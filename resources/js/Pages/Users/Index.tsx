@@ -1,0 +1,436 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { KeyRound, Pencil, Plus, Save, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import Pagination from '@/components/Pagination';
+import type { User, Role, Organization, Participant, Paginated, Flash } from '@/types';
+
+const createUserSchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    email: z.string().min(1, 'Email is required').email('Invalid email'),
+    password: z.string().min(1, 'Password is required'),
+    password_confirmation: z.string().min(1, 'Please confirm password'),
+    roles: z.array(z.number()).default([]),
+    participant_id: z.string().optional().default(''),
+});
+
+const editUserSchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    email: z.string().min(1, 'Email is required').email('Invalid email'),
+    password: z.string().optional().default(''),
+    password_confirmation: z.string().optional().default(''),
+    roles: z.array(z.number()).default([]),
+    participant_id: z.string().optional().default(''),
+});
+
+type CreateUserForm = z.infer<typeof createUserSchema>;
+type EditUserForm = z.infer<typeof editUserSchema>;
+type UserForm = CreateUserForm | EditUserForm;
+
+interface UsersIndexProps {
+    users: Paginated<User> | User[];
+    roles: Role[];
+    organizations: Organization[];
+    participants: (Participant & { name: string })[];
+}
+
+function UserFormDialog({
+    onClose,
+    editingUser,
+    roles,
+    participants,
+}: {
+    onClose: () => void;
+    editingUser: User | null;
+    roles: Role[];
+    participants: Participant[];
+}) {
+    const schema = editingUser ? editUserSchema : createUserSchema;
+    const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<CreateUserForm>({
+        defaultValues: editingUser
+            ? {
+                  name: editingUser.name,
+                  email: editingUser.email,
+                  password: '',
+                  password_confirmation: '',
+                  roles: editingUser.roles?.map(r => r.id) ?? [],
+                  participant_id: editingUser.participant_id ?? '',
+              }
+            : { name: '', email: '', password: '', password_confirmation: '', roles: [], participant_id: '' },
+        resolver: zodResolver(schema),
+    });
+
+    const selectedRoles = watch('roles');
+    const facultyRepRoleId = roles.find(r => r.name === 'faculty-representative')?.id;
+    const isFacultyRepSelected = facultyRepRoleId ? (selectedRoles ?? []).includes(facultyRepRoleId) : false;
+    const deanRoleId = roles.find(r => r.name === 'dean')?.id;
+    const isDeanSelected = deanRoleId ? (selectedRoles ?? []).includes(deanRoleId) : false;
+
+    const toggleRole = (roleId: number) => {
+        const current = selectedRoles ?? [];
+        if (current.includes(roleId)) {
+            setValue('roles', current.filter(id => id !== roleId), { shouldValidate: true });
+        } else {
+            setValue('roles', [...current, roleId], { shouldValidate: true });
+        }
+    };
+
+    const onSubmit = (formData: CreateUserForm) => {
+        const payload = editingUser
+            ? { ...formData, password: formData.password || undefined, password_confirmation: formData.password_confirmation || undefined }
+            : formData;
+
+        if (editingUser) {
+            router.put(route('users.update', editingUser.uuid), payload, {
+                onSuccess: () => onClose(),
+            });
+        } else {
+            router.post(route('users.store'), payload, {
+                onSuccess: () => onClose(),
+            });
+        }
+    };
+
+    return (
+        <Dialog open={true} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
+            <DialogContent className="max-w-lg">
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <DialogHeader>
+                        <DialogTitle>{editingUser ? 'Edit User' : 'Create New User'}</DialogTitle>
+                        <DialogDescription>
+                            {editingUser ? 'Update user information and roles.' : 'Create a new user in the organization.'}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Name</Label>
+                            <Input id="name" {...register('name')} required />
+                            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" {...register('email')} required />
+                            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="password">Password {editingUser && '(leave blank if not changing)'}</Label>
+                            <Input id="password" type="password" {...register('password', { required: !editingUser })} />
+                            {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="password_confirmation">Confirm Password</Label>
+                            <Input id="password_confirmation" type="password" {...register('password_confirmation', { required: !editingUser })} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label>Roles</Label>
+                            <div className="grid gap-2">
+                                {roles.map((role) => (
+                                    <label key={role.id} className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedRoles?.includes(role.id) ?? false}
+                                            onChange={() => toggleRole(role.id)}
+                                        />
+                                        {role.name}
+                                    </label>
+                                ))}
+                            </div>
+                            {errors.roles && <p className="text-sm text-destructive">{errors.roles.message}</p>}
+                        </div>
+
+                        {(isFacultyRepSelected || isDeanSelected) && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="participant_id">Faculty (Participant) *</Label>
+                                <select
+                                    id="participant_id"
+                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                    {...register('participant_id')}
+                                    required
+                                >
+                                    <option value="">-- Select Faculty --</option>
+                                    {participants.map((p) => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                </select>
+                                {errors.participant_id && <p className="text-sm text-destructive">{errors.participant_id.message}</p>}
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            <Save className="mr-2 size-4" />
+                            {editingUser ? 'Update' : 'Save'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export default function UsersIndex({ users: usersProp, roles, organizations, participants: participantsProp = [] }: UsersIndexProps) {
+    const { flash } = usePage().props;
+    const [dialogMode, setDialogMode] = useState<null | 'create' | User>(null);
+    const [deleteUser, setDeleteUser] = useState<User | null>(null);
+    const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [resetSubmitting, setResetSubmitting] = useState(false);
+
+    const users = Array.isArray(usersProp) ? usersProp : (usersProp?.data ?? []);
+    const participants = Array.isArray(participantsProp) ? participantsProp : [];
+
+    const handleDelete = () => {
+        if (!deleteUser) return;
+        router.delete(route('users.destroy', deleteUser.uuid), {
+            preserveScroll: true,
+            onSuccess: () => setDeleteUser(null),
+        });
+    };
+
+    const handleResetPassword = () => {
+        if (!resetPasswordUser || !newPassword || newPassword !== confirmPassword) return;
+        setResetSubmitting(true);
+        router.put(route('users.reset-password', resetPasswordUser.uuid), { password: newPassword, password_confirmation: confirmPassword }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setResetPasswordUser(null);
+                setNewPassword('');
+                setConfirmPassword('');
+                setResetSubmitting(false);
+            },
+            onError: () => setResetSubmitting(false),
+        });
+    };
+
+    return (
+        <AuthenticatedLayout
+            header={
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Manage users and roles (M1 - RBAC)
+                        </p>
+                    </div>
+
+                    <Button onClick={() => setDialogMode('create')}>
+                        <Plus className="mr-2 size-4" />
+                        Add User
+                    </Button>
+
+                    {dialogMode && (
+                        <UserFormDialog
+                            key={dialogMode === 'create' ? 'create' : dialogMode.id}
+                            onClose={() => setDialogMode(null)}
+                            editingUser={dialogMode === 'create' ? null : dialogMode}
+                            roles={roles}
+                            participants={participants}
+                        />
+                    )}
+                </div>
+            }
+        >
+            <Head title="Users" />
+
+            {flash?.success && (
+                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
+                    {flash.success}
+                </div>
+            )}
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Users List</CardTitle>
+                    <CardDescription>
+                        Manage users and assign roles.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Organization</TableHead>
+                                <TableHead>Faculty</TableHead>
+                                <TableHead>Roles</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {users.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                                        No users yet.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {users.map((user) => (
+                                <TableRow key={user.id}>
+                                    <TableCell className="font-medium">{user.name}</TableCell>
+                                    <TableCell>{user.email}</TableCell>
+                                    <TableCell>{user.organization?.name || '-'}</TableCell>
+                                    <TableCell>{user.participant?.name || '-'}</TableCell>
+                                    <TableCell>
+                                        {user.roles && user.roles.length > 0
+                                            ? user.roles.map(r => r.name).join(', ')
+                                            : '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                        <span
+                                            className={
+                                                user.is_active
+                                                    ? 'rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700'
+                                                    : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'
+                                            }
+                                        >
+                                            {user.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right space-x-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            title="Reset password"
+                                            onClick={() => { setResetPasswordUser(user); setNewPassword(''); setConfirmPassword(''); }}
+                                        >
+                                            <KeyRound className="size-3" />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setDialogMode(user)}
+                                        >
+                                            <Pencil className="mr-1 size-3" /> Edit
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => setDeleteUser(user)}
+                                        >
+                                            <Trash2 className="mr-1 size-3" /> Delete
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+
+                <Pagination paginator={usersProp} />
+            </Card>
+
+            <Dialog open={!!deleteUser} onOpenChange={(isOpen) => !isOpen && setDeleteUser(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete User?</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete <strong>{deleteUser?.name}</strong>? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDeleteUser(null)}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={handleDelete}>
+                            Yes, Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!resetPasswordUser} onOpenChange={(isOpen) => !isOpen && setResetPasswordUser(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Reset Password</DialogTitle>
+                        <DialogDescription>
+                            Set a new password for <strong>{resetPasswordUser?.name}</strong> ({resetPasswordUser?.email})
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="reset-password">New Password *</Label>
+                            <Input
+                                id="reset-password"
+                                type="password"
+                                value={newPassword}
+                                onChange={e => setNewPassword(e.target.value)}
+                                placeholder="Min. 8 characters"
+                                required
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="reset-password-confirm">Confirm Password *</Label>
+                            <Input
+                                id="reset-password-confirm"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={e => setConfirmPassword(e.target.value)}
+                                placeholder="Repeat the new password"
+                                required
+                            />
+                            {confirmPassword && newPassword !== confirmPassword && (
+                                <p className="text-sm text-destructive">Passwords do not match.</p>
+                            )}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setResetPasswordUser(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleResetPassword}
+                            disabled={resetSubmitting || !newPassword || newPassword.length < 8 || newPassword !== confirmPassword}
+                        >
+                            <KeyRound className="mr-2 size-4" />
+                            Reset Password
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <div className="mt-6 text-xs text-muted-foreground">
+                M1: User Management + RBAC. Users can login, create organizations, and assign roles.
+            </div>
+        </AuthenticatedLayout>
+    );
+}

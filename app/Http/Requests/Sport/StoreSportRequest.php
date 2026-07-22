@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Http\Requests\Sport;
+
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class StoreSportRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user() !== null;
+    }
+
+    public function rules(): array
+    {
+        $user = $this->user();
+
+        return [
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('sports', 'name')
+                    ->where('organization_id', $user?->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
+            'slug' => [
+                'required', 'string', 'max:255', 'alpha_dash',
+                Rule::unique('sports', 'slug')
+                    ->where('organization_id', $user?->organization_id)
+                    ->whereNull('deleted_at')
+                    ->ignore($this->route('sport')),
+            ],
+            'icon' => ['nullable', 'string', 'max:255'],
+            'is_active' => ['boolean'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.unique' => 'This sport already exists.',
+            'slug.unique' => 'This sport slug already exists.',
+        ];
+    }
+}
