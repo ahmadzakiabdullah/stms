@@ -45,6 +45,11 @@ class UpdateEventRequest extends FormRequest
                         $query->where('organization_id', $user->organization_id);
                     }
                 }),
+                Rule::unique('events', 'sport_category_id')
+                    ->where('tournament_id', $this->tournament_id)
+                    ->where('sport_id', $this->sport_id)
+                    ->whereNull('deleted_at')
+                    ->ignore($event),
             ],
             'name' => ['required', 'string', 'max:255'],
             'slug' => [

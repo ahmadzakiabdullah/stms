@@ -63,9 +63,10 @@ interface EventsIndexProps {
     tournaments?: Tournament[];
     sports?: Sport[];
     categories?: SportCategory[];
+    usedCategoryIds?: Record<string, string[]>;
 }
 
-export default function EventsIndex({ events: eventsProp, tournaments: tournamentsProp = [], sports: sportsProp = [], categories: categoriesProp = [] }: EventsIndexProps) {
+export default function EventsIndex({ events: eventsProp, tournaments: tournamentsProp = [], sports: sportsProp = [], categories: categoriesProp = [], usedCategoryIds = {} }: EventsIndexProps) {
     const { flash, isSuperAdmin = false } = usePage().props;
     const [open, setOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
@@ -109,8 +110,13 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
         ? sports.filter(s => selectedTournament.sports!.some(ts => ts.id === s.id))
         : sports;
 
+    const usedCatIds = selectedTournamentId && selectedSportId
+        ? (usedCategoryIds[`${selectedTournamentId}:${selectedSportId}`] ?? [])
+        : [];
+
     const filteredCategories = categories.filter(
-        (c) => !selectedSportId || c.sport_id === selectedSportId
+        (c) => (!selectedSportId || c.sport_id === selectedSportId)
+            && (!usedCatIds.includes(c.id) || editingEvent?.sport_category_id === c.id)
     );
 
     const onTournamentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -302,6 +308,9 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
                                                 <option key={c.id} value={c.id}>{c.name}</option>
                                             ))}
                                         </select>
+                                        {filteredCategories.length === 0 && selectedSportId && !editingEvent && (
+                                            <p className="text-xs text-amber-600">All categories for this sport have already been used in this tournament.</p>
+                                        )}
                                         {errors.sport_category_id && <p className="text-sm text-destructive">{errors.sport_category_id.message}</p>}
                                     </div>
 

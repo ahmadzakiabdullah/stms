@@ -1,0 +1,34 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Http\Requests\Participant\StoreParticipantRequest;
+use App\Http\Requests\Participant\UpdateParticipantRequest;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\TestCase;
+
+class ParticipantRequestNormalizationTest extends TestCase
+{
+    public static function requestClasses(): array
+    {
+        return [
+            [StoreParticipantRequest::class],
+            [UpdateParticipantRequest::class],
+        ];
+    }
+
+    #[DataProvider('requestClasses')]
+    public function test_it_normalizes_form_data_boolean_strings(string $requestClass): void
+    {
+        $request = $requestClass::create('/', 'POST', [
+            'organization_id' => '019fa709-0000-7000-8000-000000000000',
+            'is_active' => 'true',
+        ]);
+
+        (function (): void {
+            $this->prepareForValidation();
+        })->call($request);
+
+        $this->assertTrue($request->input('is_active'));
+    }
+}

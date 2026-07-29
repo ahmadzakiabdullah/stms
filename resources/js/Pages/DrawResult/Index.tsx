@@ -16,9 +16,10 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Users, Swords } from 'lucide-react';
-import type { Event, Pool, Fixture, Participant, EventParticipant } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ArrowLeft, Users, Swords, Pencil, X, Check } from 'lucide-react';
+import { useState } from 'react';
+import type { Event, Pool, Fixture, Participant, EventParticipant, Flash } from '@/types';
 
 interface PoolWithRelations extends Pool {
     event_participants: (EventParticipant & { participant: Participant })[];
@@ -28,6 +29,7 @@ interface PoolWithRelations extends Pool {
 interface DrawResultProps {
     event: Event & { tournament?: { name: string }; sport?: { name: string }; sport_category?: { name: string } };
     pools: PoolWithRelations[];
+    canEdit: boolean;
 }
 
 const statusBadge = (status: string) => {
@@ -41,7 +43,55 @@ const statusBadge = (status: string) => {
     return <Badge variant={s.variant}>{s.label}</Badge>;
 };
 
-export default function DrawResult({ event, pools }: DrawResultProps) {
+export default function DrawResult({ event, pools: initialPools, canEdit }: DrawResultProps) {
+    const { flash } = usePage<{ flash: Flash }>().props;
+    const [editing, setEditing] = useState(false);
+    const [pools, setPools] = useState(initialPools);
+    const [pendingMoves, setPendingMoves] = useState<Record<string, string>>({});
+
+    const allParticipants = pools.flatMap(p =>
+        p.event_participants.map(ep => ({ ...ep, currentPoolId: p.id }))
+    );
+
+    const handlePoolChange = (epId: string, targetPoolId: string) => {
+        setPendingMoves(prev => ({ ...prev, [epId]: targetPoolId }));
+    };
+
+    const handleSave = () => {
+        const entries = Object.entries(pendingMoves);
+        if (entries.length === 0) {
+            setEditing(false);
+            return;
+        }
+
+        let i = 0;
+        const processNext = () => {
+            if (i >= entries.length) {
+                setEditing(false);
+                setPendingMoves({});
+                router.reload({ only: ['pools', 'flash'] });
+                return;
+            }
+            const [epId, targetPoolId] = entries[i];
+            i++;
+            router.post(route('events.draw.move-participant', event.slug), {
+                event_participant_id: epId,
+                target_pool_id: targetPoolId,
+            }, {
+                preserveScroll: true,
+                onFinish: () => processNext(),
+                onError: () => processNext(),
+            });
+        };
+        processNext();
+    };
+
+    const handleCancel = () => {
+        setPendingMoves({});
+        setEditing(false);
+        setPools(initialPools);
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -53,10 +103,39 @@ export default function DrawResult({ event, pools }: DrawResultProps) {
                         </Button>
                     </Link>
                     <h2 className="text-xl font-semibold leading-tight">Draw Result</h2>
+                    <div className="ml-auto flex items-center gap-2">
+                        {editing ? (
+                            <>
+                                <Button variant="outline" size="sm" onClick={handleCancel}>
+                                    <X className="mr-1 size-4" /> Cancel
+                                </Button>
+                                <Button size="sm" onClick={handleSave} disabled={Object.keys(pendingMoves).length === 0}>
+                                    <Check className="mr-1 size-4" /> Save Changes
+                                </Button>
+                            </>
+                        ) : canEdit && (
+                            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                                <Pencil className="mr-1 size-4" /> Edit Pools
+                            </Button>
+                        )}
+                    </div>
                 </div>
             }
         >
             <Head title="Draw Result" />
+
+            {flash?.success && (
+                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>
+            )}
+            {flash?.error && (
+                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>
+            )}
+
+            {editing && (
+                <div className="mb-4 rounded-md bg-amber-50 p-3 text-sm text-amber-700">
+                    Edit mode: Select a new pool for each participant you want to move. Fixtures will be regenerated automatically after saving.
+                </div>
+            )}
 
             <div className="space-y-6">
                 <Card>
@@ -97,21 +176,41 @@ export default function DrawResult({ event, pools }: DrawResultProps) {
                                             Participants
                                         </h4>
                                         <div className="space-y-1">
-                                            {pool.event_participants.map((ep) => (
-                                                <div
-                                                    key={ep.id}
-                                                    className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-                                                >
-                                                    <span className="font-medium">
-                                                        {ep.participant?.team_name || ep.participant?.name || 'Unknown'}
-                                                    </span>
-                                                    {ep.seed_number && (
-                                                        <Badge variant="secondary" className="text-xs">
-                                                            Seed #{ep.seed_number}
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                            ))}
+                                            {pool.event_participants.map((ep) => {
+                                                const pendingTarget = pendingMoves[ep.id];
+                                                const willMove = pendingTarget !== undefined;
+                                                return (
+                                                    <div
+                                                        key={ep.id}
+                                                        className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm ${
+                                                            willMove ? 'border-amber-300 bg-amber-50' : ''
+                                                        }`}
+                                                    >
+                                                        {editing ? (
+                                                            <select
+                                                                className="w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                                                value={pendingTarget ?? pool.id}
+                                                                onChange={(e) => handlePoolChange(ep.id, e.target.value)}
+                                                            >
+                                                                {pools.map((p) => (
+                                                                    <option key={p.id} value={p.id}>
+                                                                        {p.name}{p.id === pool.id ? ' (current)' : ''}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        ) : (
+                                                            <span className="font-medium">
+                                                                {ep.participant?.team_name || ep.participant?.name || 'Unknown'}
+                                                            </span>
+                                                        )}
+                                                        {ep.seed_number && !editing && (
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                Seed #{ep.seed_number}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}

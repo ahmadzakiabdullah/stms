@@ -390,7 +390,7 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
         is_active: true,
     });
 
-    const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+    const [errors, setErrors] = useState<Partial<Record<keyof FormData | 'logo', string>>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>((participant as any)?.logo_url ?? null);
@@ -410,37 +410,34 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const result = participantSchema.safeParse(formData);
-        if (!result.success) {
-            const fieldErrors: Partial<Record<keyof FormData, string>> = {};
-            for (const issue of result.error.issues) {
-                const field = issue.path[0] as keyof FormData;
-                if (!fieldErrors[field]) fieldErrors[field] = issue.message;
-            }
-            setErrors(fieldErrors);
-            return;
-        }
+        setErrors({});
         setIsSubmitting(true);
 
-        const payload = { ...result.data } as any;
+        const payload = { ...formData } as Record<string, string | boolean>;
         const fd = new FormData();
         for (const key of Object.keys(payload)) {
-            fd.append(key, payload[key] ?? '');
+            const value = payload[key];
+            fd.append(key, typeof value === 'boolean' ? (value ? '1' : '0') : (value ?? ''));
         }
         if (logoFile) {
             fd.append('logo', logoFile);
         }
-        if (participant) {
-            fd.append('_method', 'PUT');
-            router.post(route('participants.update', participant.slug), fd, {
-                onSuccess: () => { setIsSubmitting(false); onClose(); },
-                onError: () => setIsSubmitting(false),
-            });
-        } else {
-            router.post(route('participants.store'), fd, {
-                onSuccess: () => { setIsSubmitting(false); onClose(); },
-                onError: () => setIsSubmitting(false),
-            });
+        const options = {
+            onSuccess: () => onClose(),
+            onError: (serverErrors: Record<string, string>) => setErrors(serverErrors),
+            onFinish: () => setIsSubmitting(false),
+        };
+
+        try {
+            if (participant) {
+                fd.append('_method', 'PUT');
+                router.post(route('participants.update', participant.slug), fd, options);
+            } else {
+                router.post(route('participants.store'), fd, options);
+            }
+        } catch {
+            setErrors({ logo: 'Unable to submit the form. Please refresh the page and try again.' });
+            setIsSubmitting(false);
         }
     };
 
@@ -564,8 +561,10 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
                             <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
                                 <Upload className="mr-1 size-3" /> {logoPreview ? 'Change' : 'Upload'}
                             </Button>
-                            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+                            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={handleLogoChange} />
                             {logoFile && <p className="mt-1 text-[10px] text-muted-foreground">{logoFile.name}</p>}
+                            <p className="mt-1 text-[10px] text-muted-foreground">JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.</p>
+                            {errors.logo && <p className="mt-1 text-sm text-destructive">{errors.logo}</p>}
                         </div>
                     </div>
                 </div>
@@ -575,9 +574,9 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
                 <Button type="button" variant="outline" onClick={onClose}>
                     Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit">
                     <Save className="mr-2 size-4" />
-                    {participant ? 'Update' : 'Save'}
+                    {isSubmitting ? 'Processing...' : (participant ? 'Update' : 'Save')}
                 </Button>
             </DialogFooter>
         </form>

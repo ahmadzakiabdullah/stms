@@ -5,14 +5,15 @@ namespace Tests\Feature;
 use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Organization;
-use App\Models\Participant;
+use App\Models\Pool;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
 class MatchTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_non_super_admin_only_sees_own_organization_matches_via_global_scope(): void
     {
@@ -35,6 +36,32 @@ class MatchTest extends TestCase
 
         $response = $this->actingAs($userA)->get(route('matches.index'));
         $response->assertOk();
+    }
+
+    public function test_matches_can_be_filtered_with_an_event_slug(): void
+    {
+        $org = Organization::factory()->create();
+        $event = Event::factory()->create([
+            'organization_id' => $org->id,
+            'slug' => 'mens-football',
+        ]);
+        Pool::query()->create([
+            'organization_id' => $org->id,
+            'event_id' => $event->id,
+            'name' => 'Pool A',
+            'sort_order' => 1,
+        ]);
+        $user = $this->createStaffUser($org);
+
+        $response = $this->actingAs($user)->get(route('matches.index', [
+            'event' => $event->slug,
+        ]));
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Matches/Index')
+                ->where('selectedEventId', $event->id)
+                ->has('pools', 1));
     }
 
     public function test_super_admin_can_create_match(): void

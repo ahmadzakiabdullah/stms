@@ -4,6 +4,7 @@ namespace App\Http\Requests\Participant;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\File;
 
 class UpdateParticipantRequest extends FormRequest
 {
@@ -14,6 +15,12 @@ class UpdateParticipantRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if (in_array($this->input('is_active'), ['true', 'false'], true)) {
+            $this->merge([
+                'is_active' => $this->input('is_active') === 'true',
+            ]);
+        }
+
         if (empty($this->organization_id)) {
             $this->merge([
                 'organization_id' => $this->user()->organization_id,
@@ -45,7 +52,7 @@ class UpdateParticipantRequest extends FormRequest
             'team_name' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'in:registered,confirmed,withdrawn,disqualified'],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
+            'logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
             'is_active' => ['boolean'],
         ];
     }

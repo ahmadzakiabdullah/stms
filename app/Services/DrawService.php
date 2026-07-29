@@ -9,6 +9,7 @@ use App\Models\Fixture;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class DrawService
 {
@@ -119,6 +120,7 @@ class DrawService
 
                 $existingCount++;
                 $fixtures[] = [
+                    'id' => (string) Str::uuid(),
                     'organization_id' => $orgId,
                     'event_id' => $event->id,
                     'pool_id' => $pool->id,
@@ -140,5 +142,40 @@ class DrawService
 
         Fixture::insert($fixtures);
         return count($fixtures);
+    }
+
+    /**
+     * Move a participant to a different pool and regenerate fixtures for affected pools.
+     */
+    public function moveParticipantToPool(Event $event, string $eventParticipantId, string $targetPoolId): void
+    {
+        DB::transaction(function () use ($event, $eventParticipantId, $targetPoolId) {
+            $ep = EventParticipant::where('id', $eventParticipantId)
+                ->where('event_id', $event->id)
+                ->firstOrFail();
+
+            $sourcePoolId = $ep->pool_id;
+
+            if ($sourcePoolId === $targetPoolId) {
+                return;
+            }
+
+            $targetPool = Pool::where('id', $targetPoolId)
+                ->where('event_id', $event->id)
+                ->firstOrFail();
+
+            $ep->update(['pool_id' => $targetPoolId]);
+
+            $affectedPoolIds = array_unique(array_filter([$sourcePoolId, $targetPoolId]));
+            foreach ($affectedPoolIds as $poolId) {
+                $pool = Pool::find($poolId);
+                if ($pool) {
+                    Fixture::where('event_id', $event->id)
+                        ->where('pool_id', $poolId)
+                        ->delete();
+                    $this->generateRoundRobinFixtures($event, $pool);
+                }
+            }
+        });
     }
 }

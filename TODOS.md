@@ -7,6 +7,12 @@
 
 ## ✅ Current Status: Maintenance Mode
 
+- [x] Matches page CRUD restored with pool/round fields and Name–Logo–VS–Logo–Name fixture layout.
+- [x] Matches event filter URLs now use existing event slugs instead of UUID query values.
+- [x] Participant logo upload repair: securely accept sanitized SVG logos and display upload validation errors.
+
+- [x] Production `/portal/` 405/500 recovery: cleared environment-specific Laravel caches and restored the IIS front controller.
+
 **Matlamat:** Projek dalam fasa maintenance — semua isu kritikal telah dibaiki. Semua Fasa 0-3 selesai. Semua ciri MVP telah dibangunkan.
 
 ---

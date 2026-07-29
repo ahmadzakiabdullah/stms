@@ -89,6 +89,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/events/{event}', [\App\Http\Controllers\EventController::class, 'destroy'])->name('events.destroy');
     Route::get('/events/{event}/draw-result', [\App\Http\Controllers\DrawController::class, 'show'])->name('events.draw-result');
     Route::post('/events/{event}/draw', [\App\Http\Controllers\DrawController::class, 'draw'])->name('events.draw');
+    Route::post('/events/{event}/draw/move-participant', [\App\Http\Controllers\DrawController::class, 'moveParticipant'])->name('events.draw.move-participant');
     Route::post('/events/batch-delete', [\App\Http\Controllers\EventController::class, 'batchDestroy'])->name('events.batch-destroy');
 
     // Participant Dashboard (consolidated overview)

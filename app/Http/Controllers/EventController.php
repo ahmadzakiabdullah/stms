@@ -81,11 +81,19 @@ class EventController extends Controller
             return collect();
         });
 
+        $usedCategoryIds = Event::query()
+            ->select('tournament_id', 'sport_id', 'sport_category_id')
+            ->get()
+            ->groupBy(fn($e) => $e->tournament_id . ':' . $e->sport_id)
+            ->map(fn($group) => $group->pluck('sport_category_id')->values()->toArray())
+            ->toArray();
+
         $response = Inertia::render('Events/Index', [
             'events' => $events,
             'tournaments' => $tournaments,
             'sports' => $sports,
             'categories' => $categories,
+            'usedCategoryIds' => $usedCategoryIds,
         ]);
 
         if ($dataLoadFailed) {

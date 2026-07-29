@@ -145,6 +145,8 @@ export interface Participant {
     team_name: string | null;
     status: string;
     notes: string | null;
+    logo_path: string | null;
+    logo_url: string | null;
     is_active: boolean;
     created_at: string;
     updated_at: string;

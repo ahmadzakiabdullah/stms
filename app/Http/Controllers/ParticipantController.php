@@ -9,9 +9,9 @@ use App\Http\Requests\Participant\StoreParticipantRequest;
 use App\Http\Requests\Participant\UpdateParticipantRequest;
 use App\Models\Participant;
 use App\Models\Session;
+use App\Services\ParticipantLogoService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -30,7 +30,8 @@ class ParticipantController extends Controller
                 ->withQueryString();
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
-            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15, 1, [
+
+            return new LengthAwarePaginator([], 0, 15, 1, [
                 'path' => request()->url(),
             ]);
         });
@@ -47,14 +48,14 @@ class ParticipantController extends Controller
         return $response;
     }
 
-    public function store(StoreParticipantRequest $request, CreateParticipant $action): RedirectResponse
+    public function store(StoreParticipantRequest $request, CreateParticipant $action, ParticipantLogoService $logoService): RedirectResponse
     {
         Gate::authorize('create', Participant::class);
 
         $data = $request->validated();
 
         if ($request->hasFile('logo')) {
-            $data['logo_path'] = $request->file('logo')->store('logos', 'public');
+            $data['logo_path'] = $logoService->store($request->file('logo'));
         }
 
         $action->handle($data);
@@ -63,20 +64,24 @@ class ParticipantController extends Controller
             ->with('success', 'Participant created successfully.');
     }
 
-    public function update(UpdateParticipantRequest $request, Participant $participant, UpdateParticipant $action): RedirectResponse
+    public function update(UpdateParticipantRequest $request, Participant $participant, UpdateParticipant $action, ParticipantLogoService $logoService): RedirectResponse
     {
         Gate::authorize('update', $participant);
 
         $data = $request->validated();
 
+        $previousLogoPath = null;
+
         if ($request->hasFile('logo')) {
-            if ($participant->logo_path) {
-                Storage::disk('public')->delete($participant->logo_path);
-            }
-            $data['logo_path'] = $request->file('logo')->store('logos', 'public');
+            $previousLogoPath = $participant->logo_path;
+            $data['logo_path'] = $logoService->store($request->file('logo'));
         }
 
         $action->handle($participant, $data);
+
+        if ($previousLogoPath) {
+            Storage::disk('public')->delete($previousLogoPath);
+        }
 
         return redirect()->route('participants.index')
             ->with('success', 'Participant updated successfully.');

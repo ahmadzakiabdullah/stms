@@ -11,37 +11,69 @@ use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Participant;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class MatchController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response|RedirectResponse
     {
-        $dataLoadFailed = false;
 
-        $matches = $this->safePaginatedQuery(function () {
-            return Fixture::with(['event', 'homeParticipant', 'awayParticipant'])
-                ->orderByDesc('scheduled_at')
-                ->paginate(15)
-                ->withQueryString();
-        }, function () use (&$dataLoadFailed) {
-            $dataLoadFailed = true;
-            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15, 1, [
-                'path' => request()->url(),
-            ]);
-        });
+        $events = Event::query()
+            ->with(['tournament:id,name', 'sport:id,name', 'sportCategory:id,name'])
+            ->withCount('pools')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'tournament_id', 'sport_id', 'sport_category_id']);
+
+        $drawnEventIds = $events->filter(fn ($e) => $e->pools_count > 0)->pluck('id')->values()->toArray();
+        $selectedEvent = $events->firstWhere('slug', $request->string('event')->toString());
+
+        // Continue accepting bookmarked URLs that used the UUID query parameter.
+        if (! $selectedEvent && $request->filled('event_id')) {
+            $selectedEvent = $events->firstWhere('id', $request->string('event_id')->toString());
+
+            if ($selectedEvent) {
+                return redirect()->route('matches.index', ['event' => $selectedEvent->slug]);
+            }
+        }
+
+        if ($selectedEvent && ! in_array($selectedEvent->id, $drawnEventIds, true)) {
+            $selectedEvent = null;
+        }
+
+        $pools = collect();
+        if ($selectedEvent) {
+            $pools = $selectedEvent->pools()
+                ->with([
+                    'eventParticipants.participant',
+                    'fixtures' => function ($q) {
+                        $q->with(['homeParticipant', 'awayParticipant'])
+                            ->orderBy('round')
+                            ->orderBy('match_number');
+                    },
+                ])
+                ->orderBy('sort_order')
+                ->get();
+        }
+
+        $allFixtures = Fixture::with(['event', 'homeParticipant', 'awayParticipant'])
+            ->orderByDesc('scheduled_at')
+            ->paginate(15)
+            ->withQueryString();
 
         $response = Inertia::render('Matches/Index', [
-            'matches' => $matches,
-            'events' => Event::query()->orderBy('name')->get(['id', 'name', 'slug']),
+            'events' => $events,
+            'drawnEventIds' => $drawnEventIds,
+            'selectedEventId' => $selectedEvent?->id,
+            'nextMatchNumber' => $selectedEvent
+                ? ((int) Fixture::query()->where('event_id', $selectedEvent->id)->max('match_number')) + 1
+                : 1,
+            'pools' => $pools,
+            'allFixtures' => $allFixtures,
             'participants' => Participant::query()->active()->orderBy('name')->get(['id', 'name', 'slug']),
         ]);
-
-        if ($dataLoadFailed) {
-            $response->with('error', 'Failed to load some data. Please run "php artisan migrate" on the server (database may be out of date).');
-        }
 
         return $response;
     }
@@ -55,8 +87,7 @@ class MatchController extends Controller
             $request->validated()
         );
 
-        return redirect()->route('matches.index')
-            ->with('success', 'Match created successfully.');
+        return redirect()->back()->with('success', 'Match created successfully.');
     }
 
     public function update(UpdateMatchRequest $request, Fixture $match, UpdateMatch $action): RedirectResponse
@@ -69,8 +100,7 @@ class MatchController extends Controller
             $request->validated()
         );
 
-        return redirect()->route('matches.index')
-            ->with('success', 'Match updated successfully.');
+        return redirect()->back()->with('success', 'Match updated successfully.');
     }
 
     public function destroy(Fixture $match, DeleteMatch $action): RedirectResponse
@@ -82,7 +112,6 @@ class MatchController extends Controller
             $match->id
         );
 
-        return redirect()->route('matches.index')
-            ->with('success', 'Match deleted successfully.');
+        return redirect()->back()->with('success', 'Match deleted successfully.');
     }
 }

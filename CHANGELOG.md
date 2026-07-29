@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Restored full match CRUD controls on the Matches page, added pool/round management and per-event match-number validation, and refactored matchups to Name–Logo–VS–Logo–Name without circular logo frames.
+- Replaced UUID-based Matches event filter URLs with readable event slugs while retaining legacy `event_id` compatibility.
+- Fixed participant logo uploads, added sanitized SVG support, explicit format guidance, and visible upload validation errors.
+- Restored the IIS/Laravel front controller and fixed production startup failures caused by cached UNC paths; `/portal/`, `/health`, and `/login` now respond normally.
 - Added visible duplicate-entry validation feedback on the Sports page and reject duplicate sport names within the same organization.
 - Synced tests with the current event participant workflow (`pending` on new event registration) and sport-category slug generation.
 - Sanitized `phpunit.xml` so database credentials are no longer stored in the repository; use environment variables or CI secrets for local/remote test databases.
@@ -45,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Artisan command**: `event-participants:backfill-org` — backfill null `organization_id` on existing EventParticipant records from related Event. Supports `--dry-run`.
 
 ### Fixed
+- Restored full match CRUD controls on the Matches page, added pool/round management and per-event match-number validation, and refactored matchups to Name–Logo–VS–Logo–Name without circular logo frames.
 - **Soft-delete slug collision**: Added `->whereNull('deleted_at')` to `Rule::unique` in all Store FormRequests (Tournament, Event, Session, Sport, Participant, SportCategory). Prevents "slug has already been taken" when a soft-deleted record uses the same slug.
 
 ### Fixed (Known Issues)
@@ -213,6 +218,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - N/A
 
 ### Fixed
+- Restored full match CRUD controls on the Matches page, added pool/round management and per-event match-number validation, and refactored matchups to Name–Logo–VS–Logo–Name without circular logo frames.
 - Corrected inaccurate descriptions in docs (Breeze Blade claim, version numbers, assumed stack libraries not yet present).
 
 ### Documentation
