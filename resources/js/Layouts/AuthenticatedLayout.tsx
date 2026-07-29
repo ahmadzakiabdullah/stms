@@ -254,6 +254,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                 size="icon"
                                 className="lg:hidden"
                                 onClick={() => setMobileOpen(true)}
+                                aria-label="Open mobile menu"
                             >
                                 <Menu className="size-5" />
                             </Button>
@@ -265,7 +266,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
 
                             <div className="ml-auto flex items-center gap-2">
                                 <div className="relative">
-                                    <Button variant="ghost" size="icon" onClick={() => setNotifOpen(!notifOpen)} className="relative">
+                                    <Button variant="ghost" size="icon" onClick={() => setNotifOpen(!notifOpen)} className="relative" aria-label="Toggle notifications">
                                         <Bell className="size-5" />
                                         {notification_count > 0 && (
                                             <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
@@ -318,7 +319,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                 </div>
 
                                 <div className="relative">
-                                    <Button variant="outline" className="gap-2" onClick={() => setUserMenuOpen(!userMenuOpen)}>
+                                    <Button variant="outline" className="gap-2" onClick={() => setUserMenuOpen(!userMenuOpen)} aria-label="Toggle user menu">
                                         <Avatar className="size-6">
                                             <AvatarFallback className="text-xs">
                                                 {initials(user.name)}
