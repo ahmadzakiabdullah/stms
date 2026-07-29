@@ -65,6 +65,7 @@ class DashboardController extends Controller
 
             $upcomingEvents = $safeQuery(fn() => Event::query()
                 ->with(['sport:id,name', 'sportCategory:id,name', 'tournament:id,name'])
+                ->withCount('eventParticipants')
                 ->where('is_active', true)
                 ->where('start_date', '>=', now()->subDay())
                 ->orderBy('start_date')
@@ -78,7 +79,7 @@ class DashboardController extends Controller
                     'sport' => $e->sport ? ['id' => $e->sport->id, 'name' => $e->sport->name] : null,
                     'sport_category' => $e->sportCategory ? ['id' => $e->sportCategory->id, 'name' => $e->sportCategory->name] : null,
                     'tournament' => $e->tournament ? ['id' => $e->tournament->id, 'name' => $e->tournament->name] : null,
-                    'registration_count' => $e->eventParticipants()->count(),
+                    'registration_count' => $e->event_participants_count ?? 0,
                 ]));
 
             $registrationsBySport = $safeQuery(fn() => EventParticipant::query()
