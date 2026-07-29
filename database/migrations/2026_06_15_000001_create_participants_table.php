@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreign('session_id')->references('id')->on('event_sessions')->cascadeOnDelete();
             $table->string('name');
             $table->string('identification_number')->nullable();
-            $table->enum('gender', ['male', 'female', 'other']);
+            $table->enum('gender', ['male', 'female', 'other'])->nullable();
             $table->date('date_of_birth')->nullable();
             $table->enum('participant_type', ['individual', 'team'])->default('individual');
             $table->string('team_name')->nullable();

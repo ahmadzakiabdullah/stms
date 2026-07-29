@@ -22,7 +22,7 @@ return new class extends Migration
 
         // Backfill existing users with UUIDs (safe, one-time)
         DB::table('users')->whereNull('uuid')->update([
-            'uuid' => DB::raw('UUID()'),
+            'uuid' => DB::raw("lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))"),
         ]);
     }
 
