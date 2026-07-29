@@ -3,22 +3,51 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('participants', function (Blueprint $table) {
-            $table->dropColumn(['identification_number', 'gender', 'date_of_birth']);
+            if (Schema::hasColumn('participants', 'identification_number')) {
+                // Drop index first if it exists
+                try {
+                    $table->dropIndex('participants_identification_number_index');
+                } catch (\Exception $e) {}
+
+                try {
+                    $table->dropUnique('participants_identification_number_unique');
+                } catch (\Exception $e) {}
+            }
+        });
+
+        Schema::table('participants', function (Blueprint $table) {
+            if (Schema::hasColumn('participants', 'identification_number')) {
+                $table->dropColumn('identification_number');
+            }
+            if (Schema::hasColumn('participants', 'gender')) {
+                $table->dropColumn('gender');
+            }
+            if (Schema::hasColumn('participants', 'date_of_birth')) {
+                $table->dropColumn('date_of_birth');
+            }
         });
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
         Schema::table('participants', function (Blueprint $table) {
-            $table->string('identification_number', 50)->nullable()->after('phone');
-            $table->enum('gender', ['male', 'female', 'other'])->nullable()->after('identification_number');
-            $table->date('date_of_birth')->nullable()->after('gender');
+            $table->string('identification_number')->nullable()->index();
+            $table->string('gender')->nullable();
+            $table->date('date_of_birth')->nullable();
         });
     }
 };

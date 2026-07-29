@@ -6,12 +6,14 @@ use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Result extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization;
+    use HasFactory, HasUuids, SoftDeletes, LogsActivity, BelongsToOrganization;
 
     protected $fillable = [
         'organization_id',
@@ -48,5 +50,14 @@ class Result extends Model
     public function getRouteKeyName(): string
     {
         return 'id';
+    }
+
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }

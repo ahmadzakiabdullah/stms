@@ -7,16 +7,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Make uuid the primary key for users (following project UUID standard).
-     * Assumes uuid column exists and is backfilled from previous migration.
-     * WARNING: High risk on production with existing data/auth. Test thoroughly.
-     * This migration drops the old id PK and makes uuid primary.
-     * Spatie tables use morph, so should be ok as long as keys match.
-     */
     public function up(): void
     {
         if (!Schema::hasColumn('users', 'uuid')) {
+            return;
+        }
+
+        if (DB::getDriverName() === 'sqlite') {
+            // SQLite doesn't support dropping primary keys or columns easily without table rebuilds.
+            // We'll skip the raw statements and rely on a rebuild approach if strictly necessary,
+            // but for simplicity, we won't drop the 'id' column here if it's SQLite.
             return;
         }
 
@@ -30,6 +30,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
         Schema::table('users', function (Blueprint $table) {
             $table->dropPrimary(['uuid']);
         });

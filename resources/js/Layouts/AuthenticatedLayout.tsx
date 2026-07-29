@@ -68,6 +68,7 @@ const navSections: NavSection[] = [
             { label: 'Users', icon: UserCircle, href: 'users.index', active: 'users.index', requireSuper: true },
             { label: 'Roles', icon: Settings, href: 'roles.index', active: 'roles.index', requireSuper: true },
             { label: 'Organizations', icon: Building2, href: 'organizations.index', active: 'organizations.index', requireSuper: true },
+            { label: 'Activity Logs', icon: Settings, href: 'activity-logs.index', active: 'activity-logs.index', requireSuper: true },
         ],
     },
     {
