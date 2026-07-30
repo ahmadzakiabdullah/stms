@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Fixture;
-use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Result;
 use App\Models\Tournament;
