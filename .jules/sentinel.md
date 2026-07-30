@@ -1,0 +1,4 @@
+## 2024-07-29 - Fixed IDOR in Faculty Dashboard
+**Vulnerability:** Insecure Direct Object Reference (IDOR) found in `FacultyDashboardController` where authenticated users could manage (add, remove, import) squad members for an `EventParticipant` that did not belong to their own `participant_id`.
+**Learning:** Participant-scoped endpoints (like a dashboard meant for a specific faculty or team) that accept related IDs (like `event_participant_id` or `squad_member_id`) must explicitly verify that the related model inherently belongs to the currently authenticated user's `participant_id`. `findOrFail()` is not enough.
+**Prevention:** Always check ownership: `if (Auth::user()->participant_id !== $model->participant_id) { abort(403); }` when modifying participant resources.

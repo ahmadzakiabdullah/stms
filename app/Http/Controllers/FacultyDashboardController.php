@@ -93,6 +93,10 @@ class FacultyDashboardController extends Controller
 
         $ep = EventParticipant::with('event.sportCategory')->findOrFail($validated['event_participant_id']);
 
+        if (Auth::user()->participant_id !== $ep->participant_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $quotaError = $quotaService->validateAddition($ep, $validated['role']);
         if ($quotaError) {
             return redirect()->route('faculty.dashboard')
@@ -114,6 +118,10 @@ class FacultyDashboardController extends Controller
 
     public function destroySquad(SquadMember $squadMember): RedirectResponse
     {
+        if (Auth::user()->participant_id !== $squadMember->eventParticipant->participant_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $squadMember->delete();
 
         return redirect()->route('faculty.dashboard')
@@ -128,6 +136,10 @@ class FacultyDashboardController extends Controller
         ]);
 
         $ep = EventParticipant::with('event.sportCategory')->findOrFail($validated['event_participant_id']);
+
+        if (Auth::user()->participant_id !== $ep->participant_id) {
+            abort(403, 'Unauthorized action.');
+        }
 
         if ($ep->status !== 'confirmed') {
             return redirect()->route('faculty.dashboard')
