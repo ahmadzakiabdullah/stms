@@ -12,6 +12,7 @@ class ParticipantPolicy
         if ($user->hasRole('super-admin') || $user->hasRole('org-admin')) {
             return true;
         }
+
         return $user->hasPermissionTo('view participants');
     }
 
@@ -29,6 +30,7 @@ class ParticipantPolicy
         if ($user->hasRole('super-admin')) {
             return true;
         }
+
         return $user->hasPermissionTo('create participants') || $user->hasRole('org-admin');
     }
 

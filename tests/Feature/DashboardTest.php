@@ -4,14 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Organization;
 use App\Models\Session;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
 class DashboardTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_dashboard_shows_scoped_real_stats_and_recent_data(): void
     {

@@ -13,14 +13,14 @@ use Tests\Traits\CreatesTenantUsers;
 
 class RegistrationPolicyTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     private RegistrationPolicy $policy;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new RegistrationPolicy();
+        $this->policy = new RegistrationPolicy;
     }
 
     public function test_super_admin_can_perform_all_actions(): void

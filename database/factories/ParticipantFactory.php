@@ -6,6 +6,7 @@ use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Participant>
@@ -17,11 +18,12 @@ class ParticipantFactory extends Factory
     public function definition(): array
     {
         $name = fake()->name();
+
         return [
             'organization_id' => Organization::factory(),
             'session_id' => Session::factory(),
             'name' => $name,
-            'slug' => \Illuminate\Support\Str::slug($name),
+            'slug' => Str::slug($name),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->optional()->phoneNumber(),
             'participant_type' => fake()->randomElement(['individual', 'team']),

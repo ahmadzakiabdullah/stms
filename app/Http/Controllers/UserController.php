@@ -7,6 +7,7 @@ use App\Actions\Users\DeleteUser;
 use App\Actions\Users\UpdateUser;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
+use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -28,7 +29,7 @@ class UserController extends Controller
         $users = $this->safePaginatedQuery(function () use ($user) {
             $query = User::with('roles', 'organization', 'participant');
 
-            if (!$user->hasRole('super-admin')) {
+            if (! $user->hasRole('super-admin')) {
                 $query->where('organization_id', $user->organization_id);
             }
 
@@ -43,7 +44,7 @@ class UserController extends Controller
 
         $organizations = $this->safeCollectionQuery(function () use ($user) {
             return $user->hasRole('super-admin')
-                ? \App\Models\Organization::orderBy('name')->get()
+                ? Organization::orderBy('name')->get()
                 : collect([$user->organization]);
         });
 
@@ -68,7 +69,7 @@ class UserController extends Controller
         $data = $request->validated();
         $currentUser = Auth::user();
 
-        if (!$currentUser->hasRole('super-admin') && empty($data['organization_id'])) {
+        if (! $currentUser->hasRole('super-admin') && empty($data['organization_id'])) {
             $data['organization_id'] = $currentUser->organization_id;
         }
 
@@ -85,7 +86,7 @@ class UserController extends Controller
         $data = $request->validated();
         $currentUser = Auth::user();
 
-        if (!$currentUser->hasRole('super-admin') && empty($data['organization_id'])) {
+        if (! $currentUser->hasRole('super-admin') && empty($data['organization_id'])) {
             $data['organization_id'] = $user->organization_id; // keep original if not super
         }
 

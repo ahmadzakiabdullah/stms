@@ -12,7 +12,7 @@ return new class extends Migration
             Schema::table('event_participants', function (Blueprint $table) {
                 $table->unique(['event_id', 'participant_id'], 'ep_event_participant_unique');
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Index may already exist
         }
     }

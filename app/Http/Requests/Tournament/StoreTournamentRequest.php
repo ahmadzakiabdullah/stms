@@ -30,7 +30,7 @@ class StoreTournamentRequest extends FormRequest
                 'uuid',
                 Rule::exists('event_sessions', 'id')->where(function ($query) {
                     $user = $this->user();
-                    if (!$user->hasRole('super-admin')) {
+                    if (! $user->hasRole('super-admin')) {
                         $query->where('organization_id', $user->organization_id);
                     }
                 }),
@@ -54,7 +54,7 @@ class StoreTournamentRequest extends FormRequest
                 'uuid',
                 Rule::exists('sports', 'id')->where(function ($query) {
                     $user = $this->user();
-                    if (!$user->hasRole('super-admin')) {
+                    if (! $user->hasRole('super-admin')) {
                         $query->where('organization_id', $user->organization_id);
                     }
                 }),

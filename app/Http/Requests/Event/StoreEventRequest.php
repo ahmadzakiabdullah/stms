@@ -32,7 +32,7 @@ class StoreEventRequest extends FormRequest
                 'required',
                 'uuid',
                 Rule::exists('tournaments', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (!$isSuper) {
+                    if (! $isSuper) {
                         $query->where('organization_id', $user->organization_id);
                     }
                 }),
@@ -41,7 +41,7 @@ class StoreEventRequest extends FormRequest
                 'required',
                 'uuid',
                 Rule::exists('sports', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (!$isSuper) {
+                    if (! $isSuper) {
                         $query->where('organization_id', $user->organization_id);
                     }
                 }),
@@ -50,7 +50,7 @@ class StoreEventRequest extends FormRequest
                 'required',
                 'uuid',
                 Rule::exists('sport_categories', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (!$isSuper) {
+                    if (! $isSuper) {
                         $query->where('organization_id', $user->organization_id);
                     }
                 }),

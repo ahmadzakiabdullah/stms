@@ -2,18 +2,18 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Participants\RegisterParticipantToEvent;
+use App\Actions\Participants\WithdrawParticipantFromEvent;
 use App\Models\Event;
 use App\Models\Organization;
 use App\Models\Participant;
-use App\Actions\Participants\RegisterParticipantToEvent;
-use App\Actions\Participants\WithdrawParticipantFromEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
 class ParticipantTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_non_super_admin_only_sees_own_organization_participants_via_global_scope(): void
     {

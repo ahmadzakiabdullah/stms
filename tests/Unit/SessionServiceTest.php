@@ -16,7 +16,7 @@ class SessionServiceTest extends TestCase
     {
         $org = Organization::factory()->create();
 
-        $service = new SessionService();
+        $service = new SessionService;
 
         $session = $service->createSession([
             'organization_id' => $org->id,
@@ -43,7 +43,7 @@ class SessionServiceTest extends TestCase
             'start_date' => '2026-06-01',
         ]);
 
-        $service = new SessionService();
+        $service = new SessionService;
 
         $updated = $service->updateSession($session, [
             'name' => 'Updated Session Name',
@@ -59,7 +59,7 @@ class SessionServiceTest extends TestCase
     {
         $session = Session::factory()->create();
 
-        $service = new SessionService();
+        $service = new SessionService;
         $service->deleteSession($session);
 
         $this->assertSoftDeleted('event_sessions', ['id' => $session->id]);

@@ -29,7 +29,7 @@ return new class extends Migration
             Schema::table('events', function (Blueprint $table) {
                 $table->unique(['tournament_id', 'sport_id', 'sport_category_id'], 'events_tournament_sport_category_unique');
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Index may already exist
         }
     }

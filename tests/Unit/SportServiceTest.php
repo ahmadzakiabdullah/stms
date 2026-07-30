@@ -16,7 +16,7 @@ class SportServiceTest extends TestCase
     {
         $org = Organization::factory()->create();
 
-        $service = new SportService();
+        $service = new SportService;
 
         $sport = $service->createSport([
             'organization_id' => $org->id,
@@ -40,7 +40,7 @@ class SportServiceTest extends TestCase
             'slug' => 'original-sport',
         ]);
 
-        $service = new SportService();
+        $service = new SportService;
 
         $updated = $service->updateSport($sport, [
             'name' => 'Updated Sport Name',
@@ -54,7 +54,7 @@ class SportServiceTest extends TestCase
     {
         $sport = Sport::factory()->create();
 
-        $service = new SportService();
+        $service = new SportService;
         $service->deleteSport($sport);
 
         $this->assertSoftDeleted('sports', ['id' => $sport->id]);

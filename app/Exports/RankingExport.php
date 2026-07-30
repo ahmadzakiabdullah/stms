@@ -7,16 +7,18 @@ use App\Models\Tournament;
 use App\Services\RankingService;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class RankingExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
+class RankingExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     private Collection $rankings;
+
     private string $strategy;
+
     private int $row = 0;
 
     public function __construct(Organization $organization, string $tournamentId)
@@ -27,7 +29,7 @@ class RankingExport implements FromCollection, WithHeadings, WithMapping, Should
 
         $this->strategy = $tournament->ranking_strategy ?? 'points';
 
-        $service = new RankingService();
+        $service = new RankingService;
         $this->rankings = $service->calculateForTournament($tournament);
     }
 

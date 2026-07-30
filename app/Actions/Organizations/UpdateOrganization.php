@@ -10,6 +10,7 @@ class UpdateOrganization
     public function handle(Organization $organization, array $data, ?OrganizationService $service = null): Organization
     {
         $service = $service ?? app(OrganizationService::class);
+
         return $service->updateOrganization($organization, $data);
     }
 }

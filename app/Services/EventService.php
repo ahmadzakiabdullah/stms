@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Models\Event;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\QueryException;
 
 class EventService
 {
@@ -33,6 +33,7 @@ class EventService
         try {
             $event = Event::create($data);
             Log::info('Event created', ['id' => $event->id, 'name' => $event->name, 'org_id' => $event->organization_id]);
+
             return $event;
         } catch (QueryException $e) {
             Log::error('Event creation failed', ['name' => $data['name'], 'error' => $e->getMessage()]);
@@ -62,6 +63,7 @@ class EventService
         try {
             $event->update($data);
             Log::info('Event updated', ['id' => $event->id, 'name' => $event->name]);
+
             return $event;
         } catch (QueryException $e) {
             Log::error('Event update failed', ['id' => $event->id, 'error' => $e->getMessage()]);

@@ -41,7 +41,7 @@ class RegisteredUserController extends Controller
         $defaultOrgSlug = config('app.default_org_slug', env('DEFAULT_ORG_SLUG', 'default'));
         $organization = Organization::where('slug', $defaultOrgSlug)->first();
 
-        if (!$organization) {
+        if (! $organization) {
             $organization = Organization::first();
         }
 

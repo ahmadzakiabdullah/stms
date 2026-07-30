@@ -25,7 +25,7 @@ class EventServiceTest extends TestCase
             'sport_id' => $sport->id,
         ]);
 
-        $service = new EventService();
+        $service = new EventService;
 
         $event = $service->createEvent([
             'organization_id' => $org->id,
@@ -62,7 +62,7 @@ class EventServiceTest extends TestCase
             'slug' => 'original-name',
         ]);
 
-        $service = new EventService();
+        $service = new EventService;
 
         $updated = $service->updateEvent($event, [
             'name' => 'Updated Event Name',
@@ -80,7 +80,7 @@ class EventServiceTest extends TestCase
     {
         $event = Event::factory()->create();
 
-        $service = new EventService();
+        $service = new EventService;
         $service->deleteEvent($event);
 
         $this->assertSoftDeleted('events', ['id' => $event->id]);

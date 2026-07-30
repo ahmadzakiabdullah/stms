@@ -11,14 +11,14 @@ use Tests\Traits\CreatesTenantUsers;
 
 class ParticipantPolicyTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     private ParticipantPolicy $policy;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new ParticipantPolicy();
+        $this->policy = new ParticipantPolicy;
     }
 
     public function test_super_admin_can_perform_all_actions(): void

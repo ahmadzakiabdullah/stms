@@ -24,7 +24,7 @@ class UserService
             'is_active' => $data['is_active'] ?? true,
         ]);
 
-        if (!empty($data['roles'])) {
+        if (! empty($data['roles'])) {
             $roles = Role::whereIn('id', $data['roles'])->get();
             $user->syncRoles($roles);
         }
@@ -48,7 +48,7 @@ class UserService
             'is_active' => $data['is_active'] ?? $user->is_active,
         ];
 
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $updateData['password'] = Hash::make($data['password']);
         }
 

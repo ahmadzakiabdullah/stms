@@ -10,6 +10,7 @@ class UpdateUser
     public function handle(User $user, array $data, ?UserService $service = null): User
     {
         $service = $service ?? app(UserService::class);
+
         return $service->updateUser($user, $data);
     }
 }

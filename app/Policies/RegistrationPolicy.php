@@ -12,6 +12,7 @@ class RegistrationPolicy
         if ($user->hasRole('super-admin') || $user->hasRole('org-admin')) {
             return true;
         }
+
         return $user->hasPermissionTo('view registrations');
     }
 
@@ -29,6 +30,7 @@ class RegistrationPolicy
         if ($user->hasRole('super-admin')) {
             return true;
         }
+
         return $user->hasPermissionTo('create registrations') || $user->hasRole('org-admin');
     }
 

@@ -19,7 +19,7 @@ class OrganizationFactory extends Factory
 
         return [
             'name' => $name,
-            'slug' => Str::slug($name) . '-' . Str::random(6),
+            'slug' => Str::slug($name).'-'.Str::random(6),
             'organization_type' => fake()->randomElement(['national', 'state', 'university', 'school', 'private']),
             'is_active' => true,
             'parent_id' => null,

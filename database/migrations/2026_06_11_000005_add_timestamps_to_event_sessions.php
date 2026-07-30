@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('event_sessions', function (Blueprint $table) {
-            if (!Schema::hasColumn('event_sessions', 'created_at')) {
+            if (! Schema::hasColumn('event_sessions', 'created_at')) {
                 $table->timestamps();
             }
         });

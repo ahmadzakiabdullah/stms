@@ -8,13 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class Participant extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization, LogsActivity;
+    use BelongsToOrganization, HasFactory, HasUuids, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
@@ -67,7 +66,7 @@ class Participant extends Model
 
     public function getLogoUrlAttribute(): ?string
     {
-        return $this->logo_path ? asset('storage/' . $this->logo_path) : null;
+        return $this->logo_path ? asset('storage/'.$this->logo_path) : null;
     }
 
     public function scopeActive($query)

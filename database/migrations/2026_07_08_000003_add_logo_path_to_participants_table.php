@@ -8,7 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasColumn('participants', 'logo_path')) return;
+        if (Schema::hasColumn('participants', 'logo_path')) {
+            return;
+        }
 
         Schema::table('participants', function (Blueprint $table) {
             $table->string('logo_path')->nullable()->after('notes');

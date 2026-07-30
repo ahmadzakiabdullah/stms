@@ -4,14 +4,13 @@ namespace Tests\Feature\Requests;
 
 use App\Models\Event;
 use App\Models\Organization;
-use App\Models\Participant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
 class StoreMatchRequestTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_passes_with_valid_data(): void
     {

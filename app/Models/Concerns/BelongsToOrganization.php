@@ -35,7 +35,7 @@ trait BelongsToOrganization
 
             $user = Auth::user();
 
-            if ($user && !$user->hasRole('super-admin') && !empty($user->organization_id)) {
+            if ($user && ! $user->hasRole('super-admin') && ! empty($user->organization_id)) {
                 $table = $query->getModel()->getTable();
 
                 // Use qualified column name to avoid ambiguity in joins
@@ -59,6 +59,6 @@ trait BelongsToOrganization
     public function scopeForOrganization(Builder $query, $organizationId): Builder
     {
         return $query->withoutGlobalScope('organization')
-            ->where($this->getTable() . '.organization_id', $organizationId);
+            ->where($this->getTable().'.organization_id', $organizationId);
     }
 }

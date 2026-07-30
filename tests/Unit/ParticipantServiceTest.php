@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\Event;
 use App\Models\Organization;
 use App\Models\Participant;
+use App\Models\User;
 use App\Services\ParticipantService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -19,18 +20,18 @@ class ParticipantServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ParticipantService();
+        $this->service = new ParticipantService;
     }
 
     public function test_create_participant(): void
     {
-        $this->actingAs(\App\Models\User::factory()->create());
+        $this->actingAs(User::factory()->create());
 
         $participant = $this->service->createParticipant([
             'name' => 'Test Participant',
             'email' => 'test@example.com',
             'type' => 'individual',
-            'organization_id' => \App\Models\Organization::factory()->create()->id,
+            'organization_id' => Organization::factory()->create()->id,
         ]);
 
         $this->assertNotNull($participant);
@@ -40,7 +41,7 @@ class ParticipantServiceTest extends TestCase
 
     public function test_update_participant(): void
     {
-        $this->actingAs(\App\Models\User::factory()->create());
+        $this->actingAs(User::factory()->create());
 
         $participant = Participant::factory()->create(['name' => 'Original Name']);
 

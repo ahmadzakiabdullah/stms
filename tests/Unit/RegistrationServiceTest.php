@@ -2,7 +2,11 @@
 
 namespace Tests\Unit;
 
+use App\Models\Organization;
+use App\Models\Participant;
 use App\Models\Registration;
+use App\Models\Tournament;
+use App\Models\User;
 use App\Services\RegistrationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,16 +20,16 @@ class RegistrationServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new RegistrationService();
+        $this->service = new RegistrationService;
     }
 
     public function test_create_registration(): void
     {
-        $this->actingAs(\App\Models\User::factory()->create());
+        $this->actingAs(User::factory()->create());
 
-        $org = \App\Models\Organization::factory()->create();
-        $tournament = \App\Models\Tournament::factory()->create(['organization_id' => $org->id]);
-        $participant = \App\Models\Participant::factory()->create(['organization_id' => $org->id]);
+        $org = Organization::factory()->create();
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+        $participant = Participant::factory()->create(['organization_id' => $org->id]);
 
         $registration = $this->service->createRegistration([
             'tournament_id' => $tournament->id,

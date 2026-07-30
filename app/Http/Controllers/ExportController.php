@@ -6,7 +6,7 @@ use App\Exports\FixtureExport;
 use App\Exports\RankingExport;
 use App\Exports\ResultExport;
 use App\Models\Fixture;
-use App\Models\Organization;
+use App\Models\Result;
 use App\Models\Tournament;
 use App\Services\RankingService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -59,12 +59,12 @@ class ExportController extends Controller implements HasMiddleware
 
         $pdf = Pdf::loadView('exports.pdf', [
             'title' => 'Fixture Schedule',
-            'subtitle' => $org->name . ($eventId ? ' — Filtered by Event' : ''),
+            'subtitle' => $org->name.($eventId ? ' — Filtered by Event' : ''),
             'headings' => $headings,
             'rows' => $rows,
         ]);
 
-        return $pdf->download('fixtures-' . now()->format('Y-m-d') . '.pdf');
+        return $pdf->download('fixtures-'.now()->format('Y-m-d').'.pdf');
     }
 
     public function fixturesExcel(Request $request)
@@ -72,7 +72,7 @@ class ExportController extends Controller implements HasMiddleware
         $org = $request->user()->organization;
         $eventId = $request->query('event_id');
 
-        return Excel::download(new FixtureExport($org, $eventId), 'fixtures-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new FixtureExport($org, $eventId), 'fixtures-'.now()->format('Y-m-d').'.xlsx');
     }
 
     // ─── RESULTS ───
@@ -82,7 +82,7 @@ class ExportController extends Controller implements HasMiddleware
         $org = $request->user()->organization;
         $eventId = $request->query('event_id');
 
-        $query = \App\Models\Result::where('organization_id', $org->id)
+        $query = Result::where('organization_id', $org->id)
             ->with(['match.event.tournament', 'match.homeParticipant', 'match.awayParticipant', 'winner']);
 
         if ($eventId) {
@@ -99,7 +99,7 @@ class ExportController extends Controller implements HasMiddleware
                 $r->match?->event?->name ?? '-',
                 $r->match?->match_number ?? '-',
                 $r->match?->homeParticipant?->name ?? '-',
-                ($r->score_home ?? 0) . ' - ' . ($r->score_away ?? 0),
+                ($r->score_home ?? 0).' - '.($r->score_away ?? 0),
                 $r->match?->awayParticipant?->name ?? '-',
                 $r->winner?->name ?? 'Draw',
             ];
@@ -107,12 +107,12 @@ class ExportController extends Controller implements HasMiddleware
 
         $pdf = Pdf::loadView('exports.pdf', [
             'title' => 'Match Results',
-            'subtitle' => $org->name . ($eventId ? ' — Filtered by Event' : ''),
+            'subtitle' => $org->name.($eventId ? ' — Filtered by Event' : ''),
             'headings' => $headings,
             'rows' => $rows,
         ]);
 
-        return $pdf->download('results-' . now()->format('Y-m-d') . '.pdf');
+        return $pdf->download('results-'.now()->format('Y-m-d').'.pdf');
     }
 
     public function resultsExcel(Request $request)
@@ -120,7 +120,7 @@ class ExportController extends Controller implements HasMiddleware
         $org = $request->user()->organization;
         $eventId = $request->query('event_id');
 
-        return Excel::download(new ResultExport($org, $eventId), 'results-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new ResultExport($org, $eventId), 'results-'.now()->format('Y-m-d').'.xlsx');
     }
 
     // ─── RANKINGS ───
@@ -133,7 +133,7 @@ class ExportController extends Controller implements HasMiddleware
             ->with(['session'])
             ->findOrFail($tournamentId);
 
-        $service = new RankingService();
+        $service = new RankingService;
         $rankings = $service->calculateForTournament($tournament);
         $strategy = $tournament->ranking_strategy ?? 'points';
 
@@ -162,24 +162,25 @@ class ExportController extends Controller implements HasMiddleware
             } else {
                 $row = array_merge($row, [$r['score_for'], $r['score_against'], $r['points'], $r['gold'], $r['silver'], $r['bronze']]);
             }
+
             return $row;
         });
 
         $pdf = Pdf::loadView('exports.pdf', [
-            'title' => 'Rankings — ' . $tournament->name,
-            'subtitle' => $org->name . ' • Strategy: ' . ucfirst(str_replace('_', ' ', $strategy)),
+            'title' => 'Rankings — '.$tournament->name,
+            'subtitle' => $org->name.' • Strategy: '.ucfirst(str_replace('_', ' ', $strategy)),
             'headings' => $headings,
             'rows' => $rows,
         ]);
 
-        return $pdf->download('rankings-' . $tournament->slug . '-' . now()->format('Y-m-d') . '.pdf');
+        return $pdf->download('rankings-'.$tournament->slug.'-'.now()->format('Y-m-d').'.pdf');
     }
 
     public function rankingsExcel(Request $request, string $tournamentId)
     {
         $org = $request->user()->organization;
 
-        return Excel::download(new RankingExport($org, $tournamentId), 'rankings-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new RankingExport($org, $tournamentId), 'rankings-'.now()->format('Y-m-d').'.xlsx');
     }
 
     // ─── MATCH SHEET ───
@@ -199,6 +200,6 @@ class ExportController extends Controller implements HasMiddleware
             'result' => $result,
         ]);
 
-        return $pdf->download('match-sheet-' . ($fixture->match_number ?? 'draft') . '.pdf');
+        return $pdf->download('match-sheet-'.($fixture->match_number ?? 'draft').'.pdf');
     }
 }

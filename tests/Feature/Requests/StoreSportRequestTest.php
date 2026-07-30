@@ -3,14 +3,13 @@
 namespace Tests\Feature\Requests;
 
 use App\Models\Organization;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
 class StoreSportRequestTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_passes_with_valid_data(): void
     {

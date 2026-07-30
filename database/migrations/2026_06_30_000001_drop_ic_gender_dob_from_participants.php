@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -18,11 +18,13 @@ return new class extends Migration
                 // Drop index first if it exists
                 try {
                     $table->dropIndex('participants_identification_number_index');
-                } catch (\Exception $e) {}
+                } catch (Exception $e) {
+                }
 
                 try {
                     $table->dropUnique('participants_identification_number_unique');
-                } catch (\Exception $e) {}
+                } catch (Exception $e) {
+                }
             }
         });
 

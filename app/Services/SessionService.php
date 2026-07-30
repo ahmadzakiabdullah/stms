@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Models\Session;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\QueryException;
 
 class SessionService
 {
@@ -32,6 +32,7 @@ class SessionService
         try {
             $session = Session::create($data);
             Log::info('Session created', ['id' => $session->id, 'name' => $session->name, 'org_id' => $session->organization_id]);
+
             return $session;
         } catch (QueryException $e) {
             Log::error('Session creation failed', ['name' => $data['name'], 'error' => $e->getMessage()]);
@@ -61,6 +62,7 @@ class SessionService
         try {
             $session->update($data);
             Log::info('Session updated', ['id' => $session->id, 'name' => $session->name]);
+
             return $session;
         } catch (QueryException $e) {
             Log::error('Session update failed', ['id' => $session->id, 'error' => $e->getMessage()]);
