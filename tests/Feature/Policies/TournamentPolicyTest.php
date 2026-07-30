@@ -12,14 +12,14 @@ use Tests\Traits\CreatesTenantUsers;
 
 class TournamentPolicyTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     private TournamentPolicy $policy;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new TournamentPolicy();
+        $this->policy = new TournamentPolicy;
     }
 
     public function test_super_admin_can_perform_all_actions(): void

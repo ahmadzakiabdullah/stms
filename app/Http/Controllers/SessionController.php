@@ -7,6 +7,7 @@ use App\Actions\Sessions\DeleteSession;
 use App\Actions\Sessions\UpdateSession;
 use App\Http\Requests\Session\StoreSessionRequest;
 use App\Http\Requests\Session\UpdateSessionRequest;
+use App\Models\Organization;
 use App\Models\Session;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -31,7 +32,7 @@ class SessionController extends Controller
         $organizations = $this->safeCollectionQuery(function () use ($user) {
             // Only super-admins need the full list of organizations for the create form
             return $user->hasRole('super-admin')
-                ? \App\Models\Organization::orderBy('name')->get(['id', 'name'])
+                ? Organization::orderBy('name')->get(['id', 'name'])
                 : collect();
         });
 

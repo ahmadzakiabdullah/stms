@@ -23,7 +23,7 @@ class UserServiceTest extends TestCase
 
     public function test_it_creates_user_with_roles(): void
     {
-        $service = new UserService();
+        $service = new UserService;
 
         $user = $service->createUser([
             'name' => 'Test User via Service',
@@ -47,7 +47,7 @@ class UserServiceTest extends TestCase
             'email' => 'original@example.com',
         ]);
 
-        $service = new UserService();
+        $service = new UserService;
 
         $updated = $service->updateUser($user, [
             'name' => 'Updated Name',
@@ -65,7 +65,7 @@ class UserServiceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $service = new UserService();
+        $service = new UserService;
         $service->deleteUser($user);
 
         $this->assertSoftDeleted('users', ['uuid' => $user->uuid]);

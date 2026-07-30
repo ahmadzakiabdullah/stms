@@ -13,7 +13,7 @@ class OrganizationServiceTest extends TestCase
 
     public function test_it_creates_organization_with_slug(): void
     {
-        $service = new OrganizationService();
+        $service = new OrganizationService;
 
         $org = $service->createOrganization([
             'name' => 'Test Organization via Service',
@@ -33,7 +33,7 @@ class OrganizationServiceTest extends TestCase
             'slug' => 'original-org',
         ]);
 
-        $service = new OrganizationService();
+        $service = new OrganizationService;
 
         $updated = $service->updateOrganization($org, [
             'name' => 'Updated Organization Name',
@@ -47,7 +47,7 @@ class OrganizationServiceTest extends TestCase
     {
         $org = Organization::factory()->create();
 
-        $service = new OrganizationService();
+        $service = new OrganizationService;
         $service->deleteOrganization($org);
 
         $this->assertSoftDeleted('organizations', ['id' => $org->id]);

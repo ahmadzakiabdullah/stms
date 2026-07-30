@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Organization;
 use App\Models\Event;
 use App\Models\Fixture;
-use App\Models\Participant;
-use App\Models\Result;
+use App\Models\Organization;
+use App\Models\Session;
 use App\Models\Tournament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,7 +13,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class ExportTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_fixtures_pdf_export_requires_auth(): void
     {
@@ -45,7 +44,7 @@ class ExportTest extends TestCase
     public function test_rankings_pdf_export_works(): void
     {
         $org = Organization::factory()->create();
-        $session = \App\Models\Session::factory()->create(['organization_id' => $org->id]);
+        $session = Session::factory()->create(['organization_id' => $org->id]);
         $tournament = Tournament::factory()->create(['organization_id' => $org->id, 'session_id' => $session->id]);
         $user = $this->createOrgAdmin($org);
 

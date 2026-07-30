@@ -19,9 +19,13 @@ use Illuminate\Support\Str;
 class SAF2026Seeder extends Seeder
 {
     private Organization $org;
+
     private Session $session;
+
     private Tournament $tournament;
+
     private array $faculties = [];
+
     private array $sports = [];
 
     public function run(): void
@@ -209,16 +213,20 @@ class SAF2026Seeder extends Seeder
 
         foreach ($eventsConfig as $sportSlug => $categories) {
             $sport = $this->sports[$sportSlug] ?? null;
-            if (!$sport) continue;
+            if (! $sport) {
+                continue;
+            }
 
             foreach ($categories as $catName) {
                 $catSlug = Str::slug($catName);
                 $category = SportCategory::where('sport_id', $sport->id)
                     ->where('slug', $catSlug)->first();
-                if (!$category) continue;
+                if (! $category) {
+                    continue;
+                }
 
-                $eventName = $sport->name . ' (' . $catName . ')';
-                $eventSlug = $sportSlug . '-' . $catSlug;
+                $eventName = $sport->name.' ('.$catName.')';
+                $eventSlug = $sportSlug.'-'.$catSlug;
 
                 Event::withTrashed()->updateOrCreate(
                     ['slug' => $eventSlug, 'tournament_id' => $this->tournament->id],
@@ -229,7 +237,7 @@ class SAF2026Seeder extends Seeder
                         'sport_category_id' => $category->id,
                         'name' => $eventName,
                         'slug' => $eventSlug,
-                        'description' => $eventName . ' - SAF 2026',
+                        'description' => $eventName.' - SAF 2026',
                         'start_date' => $this->session->start_date,
                         'end_date' => $this->session->end_date,
                         'is_active' => true,
@@ -286,7 +294,7 @@ class SAF2026Seeder extends Seeder
 
     private function generateEventMatches(Event $event, array $venues): void
     {
-        $facultyIds = array_map(fn($f) => $f->id, $this->faculties);
+        $facultyIds = array_map(fn ($f) => $f->id, $this->faculties);
         $matchNumber = 0;
 
         for ($i = 0; $i < count($facultyIds); $i++) {

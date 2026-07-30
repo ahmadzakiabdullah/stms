@@ -7,6 +7,7 @@ use App\Models\Tournament;
 use App\Services\RankingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,7 +19,7 @@ class RankingController extends Controller
 
     public function index(): Response
     {
-        $tournaments = \App\Models\Tournament::query()
+        $tournaments = Tournament::query()
             ->with('session:id,name')
             ->orderBy('name')
             ->get(['id', 'name', 'slug', 'session_id', 'ranking_strategy']);
@@ -28,7 +29,7 @@ class RankingController extends Controller
         $events = collect();
 
         if ($selectedTournament) {
-            $tournament = \App\Models\Tournament::where('slug', $selectedTournament)->firstOrFail();
+            $tournament = Tournament::where('slug', $selectedTournament)->firstOrFail();
             $rankings = $this->rankingService->calculateForTournament($tournament);
             $events = Event::where('tournament_id', $tournament->id)->get(['id', 'name', 'slug']);
         }
@@ -47,7 +48,7 @@ class RankingController extends Controller
         Gate::authorize('update', $tournament);
 
         $validated = request()->validate([
-            'ranking_strategy' => ['required', 'string', \Illuminate\Validation\Rule::in(['points', 'win_rate', 'medal_tally'])],
+            'ranking_strategy' => ['required', 'string', Rule::in(['points', 'win_rate', 'medal_tally'])],
         ]);
 
         $tournament->update($validated);

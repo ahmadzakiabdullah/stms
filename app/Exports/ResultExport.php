@@ -6,15 +6,16 @@ use App\Models\Organization;
 use App\Models\Result;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ResultExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
+class ResultExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     private Collection $results;
+
     private int $row = 0;
 
     public function __construct(Organization $organization, ?string $eventId = null)
@@ -58,7 +59,7 @@ class ResultExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $result->match?->event?->name ?? '-',
             $result->match?->match_number ?? '-',
             $result->match?->homeParticipant?->name ?? '-',
-            ($result->score_home ?? 0) . ' - ' . ($result->score_away ?? 0),
+            ($result->score_home ?? 0).' - '.($result->score_away ?? 0),
             $result->match?->awayParticipant?->name ?? '-',
             $result->winner?->name ?? 'Draw',
         ];

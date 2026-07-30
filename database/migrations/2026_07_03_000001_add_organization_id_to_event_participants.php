@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('event_participants', 'organization_id')) {
+        if (! Schema::hasColumn('event_participants', 'organization_id')) {
             Schema::table('event_participants', function (Blueprint $table) {
                 $table->uuid('organization_id')->nullable()->after('id');
                 $table->foreign('organization_id')->references('id')->on('organizations')->cascadeOnDelete();

@@ -3,14 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
 class UserTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_super_admin_can_create_user(): void
     {

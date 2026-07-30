@@ -3,15 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
 class OrganizationTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_super_admin_can_create_organization(): void
     {
@@ -47,8 +45,8 @@ class OrganizationTest extends TestCase
 
     public function test_non_super_admin_cannot_see_other_organizations_data_via_global_scope(): void
     {
-        $orgA = Organization::factory()->create(['slug' => 'org-a-' . uniqid()]);
-        $orgB = Organization::factory()->create(['slug' => 'org-b-' . uniqid()]);
+        $orgA = Organization::factory()->create(['slug' => 'org-a-'.uniqid()]);
+        $orgB = Organization::factory()->create(['slug' => 'org-b-'.uniqid()]);
 
         $userA = $this->createStaffUser($orgA);
 

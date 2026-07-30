@@ -2,12 +2,13 @@
 
 namespace App\Services;
 
-use App\Models\Result;
 use App\Models\Organization;
+use App\Models\Result;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+
 class ResultService
 {
     public function getAllByOrganization(Organization $organization, array $filters = []): LengthAwarePaginator
@@ -48,6 +49,7 @@ class ResultService
             $data['organization_id'] = $organization->id;
             $result = Result::create($data);
             Log::info('Result created', ['id' => $result->id, 'match_id' => $result->match_id, 'org_id' => $organization->id]);
+
             return $result;
         });
     }
@@ -58,6 +60,7 @@ class ResultService
             $result = $this->getById($organization, $id);
             $result->update($data);
             Log::info('Result updated', ['id' => $id, 'org_id' => $organization->id]);
+
             return $result->fresh();
         });
     }

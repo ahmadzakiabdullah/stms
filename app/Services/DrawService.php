@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Models\EventParticipant;
-use App\Models\Pool;
 use App\Models\Fixture;
+use App\Models\Pool;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -48,7 +48,7 @@ class DrawService
                 $pools[] = Pool::create([
                     'organization_id' => $orgId,
                     'event_id' => $event->id,
-                    'name' => 'Group ' . ($poolLetters[$i] ?? ($i + 1)),
+                    'name' => 'Group '.($poolLetters[$i] ?? ($i + 1)),
                     'sort_order' => $i,
                 ]);
             }
@@ -91,7 +91,9 @@ class DrawService
             ->pluck('participant_id')
             ->toArray();
 
-        if (count($participantIds) < 2) return 0;
+        if (count($participantIds) < 2) {
+            return 0;
+        }
 
         $existingCount = Fixture::where('event_id', $event->id)->withTrashed()->max('match_number') ?? 0;
         $orgId = $event->organization_id ?? Auth::user()->organization_id;
@@ -116,7 +118,9 @@ class DrawService
                 $home = $teams[$match];
                 $away = $teams[$numTeams - 1 - $match];
 
-                if ($home === null || $away === null) continue;
+                if ($home === null || $away === null) {
+                    continue;
+                }
 
                 $existingCount++;
                 $fixtures[] = [
@@ -141,6 +145,7 @@ class DrawService
         }
 
         Fixture::insert($fixtures);
+
         return count($fixtures);
     }
 

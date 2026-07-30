@@ -16,13 +16,13 @@ class HealthCheckController extends Controller
         try {
             DB::connection()->getPdo();
         } catch (\Exception $e) {
-            $database = 'error: ' . $e->getMessage();
+            $database = 'error: '.$e->getMessage();
         }
 
         try {
             Cache::store(config('cache.default'))->get('health_check');
         } catch (\Exception $e) {
-            $cache = 'error: ' . $e->getMessage();
+            $cache = 'error: '.$e->getMessage();
         }
 
         $data = [

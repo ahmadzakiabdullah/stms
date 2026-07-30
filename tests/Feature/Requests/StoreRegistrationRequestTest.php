@@ -11,7 +11,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class StoreRegistrationRequestTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_passes_with_valid_data(): void
     {

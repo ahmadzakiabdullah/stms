@@ -21,7 +21,7 @@ class RankingServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new RankingService();
+        $this->service = new RankingService;
     }
 
     public function test_calculate_for_tournament_returns_ranked_participants(): void

@@ -11,14 +11,14 @@ use Tests\Traits\CreatesTenantUsers;
 
 class SessionPolicyTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     private SessionPolicy $policy;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new SessionPolicy();
+        $this->policy = new SessionPolicy;
     }
 
     public function test_super_admin_can_perform_all_actions(): void

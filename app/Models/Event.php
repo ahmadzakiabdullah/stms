@@ -13,7 +13,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Event extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization, LogsActivity;
+    use BelongsToOrganization, HasFactory, HasUuids, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'organization_id',

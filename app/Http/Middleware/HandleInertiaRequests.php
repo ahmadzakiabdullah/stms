@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Organization;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -48,17 +50,19 @@ class HandleInertiaRequests extends Middleware
             ],
             'settings' => function () use ($request) {
                 $orgId = $request->user()?->organization_id
-                    ?? \App\Models\Organization::where('is_active', true)->value('id');
+                    ?? Organization::where('is_active', true)->value('id');
+
                 return $orgId
-                    ? \App\Models\Setting::where('organization_id', $orgId)->pluck('value', 'key')->toArray()
+                    ? Setting::where('organization_id', $orgId)->pluck('value', 'key')->toArray()
                     : [];
             },
             'app' => function () use ($request) {
                 $orgId = $request->user()?->organization_id
-                    ?? \App\Models\Organization::where('is_active', true)->value('id');
+                    ?? Organization::where('is_active', true)->value('id');
                 $appName = $orgId
-                    ? \App\Models\Setting::where('organization_id', $orgId)->where('key', 'app_name')->value('value')
+                    ? Setting::where('organization_id', $orgId)->where('key', 'app_name')->value('value')
                     : null;
+
                 return [
                     'name' => $appName ?? config('app.name', 'STMS Portal'),
                 ];
@@ -96,7 +100,7 @@ class HandleInertiaRequests extends Middleware
             // For super admins, provide all active organizations for switching/context
             if ($isSuperAdmin) {
                 try {
-                    $shared['organizations'] = \App\Models\Organization::query()
+                    $shared['organizations'] = Organization::query()
                         ->active()
                         ->orderBy('name')
                         ->get(['id', 'name', 'slug']);

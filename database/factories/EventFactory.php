@@ -22,7 +22,7 @@ class EventFactory extends Factory
         $sport = Sport::factory()->create(['organization_id' => $tournament->organization_id]);
         $category = SportCategory::factory()->forSport($sport)->create();
 
-        $name = $sport->name . ' - ' . $category->name;
+        $name = $sport->name.' - '.$category->name;
 
         return [
             'organization_id' => $tournament->organization_id,
@@ -30,7 +30,7 @@ class EventFactory extends Factory
             'sport_id' => $sport->id,
             'sport_category_id' => $category->id,
             'name' => $name,
-            'slug' => Str::slug($name) . '-' . Str::random(4),
+            'slug' => Str::slug($name).'-'.Str::random(4),
             'description' => fake()->optional()->sentence(),
             'start_date' => $tournament->start_date,
             'end_date' => $tournament->end_date,

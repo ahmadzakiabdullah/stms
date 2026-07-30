@@ -30,7 +30,7 @@ class UpdateOrganizationRequest extends FormRequest
                 Rule::unique('organizations', 'slug')->ignore($organization)->whereNull('deleted_at'),
             ],
             'organization_type' => ['required', 'string', Rule::in(['national', 'state', 'university', 'school', 'private'])],
-            'parent_id' => ['nullable', 'uuid', 'exists:organizations,id', 'not_in:' . ($organization?->id ?? '')],
+            'parent_id' => ['nullable', 'uuid', 'exists:organizations,id', 'not_in:'.($organization?->id ?? '')],
             'is_active' => ['boolean'],
         ];
     }

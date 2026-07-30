@@ -17,15 +17,15 @@ class SportCategoryFactory extends Factory
     public function definition(): array
     {
         $name = fake()->randomElement([
-            "Men's Open", "Women's Open", "U-21", "U-18", "Mixed",
-            "Men's Team", "Women's Team", "Singles", "Doubles"
+            "Men's Open", "Women's Open", 'U-21', 'U-18', 'Mixed',
+            "Men's Team", "Women's Team", 'Singles', 'Doubles',
         ]);
 
         return [
             'organization_id' => null, // will be set via sport relationship in factory state if needed
             'sport_id' => Sport::factory(),
             'name' => $name,
-            'slug' => Str::slug($name) . '-' . Str::random(4),
+            'slug' => Str::slug($name).'-'.Str::random(4),
         ];
     }
 

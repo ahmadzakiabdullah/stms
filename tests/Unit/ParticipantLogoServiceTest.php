@@ -23,6 +23,7 @@ class ParticipantLogoServiceTest extends TestCase
         Storage::disk('public')->assertExists($path);
         $this->assertStringEndsWith('.png', $path);
     }
+
     public function test_it_sanitizes_and_stores_a_safe_svg_logo(): void
     {
         Storage::fake('public');
@@ -80,4 +81,3 @@ class ParticipantLogoServiceTest extends TestCase
         $this->assertTrue($validator->passes(), $validator->errors()->first('logo'));
     }
 }
-

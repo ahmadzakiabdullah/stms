@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 class StandardizeSportCategorySlugs extends Command
 {
     protected $signature = 'sport-categories:standardize-slugs {--dry-run : Preview changes without saving}';
+
     protected $description = 'Standardize all sport category slugs to sport-name-category-name format';
 
     public function handle(): int
@@ -22,16 +23,18 @@ class StandardizeSportCategorySlugs extends Command
         $this->line("Found {$categories->count()} categories.\n");
 
         foreach ($categories as $category) {
-            if (!$category->sport) {
+            if (! $category->sport) {
                 $this->warn("  [SKIP] Category #{$category->id} '{$category->name}' has no sport");
                 $skipped++;
+
                 continue;
             }
 
-            $expectedSlug = Str::slug($category->sport->name . ' ' . $category->name);
+            $expectedSlug = Str::slug($category->sport->name.' '.$category->name);
 
             if ($category->slug === $expectedSlug) {
                 $this->line("  [OK]   {$category->slug}");
+
                 continue;
             }
 
@@ -69,11 +72,11 @@ class StandardizeSportCategorySlugs extends Command
                 ->where('sport_id', $sportId)
                 ->where('id', '!=', $excludeId);
 
-            if (!$query->exists()) {
+            if (! $query->exists()) {
                 return $slug;
             }
 
-            $slug = $base . '-' . $counter;
+            $slug = $base.'-'.$counter;
             $counter++;
         }
     }

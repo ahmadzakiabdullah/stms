@@ -14,14 +14,14 @@ use Tests\Traits\CreatesTenantUsers;
 
 class EventParticipantPolicyTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     private EventParticipantPolicy $policy;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new EventParticipantPolicy();
+        $this->policy = new EventParticipantPolicy;
         foreach (['view event participants', 'create event participants', 'edit event participants', 'delete event participants'] as $perm) {
             Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
         }
@@ -31,6 +31,7 @@ class EventParticipantPolicyTest extends TestCase
     {
         $event = Event::factory()->create(['organization_id' => $org->id]);
         $participant = Participant::factory()->create(['organization_id' => $org->id]);
+
         return EventParticipant::create([
             'event_id' => $event->id,
             'participant_id' => $participant->id,

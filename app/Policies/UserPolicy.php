@@ -45,7 +45,7 @@ class UserPolicy
 
         return $user->organization_id === $model->organization_id
             && $user->hasRole('org-admin')
-            && !$model->hasRole('super-admin');
+            && ! $model->hasRole('super-admin');
     }
 
     /**
@@ -59,6 +59,6 @@ class UserPolicy
 
         return $user->organization_id === $model->organization_id
             && $user->hasRole('org-admin')
-            && !$model->hasRole('super-admin');
+            && ! $model->hasRole('super-admin');
     }
 }

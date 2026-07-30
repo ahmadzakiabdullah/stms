@@ -15,7 +15,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class RouteBindingTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_result_route_binds_by_uuid(): void
     {
@@ -49,13 +49,13 @@ class RouteBindingTest extends TestCase
 
     public function test_result_is_resolved_by_uuid_not_slug(): void
     {
-        $result = new Result();
+        $result = new Result;
         $this->assertEquals('id', $result->getRouteKeyName());
     }
 
     public function test_registration_is_resolved_by_uuid_not_slug(): void
     {
-        $registration = new Registration();
+        $registration = new Registration;
         $this->assertEquals('id', $registration->getRouteKeyName());
     }
 }

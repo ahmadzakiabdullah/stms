@@ -11,14 +11,14 @@ use Tests\Traits\CreatesTenantUsers;
 
 class OrganizationPolicyTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     private OrganizationPolicy $policy;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new OrganizationPolicy();
+        $this->policy = new OrganizationPolicy;
     }
 
     public function test_super_admin_can_perform_all_actions(): void

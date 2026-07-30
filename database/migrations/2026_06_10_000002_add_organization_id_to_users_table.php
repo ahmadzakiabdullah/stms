@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->foreignUuid('organization_id')
-                  ->nullable()
-                  ->constrained('organizations')
-                  ->cascadeOnDelete();
+                ->nullable()
+                ->constrained('organizations')
+                ->cascadeOnDelete();
 
             $table->index('organization_id');
         });

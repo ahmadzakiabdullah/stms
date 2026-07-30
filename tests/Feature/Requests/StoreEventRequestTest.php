@@ -2,9 +2,7 @@
 
 namespace Tests\Feature\Requests;
 
-use App\Models\Event;
 use App\Models\Organization;
-use App\Models\Session;
 use App\Models\Sport;
 use App\Models\SportCategory;
 use App\Models\Tournament;
@@ -14,7 +12,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class StoreEventRequestTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_passes_with_valid_data(): void
     {

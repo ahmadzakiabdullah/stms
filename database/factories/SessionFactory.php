@@ -19,12 +19,12 @@ class SessionFactory extends Factory
         $start = fake()->dateTimeBetween('+1 month', '+6 months');
         $end = (clone $start)->modify('+14 days');
 
-        $name = 'SUKMA / Event ' . $start->format('Y');
+        $name = 'SUKMA / Event '.$start->format('Y');
 
         return [
             'organization_id' => Organization::factory(),
             'name' => $name,
-            'slug' => Str::slug($name) . '-' . Str::random(4),
+            'slug' => Str::slug($name).'-'.Str::random(4),
             'description' => fake()->sentence(),
             'start_date' => $start->format('Y-m-d'),
             'end_date' => $end->format('Y-m-d'),

@@ -2,8 +2,8 @@
 
 namespace App\Actions\Results;
 
-use App\Models\Result;
 use App\Models\Organization;
+use App\Models\Result;
 use App\Services\ResultService;
 
 class UpdateResult

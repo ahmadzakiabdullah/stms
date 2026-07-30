@@ -2,10 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Fixture;
 use App\Models\Event;
+use App\Models\Fixture;
 use App\Models\Organization;
-use App\Models\Participant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

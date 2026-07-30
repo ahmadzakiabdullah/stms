@@ -4,11 +4,11 @@ namespace App\Services;
 
 use App\Models\Sport;
 use App\Models\SportCategory;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\QueryException;
 
 class SportCategoryService
 {
@@ -25,7 +25,7 @@ class SportCategoryService
         $data['quota_mode'] = $data['quota_mode'] ?? 'gender_based';
 
         if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($sport->name . ' ' . $data['name']);
+            $data['slug'] = Str::slug($sport->name.' '.$data['name']);
         }
 
         // Ensure slug is unique per sport
@@ -37,6 +37,7 @@ class SportCategoryService
         try {
             $category = SportCategory::create($data);
             Log::info('Sport category created', ['id' => $category->id, 'name' => $category->name, 'sport_id' => $category->sport_id]);
+
             return $category;
         } catch (QueryException $e) {
             Log::error('Sport category creation failed', ['name' => $data['name'], 'error' => $e->getMessage()]);
@@ -56,7 +57,7 @@ class SportCategoryService
     {
         if (empty($data['slug'])) {
             $sportName = $sportCategory->sport?->name ?? '';
-            $data['slug'] = Str::slug($sportName . ' ' . $data['name']);
+            $data['slug'] = Str::slug($sportName.' '.$data['name']);
         }
 
         $data['slug'] = $this->makeSlugUnique($data['slug'], $sportCategory->sport_id, $sportCategory->id);
@@ -64,6 +65,7 @@ class SportCategoryService
         try {
             $sportCategory->update($data);
             Log::info('Sport category updated', ['id' => $sportCategory->id, 'name' => $sportCategory->name]);
+
             return $sportCategory;
         } catch (QueryException $e) {
             Log::error('Sport category update failed', ['id' => $sportCategory->id, 'error' => $e->getMessage()]);
@@ -89,11 +91,11 @@ class SportCategoryService
                 $query->where('id', '!=', $excludeId);
             }
 
-            if (!$query->exists()) {
+            if (! $query->exists()) {
                 return $slug;
             }
 
-            $slug = $base . '-' . $counter;
+            $slug = $base.'-'.$counter;
             $counter++;
         }
     }

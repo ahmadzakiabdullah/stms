@@ -15,6 +15,7 @@ class OrganizationPolicy
         if ($user->hasRole('super-admin') || $user->hasRole('org-admin')) {
             return true;
         }
+
         return $user->hasPermissionTo('view organizations');
     }
 
@@ -38,6 +39,7 @@ class OrganizationPolicy
         if ($user->hasRole('super-admin')) {
             return true;
         }
+
         return $user->hasPermissionTo('create organizations') || $user->hasRole('org-admin');
     }
 
