@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Participant extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization;
+    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization, LogsActivity;
 
     protected $fillable = [
         'organization_id',
@@ -72,6 +74,13 @@ class Participant extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty();
     }
 
     public function getRouteKeyName(): string

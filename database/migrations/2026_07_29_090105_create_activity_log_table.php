@@ -12,9 +12,13 @@ return new class extends Migration
             $table->id();
             $table->string('log_name')->nullable()->index();
             $table->text('description');
-            $table->nullableMorphs('subject', 'subject');
+            $table->string('subject_id', 36)->nullable();
+            $table->string('subject_type')->nullable();
+            $table->index(['subject_id', 'subject_type'], 'subject_index');
             $table->string('event')->nullable();
-            $table->nullableMorphs('causer', 'causer');
+            $table->string('causer_id', 36)->nullable();
+            $table->string('causer_type')->nullable();
+            $table->index(['causer_id', 'causer_type'], 'causer_index');
             $table->json('attribute_changes')->nullable();
             $table->json('properties')->nullable();
             $table->timestamps();

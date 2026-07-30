@@ -8,6 +8,7 @@ use App\Models\Fixture;
 use App\Services\DrawService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -20,6 +21,14 @@ class DrawController extends Controller
 
         try {
             $result = $drawService->drawAndGenerateFixtures($event);
+
+            activity()
+                ->performedOn($event)
+                ->causedBy(Auth::user())
+                ->event('draw')
+                ->withProperties($result)
+                ->log("Draw completed for '{$event->name}': {$result['pools']} pools, {$result['fixtures']} fixtures");
+
             return redirect()->route('events.index')
                 ->with('success', "Draw completed: {$result['pools']} pools, {$result['participants']} participants, {$result['fixtures']} fixtures generated.");
         } catch (\InvalidArgumentException $e) {
@@ -85,6 +94,16 @@ class DrawController extends Controller
                 $request->input('event_participant_id'),
                 $request->input('target_pool_id')
             );
+
+            activity()
+                ->performedOn($event)
+                ->causedBy(Auth::user())
+                ->event('move_participant')
+                ->withProperties([
+                    'event_participant_id' => $request->input('event_participant_id'),
+                    'target_pool_id' => $request->input('target_pool_id'),
+                ])
+                ->log("Participant moved to different pool in '{$event->name}'");
 
             return redirect()->route('events.draw-result', $event)
                 ->with('success', 'Participant moved and fixtures regenerated.');

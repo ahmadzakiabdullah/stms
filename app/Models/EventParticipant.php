@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class EventParticipant extends Model
 {
-    use HasUuids, SoftDeletes, BelongsToOrganization;
+    use HasUuids, SoftDeletes, BelongsToOrganization, LogsActivity;
 
     protected $table = 'event_participants';
 
@@ -52,5 +54,12 @@ class EventParticipant extends Model
     public function squadMembers(): HasMany
     {
         return $this->hasMany(SquadMember::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty();
     }
 }

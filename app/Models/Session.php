@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Concerns\BelongsToOrganization;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Session extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization;
+    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization, LogsActivity;
 
     protected $table = 'event_sessions';  // IMPORTANT: our domain "Session" (like SUKMA event), NOT Laravel's 'sessions' table used for login session storage.
 
@@ -48,6 +50,13 @@ class Session extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty();
     }
 
     public function getRouteKeyName(): string

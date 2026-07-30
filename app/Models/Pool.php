@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Pool extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization;
+    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization, LogsActivity;
 
     protected $fillable = ['organization_id', 'event_id', 'name', 'sort_order'];
 
@@ -29,5 +31,12 @@ class Pool extends Model
     public function fixtures(): HasMany
     {
         return $this->hasMany(Fixture::class, 'pool_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty();
     }
 }

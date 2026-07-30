@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -51,6 +52,13 @@ class RoleController extends Controller
         $role = Role::create(['name' => $validated['name']]);
         $role->syncPermissions($validated['permissions'] ?? []);
 
+        activity()
+            ->performedOn($role)
+            ->causedBy(Auth::user())
+            ->event('created')
+            ->withProperties(['permissions' => $validated['permissions'] ?? []])
+            ->log("Role '{$role->name}' created");
+
         return redirect()->route('roles.index')
             ->with('success', "Role '{$role->name}' created.");
     }
@@ -68,6 +76,13 @@ class RoleController extends Controller
         $role->update(['name' => $validated['name']]);
         $role->syncPermissions($validated['permissions'] ?? []);
 
+        activity()
+            ->performedOn($role)
+            ->causedBy(Auth::user())
+            ->event('updated')
+            ->withProperties(['permissions' => $validated['permissions'] ?? []])
+            ->log("Role '{$role->name}' updated");
+
         return redirect()->route('roles.index')
             ->with('success', "Role '{$role->name}' updated.");
     }
@@ -81,9 +96,15 @@ class RoleController extends Controller
                 ->with('error', 'Cannot delete super-admin role.');
         }
 
+        $roleName = $role->name;
         $role->delete();
 
+        activity()
+            ->causedBy(Auth::user())
+            ->event('deleted')
+            ->log("Role '{$roleName}' deleted");
+
         return redirect()->route('roles.index')
-            ->with('success', "Role '{$role->name}' deleted.");
+            ->with('success', "Role '{$roleName}' deleted.");
     }
 }

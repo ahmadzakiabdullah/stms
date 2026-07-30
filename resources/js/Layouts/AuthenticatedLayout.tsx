@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Link, router, usePage } from '@inertiajs/react';
 import {
+    Activity,
     Award,
     BarChart3,
     Bell,
@@ -68,6 +69,8 @@ const navSections: NavSection[] = [
             { label: 'Users', icon: UserCircle, href: 'users.index', active: 'users.index', requireSuper: true },
             { label: 'Roles', icon: Settings, href: 'roles.index', active: 'roles.index', requireSuper: true },
             { label: 'Organizations', icon: Building2, href: 'organizations.index', active: 'organizations.index', requireSuper: true },
+            { label: 'Settings', icon: Settings, href: 'settings.index', active: 'settings.index', requireSuper: true },
+            { label: 'Activity Logs', icon: Activity, href: 'activity-logs.index', active: 'activity-logs.index', requireSuper: true },
         ],
     },
     {
@@ -115,12 +118,19 @@ interface SidebarProps {
 }
 
 function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = false, isFacultyRep = false, isDean = false, app = null }: SidebarProps) {
+    const { settings = {} as Record<string, string> } = usePage<PageProps>().props;
+    const logoUrl = (settings as Record<string, string>)?.logo_url;
+
     return (
         <aside className={mobile ? 'flex h-full flex-col bg-sidebar' : 'hidden min-h-screen w-72 shrink-0 border-r bg-sidebar lg:flex lg:flex-col'}>
             <div className="flex h-16 items-center gap-3 border-b px-5">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <ShieldCheck className="size-5" />
-                </div>
+                {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="h-9 w-auto rounded object-contain" />
+                ) : (
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                        <ShieldCheck className="size-5" />
+                    </div>
+                )}
                 <div>
                     <div className="text-sm font-semibold leading-none">{app?.name || 'STMS Portal'}</div>
                     <div className="mt-1 text-xs text-muted-foreground">

@@ -52,6 +52,13 @@ class RankingController extends Controller
 
         $tournament->update($validated);
 
+        activity()
+            ->performedOn($tournament)
+            ->causedBy(request()->user())
+            ->event('updated')
+            ->withProperties(['ranking_strategy' => $validated['ranking_strategy']])
+            ->log("Ranking strategy changed to '{$validated['ranking_strategy']}' for '{$tournament->name}'");
+
         return redirect()->route('rankings.index', ['tournament' => $tournament->slug])
             ->with('success', 'Ranking strategy updated.');
     }

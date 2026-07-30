@@ -46,9 +46,23 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
             ],
-            'app' => [
-                'name' => config('app.name', 'STMS Portal'),
-            ],
+            'settings' => function () use ($request) {
+                $orgId = $request->user()?->organization_id
+                    ?? \App\Models\Organization::where('is_active', true)->value('id');
+                return $orgId
+                    ? \App\Models\Setting::where('organization_id', $orgId)->pluck('value', 'key')->toArray()
+                    : [];
+            },
+            'app' => function () use ($request) {
+                $orgId = $request->user()?->organization_id
+                    ?? \App\Models\Organization::where('is_active', true)->value('id');
+                $appName = $orgId
+                    ? \App\Models\Setting::where('organization_id', $orgId)->where('key', 'app_name')->value('value')
+                    : null;
+                return [
+                    'name' => $appName ?? config('app.name', 'STMS Portal'),
+                ];
+            },
         ];
 
         if ($user) {

@@ -37,6 +37,12 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        activity()
+            ->performedOn($request->user())
+            ->causedBy($request->user())
+            ->event('updated')
+            ->log('Profile updated');
+
         return Redirect::route('profile.edit');
     }
 
@@ -52,6 +58,12 @@ class ProfileController extends Controller
         $user = $request->user();
 
         Auth::logout();
+
+        activity()
+            ->performedOn($user)
+            ->causedBy($user)
+            ->event('deleted')
+            ->log('Account deleted');
 
         $user->delete();
 

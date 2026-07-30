@@ -4,9 +4,12 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+        @php
+            $favicon = \App\Models\Setting::where('key', 'favicon_url')->value('value');
+        @endphp
+        <link rel="icon" type="image/x-icon" href="{{ $favicon ?: asset('favicon.ico') }}">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'STMS Portal') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
