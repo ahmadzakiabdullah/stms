@@ -4,7 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\EventParticipant;
+use App\Models\Fixture;
+use App\Models\Organization;
 use App\Models\Participant;
+use App\Models\Registration;
+use App\Models\Result;
+use App\Models\Session;
+use App\Models\Sport;
+use App\Models\Tournament;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,6 +28,7 @@ class DashboardController extends Controller
                 if ($query) {
                     $builder = $query($builder);
                 }
+
                 return $builder->count();
             } catch (\Throwable $e) {
                 return 0;
@@ -44,33 +52,33 @@ class DashboardController extends Controller
 
         $isFacultyRep = $user && $user->hasRole('faculty-representative') && $user->participant_id;
 
-        $cacheKey = 'dashboard-v2-' . ($user?->id ?? 'guest');
+        $cacheKey = 'dashboard-v2-'.($user?->id ?? 'guest');
         $data = Cache::remember($cacheKey, 60, function () use ($safeCount, $safeQuery, $isSuper, $user, $isFacultyRep) {
             $stats = [
                 'organizations' => $isSuper
-                    ? $safeCount(\App\Models\Organization::class)
+                    ? $safeCount(Organization::class)
                     : 1,
-                'activeSessions' => $safeCount(\App\Models\Session::class, fn($q) => $q->where('is_active', true)),
-                'tournaments' => $safeCount(\App\Models\Tournament::class),
-                'sports' => $safeCount(\App\Models\Sport::class),
-                'events' => $safeCount(\App\Models\Event::class),
-                'participants' => $safeCount(\App\Models\Participant::class),
-                'registrations' => $safeCount(\App\Models\Registration::class),
-                'matches' => $safeCount(\App\Models\Fixture::class),
-                'results' => $safeCount(\App\Models\Result::class),
+                'activeSessions' => $safeCount(Session::class, fn ($q) => $q->where('is_active', true)),
+                'tournaments' => $safeCount(Tournament::class),
+                'sports' => $safeCount(Sport::class),
+                'events' => $safeCount(Event::class),
+                'participants' => $safeCount(Participant::class),
+                'registrations' => $safeCount(Registration::class),
+                'matches' => $safeCount(Fixture::class),
+                'results' => $safeCount(Result::class),
             ];
 
             $totalEventRegistrations = $safeCount(EventParticipant::class);
-            $participantsWithRegistrations = $safeCount(Participant::class, fn($q) => $q->whereHas('eventParticipants'));
+            $participantsWithRegistrations = $safeCount(Participant::class, fn ($q) => $q->whereHas('eventParticipants'));
 
-            $upcomingEvents = $safeQuery(fn() => Event::query()
+            $upcomingEvents = $safeQuery(fn () => Event::query()
                 ->with(['sport:id,name', 'sportCategory:id,name', 'tournament:id,name'])
                 ->where('is_active', true)
                 ->where('start_date', '>=', now()->subDay())
                 ->orderBy('start_date')
                 ->limit(5)
                 ->get()
-                ->map(fn($e) => [
+                ->map(fn ($e) => [
                     'id' => $e->id,
                     'name' => $e->name,
                     'slug' => $e->slug,
@@ -81,7 +89,7 @@ class DashboardController extends Controller
                     'registration_count' => $e->eventParticipants()->count(),
                 ]));
 
-            $registrationsBySport = $safeQuery(fn() => EventParticipant::query()
+            $registrationsBySport = $safeQuery(fn () => EventParticipant::query()
                 ->selectRaw('sports.name, count(*) as total')
                 ->join('events', 'event_participants.event_id', '=', 'events.id')
                 ->join('sports', 'events.sport_id', '=', 'sports.id')
@@ -97,9 +105,9 @@ class DashboardController extends Controller
             $facultyOfficials = 0;
 
             if ($isFacultyRep) {
-                $myRegistrations = $safeCount(EventParticipant::class, fn($q) => $q->where('participant_id', $user->participant_id));
+                $myRegistrations = $safeCount(EventParticipant::class, fn ($q) => $q->where('participant_id', $user->participant_id));
 
-                $facultyRegistrations = $safeQuery(fn() => EventParticipant::query()
+                $facultyRegistrations = $safeQuery(fn () => EventParticipant::query()
                     ->with([
                         'event.sport:id,name',
                         'event.sportCategory:id,name',
@@ -108,7 +116,7 @@ class DashboardController extends Controller
                     ->where('participant_id', $user->participant_id)
                     ->orderBy('created_at', 'desc')
                     ->get()
-                    ->map(fn($ep) => [
+                    ->map(fn ($ep) => [
                         'id' => $ep->id,
                         'event' => $ep->event ? [
                             'id' => $ep->event->id,
@@ -117,23 +125,23 @@ class DashboardController extends Controller
                             'sport_category' => $ep->event->sportCategory ? ['id' => $ep->event->sportCategory->id, 'name' => $ep->event->sportCategory->name] : null,
                             'start_date' => $ep->event->start_date?->format('Y-m-d'),
                         ] : null,
-                        'squad_members' => $ep->squadMembers->map(fn($sm) => ['role' => $sm->role]),
+                        'squad_members' => $ep->squadMembers->map(fn ($sm) => ['role' => $sm->role]),
                     ]));
 
-                $allSquad = $facultyRegistrations->flatMap(fn($r) => $r['squad_members'] ?? []);
+                $allSquad = $facultyRegistrations->flatMap(fn ($r) => $r['squad_members'] ?? []);
                 $facultyMale = $allSquad->where('role', 'athlete_male')->count();
                 $facultyFemale = $allSquad->where('role', 'athlete_female')->count();
                 $facultyOfficials = $allSquad->whereIn('role', ['manager', 'coach', 'physio'])->count();
             }
 
-            $recentSessions = $safeQuery(fn() => \App\Models\Session::query()
-                ->when(!$isSuper && $user, fn($q) => $q->where('organization_id', $user->organization_id))
+            $recentSessions = $safeQuery(fn () => Session::query()
+                ->when(! $isSuper && $user, fn ($q) => $q->where('organization_id', $user->organization_id))
                 ->orderBy('start_date', 'desc')
                 ->limit(5)
                 ->get(['id', 'name', 'start_date', 'end_date', 'is_active']), collect());
 
-            $recentTournaments = $safeQuery(fn() => \App\Models\Tournament::query()
-                ->when(!$isSuper && $user, fn($q) => $q->where('organization_id', $user->organization_id))
+            $recentTournaments = $safeQuery(fn () => Tournament::query()
+                ->when(! $isSuper && $user, fn ($q) => $q->where('organization_id', $user->organization_id))
                 ->with('session:id,name')
                 ->orderBy('start_date', 'desc')
                 ->limit(5)

@@ -25,7 +25,7 @@ class TournamentService
 
         $tournament = Tournament::create($data);
 
-        if (!empty($data['sports'])) {
+        if (! empty($data['sports'])) {
             $tournament->sports()->sync($data['sports']);
         }
 
@@ -83,6 +83,7 @@ class TournamentService
                             $existingEvent->restore();
                             $count++;
                         }
+
                         continue;
                     }
 
@@ -132,7 +133,7 @@ class TournamentService
         $counter = 1;
 
         while (Event::withoutOrganizationScope()->withTrashed()->where('organization_id', $organizationId)->where('slug', $slug)->exists()) {
-            $slug = $base . '-' . $counter;
+            $slug = $base.'-'.$counter;
             $counter++;
         }
 

@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('users', 'uuid')) {
+        if (! Schema::hasColumn('users', 'uuid')) {
             return;
         }
 

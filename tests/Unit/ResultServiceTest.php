@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Result;
@@ -18,13 +19,13 @@ class ResultServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ResultService();
+        $this->service = new ResultService;
     }
 
     public function test_create_result(): void
     {
         $org = Organization::factory()->create();
-        $event = \App\Models\Event::factory()->create(['organization_id' => $org->id]);
+        $event = Event::factory()->create(['organization_id' => $org->id]);
         $match = Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id]);
 
         $result = $this->service->create($org, [
@@ -42,7 +43,7 @@ class ResultServiceTest extends TestCase
     public function test_update_result(): void
     {
         $org = Organization::factory()->create();
-        $event = \App\Models\Event::factory()->create(['organization_id' => $org->id]);
+        $event = Event::factory()->create(['organization_id' => $org->id]);
         $match = Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id]);
         $result = Result::factory()->create([
             'organization_id' => $org->id,
@@ -61,7 +62,7 @@ class ResultServiceTest extends TestCase
     public function test_delete_result(): void
     {
         $org = Organization::factory()->create();
-        $event = \App\Models\Event::factory()->create(['organization_id' => $org->id]);
+        $event = Event::factory()->create(['organization_id' => $org->id]);
         $match = Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id]);
         $result = Result::factory()->create([
             'organization_id' => $org->id,

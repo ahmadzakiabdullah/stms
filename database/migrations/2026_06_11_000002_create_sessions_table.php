@@ -19,7 +19,7 @@ return new class extends Migration
             }
         }
 
-        if (!Schema::hasTable('event_sessions')) {
+        if (! Schema::hasTable('event_sessions')) {
             Schema::create('event_sessions', function (Blueprint $table) {
                 $table->uuid('id')->primary();
                 $table->foreignUuid('organization_id')->constrained('organizations')->cascadeOnDelete();

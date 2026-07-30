@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Organization;
-use App\Models\Participant;
 use App\Models\Result;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -13,7 +12,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class ResultTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_non_super_admin_only_sees_own_organization_results_via_global_scope(): void
     {

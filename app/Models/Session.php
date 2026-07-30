@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Concerns\BelongsToOrganization;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class Session extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization, LogsActivity;
+    use BelongsToOrganization, HasFactory, HasUuids, LogsActivity, SoftDeletes;
 
     protected $table = 'event_sessions';  // IMPORTANT: our domain "Session" (like SUKMA event), NOT Laravel's 'sessions' table used for login session storage.
 

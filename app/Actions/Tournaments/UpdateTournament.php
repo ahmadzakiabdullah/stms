@@ -3,9 +3,9 @@
 namespace App\Actions\Tournaments;
 
 use App\Models\Tournament;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\QueryException;
 
 class UpdateTournament
 {

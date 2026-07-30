@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Models\Sport;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\QueryException;
 
 class SportService
 {
@@ -32,6 +32,7 @@ class SportService
         try {
             $sport = Sport::create($data);
             Log::info('Sport created', ['id' => $sport->id, 'name' => $sport->name, 'org_id' => $sport->organization_id]);
+
             return $sport;
         } catch (QueryException $e) {
             Log::error('Sport creation failed', ['name' => $data['name'], 'error' => $e->getMessage()]);
@@ -62,6 +63,7 @@ class SportService
         try {
             $sport->update($data);
             Log::info('Sport updated', ['id' => $sport->id, 'name' => $sport->name]);
+
             return $sport;
         } catch (QueryException $e) {
             Log::error('Sport update failed', ['id' => $sport->id, 'error' => $e->getMessage()]);

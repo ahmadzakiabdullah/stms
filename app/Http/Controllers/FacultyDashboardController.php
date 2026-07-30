@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Imports\SquadMembersImport;
+use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\SportCategory;
 use App\Models\SquadMember;
@@ -11,9 +12,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FacultyDashboardController extends Controller
 {
@@ -46,7 +49,7 @@ class FacultyDashboardController extends Controller
             }
         }
 
-        $availableEvents = \App\Models\Event::with(['sport', 'sportCategory', 'tournament'])
+        $availableEvents = Event::with(['sport', 'sportCategory', 'tournament'])
             ->where('is_active', true)
             ->orderBy('start_date')
             ->get(['id', 'name', 'sport_id', 'sport_category_id', 'tournament_id', 'start_date']);
@@ -63,7 +66,7 @@ class FacultyDashboardController extends Controller
             'sportCategories' => SportCategory::with('sport')
                 ->orderBy('name')
                 ->get()
-                ->map(fn($sc) => array_merge(
+                ->map(fn ($sc) => array_merge(
                     $sc->only([
                         'id',
                         'name',
@@ -142,18 +145,20 @@ class FacultyDashboardController extends Controller
 
             return redirect()->route('faculty.dashboard')
                 ->with('success', 'Squad members imported successfully.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $errors = implode(' ', array_merge(...array_values($e->errors())));
+
             return redirect()->route('faculty.dashboard')
                 ->with('error', $errors);
         } catch (\Throwable $e) {
             Log::error('Squad import failed', ['error' => $e->getMessage()]);
+
             return redirect()->route('faculty.dashboard')
-                ->with('error', 'Failed to import file: ' . $e->getMessage());
+                ->with('error', 'Failed to import file: '.$e->getMessage());
         }
     }
 
-    public function downloadTemplate(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function downloadTemplate(): BinaryFileResponse
     {
         $headers = ['name', 'role', 'ic_passport', 'phone'];
         $example = [
@@ -163,9 +168,9 @@ class FacultyDashboardController extends Controller
         ];
 
         $filename = 'squad-template.csv';
-        $path = storage_path('app/temp/' . $filename);
+        $path = storage_path('app/temp/'.$filename);
 
-        if (!is_dir(storage_path('app/temp'))) {
+        if (! is_dir(storage_path('app/temp'))) {
             mkdir(storage_path('app/temp'), 0755, true);
         }
 

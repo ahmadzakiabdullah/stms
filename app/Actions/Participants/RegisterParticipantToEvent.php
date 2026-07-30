@@ -1,1 +1,15 @@
-<?php namespace App\Actions\Participants; use App\Models\Participant; use App\Services\ParticipantService; class RegisterParticipantToEvent { public function handle(Participant $p, string $eventId, array $d=[], ?ParticipantService $s=null): void { $s=$s??app(ParticipantService::class); $s->registerToEvent($p,$eventId,$d); } }
+<?php
+
+namespace App\Actions\Participants;
+
+use App\Models\Participant;
+use App\Services\ParticipantService;
+
+class RegisterParticipantToEvent
+{
+    public function handle(Participant $p, string $eventId, array $d = [], ?ParticipantService $s = null): void
+    {
+        $s = $s ?? app(ParticipantService::class);
+        $s->registerToEvent($p, $eventId, $d);
+    }
+}

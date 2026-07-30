@@ -11,7 +11,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Organization extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, LogsActivity;
+    use HasFactory, HasUuids, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'parent_id',

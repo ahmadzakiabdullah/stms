@@ -68,4 +68,3 @@ class ParticipantLogoService
         return $path;
     }
 }
-

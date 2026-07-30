@@ -18,13 +18,13 @@ class SportFactory extends Factory
     {
         $name = fake()->randomElement([
             'Football', 'Badminton', 'Volleyball', 'Futsal', 'Table Tennis',
-            'Basketball', 'Swimming', 'Athletics', 'Hockey', 'Tennis'
+            'Basketball', 'Swimming', 'Athletics', 'Hockey', 'Tennis',
         ]);
 
         return [
             'organization_id' => Organization::factory(),
             'name' => $name,
-            'slug' => Str::slug($name) . '-' . Str::random(4),
+            'slug' => Str::slug($name).'-'.Str::random(4),
             'icon' => null,
             'is_active' => true,
         ];

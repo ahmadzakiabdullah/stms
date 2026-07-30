@@ -3,18 +3,17 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
-use Database\Factories\RegistrationFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
-use Spatie\Activitylog\Support\LogOptions;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Registration extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, LogsActivity, BelongsToOrganization;
+    use BelongsToOrganization, HasFactory, HasUuids, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
@@ -51,7 +50,6 @@ class Registration extends Model
     {
         return 'id';
     }
-
 
     public function getActivitylogOptions(): LogOptions
     {

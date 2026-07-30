@@ -3,17 +3,17 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class EventParticipant extends Model
 {
-    use HasUuids, SoftDeletes, BelongsToOrganization, LogsActivity;
+    use BelongsToOrganization, HasUuids, LogsActivity, SoftDeletes;
 
     protected $table = 'event_participants';
 

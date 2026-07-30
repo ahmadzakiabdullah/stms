@@ -9,6 +9,7 @@ use App\Models\SquadMember;
 class SquadQuotaService
 {
     private const ATHLETE_ROLES = ['athlete_male', 'athlete_female'];
+
     private const OFFICIAL_ROLES = ['assistant_manager', 'manager', 'coach', 'physio'];
 
     public function validateAddition(EventParticipant $eventParticipant, string $role): ?string
@@ -49,8 +50,8 @@ class SquadQuotaService
         string $role
     ): ?string {
         $allowed = $category?->allowedAthleteRoles() ?? self::ATHLETE_ROLES;
-        if (!in_array($role, $allowed, true)) {
-            return 'This event does not allow ' . ($role === 'athlete_male' ? 'male' : 'female') . ' athletes.';
+        if (! in_array($role, $allowed, true)) {
+            return 'This event does not allow '.($role === 'athlete_male' ? 'male' : 'female').' athletes.';
         }
 
         $maxField = $role === 'athlete_male' ? 'max_male_athletes' : 'max_female_athletes';
@@ -61,11 +62,11 @@ class SquadQuotaService
                 ->count();
 
             if ($current >= $max) {
-                return ucfirst(str_replace('_', ' ', $role)) . " quota full ({$current}/{$max}).";
+                return ucfirst(str_replace('_', ' ', $role))." quota full ({$current}/{$max}).";
             }
         }
 
-        if (!$category?->usesTotalAthleteQuota()) {
+        if (! $category?->usesTotalAthleteQuota()) {
             return null;
         }
 
@@ -100,7 +101,7 @@ class SquadQuotaService
             ->count();
 
         if ($current >= 1) {
-            return 'Only 1 ' . $role . ' allowed per team.';
+            return 'Only 1 '.$role.' allowed per team.';
         }
 
         $maxOfficials = $category?->max_officials;

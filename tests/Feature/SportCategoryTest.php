@@ -11,7 +11,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class SportCategoryTest extends TestCase
 {
-    use RefreshDatabase, CreatesTenantUsers;
+    use CreatesTenantUsers, RefreshDatabase;
 
     public function test_non_super_admin_only_sees_own_organization_categories_via_global_scope(): void
     {

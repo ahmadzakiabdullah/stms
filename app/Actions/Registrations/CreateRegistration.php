@@ -10,6 +10,7 @@ class CreateRegistration
     public function handle(array $data, ?RegistrationService $service = null): Registration
     {
         $service = $service ?? app(RegistrationService::class);
+
         return $service->createRegistration($data);
     }
 }

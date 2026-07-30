@@ -13,7 +13,7 @@ return new class extends Migration
                 Schema::table('events', function (Blueprint $table) {
                     $table->dropUnique('events_slug_unique');
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Index may not exist — safe to ignore
             }
 
@@ -21,7 +21,7 @@ return new class extends Migration
                 Schema::table('events', function (Blueprint $table) {
                     $table->dropIndex('events_slug_index');
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Index may not exist — safe to ignore
             }
 
@@ -29,7 +29,7 @@ return new class extends Migration
                 Schema::table('events', function (Blueprint $table) {
                     $table->unique(['organization_id', 'slug'], 'events_org_slug_unique');
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Index may already exist — safe to ignore
             }
         }
@@ -41,7 +41,7 @@ return new class extends Migration
             Schema::table('events', function (Blueprint $table) {
                 try {
                     $table->dropUnique('events_org_slug_unique');
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // ignore
                 }
 

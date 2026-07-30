@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Models\EventParticipant;
 use App\Models\Fixture;
 use App\Services\DrawService;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class DrawController extends Controller
 {
@@ -36,12 +36,13 @@ class DrawController extends Controller
                 ->with('error', $e->getMessage());
         } catch (\Throwable $e) {
             Log::error('Draw failed', ['event_id' => $event->id, 'error' => $e->getMessage()]);
+
             return redirect()->route('events.index')
-                ->with('error', 'Draw failed: ' . $e->getMessage());
+                ->with('error', 'Draw failed: '.$e->getMessage());
         }
     }
 
-    public function show(Event $event): \Inertia\Response
+    public function show(Event $event): Response
     {
         Gate::authorize('view', $event);
 
@@ -66,7 +67,7 @@ class DrawController extends Controller
         return Inertia::render('DrawResult/Index', [
             'event' => $event,
             'pools' => $pools,
-            'canEdit' => !$hasStartedMatches,
+            'canEdit' => ! $hasStartedMatches,
         ]);
     }
 
@@ -109,6 +110,7 @@ class DrawController extends Controller
                 ->with('success', 'Participant moved and fixtures regenerated.');
         } catch (\Throwable $e) {
             Log::error('Move participant failed', ['event_id' => $event->id, 'error' => $e->getMessage()]);
+
             return redirect()->route('events.draw-result', $event)
                 ->with('error', $e->getMessage());
         }

@@ -3,10 +3,10 @@
 namespace App\Services;
 
 use App\Models\Organization;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\QueryException;
 
 class OrganizationService
 {
@@ -24,6 +24,7 @@ class OrganizationService
         try {
             $org = Organization::create($data);
             Log::info('Organization created', ['id' => $org->id, 'name' => $org->name]);
+
             return $org;
         } catch (QueryException $e) {
             Log::error('Organization creation failed', ['name' => $data['name'], 'error' => $e->getMessage()]);
@@ -50,6 +51,7 @@ class OrganizationService
         try {
             $organization->update($data);
             Log::info('Organization updated', ['id' => $organization->id, 'name' => $organization->name]);
+
             return $organization;
         } catch (QueryException $e) {
             Log::error('Organization update failed', ['id' => $organization->id, 'error' => $e->getMessage()]);

@@ -23,7 +23,7 @@ class SquadQuotaServiceTest extends TestCase
             'max_female_athletes' => 6,
         ]);
 
-        $service = new SquadQuotaService();
+        $service = new SquadQuotaService;
 
         for ($i = 0; $i < 6; $i++) {
             $this->assertNull($service->validateAddition($eventParticipant, 'athlete_male'));
@@ -47,7 +47,7 @@ class SquadQuotaServiceTest extends TestCase
             'min_female_athletes' => 2,
         ]);
 
-        $service = new SquadQuotaService();
+        $service = new SquadQuotaService;
 
         foreach (['athlete_male', 'athlete_male', 'athlete_male', 'athlete_male', 'athlete_female'] as $index => $role) {
             $this->createSquadMember($eventParticipant, $role, "Player {$index}");

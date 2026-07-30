@@ -4,10 +4,10 @@ namespace App\Actions\Tournaments;
 
 use App\Models\Tournament;
 use App\Services\TournamentService;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CreateTournament
 {
@@ -28,7 +28,8 @@ class CreateTournament
         $data['slug'] = $this->ensureUniqueSlug($data['slug'], $data['organization_id']);
 
         try {
-            $service = new TournamentService();
+            $service = new TournamentService;
+
             return $service->createWithSports($data);
         } catch (QueryException $e) {
             if ($e->getCode() == 23000) {
@@ -49,7 +50,7 @@ class CreateTournament
 
         if ($existing && $existing->trashed()) {
             $existing->updateQuietly([
-                'slug' => $slug . '-removed-' . now()->timestamp,
+                'slug' => $slug.'-removed-'.now()->timestamp,
             ]);
         }
 

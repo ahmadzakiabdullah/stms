@@ -32,7 +32,7 @@ class StoreRegistrationRequest extends FormRequest
                 'required',
                 'uuid',
                 Rule::exists('tournaments', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (!$isSuper) {
+                    if (! $isSuper) {
                         $query->where('organization_id', $user->organization_id);
                     }
                 }),
@@ -41,7 +41,7 @@ class StoreRegistrationRequest extends FormRequest
                 'required',
                 'uuid',
                 Rule::exists('participants', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (!$isSuper) {
+                    if (! $isSuper) {
                         $query->where('organization_id', $user->organization_id);
                     }
                 }),

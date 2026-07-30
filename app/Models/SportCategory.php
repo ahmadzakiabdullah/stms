@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Concerns\BelongsToOrganization;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class SportCategory extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, BelongsToOrganization, LogsActivity;
+    use BelongsToOrganization, HasFactory, HasUuids, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
@@ -57,7 +57,7 @@ class SportCategory extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereHas('sport', fn($q) => $q->where('is_active', true));
+        return $query->whereHas('sport', fn ($q) => $q->where('is_active', true));
     }
 
     public function allowedAthleteRoles(): array
@@ -66,9 +66,16 @@ class SportCategory extends Model
         $female = $this->max_female_athletes;
 
         if ($male !== null && $female !== null) {
-            if ($male > 0 && $female > 0) return ['athlete_male', 'athlete_female'];
-            if ($male > 0) return ['athlete_male'];
-            if ($female > 0) return ['athlete_female'];
+            if ($male > 0 && $female > 0) {
+                return ['athlete_male', 'athlete_female'];
+            }
+            if ($male > 0) {
+                return ['athlete_male'];
+            }
+            if ($female > 0) {
+                return ['athlete_female'];
+            }
+
             return [];
         }
 
@@ -83,7 +90,7 @@ class SportCategory extends Model
 
     public function athleteQuotaLabel(): string
     {
-        if (!$this->usesTotalAthleteQuota()) {
+        if (! $this->usesTotalAthleteQuota()) {
             return 'Gender based';
         }
 
@@ -103,14 +110,22 @@ class SportCategory extends Model
         $name = mb_strtolower($this->name);
 
         $hasMixed = preg_match('/\bmixed\b/', $name) || preg_match('/\bopen\b/', $name) || preg_match('/\bcampuran\b/', $name);
-        if ($hasMixed) return ['athlete_male', 'athlete_female'];
+        if ($hasMixed) {
+            return ['athlete_male', 'athlete_female'];
+        }
 
         $onlyMen = preg_match('/\bmen\'?s?\b/', $name) || preg_match('/\bmale\b/', $name) || $name === 'men';
         $onlyWomen = preg_match('/\bwomen\'?s?\b/', $name) || preg_match('/\bfemale\b/', $name) || $name === 'women';
 
-        if ($onlyMen && $onlyWomen) return ['athlete_male', 'athlete_female'];
-        if ($onlyMen) return ['athlete_male'];
-        if ($onlyWomen) return ['athlete_female'];
+        if ($onlyMen && $onlyWomen) {
+            return ['athlete_male', 'athlete_female'];
+        }
+        if ($onlyMen) {
+            return ['athlete_male'];
+        }
+        if ($onlyWomen) {
+            return ['athlete_female'];
+        }
 
         return ['athlete_male', 'athlete_female'];
     }

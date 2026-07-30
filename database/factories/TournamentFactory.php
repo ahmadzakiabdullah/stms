@@ -17,7 +17,7 @@ class TournamentFactory extends Factory
     public function definition(): array
     {
         $name = fake()->randomElement([
-            "Men's Football", "Women's Badminton", "Open Futsal", "Volleyball Championship"
+            "Men's Football", "Women's Badminton", 'Open Futsal', 'Volleyball Championship',
         ]);
 
         $session = Session::factory()->create(); // ensure we have a session
@@ -26,7 +26,7 @@ class TournamentFactory extends Factory
             'organization_id' => $session->organization_id,
             'session_id' => $session->id,
             'name' => $name,
-            'slug' => Str::slug($name) . '-' . Str::random(4),
+            'slug' => Str::slug($name).'-'.Str::random(4),
             'description' => fake()->sentence(),
             'start_date' => $session->start_date,
             'end_date' => $session->end_date,

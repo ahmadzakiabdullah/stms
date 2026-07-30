@@ -5,12 +5,12 @@ namespace App\Services;
 use App\Models\EventParticipant;
 use App\Models\Participant;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Database\QueryException;
 
 class ParticipantService
 {
@@ -56,16 +56,18 @@ class ParticipantService
 
         if (empty($email)) {
             Log::warning('Cannot auto-create user for participant without email', ['participant_id' => $participant->id]);
+
             return null;
         }
 
         $existingUser = User::where('email', $email)->first();
 
         if ($existingUser) {
-            if (!$existingUser->participant_id) {
+            if (! $existingUser->participant_id) {
                 $existingUser->update(['participant_id' => $participant->id]);
                 Log::info('Linked existing user to participant', ['user_id' => $existingUser->uuid, 'participant_id' => $participant->id]);
             }
+
             return $existingUser;
         }
 
@@ -99,6 +101,7 @@ class ParticipantService
         try {
             $participant->update($data);
             Log::info('Participant updated', ['id' => $participant->id, 'name' => $participant->name]);
+
             return $participant;
         } catch (QueryException $e) {
             Log::error('Participant update failed', ['id' => $participant->id, 'error' => $e->getMessage()]);
@@ -154,7 +157,7 @@ class ParticipantService
             ->where('participant_id', $participant->id)
             ->first();
 
-        if (!$registration) {
+        if (! $registration) {
             throw ValidationException::withMessages([
                 'participant_id' => ['This participant is not registered for this event.'],
             ]);

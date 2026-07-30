@@ -26,7 +26,7 @@ class ReportingController extends Controller implements HasMiddleware
     {
         $org = $request->user()->organization;
 
-        if (!$org) {
+        if (! $org) {
             return Inertia::render('Reports/Index', [
                 'stats' => [
                     'total_fixtures' => 0, 'completed_fixtures' => 0, 'pending_fixtures' => 0,
@@ -45,6 +45,7 @@ class ReportingController extends Controller implements HasMiddleware
                 if ($query) {
                     $builder = $query($builder);
                 }
+
                 return $builder->count();
             } catch (\Throwable $e) {
                 return 0;
@@ -78,7 +79,7 @@ class ReportingController extends Controller implements HasMiddleware
                     'id' => $r->id,
                     'home' => $r->match?->homeParticipant?->name ?? '-',
                     'away' => $r->match?->awayParticipant?->name ?? '-',
-                    'score' => ($r->score_home ?? 0) . ' - ' . ($r->score_away ?? 0),
+                    'score' => ($r->score_home ?? 0).' - '.($r->score_away ?? 0),
                     'tournament' => $r->match?->event?->tournament?->name ?? '-',
                     'created_at' => $r->created_at->format('d M Y H:i'),
                 ]);

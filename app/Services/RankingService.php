@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Fixture;
-use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Result;
 use App\Models\Tournament;
@@ -13,7 +11,9 @@ use Illuminate\Support\Facades\Log;
 class RankingService
 {
     private const STRATEGY_POINTS = 'points';
+
     private const STRATEGY_WIN_RATE = 'win_rate';
+
     private const STRATEGY_MEDAL_TALLY = 'medal_tally';
 
     public function calculateForTournament(Tournament $tournament): Collection
@@ -74,12 +74,12 @@ class RankingService
             $awayId = $result->match?->away_participant_id;
             $winnerId = $result->winner_participant_id;
 
-            if (!$homeId || !$awayId) {
+            if (! $homeId || ! $awayId) {
                 continue;
             }
 
             foreach ([$homeId, $awayId] as $participantId) {
-                if (!$stats->has($participantId)) {
+                if (! $stats->has($participantId)) {
                     $participant = Participant::find($participantId);
                     $stats->put($participantId, [
                         'participant_id' => $participantId,
@@ -128,9 +128,11 @@ class RankingService
         return $stats->map(function ($s) {
             $s['points'] = ($s['wins'] * 3) + $s['draws'];
             $s['goal_difference'] = $s['score_for'] - $s['score_against'];
+
             return $s;
         })->sortByDesc('points')->sortByDesc('goal_difference')->values()->map(function ($s, $index) {
             $s['rank'] = $index + 1;
+
             return $s;
         });
     }
@@ -141,9 +143,11 @@ class RankingService
             $s['win_rate'] = $s['matches_played'] > 0
                 ? round(($s['wins'] / $s['matches_played']) * 100, 2)
                 : 0;
+
             return $s;
         })->sortByDesc('win_rate')->sortByDesc('wins')->values()->map(function ($s, $index) {
             $s['rank'] = $index + 1;
+
             return $s;
         });
     }
@@ -152,12 +156,18 @@ class RankingService
     {
         return $stats->map(function ($s) {
             $s['points'] = ($s['wins'] * 3) + $s['draws'];
+
             return $s;
         })->sortByDesc('points')->values()->map(function ($s, $index) {
             $s['rank'] = $index + 1;
-            if ($index === 0) $s['gold'] = 1;
-            elseif ($index === 1) $s['silver'] = 1;
-            elseif ($index === 2) $s['bronze'] = 1;
+            if ($index === 0) {
+                $s['gold'] = 1;
+            } elseif ($index === 1) {
+                $s['silver'] = 1;
+            } elseif ($index === 2) {
+                $s['bronze'] = 1;
+            }
+
             return $s;
         });
     }

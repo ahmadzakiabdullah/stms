@@ -12,6 +12,7 @@ class EventPolicy
         if ($user->hasRole('super-admin') || $user->hasRole('org-admin') || $user->hasRole('tournament-manager')) {
             return true;
         }
+
         return $user->hasPermissionTo('view events');
     }
 
@@ -29,6 +30,7 @@ class EventPolicy
         if ($user->hasRole('super-admin')) {
             return true;
         }
+
         return $user->hasPermissionTo('create events') || $user->hasRole('tournament-manager') || $user->hasRole('org-admin');
     }
 

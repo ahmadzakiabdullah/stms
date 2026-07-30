@@ -10,7 +10,7 @@ return new class extends Migration
     {
         $tableNames = config('permission.table_names');
         if (empty($tableNames)) {
-            throw new \Exception('Error: config/permission.php not found and config could not be published. Please publish the package configuration first, or drop the empty migration.');
+            throw new Exception('Error: config/permission.php not found and config could not be published. Please publish the package configuration first, or drop the empty migration.');
         }
 
         Schema::create($tableNames['permissions'], function (Blueprint $table) {
@@ -84,7 +84,7 @@ return new class extends Migration
         $tableNames = config('permission.table_names');
 
         if (empty($tableNames)) {
-            throw new \Exception('Error: config/permission.php not found. Please publish the package configuration first, or drop the empty migration.');
+            throw new Exception('Error: config/permission.php not found. Please publish the package configuration first, or drop the empty migration.');
         }
 
         Schema::dropIfExists($tableNames['role_has_permissions']);

@@ -7,7 +7,6 @@ use App\Notifications\EventParticipantConfirmed;
 use App\Notifications\EventParticipantRejected;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,10 +32,10 @@ class DeanVerificationController extends Controller
 
         $counts = $this->safeCollectionQuery(function () use ($user) {
             return EventParticipant::where('participant_id', $user->participant_id)
-                ->selectRaw("status, count(*) as total")
+                ->selectRaw('status, count(*) as total')
                 ->groupBy('status')
                 ->pluck('total', 'status');
-        }, fn() => collect([]));
+        }, fn () => collect([]));
 
         return Inertia::render('Dean/Dashboard', [
             'registrations' => $registrations,

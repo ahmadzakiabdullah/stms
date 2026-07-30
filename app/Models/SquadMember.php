@@ -11,7 +11,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class SquadMember extends Model
 {
-    use HasFactory, HasUuids, BelongsToOrganization, LogsActivity;
+    use BelongsToOrganization, HasFactory, HasUuids, LogsActivity;
 
     protected $fillable = [
         'event_participant_id',

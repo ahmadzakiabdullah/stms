@@ -20,7 +20,7 @@ class TournamentServiceTest extends TestCase
         $session = Session::factory()->create(['organization_id' => $org->id]);
         $sport = Sport::factory()->create(['organization_id' => $org->id]);
 
-        $service = new TournamentService();
+        $service = new TournamentService;
 
         $tournament = $service->createWithSports([
             'organization_id' => $org->id,
@@ -46,7 +46,7 @@ class TournamentServiceTest extends TestCase
             'session_id' => $session->id,
         ]);
 
-        $service = new TournamentService();
+        $service = new TournamentService;
         $updated = $service->updateWithSports($tournament, [
             'organization_id' => $org->id,
             'session_id' => $session->id,
@@ -69,7 +69,7 @@ class TournamentServiceTest extends TestCase
             'session_id' => $session->id,
         ]);
 
-        $service = new TournamentService();
+        $service = new TournamentService;
         $service->deleteWithSports($tournament);
 
         $this->assertSoftDeleted('tournaments', ['id' => $tournament->id]);

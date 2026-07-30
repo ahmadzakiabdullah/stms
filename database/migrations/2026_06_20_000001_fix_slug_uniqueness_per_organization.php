@@ -19,7 +19,7 @@ return new class extends Migration
                 // Drop old global unique safely (without Doctrine, which is removed in newer Laravel)
                 try {
                     $table->dropUnique('sports_slug_unique');
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // Index may not exist or already dropped — safe to ignore
                 }
 
@@ -34,12 +34,12 @@ return new class extends Migration
         if (Schema::hasTable($sessionTable)) {
             Schema::table($sessionTable, function (Blueprint $table) use ($sessionTable) {
                 try {
-                    $table->dropUnique($sessionTable . '_slug_unique');
-                } catch (\Throwable $e) {
+                    $table->dropUnique($sessionTable.'_slug_unique');
+                } catch (Throwable $e) {
                     // ignore if not exists
                 }
 
-                $table->unique(['organization_id', 'slug'], $sessionTable . '_org_slug_unique');
+                $table->unique(['organization_id', 'slug'], $sessionTable.'_org_slug_unique');
             });
         }
 
@@ -48,7 +48,7 @@ return new class extends Migration
             Schema::table('tournaments', function (Blueprint $table) {
                 try {
                     $table->dropUnique('tournaments_slug_unique');
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // ignore
                 }
 
@@ -61,7 +61,7 @@ return new class extends Migration
             Schema::table('events', function (Blueprint $table) {
                 try {
                     $table->dropUnique('events_slug_unique');
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // ignore
                 }
 
