@@ -14,6 +14,7 @@ use App\Models\Tournament;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -156,13 +157,34 @@ class EventController extends Controller
 
         $deleted = 0;
 
-        foreach ($events as $event) {
-            try {
-                $event->delete();
-                $deleted++;
-            } catch (\Throwable $e) {
-                Log::error('Batch delete event failed', ['id' => $event->id, 'error' => $e->getMessage()]);
-            }
+        try {
+            DB::transaction(function () use ($events, &$deleted) {
+                $idsToDelete = $events->pluck('id')->toArray();
+
+                // Perform a single query to soft delete all events, avoiding N soft-delete queries.
+                Event::whereIn('id', $idsToDelete)->delete();
+                $deleted = count($idsToDelete);
+
+                // Spatie Activitylog automatically logs on 'deleted' model events.
+                // Since we bypassed individual delete() calls, we use the facade to log manually.
+                // This eliminates the N `SELECT` queries that Spatie otherwise executes.
+                foreach ($events as $event) {
+                    activity()
+                        ->performedOn($event)
+                        ->event('deleted')
+                        ->log('deleted');
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::error('Batch delete events failed', ['error' => $e->getMessage()]);
+
+            return redirect()->route('events.index')
+                ->with('error', 'Failed to delete events due to a server error.');
+        }
+
+        if ($deleted === 0) {
+            return redirect()->route('events.index')
+                ->with('error', 'No events were deleted.');
         }
 
         return redirect()->route('events.index')
