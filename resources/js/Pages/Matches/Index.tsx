@@ -15,13 +15,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { Eye, Pencil, Plus, Save, Swords, Trash2, Users } from 'lucide-react';
+import { BarChart3, Eye, Pencil, Plus, Save, Swords, Trash2, Users } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import type { Event, Fixture, Paginated, Participant, Pool } from '@/types';
+
+interface StandingRow {
+    participant_id: string;
+    played: number;
+    won: number;
+    drawn: number;
+    lost: number;
+    goals_for: number;
+    goals_against: number;
+    goal_difference: number;
+    points: number;
+    participant?: { id: string; name: string; team_name?: string; logo_url?: string } | null;
+}
 
 interface PoolWithRelations extends Pool {
     event_participants: (import('@/types').EventParticipant & { participant: Participant })[];
     fixtures: MatchRow[];
+    standings: StandingRow[];
+    has_standings: boolean;
 }
 
 interface MatchRow extends Fixture {
@@ -102,6 +117,60 @@ function Matchup({ home, away }: { home?: Participant; away?: Participant }) {
             <span className="text-center text-xs font-bold text-muted-foreground">VS</span>
             <TeamMark participant={away} />
             <span className="truncate font-medium">{participantName(away)}</span>
+        </div>
+    );
+}
+
+function LeagueTable({ standings }: { standings: StandingRow[] }) {
+    return (
+        <div className="overflow-hidden rounded-lg border">
+            <Table>
+                <TableHeader>
+                    <TableRow className="bg-muted/50">
+                        <TableHead className="w-10">#</TableHead>
+                        <TableHead>Team</TableHead>
+                        <TableHead className="text-center">P</TableHead>
+                        <TableHead className="text-center">W</TableHead>
+                        <TableHead className="text-center">D</TableHead>
+                        <TableHead className="text-center">L</TableHead>
+                        <TableHead className="text-center">GF</TableHead>
+                        <TableHead className="text-center">GA</TableHead>
+                        <TableHead className="text-center">GD</TableHead>
+                        <TableHead className="w-14 text-center font-semibold">Pts</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {standings.map((row, index) => {
+                        const name = row.participant?.team_name || row.participant?.name || 'Unknown';
+                        const isLeader = index === 0 && row.points > 0;
+
+                        return (
+                            <TableRow key={row.participant_id} className={isLeader ? 'bg-emerald-50/60 dark:bg-emerald-950/20' : ''}>
+                                <TableCell className="font-medium">{index + 1}</TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        {row.participant?.logo_url && (
+                                            <img src={row.participant.logo_url} alt={name} className="size-6 shrink-0 object-contain" />
+                                        )}
+                                        <span className="truncate font-medium">{name}</span>
+                                        {isLeader && <Badge variant="secondary">Leader</Badge>}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-center">{row.played}</TableCell>
+                                <TableCell className="text-center">{row.won}</TableCell>
+                                <TableCell className="text-center">{row.drawn}</TableCell>
+                                <TableCell className="text-center">{row.lost}</TableCell>
+                                <TableCell className="text-center">{row.goals_for}</TableCell>
+                                <TableCell className="text-center">{row.goals_against}</TableCell>
+                                <TableCell className={`text-center ${row.goal_difference > 0 ? 'font-medium text-emerald-600 dark:text-emerald-400' : row.goal_difference < 0 ? 'text-destructive' : ''}`}>
+                                    {row.goal_difference > 0 ? `+${row.goal_difference}` : row.goal_difference}
+                                </TableCell>
+                                <TableCell className="text-center font-semibold">{row.points}</TableCell>
+                            </TableRow>
+                        );
+                    })}
+                </TableBody>
+            </Table>
         </div>
     );
 }
@@ -288,6 +357,16 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
                                         </div>
                                     ))}
                                 </div>
+
+                                {pool.has_standings && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-sm font-semibold">
+                                            <BarChart3 className="size-4 text-primary" />
+                                            League Table
+                                        </div>
+                                        <LeagueTable standings={pool.standings} />
+                                    </div>
+                                )}
 
                                 <Table>
                                     <TableHeader>
