@@ -13,7 +13,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Participant extends Model
 {
-    use BelongsToOrganization, HasFactory, HasUuids, LogsActivity, SoftDeletes;
+    use BelongsToOrganization, HasFactory, \Illuminate\Database\Eloquent\Concerns\HasUuids, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'organization_id',
