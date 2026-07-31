@@ -203,17 +203,19 @@ class RankingService
     {
         $medals = [];
 
-        $tournaments
-            ->each(function ($tournament) {
-                $tournament->events->each(function ($event) {
-                    $event->setRelation('matches', $event->matches()
-                        ->with('result')
-                        ->whereIn('stage', [KnockoutStageService::STAGE_FINAL, KnockoutStageService::STAGE_BRONZE])
-                        ->where('status', 'completed')
-                        ->get());
-                });
-            })
-            ->flatMap(fn ($tournament) => $tournament->events)
+        // Bolt ⚡: Replace N+1 query loop with a single eager load on the events collection.
+        // Eager load on the already loaded events to avoid overwriting parent constraints
+        $events = \Illuminate\Database\Eloquent\Collection::make($tournaments->flatMap->events);
+
+        $events->load([
+            'matches' => function ($query) {
+                $query->with('result')
+                    ->whereIn('stage', [KnockoutStageService::STAGE_FINAL, KnockoutStageService::STAGE_BRONZE])
+                    ->where('status', 'completed');
+            },
+        ]);
+
+        $events
             ->each(function ($event) use (&$medals) {
                 $final = $event->matches->firstWhere('stage', KnockoutStageService::STAGE_FINAL);
                 $bronze = $event->matches->firstWhere('stage', KnockoutStageService::STAGE_BRONZE);
