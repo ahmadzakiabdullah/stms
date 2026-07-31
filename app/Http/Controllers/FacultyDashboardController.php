@@ -96,7 +96,7 @@ class FacultyDashboardController extends Controller
 
         $ep = EventParticipant::with('event.sportCategory')->findOrFail($validated['event_participant_id']);
 
-        if ($ep->participant_id !== Auth::user()->participant_id) {
+        if ($ep->organization_id !== Auth::user()->organization_id || $ep->participant_id !== Auth::user()->participant_id) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -122,7 +122,10 @@ class FacultyDashboardController extends Controller
     public function destroySquad(SquadMember $squadMember): RedirectResponse
     {
         $squadMember->load('eventParticipant');
-        if ($squadMember->eventParticipant->participant_id !== Auth::user()->participant_id) {
+        if (
+            $squadMember->organization_id !== Auth::user()->organization_id ||
+            $squadMember->eventParticipant->participant_id !== Auth::user()->participant_id
+        ) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -141,7 +144,7 @@ class FacultyDashboardController extends Controller
 
         $ep = EventParticipant::with('event.sportCategory')->findOrFail($validated['event_participant_id']);
 
-        if ($ep->participant_id !== Auth::user()->participant_id) {
+        if ($ep->organization_id !== Auth::user()->organization_id || $ep->participant_id !== Auth::user()->participant_id) {
             abort(403, 'Unauthorized action.');
         }
 
