@@ -99,6 +99,7 @@ class MatchController extends Controller
         $knockout = [
             'has_stage' => $selectedEvent ? $this->knockoutStageService->hasKnockoutStage($selectedEvent) : false,
             'league_complete' => $selectedEvent ? $this->knockoutStageService->leagueComplete($selectedEvent) : false,
+            'event_slug' => $selectedEvent?->slug,
             'fixtures' => $selectedEvent ? $this->knockoutStageService->fixtures($selectedEvent)->values() : [],
         ];
 
@@ -155,5 +156,25 @@ class MatchController extends Controller
         );
 
         return redirect()->back()->with('success', 'Match deleted successfully.');
+    }
+
+    public function generateKnockout(Event $event): RedirectResponse
+    {
+        Gate::authorize('update', $event);
+
+        try {
+            $count = $this->knockoutStageService->generate($event);
+
+            activity()
+                ->performedOn($event)
+                ->causedBy(auth()->user())
+                ->event('generate_knockout')
+                ->withProperties(['fixtures' => $count])
+                ->log("Knockout stage generated for '{$event->name}': {$count} fixtures");
+
+            return redirect()->back()->with('success', "Knockout stage generated: {$count} fixtures created.");
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 }

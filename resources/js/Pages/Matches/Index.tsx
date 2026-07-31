@@ -47,6 +47,7 @@ interface MatchRow extends Fixture {
 interface KnockoutData {
     has_stage: boolean;
     league_complete: boolean;
+    event_slug?: string | null;
     fixtures: MatchRow[];
 }
 
@@ -227,6 +228,15 @@ const stageTitle = (stage: string, round?: number | null) => {
 const isKnockoutStage = (stage?: string) => !!stage && ['semi_final', 'bronze', 'final'].includes(stage);
 
 function KnockoutStageSection({ knockout }: { knockout: KnockoutData }) {
+    const [generating, setGenerating] = useState(false);
+    const generate = () => {
+        setGenerating(true);
+        router.post(route('matches.generate-knockout', knockout.event_slug ?? ''), {}, {
+            preserveScroll: true,
+            onFinish: () => setGenerating(false),
+        });
+    };
+
     if (knockout.fixtures.length === 0) {
         return (
             <Card>
@@ -234,9 +244,14 @@ function KnockoutStageSection({ knockout }: { knockout: KnockoutData }) {
                     <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> Knockout Stage</CardTitle>
                     <CardDescription>
                         {knockout.league_complete
-                            ? 'League complete — the knockout stage will be generated automatically.'
+                            ? 'League complete — generate the knockout stage to continue.'
                             : 'Not available yet. The knockout stage unlocks once every league fixture has a result.'}
                     </CardDescription>
+                    {knockout.league_complete && (
+                        <Button onClick={generate} disabled={generating} className="mt-2 w-fit">
+                            <Trophy className="mr-2 size-4" /> {generating ? 'Generating…' : 'Generate Knockout Stage'}
+                        </Button>
+                    )}
                 </CardHeader>
             </Card>
         );

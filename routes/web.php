@@ -139,6 +139,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/matches', [MatchController::class, 'store'])->name('matches.store');
     Route::put('/matches/{match}', [MatchController::class, 'update'])->name('matches.update');
     Route::delete('/matches/{match}', [MatchController::class, 'destroy'])->name('matches.destroy');
+    Route::post('/matches/{event}/generate-knockout', [MatchController::class, 'generateKnockout'])->name('matches.generate-knockout');
 
     // M4: Result Entry
     Route::get('/results', [ResultController::class, 'index'])->name('results.index');
