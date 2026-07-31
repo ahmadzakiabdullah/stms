@@ -28,7 +28,12 @@ class ResultController extends Controller
         $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
 
         $results = $this->safePaginatedQuery(function () use ($sportIds) {
-            $query = Result::with(['match.event', 'winner'])
+            $query = Result::with([
+                'match.event',
+                'match.homeParticipant:id,name,team_name,logo_url',
+                'match.awayParticipant:id,name,team_name,logo_url',
+                'winner:id,name,team_name',
+            ])
                 ->orderByDesc('created_at');
 
             if ($sportIds !== null) {
@@ -46,14 +51,22 @@ class ResultController extends Controller
         });
 
         $matches = Fixture::query()
+            ->with([
+                'event:id,name,sport_id',
+                'pool:id,name',
+                'homeParticipant:id,name,team_name,logo_url',
+                'awayParticipant:id,name,team_name,logo_url',
+            ])
+            ->whereDoesntHave('result')
             ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
-            ->orderByDesc('match_number')
-            ->get(['id', 'match_number', 'status']);
+            ->orderBy('match_number')
+            ->get(['id', 'match_number', 'event_id', 'pool_id', 'status', 'scheduled_at']);
 
         $events = Event::query()
+            ->with('sport:id,name')
             ->when($sportIds !== null, fn ($q) => $q->whereIn('sport_id', $sportIds))
             ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
+            ->get(['id', 'name', 'slug', 'sport_id']);
 
         $response = Inertia::render('Results/Index', [
             'results' => $results,
