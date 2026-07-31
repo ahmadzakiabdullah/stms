@@ -158,10 +158,8 @@ class FacultyDashboardController extends Controller
             return redirect()->route('faculty.dashboard')
                 ->with('success', 'Squad members imported successfully.');
         } catch (ValidationException $e) {
-            $errors = implode(' ', array_merge(...array_values($e->errors())));
-
-            return redirect()->route('faculty.dashboard')
-                ->with('error', $errors);
+            return redirect()->back()
+                ->withErrors($e->errors());
         } catch (\Throwable $e) {
             Log::error('Squad import failed', ['error' => $e->getMessage()]);
 
