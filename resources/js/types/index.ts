@@ -220,7 +220,7 @@ export interface RankingEntry {
     score_for: number;
     score_against: number;
     goal_difference: number;
-    points: number;
+    points?: number;
     win_rate?: number;
     gold?: number;
     silver?: number;

@@ -194,7 +194,8 @@ class RankingService
      * Real medal tally: for every event in the given tournaments, the Final
      * winner earns Gold, the Final runner-up earns Silver, and the Bronze
      * match winner earns Bronze. Totals are aggregated across all events and
-     * sorted by Gold, then Silver, then Bronze.
+     * sorted by Gold, then Silver, then Bronze. Points are never considered;
+     * teams with identical medal counts share the same rank.
      *
      * @param  Collection<int, Tournament>  $tournaments
      */
@@ -234,7 +235,6 @@ class RankingService
             });
 
         return $stats->map(function ($s) use ($medals) {
-            $s['points'] = ($s['wins'] * 3) + $s['draws'];
             $s['gold'] = $medals[$s['participant_id']]['gold'] ?? 0;
             $s['silver'] = $medals[$s['participant_id']]['silver'] ?? 0;
             $s['bronze'] = $medals[$s['participant_id']]['bronze'] ?? 0;
@@ -242,13 +242,21 @@ class RankingService
 
             return $s;
         })
-            ->sortByDesc(fn ($s) => [$s['gold'], $s['silver'], $s['bronze'], $s['points']])
+            ->sortByDesc(fn ($s) => [$s['gold'], $s['silver'], $s['bronze']])
             ->values()
-            ->map(function ($s, $index) {
-                $s['rank'] = $index + 1;
+            ->reduce(function (Collection $ranked, array $s) {
+                $previous = $ranked->last();
+                $s['rank'] = $previous
+                    && $previous['gold'] === $s['gold']
+                    && $previous['silver'] === $s['silver']
+                    && $previous['bronze'] === $s['bronze']
+                        ? $previous['rank']
+                        : $ranked->count() + 1;
 
-                return $s;
-            });
+                $ranked->push($s);
+
+                return $ranked;
+            }, collect());
     }
 
     protected function awardMedal(array &$medals, string $participantId, string $medal): void

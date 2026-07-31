@@ -291,6 +291,37 @@ class RankingServiceTest extends TestCase
         $this->assertSame('FTKE', $rankings->first()['participant_name']);
     }
 
+    public function test_medal_tally_ties_share_the_same_rank_and_ignore_points(): void
+    {
+        $org = Organization::factory()->create();
+        $tournament = Tournament::factory()->create([
+            'organization_id' => $org->id,
+            'ranking_strategy' => 'medal_tally',
+        ]);
+
+        $ftke = Participant::factory()->create(['organization_id' => $org->id, 'name' => 'FTKE']);
+        $ftmk = Participant::factory()->create(['organization_id' => $org->id, 'name' => 'FTMK']);
+        $step = Participant::factory()->create(['organization_id' => $org->id, 'name' => 'STEP']);
+        $faix = Participant::factory()->create(['organization_id' => $org->id, 'name' => 'FAIX']);
+
+        $event1 = Event::factory()->create(['organization_id' => $org->id, 'tournament_id' => $tournament->id]);
+        $this->createCompletedKnockout($event1, $ftke, $step, $faix);
+
+        $event2 = Event::factory()->create(['organization_id' => $org->id, 'tournament_id' => $tournament->id]);
+        $this->createCompletedKnockout($event2, $ftmk, $step, $faix);
+
+        $rankings = $this->service->calculateForTournament($tournament);
+
+        $this->assertSame(1, $rankings[0]['rank']);
+        $this->assertSame('FTKE', $rankings[0]['participant_name']);
+        $this->assertSame(1, $rankings[1]['rank']);
+        $this->assertSame('FTMK', $rankings[1]['participant_name']);
+        $this->assertSame(3, $rankings[2]['rank']);
+        $this->assertSame('STEP', $rankings[2]['participant_name']);
+        $this->assertSame(2, $rankings[2]['silver']);
+        $this->assertFalse(array_key_exists('points', $rankings[0]));
+    }
+
     private function createCompletedKnockout(Event $event, Participant $gold, Participant $silver, Participant $bronze): void
     {
         $org = Organization::find($event->organization_id);
