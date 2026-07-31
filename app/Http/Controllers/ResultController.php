@@ -30,8 +30,8 @@ class ResultController extends Controller
         $results = $this->safePaginatedQuery(function () use ($sportIds) {
             $query = Result::with([
                 'match.event',
-                'match.homeParticipant:id,name,team_name,logo_url',
-                'match.awayParticipant:id,name,team_name,logo_url',
+                'match.homeParticipant:id,name,team_name,logo_path',
+                'match.awayParticipant:id,name,team_name,logo_path',
                 'winner:id,name,team_name',
             ])
                 ->orderByDesc('created_at');
@@ -54,8 +54,8 @@ class ResultController extends Controller
             ->with([
                 'event:id,name,sport_id',
                 'pool:id,name',
-                'homeParticipant:id,name,team_name,logo_url',
-                'awayParticipant:id,name,team_name,logo_url',
+                'homeParticipant:id,name,team_name,logo_path',
+                'awayParticipant:id,name,team_name,logo_path',
             ])
             ->whereDoesntHave('result')
             ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
