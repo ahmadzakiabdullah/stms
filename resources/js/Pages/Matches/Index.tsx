@@ -15,9 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { BarChart3, Eye, Pencil, Plus, Save, Swords, Trash2, Users } from 'lucide-react';
-import { FormEvent, useState } from 'react';
-import type { Event, Fixture, Paginated, Participant, Pool } from '@/types';
+import { BarChart3, Eye, Pencil, Plus, RefreshCw, Save, Swords, Trash2, Users } from 'lucide-react';
+import { FormEvent, useEffect, useState } from 'react';
+import type { Event, Fixture, Paginated, Participant, Pool, Result } from '@/types';
 
 interface StandingRow {
     participant_id: string;
@@ -123,12 +123,20 @@ function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: 
     );
 }
 
-function Matchup({ home, away }: { home?: Participant; away?: Participant }) {
+function Matchup({ home, away, result }: { home?: Participant; away?: Participant; result?: Result }) {
+    const scored = result?.score_home !== null && result?.score_home !== undefined;
+
     return (
-        <div className="grid min-w-[360px] grid-cols-[minmax(90px,1fr)_36px_32px_36px_minmax(90px,1fr)] items-center gap-2">
+        <div className="grid min-w-[360px] grid-cols-[minmax(90px,1fr)_36px_40px_36px_minmax(90px,1fr)] items-center gap-2">
             <span className="truncate text-right font-medium">{participantName(home)}</span>
             <TeamMark participant={home} />
-            <span className="text-center text-xs font-bold text-muted-foreground">VS</span>
+            {scored ? (
+                <span className="text-center text-sm font-bold">
+                    {result.score_home} : {result.score_away}
+                </span>
+            ) : (
+                <span className="text-center text-xs font-bold text-muted-foreground">VS</span>
+            )}
             <TeamMark participant={away} />
             <span className="truncate font-medium">{participantName(away)}</span>
         </div>
@@ -296,6 +304,27 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
         });
     };
 
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+    const refreshData = () => {
+        router.reload({
+            only: ['pools', 'allFixtures'],
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => setLastUpdated(new Date()),
+        });
+    };
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (document.hidden || dialogOpen || processing || deleteMatch) return;
+            refreshData();
+        }, 15000);
+
+        return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dialogOpen, processing, deleteMatch]);
+
     return (
         <AuthenticatedLayout
             header={
@@ -343,9 +372,15 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
                                         {selectedEvent.sportCategory && ` — ${selectedEvent.sportCategory.name}`} · {pools.length} Pool
                                     </CardDescription>
                                 </div>
-                                <Link href={route('events.draw-result', selectedEvent.slug)}>
-                                    <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
-                                </Link>
+                                <div className="flex items-center gap-2">
+                                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <RefreshCw className="size-3 animate-spin [animation-duration:3s]" />
+                                        {lastUpdated ? `Auto-updated ${lastUpdated.toLocaleTimeString()}` : 'Auto-updates every 15s'}
+                                    </span>
+                                    <Link href={route('events.draw-result', selectedEvent.slug)}>
+                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                    </Link>
+                                </div>
                             </div>
                         </CardHeader>
                     </Card>
@@ -401,7 +436,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
                                             <TableRow key={fixture.id}>
                                                 <TableCell>{fixture.match_number}</TableCell>
                                                 <TableCell>R{fixture.round || 1}</TableCell>
-                                                <TableCell><Matchup home={fixture.home_participant} away={fixture.away_participant} /></TableCell>
+                                                <TableCell><Matchup home={fixture.home_participant} away={fixture.away_participant} result={fixture.result} /></TableCell>
                                                 <TableCell className="text-sm">
                                                     <div>{fixture.venue || 'Venue TBD'}</div>
                                                     <div className="text-muted-foreground">{fixture.scheduled_at ? new Date(fixture.scheduled_at).toLocaleString() : 'Time TBD'}</div>
@@ -434,7 +469,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
                                     <TableRow key={match.id}>
                                         <TableCell>{match.match_number}</TableCell>
                                         <TableCell>{match.event?.name || '-'}</TableCell>
-                                        <TableCell><Matchup home={match.home_participant} away={match.away_participant} /></TableCell>
+                                        <TableCell><Matchup home={match.home_participant} away={match.away_participant} result={match.result} /></TableCell>
                                         <TableCell className="text-sm"><div>{match.venue || 'Venue TBD'}</div><div className="text-muted-foreground">{match.scheduled_at ? new Date(match.scheduled_at).toLocaleString() : 'Time TBD'}</div></TableCell>
                                         <TableCell>{statusBadge(match.status)}</TableCell>
                                         <TableCell className="space-x-1 text-right">

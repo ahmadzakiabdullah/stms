@@ -58,7 +58,7 @@ class MatchController extends Controller
                 ->with([
                     'eventParticipants.participant',
                     'fixtures' => function ($q) {
-                        $q->with(['homeParticipant', 'awayParticipant'])
+                        $q->with(['homeParticipant', 'awayParticipant', 'result'])
                             ->orderBy('round')
                             ->orderBy('match_number');
                     },
@@ -87,7 +87,7 @@ class MatchController extends Controller
                 });
         }
 
-        $allFixtures = Fixture::with(['event', 'homeParticipant', 'awayParticipant'])
+        $allFixtures = Fixture::with(['event', 'homeParticipant', 'awayParticipant', 'result'])
             ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
             ->orderByDesc('scheduled_at')
             ->paginate(15)
