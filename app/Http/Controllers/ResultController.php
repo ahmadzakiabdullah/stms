@@ -60,7 +60,7 @@ class ResultController extends Controller
             ->whereDoesntHave('result')
             ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
             ->orderBy('match_number')
-            ->get(['id', 'match_number', 'event_id', 'pool_id', 'status', 'scheduled_at']);
+            ->get(['id', 'match_number', 'event_id', 'pool_id', 'home_participant_id', 'away_participant_id', 'status', 'scheduled_at']);
 
         $events = Event::query()
             ->with('sport:id,name')
