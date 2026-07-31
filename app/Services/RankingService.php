@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Result;
+use App\Models\Session;
 use App\Models\Tournament;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,40 @@ class RankingService
     private const STRATEGY_WIN_RATE = 'win_rate';
 
     private const STRATEGY_MEDAL_TALLY = 'medal_tally';
+
+    /**
+     * Rankings aggregated across every tournament in a session.
+     * Used when the session is a single competition split into phases.
+     */
+    public function calculateForSession(Session $session): Collection
+    {
+        $strategy = $session->ranking_strategy ?? self::STRATEGY_POINTS;
+
+        $results = Result::query()
+            ->whereHas('match', fn ($q) => $q->where('event_id', '!=', null))
+            ->whereHas('match.event', fn ($q) => $q->whereIn(
+                'tournament_id',
+                $session->tournaments()->pluck('tournaments.id')
+            ))
+            ->with(['match.homeParticipant', 'match.awayParticipant', 'winner'])
+            ->get();
+
+        $participantStats = $this->aggregateStats($results);
+
+        $rankings = match ($strategy) {
+            self::STRATEGY_POINTS => $this->rankByPoints($participantStats),
+            self::STRATEGY_WIN_RATE => $this->rankByWinRate($participantStats),
+            self::STRATEGY_MEDAL_TALLY => $this->rankByMedalTally(
+                $session->tournaments()->with('events')->get(),
+                $participantStats
+            ),
+            default => $this->rankByPoints($participantStats),
+        };
+
+        Log::info('Rankings calculated for session', ['session_id' => $session->id, 'strategy' => $strategy, 'participant_count' => $rankings->count()]);
+
+        return $rankings;
+    }
 
     public function calculateForTournament(Tournament $tournament): Collection
     {
@@ -30,7 +65,10 @@ class RankingService
         $rankings = match ($strategy) {
             self::STRATEGY_POINTS => $this->rankByPoints($participantStats),
             self::STRATEGY_WIN_RATE => $this->rankByWinRate($participantStats),
-            self::STRATEGY_MEDAL_TALLY => $this->rankByMedalTally($tournament, $participantStats),
+            self::STRATEGY_MEDAL_TALLY => $this->rankByMedalTally(
+                collect([$tournament->load('events')]),
+                $participantStats
+            ),
             default => $this->rankByPoints($participantStats),
         };
 
@@ -153,22 +191,28 @@ class RankingService
     }
 
     /**
-     * Real medal tally: for every event in the tournament, the Final winner
-     * earns Gold, the Final runner-up earns Silver, and the Bronze match
-     * winner earns Bronze. Totals are aggregated across all events and
+     * Real medal tally: for every event in the given tournaments, the Final
+     * winner earns Gold, the Final runner-up earns Silver, and the Bronze
+     * match winner earns Bronze. Totals are aggregated across all events and
      * sorted by Gold, then Silver, then Bronze.
+     *
+     * @param  Collection<int, Tournament>  $tournaments
      */
-    private function rankByMedalTally(Tournament $tournament, Collection $stats): Collection
+    private function rankByMedalTally(Collection $tournaments, Collection $stats): Collection
     {
         $medals = [];
 
-        $tournament->events()
-            ->with(['matches' => fn ($q) => $q
-                ->with('result')
-                ->whereIn('stage', [KnockoutStageService::STAGE_FINAL, KnockoutStageService::STAGE_BRONZE])
-                ->where('status', 'completed'),
-            ])
-            ->get()
+        $tournaments
+            ->each(function ($tournament) {
+                $tournament->events->each(function ($event) {
+                    $event->setRelation('matches', $event->matches()
+                        ->with('result')
+                        ->whereIn('stage', [KnockoutStageService::STAGE_FINAL, KnockoutStageService::STAGE_BRONZE])
+                        ->where('status', 'completed')
+                        ->get());
+                });
+            })
+            ->flatMap(fn ($tournament) => $tournament->events)
             ->each(function ($event) use (&$medals) {
                 $final = $event->matches->firstWhere('stage', KnockoutStageService::STAGE_FINAL);
                 $bronze = $event->matches->firstWhere('stage', KnockoutStageService::STAGE_BRONZE);

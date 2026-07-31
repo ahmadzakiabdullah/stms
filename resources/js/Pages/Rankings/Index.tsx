@@ -17,12 +17,14 @@ import {
 } from '@/components/ui/table';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Medal, Save, Trophy } from 'lucide-react';
-import { type PageProps, type Tournament, type RankingEntry } from '@/types';
+import { type PageProps, type RankingEntry, type Session, type Tournament } from '@/types';
 
 interface RankingsIndexProps {
+    sessions: Session[];
+    selectedSession: string | null;
     tournaments: Tournament[];
-    rankings: RankingEntry[];
     selectedTournament: string | null;
+    rankings: RankingEntry[];
     events: Record<string, unknown>;
     strategies: Record<string, string>;
 }
@@ -39,28 +41,42 @@ const rankColors: Record<number, string> = {
     3: 'text-amber-600 font-bold',
 };
 
-export default function RankingsIndex({ tournaments, rankings, selectedTournament, events, strategies }: RankingsIndexProps) {
+export default function RankingsIndex({ sessions, selectedSession, tournaments, selectedTournament, rankings, events, strategies }: RankingsIndexProps) {
     const { flash } = usePage<PageProps>().props;
 
+    const selectedSessionData = sessions.find(s => s.slug === selectedSession);
     const selectedTournamentData = tournaments.find(t => t.slug === selectedTournament);
+    const isSessionLevel = !!selectedSession && !selectedTournament;
 
     const { data, setData, put, processing } = useForm({
-        ranking_strategy: selectedTournamentData?.ranking_strategy || 'points',
+        ranking_strategy: selectedSessionData?.ranking_strategy || 'points',
     });
 
-    const handleTournamentChange = (slug: string) => {
+    const handleSessionChange = (slug: string) => {
         if (slug) {
-            router.get(route('rankings.index', { tournament: slug }));
+            router.get(route('rankings.index', { session: slug }));
         } else {
             router.get(route('rankings.index'));
         }
     };
 
+    const handleTournamentChange = (slug: string) => {
+        const params: Record<string, string> = { session: selectedSession || '' };
+        if (slug) params.tournament = slug;
+        router.get(route('rankings.index', params));
+    };
+
     const updateStrategy = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedTournamentData) return;
-        put(route('rankings.updateStrategy', selectedTournamentData.slug));
+        if (selectedTournamentData) {
+            put(route('rankings.updateStrategy', selectedTournamentData.slug));
+        } else if (selectedSessionData) {
+            put(route('rankings.updateSessionStrategy', selectedSessionData.slug));
+        }
     };
+
+    const isMedal = (selectedTournamentData?.ranking_strategy ?? selectedSessionData?.ranking_strategy ?? 'points') === 'medal_tally';
+    const isWinRate = (selectedTournamentData?.ranking_strategy ?? selectedSessionData?.ranking_strategy ?? 'points') === 'win_rate';
 
     return (
         <AuthenticatedLayout
@@ -85,30 +101,48 @@ export default function RankingsIndex({ tournaments, rankings, selectedTournamen
 
             <Card className="mb-6">
                 <CardHeader>
-                    <CardTitle>Select Tournament</CardTitle>
+                    <CardTitle>Select Session</CardTitle>
                     <CardDescription>
-                        Choose a tournament to view its rankings
+                        A session is one competition (e.g. SAF 2026); its tournaments (e.g. Fasa 1, Fasa 2) can be viewed separately.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-end gap-4">
+                    <div className="flex flex-wrap items-end gap-4">
                         <div className="flex-1">
-                            <label className="text-sm font-medium mb-1 block">Tournament</label>
+                            <label className="text-sm font-medium mb-1 block">Session</label>
                             <select
                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                value={selectedTournament || ''}
-                                onChange={(e) => handleTournamentChange(e.target.value)}
+                                value={selectedSession || ''}
+                                onChange={(e) => handleSessionChange(e.target.value)}
                             >
-                                <option value="">-- Select Tournament --</option>
-                                {tournaments.map((t) => (
-                                    <option key={t.id} value={t.slug}>
-                                        {t.name} {t.session ? `(${t.session.name})` : ''}
+                                <option value="">-- Select Session --</option>
+                                {sessions.map((s) => (
+                                    <option key={s.id} value={s.slug}>
+                                        {s.name}
                                     </option>
                                 ))}
                             </select>
                         </div>
 
-                        {selectedTournamentData && (
+                        {tournaments.length > 0 && (
+                            <div className="flex-1">
+                                <label className="text-sm font-medium mb-1 block">Tournament (optional)</label>
+                                <select
+                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                    value={selectedTournament || ''}
+                                    onChange={(e) => handleTournamentChange(e.target.value)}
+                                >
+                                    <option value="">All Phases (Session Total)</option>
+                                    {tournaments.map((t) => (
+                                        <option key={t.id} value={t.slug}>
+                                            {t.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {selectedSessionData && (
                             <form onSubmit={updateStrategy} className="flex items-end gap-2">
                                 <div>
                                     <label className="text-sm font-medium mb-1 block">Strategy</label>
@@ -127,42 +161,47 @@ export default function RankingsIndex({ tournaments, rankings, selectedTournamen
                                 </Button>
                             </form>
                         )}
-                        {selectedTournamentData && (
+                        {selectedSessionData && (
                             <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => window.location.href = route('exports.rankings.pdf', selectedTournamentData.slug)}
-                                >
-                                    PDF
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => window.location.href = route('exports.rankings.excel', selectedTournamentData.slug)}
-                                >
-                                    Excel
-                                </Button>
+                                {selectedTournamentData && (
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => window.location.href = route('exports.rankings.pdf', selectedTournamentData.slug)}
+                                        >
+                                            PDF
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => window.location.href = route('exports.rankings.excel', selectedTournamentData.slug)}
+                                        >
+                                            Excel
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
                 </CardContent>
             </Card>
 
-            {selectedTournament && (
+            {selectedSession && (
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Trophy className="size-5" />
-                            Rankings: {selectedTournamentData?.name}
+                            Rankings: {selectedSessionData?.name}
+                            {selectedTournamentData ? ` — ${selectedTournamentData.name}` : ' (All Phases)'}
                         </CardTitle>
                         <CardDescription>
-                            Strategy: {strategyLabels[selectedTournamentData?.ranking_strategy || ''] || 'Points'} |
+                            Strategy: {strategyLabels[selectedTournamentData?.ranking_strategy ?? selectedSessionData?.ranking_strategy ?? 'points'] || 'Points'} |
                             Based on {rankings.length} participant(s) with match results
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {selectedTournamentData?.ranking_strategy === 'medal_tally' ? (
+                        {isMedal ? (
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -210,70 +249,70 @@ export default function RankingsIndex({ tournaments, rankings, selectedTournamen
                             </Table>
                         ) : (
                             <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-16">Rank</TableHead>
-                                    <TableHead>Participant</TableHead>
-                                    <TableHead className="text-center">Played</TableHead>
-                                    <TableHead className="text-center">W</TableHead>
-                                    <TableHead className="text-center">D</TableHead>
-                                    <TableHead className="text-center">L</TableHead>
-                                    <TableHead className="text-center">GF</TableHead>
-                                    <TableHead className="text-center">GA</TableHead>
-                                    <TableHead className="text-center">GD</TableHead>
-                                    <TableHead className="text-center">
-                                        {selectedTournamentData?.ranking_strategy === 'win_rate' ? 'Win %' : 'Pts'}
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {rankings.length === 0 && (
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={10} className="text-center text-muted-foreground">
-                                            No rankings available. Record match results first.
-                                        </TableCell>
+                                        <TableHead className="w-16">Rank</TableHead>
+                                        <TableHead>Participant</TableHead>
+                                        <TableHead className="text-center">Played</TableHead>
+                                        <TableHead className="text-center">W</TableHead>
+                                        <TableHead className="text-center">D</TableHead>
+                                        <TableHead className="text-center">L</TableHead>
+                                        <TableHead className="text-center">GF</TableHead>
+                                        <TableHead className="text-center">GA</TableHead>
+                                        <TableHead className="text-center">GD</TableHead>
+                                        <TableHead className="text-center">
+                                            {isWinRate ? 'Win %' : 'Pts'}
+                                        </TableHead>
                                     </TableRow>
-                                )}
-                                {rankings.map((r) => (
-                                    <TableRow key={r.participant_id}>
-                                        <TableCell>
-                                            <span className={`flex items-center gap-1 ${rankColors[r.rank] || ''}`}>
-                                                {r.rank <= 3 && <Medal className="size-4" />}
-                                                {r.rank}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className="font-medium">
-                                            {r.participant_name}
-                                            {r.team_name && <span className="text-muted-foreground ml-1">({r.team_name})</span>}
-                                        </TableCell>
-                                        <TableCell className="text-center">{r.matches_played}</TableCell>
-                                        <TableCell className="text-center text-emerald-600">{r.wins}</TableCell>
-                                        <TableCell className="text-center text-yellow-600">{r.draws}</TableCell>
-                                        <TableCell className="text-center text-red-600">{r.losses}</TableCell>
-                                        <TableCell className="text-center">{r.score_for}</TableCell>
-                                        <TableCell className="text-center">{r.score_against}</TableCell>
-                                        <TableCell className="text-center font-medium">
-                                            {r.goal_difference > 0 ? '+' : ''}{r.goal_difference}
-                                        </TableCell>
-                                        <TableCell className="text-center font-bold">
-                                            {selectedTournamentData?.ranking_strategy === 'win_rate'
-                                                ? `${r.win_rate}%`
-                                                : r.points}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {rankings.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={10} className="text-center text-muted-foreground">
+                                                No rankings available. Record match results first.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                    {rankings.map((r) => (
+                                        <TableRow key={r.participant_id}>
+                                            <TableCell>
+                                                <span className={`flex items-center gap-1 ${rankColors[r.rank] || ''}`}>
+                                                    {r.rank <= 3 && <Medal className="size-4" />}
+                                                    {r.rank}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {r.participant_name}
+                                                {r.team_name && <span className="text-muted-foreground ml-1">({r.team_name})</span>}
+                                            </TableCell>
+                                            <TableCell className="text-center">{r.matches_played}</TableCell>
+                                            <TableCell className="text-center text-emerald-600">{r.wins}</TableCell>
+                                            <TableCell className="text-center text-yellow-600">{r.draws}</TableCell>
+                                            <TableCell className="text-center text-red-600">{r.losses}</TableCell>
+                                            <TableCell className="text-center">{r.score_for}</TableCell>
+                                            <TableCell className="text-center">{r.score_against}</TableCell>
+                                            <TableCell className="text-center font-medium">
+                                                {r.goal_difference > 0 ? '+' : ''}{r.goal_difference}
+                                            </TableCell>
+                                            <TableCell className="text-center font-bold">
+                                                {isWinRate
+                                                    ? `${r.win_rate}%`
+                                                    : r.points}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
                         )}
                     </CardContent>
                 </Card>
             )}
 
-            {!selectedTournament && (
+            {!selectedSession && (
                 <Card>
                     <CardContent className="py-12 text-center text-muted-foreground">
                         <Trophy className="mx-auto mb-4 size-12 opacity-30" />
-                        <p>Select a tournament above to view rankings</p>
+                        <p>Select a session above to view rankings</p>
                     </CardContent>
                 </Card>
             )}

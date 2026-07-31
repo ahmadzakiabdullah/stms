@@ -150,6 +150,7 @@ Route::middleware('auth')->group(function () {
     // M5: Rankings
     Route::get('/rankings', [RankingController::class, 'index'])->name('rankings.index');
     Route::put('/rankings/{tournament}/strategy', [RankingController::class, 'updateStrategy'])->name('rankings.updateStrategy');
+    Route::put('/rankings/session/{session}/strategy', [RankingController::class, 'updateSessionStrategy'])->name('rankings.updateSessionStrategy');
 
     // M6: Exports
     Route::get('/exports/fixtures/pdf', [ExportController::class, 'fixturesPdf'])->name('exports.fixtures.pdf');

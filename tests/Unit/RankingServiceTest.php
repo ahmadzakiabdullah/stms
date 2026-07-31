@@ -7,6 +7,7 @@ use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Result;
+use App\Models\Session;
 use App\Models\Tournament;
 use App\Services\RankingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -238,6 +239,56 @@ class RankingServiceTest extends TestCase
         $rankings = $this->service->calculateForTournament($tournament);
 
         $this->assertTrue($rankings->every(fn ($r) => $r['gold'] === 0 && $r['silver'] === 0 && $r['bronze'] === 0));
+    }
+
+    public function test_calculate_for_session_aggregates_medals_across_phases(): void
+    {
+        $org = Organization::factory()->create();
+        $session = Session::factory()->create([
+            'organization_id' => $org->id,
+            'ranking_strategy' => 'medal_tally',
+        ]);
+
+        $ftke = Participant::factory()->create(['organization_id' => $org->id, 'name' => 'FTKE']);
+        $step = Participant::factory()->create(['organization_id' => $org->id, 'name' => 'STEP']);
+        $ftkip = Participant::factory()->create(['organization_id' => $org->id, 'name' => 'FTKIP']);
+
+        $phase1 = Tournament::factory()->create([
+            'organization_id' => $org->id,
+            'session_id' => $session->id,
+            'ranking_strategy' => 'medal_tally',
+        ]);
+        $event1 = Event::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $phase1->id,
+        ]);
+        $this->createCompletedKnockout($event1, $ftke, $step, $ftkip);
+
+        $phase2 = Tournament::factory()->create([
+            'organization_id' => $org->id,
+            'session_id' => $session->id,
+            'ranking_strategy' => 'medal_tally',
+        ]);
+        $event2 = Event::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $phase2->id,
+        ]);
+        $this->createCompletedKnockout($event2, $step, $ftke, $ftkip);
+
+        $rankings = $this->service->calculateForSession($session);
+
+        $byName = $rankings->keyBy('participant_name');
+
+        $this->assertSame(1, $byName['FTKE']['gold']);
+        $this->assertSame(1, $byName['FTKE']['silver']);
+        $this->assertSame(0, $byName['FTKE']['bronze']);
+
+        $this->assertSame(1, $byName['STEP']['gold']);
+        $this->assertSame(1, $byName['STEP']['silver']);
+
+        $this->assertSame(2, $byName['FTKIP']['bronze']);
+
+        $this->assertSame('FTKE', $rankings->first()['participant_name']);
     }
 
     private function createCompletedKnockout(Event $event, Participant $gold, Participant $silver, Participant $bronze): void
