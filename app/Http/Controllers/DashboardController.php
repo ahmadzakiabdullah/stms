@@ -13,6 +13,7 @@ use App\Models\Session;
 use App\Models\Sport;
 use App\Models\Tournament;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +21,8 @@ class DashboardController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('view-dashboard');
+
         $user = auth()->user();
 
         $safeCount = function (string $modelClass, $query = null) {

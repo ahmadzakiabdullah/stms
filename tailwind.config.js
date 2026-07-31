@@ -14,6 +14,24 @@ export default {
 
     theme: {
         extend: {
+            keyframes: {
+                'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+                'fade-out': { from: { opacity: '1' }, to: { opacity: '0' } },
+                'dialog-in': {
+                    from: { opacity: '0', transform: 'translate(-50%, -50%) scale(0.95)' },
+                    to: { opacity: '1', transform: 'translate(-50%, -50%) scale(1)' },
+                },
+                'dialog-out': {
+                    from: { opacity: '1', transform: 'translate(-50%, -50%) scale(1)' },
+                    to: { opacity: '0', transform: 'translate(-50%, -50%) scale(0.95)' },
+                },
+            },
+            animation: {
+                'fade-in': 'fade-in 100ms ease-out',
+                'fade-out': 'fade-out 100ms ease-in',
+                'dialog-in': 'dialog-in 100ms ease-out',
+                'dialog-out': 'dialog-out 100ms ease-in',
+            },
             borderRadius: {
                 lg: 'var(--radius)',
                 md: 'calc(var(--radius) - 2px)',

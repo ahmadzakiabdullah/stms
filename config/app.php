@@ -54,6 +54,42 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'public_registration' => (bool) env(
+        'PUBLIC_REGISTRATION_ENABLED',
+        env('APP_ENV', 'production') !== 'production'
+    ),
+
+    'default_org_slug' => env('DEFAULT_ORG_SLUG'),
+
+    'trusted_proxies' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('TRUSTED_PROXIES', ''))
+    ))),
+
+    'seed_demo_data' => (bool) env(
+        'SEED_DEMO_DATA',
+        env('APP_ENV', 'production') !== 'production'
+    ),
+
+    'allow_demo_seeding' => (bool) env('ALLOW_DEMO_SEEDING', false),
+
+    'backup' => [
+        'enabled' => (bool) env('BACKUP_ENABLED', false),
+        'path' => env('BACKUP_PATH') ?: storage_path('app/backups'),
+        'source_path' => env('BACKUP_SOURCE_PATH') ?: storage_path('app/public'),
+        'encryption_key' => env('BACKUP_ENCRYPTION_KEY'),
+        'retention_days' => (int) env('BACKUP_RETENTION_DAYS', 14),
+        'mysqldump_binary' => env('MYSQLDUMP_BINARY', 'mysqldump'),
+        'mysql_binary' => env('MYSQL_BINARY', 'mysql'),
+    ],
+
+    'health' => [
+        'monitor_enabled' => (bool) env('HEALTH_MONITOR_ENABLED', false),
+        'max_pending_jobs' => (int) env('HEALTH_MAX_PENDING_JOBS', 100),
+        'max_failed_jobs' => (int) env('HEALTH_MAX_FAILED_JOBS', 0),
+        'min_disk_free_mb' => (int) env('HEALTH_MIN_DISK_FREE_MB', 1024),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

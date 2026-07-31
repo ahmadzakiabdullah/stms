@@ -8,7 +8,7 @@ Queues are used to defer the processing of time-consuming tasks, such as sending
 
 ## Current Implementation
 
--   **Driver**: The application is currently configured to use the `database` driver. Jobs are stored in the `jobs` table in the main application database.
+-   **Driver**: Environment-controlled. Production examples and Docker use Redis; local/test environments may use database or synchronous queues.
 -   **Worker**: A queue worker process is needed to pull jobs from the table and execute them. The `composer dev` script includes a `php artisan queue:listen` command for local development. For production, a more robust worker setup using Supervisor is required.
 
 ## Weaknesses & Risks
@@ -27,7 +27,7 @@ For production environments, a dedicated queueing service should be used.
     -   Set `QUEUE_CONNECTION=redis` in the `.env` file.
     -   Ensure a Redis server is available. The project's `docker-compose.yml` already includes a Redis service.
 -   **Production Worker**:
-    -   Use a process manager like **Supervisor** to run the `php artisan queue:work` command. Supervisor will ensure that the queue worker is always running. The included `docker/supervisord.conf` is a good starting point.
+    -   Use a process manager like **Supervisor** to run `php artisan queue:work redis --sleep=3 --tries=3 --timeout=90`. The included Docker configuration runs this worker and Laravel Scheduler.
     -   For higher availability, consider running multiple workers.
 
 ## Types of Jobs

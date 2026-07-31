@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -11,27 +9,46 @@ services:
       - ./storage:/var/www/html/storage
       - ./public/build:/var/www/html/public/build
     environment:
-      - APP_ENV=production
-      - DB_HOST=mysql
-      - DB_DATABASE=stms
-      - DB_USERNAME=stms
-      - DB_PASSWORD=secret
-      - REDIS_HOST=redis
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY:?Set APP_KEY in the Compose environment}
+      PUBLIC_REGISTRATION_ENABLED: "false"
+      SEED_DEMO_DATA: "false"
+      ALLOW_DEMO_SEEDING: "false"
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      BACKUP_ENABLED: "true"
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY in the Compose environment}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      HEALTH_MONITOR_ENABLED: "true"
+      HEALTH_MAX_PENDING_JOBS: ${HEALTH_MAX_PENDING_JOBS:-100}
+      HEALTH_MAX_FAILED_JOBS: ${HEALTH_MAX_FAILED_JOBS:-0}
+      HEALTH_MIN_DISK_FREE_MB: ${HEALTH_MIN_DISK_FREE_MB:-1024}
+      DB_HOST: mysql
+      DB_DATABASE: ${DB_DATABASE:-stms}
+      DB_USERNAME: ${DB_USERNAME:-stms}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the Compose environment}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in the Compose environment}
     depends_on:
       mysql:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
 
   mysql:
     image: mysql:8.0
-    ports:
-      - "3306:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=rootsecret
-      - MYSQL_DATABASE=stms
-      - MYSQL_USER=stms
-      - MYSQL_PASSWORD=secret
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in the Compose environment}
+      MYSQL_DATABASE: ${DB_DATABASE:-stms}
+      MYSQL_USER: ${DB_USERNAME:-stms}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the Compose environment}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -39,13 +56,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD in the Compose environment}"]
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in the Compose environment}
+    restart: unless-stopped
 
 volumes:
   mysql_data:

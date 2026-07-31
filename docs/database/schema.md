@@ -1,4 +1,6 @@
-# Database Schema (26 Tables)
+# Database Schema
+
+The schema is migration-driven. There are 51 migration files as of 31 July 2026; do not infer the final table count from migration count because several migrations alter or rename existing tables.
 
 ## Tables Overview
 
@@ -30,6 +32,13 @@
 ### Squad Management
 
 - **`squad_members`** — Roster members within an event participant. Roles: athlete_male, athlete_female, manager, coach, physio. Has identification_no, phone, and `organization_id`.
+
+### Draws, Configuration, Notifications, and Audit
+
+- **`pools`** — Event draw/group allocation, tenant-scoped by `organization_id`.
+- **`settings`** — Per-organization key/value settings with a unique `[organization_id, key]` constraint.
+- **`notifications`** — Laravel database notifications.
+- **`activity_log`** — Spatie activity records for selected audited actions.
 
 ### Laravel System Tables (7)
 

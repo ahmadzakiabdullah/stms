@@ -22,6 +22,8 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
+        abort_unless(config('app.public_registration'), 404);
+
         return Inertia::render('Auth/Register');
     }
 
@@ -32,24 +34,35 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        abort_unless(config('app.public_registration'), 404);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $defaultOrgSlug = config('app.default_org_slug', env('DEFAULT_ORG_SLUG', 'default'));
+        $defaultOrgSlug = config('app.default_org_slug');
+
+        if (! is_string($defaultOrgSlug) || $defaultOrgSlug === '') {
+            throw ValidationException::withMessages([
+                'email' => 'Registration is unavailable because no organization has been configured.',
+            ]);
+        }
+
         $organization = Organization::where('slug', $defaultOrgSlug)->first();
 
         if (! $organization) {
-            $organization = Organization::first();
+            throw ValidationException::withMessages([
+                'email' => 'Registration is unavailable for the configured organization.',
+            ]);
         }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'organization_id' => $organization?->id,
+            'organization_id' => $organization->id,
         ]);
 
         event(new Registered($user));

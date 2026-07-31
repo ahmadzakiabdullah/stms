@@ -1,0 +1,53 @@
+# Backup and Restore Runbook
+
+## Objectives
+
+- **RPO:** 24 hours with the default daily schedule. Reduce the interval if operations require lower data loss.
+- **RTO target:** 2 hours for a single-node restore, subject to database/storage size and infrastructure availability.
+- **Scope:** configured database plus `storage/app/public` uploads.
+- **Retention:** 14 days by default, controlled by `BACKUP_RETENTION_DAYS`.
+
+## Configuration
+
+Set `BACKUP_ENABLED=true`, an off-repository `BACKUP_PATH`, and a unique `BACKUP_ENCRYPTION_KEY` of at least 32 characters. Store the key in the deployment secret manager. Losing the key makes backups unrecoverable.
+
+For MySQL, ensure `mysqldump` and `mysql` are installed or configure `MYSQLDUMP_BINARY` and `MYSQL_BINARY`. The Docker image includes compatible client tools.
+
+The application creates AES-256 encrypted ZIP archives with a manifest and SHA-256 checksum for every database/storage entry.
+
+## Create and Retain a Backup
+
+```bash
+php artisan stms:backup
+```
+
+Copy completed archives to storage outside the application host/container. Local retention is not a substitute for off-site storage.
+
+## Restore Drill
+
+1. Select a known backup and record its timestamp.
+2. Restore first into an isolated environment running the same application release.
+3. Configure the same `BACKUP_ENCRYPTION_KEY`.
+4. Put the isolated application in maintenance mode.
+5. Run:
+
+```bash
+php artisan down
+php artisan stms:restore /absolute/path/to/stms-YYYYMMDD-HHMMSS.zip --force
+php artisan optimize:clear
+php artisan migrate:status
+php artisan stms:health-check
+php artisan up
+```
+
+6. Verify login, tenant isolation, recent registrations/results, uploaded logos, exports, and queue processing. Record achieved RPO/RTO.
+
+## Production Restore
+
+A restore replaces the current database and public upload directory. Obtain incident authorization, stop incoming writes and queue workers, take a pre-restore snapshot, and confirm the target archive in an isolated drill before restoring production.
+
+After restoration, restart workers, run the health check, perform smoke tests, and retain incident/audit evidence.
+
+## Automated Evidence
+
+`tests/Feature/BackupServiceTest.php` creates an encrypted backup, changes a temporary SQLite database and upload file, restores the archive, and verifies both return to their original state. MySQL restore drills must also be executed in the deployment environment because they depend on installed client binaries and production-scale data.

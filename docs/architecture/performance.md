@@ -10,7 +10,7 @@ The application is generally performant for small to medium-scale use cases. The
 
 ### 1. Cache and Queue Drivers
 
--   **Current Implementation**: The application is currently configured to use the `database` driver for both caching and queuing.
+-   **Current Implementation**: Drivers are environment-controlled. Production examples and Docker use Redis; tests use isolated array/synchronous drivers.
 -   **Risk**: This presents the most significant performance bottleneck, especially under high load. Using the primary application database for frequent, short-lived cache operations and for managing background jobs adds significant overhead to the database server. This can lead to slower response times and potential database contention issues as user traffic grows.
 -   **Recommendation**: For all production and staging environments, it is strongly recommended to use an in-memory data store like **Redis**. Redis is purpose-built for high-throughput caching and queuing, and offloading this work from the main database will significantly improve application performance and scalability.
 
@@ -26,5 +26,18 @@ The application is generally performant for small to medium-scale use cases. The
 
 ## Action Plan
 
-1.  **Immediate Priority**: Configure the production environment to use **Redis** for the `CACHE_STORE` and `QUEUE_CONNECTION` drivers, as outlined in the `TODOS.md` file (Task 3.6).
+1.  **Deployment Verification**: Confirm production is actually using Redis for `CACHE_STORE` and `QUEUE_CONNECTION`; repository examples alone do not prove runtime configuration.
 2.  **Ongoing**: Implement a monitoring solution (like Laravel Telescope in development or a commercial APM in production) to proactively identify performance bottlenecks in database queries and application code.
+# Automated Baselines
+
+- `PerformanceBaselineTest` limits the dashboard request to 40 database queries with representative domain data.
+- `tests/performance/smoke.js` defines a k6 smoke baseline of less than 1% request failures and p95 below 750 ms for `/health`.
+- `npm run build:budget` limits every emitted JavaScript chunk to 400 KB and CSS asset to 100 KB uncompressed.
+
+Run k6 against a non-production or explicitly approved environment:
+
+```bash
+k6 run -e BASE_URL=https://staging.example.test -e VUS=10 -e DURATION=30s tests/performance/smoke.js
+```
+
+Authenticated dashboard/ranking/export load scenarios remain deployment follow-up because they require controlled credentials and representative protected data.

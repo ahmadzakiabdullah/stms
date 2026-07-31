@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Spatie\Activitylog\Models\Activity;
 
@@ -10,6 +11,8 @@ class ActivityLogController extends Controller
 {
     public function index()
     {
+        Gate::authorize('view-activity-logs');
+
         $activities = Activity::with('causer')
             ->where(function ($q) {
                 $q->whereHas('causer', function ($sub) {

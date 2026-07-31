@@ -36,8 +36,8 @@
 - **Session:** SAF 2026 (1-30 September 2026)
 - **2 Tournaments:** Fasa 1 (11-13 Sept), Fasa 2 (25-27 Sept)
 - **8 Faculties:** FTKEK, FTKE, FTKM, FTKIP, FTMK, FPTT, FAIX, STEP
-- **16 Users:** 8 faculty reps + 8 deans (password: `password`)
-- **Super-admin:** ahmadzaki@utem.edu.my
+- **19 seeded users:** 8 faculty reps + 8 deans + 1 named super-admin + 2 development/test accounts
+- **Credential warning:** current seeders use the shared development password `password`; do not run them unchanged in production.
 
 ## Long-term Vision (Future Phases)
 
@@ -50,4 +50,4 @@
 | 10    | AI Features                 | Low      | ⏳ Deferred |
 | 11    | REST API Layer              | Low      | ⏳ Deferred |
 
-**Fokus semasa:** Maintenance — pastikan kestabilan production dan sokong pengurusan SAF 2026.
+**Fokus semasa:** Production hardening and maintenance — close the security, deployment, observability, and documentation gaps recorded in `docs/audits/2026-07-31-enterprise-audit.md` before describing the system as production-ready.

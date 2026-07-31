@@ -7,11 +7,35 @@
 
 ## ✅ Current Status: Maintenance Mode
 
+### Current Focus (MVP): Production Hardening
+
+- [x] Disable public registration by default in production and remove first-organization fallback; invitation-based onboarding remains a future enhancement.
+- [x] Restrict trusted proxies to explicit environment-provided IPs/CIDRs.
+- [x] Split production bootstrap from SAF/demo account seeding and guard direct demo seeding in production.
+- [x] Add Composer/npm vulnerability audit gates to connected CI.
+- [x] Implement encrypted DB/upload backup, retention, destructive restore guard, SQLite restore drill, health checks, and supervised queue/scheduler lifecycle. Production MySQL/off-site restore drill remains operational follow-up.
+- [x] Restore a clean Pint quality gate. Measured coverage, browser E2E, accessibility, and load-test baselines remain Sprint 3 work.
+
+Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
+
+### Sprint 3: Assurance, Accessibility, and Performance
+
+- [x] Add PCOV coverage reporting and publish Clover output in CI; capture the first measured baseline from the connected CI run before setting a ratcheting threshold.
+- [x] Add Playwright desktop/mobile critical-journey tests for super-admin, faculty, and dean roles.
+- [x] Add axe WCAG 2.2 AA checks for login and dashboard; Chromium execution is enforced in CI.
+- [x] Add dashboard query budget and k6 health/load scenario with p95/error thresholds.
+- [x] Add frontend JS/CSS bundle budgets and remove Tailwind 3/4 mismatch; production build is warning-free.
+- [ ] Execute the Playwright suite in connected CI and triage any real browser/accessibility findings.
+- [ ] Establish a clean `tsc --noEmit` gate by typing legacy JSX UI modules, Ziggy's global `route`, and remaining page/model mismatches.
+- [ ] Execute production-sized MySQL restore, authenticated k6 scenarios, and external alert delivery drills.
+
 - [x] Matches page CRUD restored with pool/round fields and Name–Logo–VS–Logo–Name fixture layout.
 - [x] Matches event filter URLs now use existing event slugs instead of UUID query values.
 - [x] Participant logo upload repair: securely accept sanitized SVG logos and display upload validation errors.
 
 - [x] Production `/portal/` 405/500 recovery: cleared environment-specific Laravel caches and restored the IIS front controller.
+- [x] Local `db4stms` schema-drift recovery: encrypted pre-migration backup created, all migrations reconciled without `migrate:fresh`, and HTTP/PHP regression checks passed.
+- [x] Restore the complete SAF 2026 local dataset after schema reconciliation and verify the administrator password remains user-controlled.
 
 **Matlamat:** Projek dalam fasa maintenance — semua isu kritikal telah dibaiki. Semua Fasa 0-3 selesai. Semua ciri MVP telah dibangunkan.
 
@@ -109,4 +133,4 @@
 
 ---
 
-*Fail ini dikemaskini 22 Julai 2026 — semua ciri MVP selesai, seed SAF 2026 kini meliputi 24 sports dan 30 categories/events dengan quota.*
+*Fail ini dikemaskini 31 Julai 2026 — Sprint 1 production hardening selesai; fokus seterusnya ialah dependency audit, operasi/restore, observability, dan quality baselines.*

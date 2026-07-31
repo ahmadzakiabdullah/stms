@@ -61,6 +61,15 @@ Edit `.env`:
 | `CACHE_STORE` | `redis` (or `database` if no Redis) |
 | `QUEUE_CONNECTION` | `redis` (or `database` if no Redis) |
 | `REDIS_HOST` | `127.0.0.1` (if using Redis) |
+| `PUBLIC_REGISTRATION_ENABLED` | `false` unless public onboarding is explicitly approved |
+| `DEFAULT_ORG_SLUG` | Required only when public registration is enabled |
+| `TRUSTED_PROXIES` | Comma-separated IP/CIDR allowlist for the actual reverse proxy; never `*` |
+| `SEED_DEMO_DATA` | `false` in production |
+| `ALLOW_DEMO_SEEDING` | `false`; temporary explicit override only for an approved SAF data load |
+| `BACKUP_ENABLED` | `true` after configuring and testing encrypted backup storage |
+| `BACKUP_PATH` | Persistent path outside an ephemeral container layer |
+| `BACKUP_ENCRYPTION_KEY` | Unique 32+ character secret stored outside the repository |
+| `HEALTH_MONITOR_ENABLED` | `true` when Laravel Scheduler is running |
 
 ---
 
@@ -77,7 +86,8 @@ npm ci && npm run build
 
 ```bash
 php artisan migrate --force
-php artisan db:seed --force          # Creates default org, permissions, SAF sports, categories/events, faculties, and users
+php artisan db:seed --force          # Production default: organization + roles/permissions only; creates no users
+php artisan stms:create-super-admin admin@example.com utem  # Password is requested securely and is not stored in shell history
 php artisan event-participants:backfill-org  # Backfill org_id for existing records
 ```
 
@@ -102,7 +112,7 @@ chown -R www-data:www-data storage bootstrap/cache
 
 - [ ] Visit `https://your-domain.com/portal` — should show welcome page
 - [ ] Visit `https://your-domain.com/portal/health` — should return JSON `{"status":"ok"}`
-- [ ] Login with default super-admin (check seeder output for credentials)
+- [ ] Provision the initial super-admin with `stms:create-super-admin`; production seeding intentionally creates no default account
 - [ ] Test basic CRUD (Organizations, Sports, Sessions, Tournaments, Events)
 
 ---
@@ -114,15 +124,24 @@ chown -R www-data:www-data storage bootstrap/cache
 - [ ] Configure SSL/HTTPS
 - [ ] Schedule `php artisan schedule:run` in cron (if using scheduled tasks)
 - [ ] Set up log rotation for `storage/logs/`
-- [ ] Configure backup for database + storage
+- [ ] Run `php artisan stms:backup`, copy the archive off-host, and complete the isolated restore drill in [backup-restore.md](../deployment/backup-restore.md)
+- [ ] Configure an external uptime monitor for `/health` and alert on HTTP 503
+- [ ] Confirm `queue:work` and `schedule:work` are supervised and restart after failure/deploy
 
 ---
 
 ## Rollback
 
 ```bash
-# Revert to previous deploy
-git reset --hard <previous-tag-or-commit>
-php artisan migrate:rollback --force  # if DB migration needs revert
+# Before deployment
+php artisan stms:backup
+php artisan down
+
+# Deploy a versioned release directory, migrate, then switch the current symlink.
+# To roll back application code, switch the symlink to the previous tested release.
 php artisan optimize:clear
+php artisan queue:restart
+php artisan up
 ```
+
+Do not automatically roll back database migrations after they may have processed production data. Prefer backward-compatible expand/contract migrations. If data restoration is required, follow the authorized restore runbook and preserve the pre-restore snapshot.

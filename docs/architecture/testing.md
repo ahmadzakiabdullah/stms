@@ -28,3 +28,14 @@ Unit tests cover Service classes and Action classes in isolation. Domain models 
 php artisan test              # all tests
 php artisan test --filter=Tournament  # specific feature group
 ```
+
+## Coverage and Browser Assurance
+
+CI installs PCOV and publishes `coverage.xml` in Clover format. The first connected CI run establishes the measured baseline; only then should a minimum threshold be added and ratcheted upward.
+
+Playwright runs critical super-admin, faculty, and dean journeys on desktop and mobile Chromium. Axe scans login and dashboard against WCAG A/AA tags and fails on serious or critical violations. Failure traces, screenshots, video, and the HTML report are retained as CI artifacts.
+
+```bash
+npm run test:e2e
+npm run test:e2e:ui
+```

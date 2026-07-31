@@ -11,13 +11,19 @@ use App\Models\Session;
 use App\Models\Sport;
 use App\Models\SportCategory;
 use App\Models\Tournament;
+use App\Policies\ActivityLogPolicy;
+use App\Policies\DashboardPolicy;
+use App\Policies\DeanVerificationPolicy;
 use App\Policies\EventParticipantPolicy;
 use App\Policies\EventPolicy;
+use App\Policies\ExportPolicy;
 use App\Policies\MatchPolicy;
 use App\Policies\OrganizationPolicy;
+use App\Policies\ReportingPolicy;
 use App\Policies\ResultPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\SessionPolicy;
+use App\Policies\SettingPolicy;
 use App\Policies\SportCategoryPolicy;
 use App\Policies\SportPolicy;
 use App\Policies\TournamentPolicy;
@@ -42,8 +48,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        URL::forceScheme('https');
-        $this->app['request']->setTrustedProxies(['*'], $this->app['request']::HEADER_X_FORWARDED_FOR | $this->app['request']::HEADER_X_FORWARDED_HOST | $this->app['request']::HEADER_X_FORWARDED_PORT | $this->app['request']::HEADER_X_FORWARDED_PROTO);
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
+        $trustedProxies = config('app.trusted_proxies', []);
+
+        if ($trustedProxies !== []) {
+            $this->app['request']->setTrustedProxies(
+                $trustedProxies,
+                $this->app['request']::HEADER_X_FORWARDED_FOR
+                    | $this->app['request']::HEADER_X_FORWARDED_HOST
+                    | $this->app['request']::HEADER_X_FORWARDED_PORT
+                    | $this->app['request']::HEADER_X_FORWARDED_PROTO
+            );
+        }
 
         Vite::prefetch(concurrency: 3);
 
@@ -76,5 +94,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Role policy
         Gate::policy(Role::class, RolePolicy::class);
+
+        // Dashboard / activity log / exports / reports / settings / dean verification
+        Gate::define('view-dashboard', [DashboardPolicy::class, 'viewAny']);
+        Gate::define('view-activity-logs', [ActivityLogPolicy::class, 'viewAny']);
+        Gate::define('export-data', [ExportPolicy::class, 'viewAny']);
+        Gate::define('view-reports', [ReportingPolicy::class, 'viewAny']);
+        Gate::define('view-settings', [SettingPolicy::class, 'viewAny']);
+        Gate::define('update-settings', [SettingPolicy::class, 'update']);
+        Gate::define('view-dean-dashboard', [DeanVerificationPolicy::class, 'viewAny']);
+        Gate::define('verify-registration', [DeanVerificationPolicy::class, 'verify']);
     }
 }

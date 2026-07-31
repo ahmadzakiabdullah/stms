@@ -7,7 +7,7 @@
         @php
             $favicon = \App\Models\Setting::where('key', 'favicon_url')->value('value');
         @endphp
-        <link rel="icon" type="image/x-icon" href="{{ $favicon ?: asset('favicon.ico') }}">
+        <link rel="icon" href="{{ $favicon ?: asset('favicon.ico') }}">
 
         <title inertia>{{ config('app.name', 'STMS Portal') }}</title>
 

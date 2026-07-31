@@ -78,3 +78,8 @@ Styling dikendalikan sepenuhnya oleh **Tailwind CSS**.
 2.  **Komponen Kecil & Fokus:** Pecahkan UI kepada komponen yang lebih kecil dan boleh diguna semula.
 3.  **Elakkan State Global:** Cuba elakkan penggunaan perpustakaan pengurusan *state* global (seperti Redux atau Zustand) melainkan jika benar-benar perlu. Seni bina Inertia mengurangkan keperluan untuknya.
 4.  **Aksesibiliti (a11y):** Pastikan komponen yang dibina adalah mudah diakses, menggunakan atribut ARIA yang betul dan elemen HTML semantik. Komponen `shadcn/ui` menyediakan asas yang baik untuk ini.
+# Build Quality Gates
+
+The project standardizes on Tailwind CSS 3. Dialog and sheet state animations are defined in `tailwind.config.js`; Tailwind 4-only stylesheets are not imported. This avoids mixed compiler semantics and produces a warning-free build.
+
+After `npm run build`, run `npm run build:budget`. Default uncompressed limits are 400 KB per JavaScript chunk and 100 KB per CSS asset; override them only through reviewed CI environment variables.

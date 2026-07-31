@@ -1,6 +1,9 @@
 *.log
 .DS_Store
 .env
+.env.*.bak
+.env.bak
+.env.*.backup
 .env.backup
 .env.production
 .phpactor.json
@@ -18,8 +21,13 @@
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
+/playwright-report
+/test-results
+/coverage.xml
 /bootstrap/cache/*.php
 /storage/*.key
+/storage/app/backups/
+/storage/app/public/*
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*

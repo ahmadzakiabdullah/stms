@@ -7,6 +7,7 @@ use App\Notifications\EventParticipantConfirmed;
 use App\Notifications\EventParticipantRejected;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,6 +15,8 @@ class DeanVerificationController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('view-dean-dashboard');
+
         $user = Auth::user();
 
         $registrations = $this->safePaginatedQuery(function () use ($user) {
@@ -45,11 +48,7 @@ class DeanVerificationController extends Controller
 
     public function approve(EventParticipant $eventParticipant): RedirectResponse
     {
-        $user = Auth::user();
-
-        if ($eventParticipant->participant_id !== $user->participant_id) {
-            abort(403, 'You can only verify your own faculty registrations.');
-        }
+        Gate::authorize('verify-registration', $eventParticipant);
 
         $eventParticipant->update(['status' => 'confirmed']);
 
@@ -65,11 +64,7 @@ class DeanVerificationController extends Controller
 
     public function reject(EventParticipant $eventParticipant): RedirectResponse
     {
-        $user = Auth::user();
-
-        if ($eventParticipant->participant_id !== $user->participant_id) {
-            abort(403, 'You can only verify your own faculty registrations.');
-        }
+        Gate::authorize('verify-registration', $eventParticipant);
 
         $eventParticipant->update(['status' => 'rejected']);
 

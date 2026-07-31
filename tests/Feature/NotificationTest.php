@@ -5,9 +5,9 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Notification;
-use Tests\TestCase;
-use Inertia\Testing\AssertableInertia as Assert;
 use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 class TestNotification extends Notification
 {
@@ -27,7 +27,7 @@ class TestNotification extends Notification
     {
         return [
             'message' => 'Test notification message',
-            'type' => 'info'
+            'type' => 'info',
         ];
     }
 }
@@ -39,8 +39,8 @@ class NotificationTest extends TestCase
     public function test_user_can_view_notifications_page(): void
     {
         $user = User::factory()->create();
-        $user->notify(new TestNotification());
-        $user->notify(new TestNotification());
+        $user->notify(new TestNotification);
+        $user->notify(new TestNotification);
 
         $response = $this->actingAs($user)->get(route('notifications.index'));
 
@@ -54,7 +54,7 @@ class NotificationTest extends TestCase
     public function test_user_can_fetch_notifications_via_json(): void
     {
         $user = User::factory()->create();
-        $user->notify(new TestNotification());
+        $user->notify(new TestNotification);
 
         $response = $this->actingAs($user)
             ->withHeaders(['Accept' => 'application/json'])
@@ -63,10 +63,10 @@ class NotificationTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'notifications' => [
-                    '*' => ['id', 'type', 'data', 'read_at', 'created_at']
+                    '*' => ['id', 'type', 'data', 'read_at', 'created_at'],
                 ],
                 'unread_count',
-                'has_more'
+                'has_more',
             ])
             ->assertJsonCount(1, 'notifications')
             ->assertJsonPath('unread_count', 1);
@@ -75,8 +75,8 @@ class NotificationTest extends TestCase
     public function test_user_can_get_unread_count(): void
     {
         $user = User::factory()->create();
-        $user->notify(new TestNotification());
-        $user->notify(new TestNotification());
+        $user->notify(new TestNotification);
+        $user->notify(new TestNotification);
 
         // Mark one as read
         $notification = $user->notifications()->first();
@@ -93,7 +93,7 @@ class NotificationTest extends TestCase
     public function test_user_can_mark_notification_as_read(): void
     {
         $user = User::factory()->create();
-        $user->notify(new TestNotification());
+        $user->notify(new TestNotification);
 
         $notification = $user->notifications()->first();
         $this->assertNull($notification->read_at);
@@ -110,7 +110,7 @@ class NotificationTest extends TestCase
     public function test_user_can_mark_notification_as_read_via_json(): void
     {
         $user = User::factory()->create();
-        $user->notify(new TestNotification());
+        $user->notify(new TestNotification);
 
         $notification = $user->notifications()->first();
         $this->assertNull($notification->read_at);
@@ -128,8 +128,8 @@ class NotificationTest extends TestCase
     public function test_user_can_mark_all_notifications_as_read(): void
     {
         $user = User::factory()->create();
-        $user->notify(new TestNotification());
-        $user->notify(new TestNotification());
+        $user->notify(new TestNotification);
+        $user->notify(new TestNotification);
 
         $this->assertEquals(2, $user->unreadNotifications()->count());
 
@@ -145,7 +145,7 @@ class NotificationTest extends TestCase
     public function test_user_cannot_mark_other_users_notification_as_read(): void
     {
         $user1 = User::factory()->create();
-        $user1->notify(new TestNotification());
+        $user1->notify(new TestNotification);
         $notification = $user1->notifications()->first();
 
         $user2 = User::factory()->create();

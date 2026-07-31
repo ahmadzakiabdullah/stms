@@ -6,6 +6,7 @@ use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -13,6 +14,8 @@ class SettingController extends Controller
 {
     public function index()
     {
+        Gate::authorize('view-settings');
+
         $settings = Setting::where('organization_id', Auth::user()->organization_id)
             ->pluck('value', 'key')
             ->toArray();
@@ -28,6 +31,8 @@ class SettingController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
+        Gate::authorize('update-settings');
+
         $request->validate([
             'app_name' => 'nullable|string|max:255',
             'logo' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp|max:2048',

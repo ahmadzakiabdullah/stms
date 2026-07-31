@@ -7,6 +7,23 @@ on:
     branches: [main]
 
 jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: composer audit --locked --no-interaction --abandoned=fail
+      - run: npm audit --audit-level=high
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -48,17 +65,87 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: root
 
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+          coverage: pcov
+      - run: cp .env.example .env
+      - run: composer install --no-interaction --no-progress
+      - run: php artisan key:generate
+      - run: php artisan test --coverage-clover=coverage.xml --coverage-text
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: php-coverage
+          path: coverage.xml
+
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
       - run: npm ci
       - run: npm run build
+      - run: npm run build:budget
       - uses: actions/upload-artifact@v4
         with:
           name: build
           path: public/build/
+
+  browser-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: composer install --no-interaction --no-progress
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: touch database/e2e.sqlite
+      - run: php artisan migrate:fresh --seed --force
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          APP_URL: http://127.0.0.1:8000
+          PUBLIC_REGISTRATION_ENABLED: 'false'
+          SEED_DEMO_DATA: 'true'
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/e2e.sqlite
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
+          SESSION_DRIVER: file
+      - run: npm run test:e2e
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          APP_URL: http://127.0.0.1:8000
+          PUBLIC_REGISTRATION_ENABLED: 'false'
+          SEED_DEMO_DATA: 'true'
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/e2e.sqlite
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
+          SESSION_DRIVER: file
+          CI: 'true'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/

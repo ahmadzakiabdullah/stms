@@ -9,7 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Reconciled a drifted MySQL schema without resetting data, including user soft deletes, settings, activity logging, UUID primary keys, and all remaining domain migrations.
+- Made the user UUID backfill portable across MySQL and SQLite and made the legacy participant-column cleanup tolerate databases without the historical indexes.
+- Created and verified an encrypted pre-migration backup before schema reconciliation.
+- Fixed RBAC bootstrap seeding from an empty database by clearing Spatie's permission cache before role assignment, then restored and verified the complete SAF 2026 dataset without overwriting the administrator's changed password.
+- Updated the public welcome header and favicon markup to use organization branding uploaded through Settings, with the built-in trophy/favicon retained only as fallbacks.
+
+### Documentation
+- Added a dated enterprise audit with evidence-backed architecture, security, performance, database, testing, DevOps, and documentation findings.
+- Corrected implementation drift in current-state, roadmap, authentication, security, audit-logging, database-schema, and sports-engine documentation.
+- Added production-hardening work to the current maintenance focus and ignored environment backup files to reduce accidental secret exposure.
+
+### Operations
+- Added encrypted database/public-upload backups with checksums, retention, guarded restore, daily scheduling, and an automated SQLite restore drill.
+- Expanded health monitoring to database, cache read/write, queue backlog/failed jobs, disk space, component latency, and non-sensitive degraded responses.
+- Added supervised Laravel Scheduler lifecycle, daily log rotation defaults, backup/restore runbook, RPO/RTO targets, and safer release rollback guidance.
+- Added Composer and npm vulnerability audit gates to CI and restored a clean repository-wide Pint result.
+
+### Assurance and Performance
+- Added PCOV/Clover coverage reporting, Playwright desktop/mobile critical journeys, axe WCAG checks, and failure artifacts to CI.
+- Fixed dean verification authorization to require the seeded `dean` role, and added policy regression tests.
+- Fixed guest-logo accessible naming and dashboard color contrast findings discovered by the Playwright/axe suite.
+- Added a dashboard database-query budget and a k6 smoke/load scenario with p95 latency and error-rate thresholds.
+- Added per-asset JavaScript/CSS bundle budgets to the production build.
+- Removed the Tailwind 3/4 stylesheet mismatch and replaced v4-only dialog/sheet utilities with native Tailwind 3 state animations; production builds no longer emit Lightning CSS warnings.
+- Verified Composer and npm dependency audits locally with zero known vulnerabilities.
+
 ### Fixed
+- Hardened tenant onboarding: public registration now defaults off in production and fails closed when `DEFAULT_ORG_SLUG` is missing or invalid.
+- Replaced wildcard trusted-proxy configuration with explicit `TRUSTED_PROXIES` IP/CIDR configuration.
+- Prevented routine production seeding from creating predictable demo/SAF accounts; direct SAF demo seeding now requires explicit production approval.
+- Added `stms:create-super-admin`, which securely prompts for the initial administrator password instead of accepting or seeding a shared credential.
+- Hardened Docker deployment by requiring injected secrets, removing host exposure for MySQL/Redis, adding health checks, building frontend assets in-image, and replacing the unavailable Horizon command with the standard Laravel queue worker.
 - Restored full match CRUD controls on the Matches page, added pool/round management and per-event match-number validation, and refactored matchups to Name–Logo–VS–Logo–Name without circular logo frames.
 - Replaced UUID-based Matches event filter URLs with readable event slugs while retaining legacy `event_id` compatibility.
 - Fixed participant logo uploads, added sanitized SVG support, explicit format guidance, and visible upload validation errors.

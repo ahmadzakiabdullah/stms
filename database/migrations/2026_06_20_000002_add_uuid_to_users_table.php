@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 return new class extends Migration
 {
@@ -20,10 +21,15 @@ return new class extends Migration
             }
         });
 
-        // Backfill existing users with UUIDs (safe, one-time)
-        DB::table('users')->whereNull('uuid')->update([
-            'uuid' => DB::raw("lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))"),
-        ]);
+        // Generate UUIDs in PHP so the backfill works on both MySQL and SQLite.
+        DB::table('users')
+            ->whereNull('uuid')
+            ->orderBy('id')
+            ->each(function (object $user): void {
+                DB::table('users')
+                    ->where('id', $user->id)
+                    ->update(['uuid' => (string) Str::uuid()]);
+            });
     }
 
     public function down(): void

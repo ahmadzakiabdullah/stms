@@ -56,3 +56,5 @@ $table->foreignUuid('organization_id')->constrained()->cascadeOnDelete();
 ## Golden Rule
 
 **Never modify an existing migration** after it has been merged or deployed. Create a new migration for schema changes. This ensures reproducibility across environments and avoids conflicts in team workflows.
+
+Migration backfills must use database-portable Laravel/PHP APIs unless a driver-specific branch is explicit. Cleanup migrations must also tolerate historical environments where an optional index is already absent; dropping a column is preferred when the database automatically removes its dependent indexes.

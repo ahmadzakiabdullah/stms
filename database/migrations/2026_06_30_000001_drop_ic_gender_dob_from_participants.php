@@ -15,21 +15,6 @@ return new class extends Migration
 
         Schema::table('participants', function (Blueprint $table) {
             if (Schema::hasColumn('participants', 'identification_number')) {
-                // Drop index first if it exists
-                try {
-                    $table->dropIndex('participants_identification_number_index');
-                } catch (Exception $e) {
-                }
-
-                try {
-                    $table->dropUnique('participants_identification_number_unique');
-                } catch (Exception $e) {
-                }
-            }
-        });
-
-        Schema::table('participants', function (Blueprint $table) {
-            if (Schema::hasColumn('participants', 'identification_number')) {
                 $table->dropColumn('identification_number');
             }
             if (Schema::hasColumn('participants', 'gender')) {

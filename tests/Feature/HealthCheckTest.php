@@ -16,8 +16,12 @@ class HealthCheckTest extends TestCase
         $response->assertOk();
         $response->assertJsonStructure([
             'status',
-            'database',
-            'cache',
+            'components' => [
+                'database' => ['status', 'latency_ms'],
+                'cache' => ['status', 'latency_ms'],
+                'queue' => ['status', 'latency_ms', 'pending', 'failed'],
+                'disk' => ['status', 'latency_ms', 'free_mb'],
+            ],
             'timestamp',
         ]);
         $response->assertJson(['status' => 'ok']);

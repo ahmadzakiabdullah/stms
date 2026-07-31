@@ -500,7 +500,7 @@ export default function Dashboard({
                                                 {s.end_date ? new Date(s.end_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : 'ongoing'}
                                             </div>
                                         </div>
-                                        <span className={s.is_active ? 'text-emerald-600' : 'text-muted-foreground'}>
+                                        <span className={s.is_active ? 'text-emerald-700' : 'text-muted-foreground'}>
                                             {s.is_active ? 'Active' : 'Inactive'}
                                         </span>
                                     </div>
@@ -533,7 +533,7 @@ export default function Dashboard({
                                                 {t.session?.name || '—'} • {new Date(t.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </div>
                                         </div>
-                                        <span className={t.is_active ? 'text-emerald-600' : 'text-muted-foreground'}>
+                                        <span className={t.is_active ? 'text-emerald-700' : 'text-muted-foreground'}>
                                             {t.is_active ? 'Active' : 'Inactive'}
                                         </span>
                                     </div>

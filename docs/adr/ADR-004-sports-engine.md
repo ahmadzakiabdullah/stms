@@ -22,7 +22,6 @@ We will build a **Sports Engine** as a core configurable module with the followi
 - `Sport`
 - `SportCategory`
 - `Event`
-- `EventCategory`
 
 All sports, categories, and events will be created through the admin interface and stored in the database. The Sports Engine will be designed to be **highly configurable** rather than hardcoded.
 
@@ -61,4 +60,4 @@ All sports, categories, and events will be created through the admin interface a
 - ADR-005: Ranking Engine
 
 ## Implementation Status
-Implemented as of June 2026. Models: `Sport`, `SportCategory`, `Event`, `EventCategory` with full CRUD. See `CURRENT_STATE.md` for details.
+Implemented as of June 2026 with `Sport`, `SportCategory`, and `Event`. There is no `EventCategory` model; events reference `sport_category_id`. See `CURRENT_STATE.md` for details.

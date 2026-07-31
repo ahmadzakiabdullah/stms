@@ -70,11 +70,13 @@ class MatchTest extends TestCase
         $event = Event::factory()->create(['organization_id' => $org->id]);
         $super = $this->createSuperAdmin();
 
-        $response = $this->actingAs($super)->post(route('matches.store'), [
-            'event_id' => $event->id,
-            'match_number' => 1,
-            'status' => 'scheduled',
-        ]);
+        $response = $this->actingAs($super)
+            ->from(route('matches.index'))
+            ->post(route('matches.store'), [
+                'event_id' => $event->id,
+                'match_number' => 1,
+                'status' => 'scheduled',
+            ]);
 
         $response->assertRedirect(route('matches.index'));
         $this->assertDatabaseHas('matches', [
@@ -93,12 +95,14 @@ class MatchTest extends TestCase
             'event_id' => $event->id,
         ]);
 
-        $response = $this->actingAs($admin)->put(route('matches.update', $match), [
-            'event_id' => $event->id,
-            'match_number' => $match->match_number,
-            'venue' => 'Main Stadium',
-            'status' => 'in_progress',
-        ]);
+        $response = $this->actingAs($admin)
+            ->from(route('matches.index'))
+            ->put(route('matches.update', $match), [
+                'event_id' => $event->id,
+                'match_number' => $match->match_number,
+                'venue' => 'Main Stadium',
+                'status' => 'in_progress',
+            ]);
 
         $response->assertRedirect(route('matches.index'));
         $this->assertDatabaseHas('matches', ['venue' => 'Main Stadium', 'status' => 'in_progress']);
@@ -135,7 +139,9 @@ class MatchTest extends TestCase
             'event_id' => $event->id,
         ]);
 
-        $response = $this->actingAs($super)->delete(route('matches.destroy', $match));
+        $response = $this->actingAs($super)
+            ->from(route('matches.index'))
+            ->delete(route('matches.destroy', $match));
         $response->assertRedirect(route('matches.index'));
         $this->assertSoftDeleted('matches', ['id' => $match->id]);
     }

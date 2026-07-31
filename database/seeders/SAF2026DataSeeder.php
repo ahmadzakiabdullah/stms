@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Event;
 use App\Models\EventParticipant;
+use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;
+use App\Models\Pool;
 use App\Models\Registration;
 use App\Models\Session;
 use App\Models\Sport;
@@ -20,6 +22,12 @@ class SAF2026DataSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->environment('production') && ! config('app.allow_demo_seeding')) {
+            throw new \RuntimeException(
+                'SAF2026DataSeeder is disabled in production. Set ALLOW_DEMO_SEEDING=true only for an approved, controlled data load.'
+            );
+        }
+
         $org = Organization::withTrashed()->firstOrCreate(
             ['slug' => 'utem'],
             ['name' => 'Universiti Teknikal Malaysia Melaka', 'slug' => 'utem', 'organization_type' => 'university', 'is_active' => true]
@@ -335,6 +343,90 @@ class SAF2026DataSeeder extends Seeder
                     ]
                 );
             }
+        }
+
+        // Hockey (Men's) pools + round-robin fixtures (mirrors current system state)
+        $this->createHockeyPoolsAndFixtures($orgId, $fasa1, $faculties);
+    }
+
+    private function createHockeyPoolsAndFixtures(string $orgId, Tournament $tournament, array $faculties): void
+    {
+        $hockeyEvent = Event::where('slug', 'hockey-men-s')
+            ->where('tournament_id', $tournament->id)
+            ->first();
+
+        if (! $hockeyEvent) {
+            return;
+        }
+
+        $shortToSlug = fn (string $short) => Str::slug($short);
+
+        $groupA = ['FTKEK', 'FTKM', 'FTKIP', 'FTMK'];
+        $groupB = ['FTKE', 'FPTT', 'FAIX', 'STEP'];
+
+        $pools = [];
+        foreach ([$groupA, $groupB] as $index => $group) {
+            $pool = Pool::withTrashed()->firstOrCreate(
+                ['event_id' => $hockeyEvent->id, 'name' => $index === 0 ? 'Group A' : 'Group B'],
+                [
+                    'organization_id' => $orgId,
+                    'event_id' => $hockeyEvent->id,
+                    'name' => $index === 0 ? 'Group A' : 'Group B',
+                    'sort_order' => $index,
+                ]
+            );
+            if ($pool->trashed()) {
+                $pool->restore();
+            }
+            $pools[] = $pool;
+
+            foreach ($group as $short) {
+                $participant = Participant::where('organization_id', $orgId)
+                    ->where('slug', $shortToSlug($short))
+                    ->first();
+
+                if (! $participant) {
+                    continue;
+                }
+
+                EventParticipant::where('event_id', $hockeyEvent->id)
+                    ->where('participant_id', $participant->id)
+                    ->update(['pool_id' => $pool->id]);
+            }
+        }
+
+        $bySlug = fn (string $short) => Participant::where('organization_id', $orgId)
+            ->where('slug', $shortToSlug($short))
+            ->value('id');
+
+        $fixtures = [
+            ['match_number' => 1, 'pool' => 0, 'home' => 'FTKEK', 'away' => 'FTMK'],
+            ['match_number' => 2, 'pool' => 0, 'home' => 'FTKM', 'away' => 'FTKIP'],
+            ['match_number' => 3, 'pool' => 0, 'home' => 'FTKEK', 'away' => 'FTKIP'],
+            ['match_number' => 4, 'pool' => 0, 'home' => 'FTMK', 'away' => 'FTKM'],
+            ['match_number' => 5, 'pool' => 0, 'home' => 'FTKEK', 'away' => 'FTKM'],
+            ['match_number' => 6, 'pool' => 0, 'home' => 'FTKIP', 'away' => 'FTMK'],
+            ['match_number' => 7, 'pool' => 1, 'home' => 'FTKE', 'away' => 'STEP'],
+            ['match_number' => 8, 'pool' => 1, 'home' => 'FPTT', 'away' => 'FAIX'],
+            ['match_number' => 9, 'pool' => 1, 'home' => 'FTKE', 'away' => 'FAIX'],
+            ['match_number' => 10, 'pool' => 1, 'home' => 'STEP', 'away' => 'FPTT'],
+            ['match_number' => 11, 'pool' => 1, 'home' => 'FTKE', 'away' => 'FPTT'],
+            ['match_number' => 12, 'pool' => 1, 'home' => 'FAIX', 'away' => 'STEP'],
+        ];
+
+        foreach ($fixtures as $data) {
+            Fixture::withTrashed()->firstOrCreate(
+                ['event_id' => $hockeyEvent->id, 'match_number' => $data['match_number']],
+                [
+                    'organization_id' => $orgId,
+                    'event_id' => $hockeyEvent->id,
+                    'match_number' => $data['match_number'],
+                    'pool_id' => $pools[$data['pool']]->id,
+                    'home_participant_id' => $bySlug($data['home']),
+                    'away_participant_id' => $bySlug($data['away']),
+                    'status' => 'scheduled',
+                ]
+            );
         }
     }
 }
