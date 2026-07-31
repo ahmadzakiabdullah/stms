@@ -61,6 +61,15 @@ class TournamentService
 
         $sports = $tournament->sports()->get();
 
+        $existingEvents = Event::withoutOrganizationScope()
+            ->withTrashed()
+            ->where('organization_id', $tournament->organization_id)
+            ->where('tournament_id', $tournament->id)
+            ->get()
+            ->groupBy(function ($event) {
+                return $event->sport_id.'_'.$event->sport_category_id;
+            });
+
         DB::beginTransaction();
 
         try {
@@ -70,13 +79,8 @@ class TournamentService
                     ->get();
 
                 foreach ($categories as $category) {
-                    $existingEvent = Event::withoutOrganizationScope()
-                        ->withTrashed()
-                        ->where('organization_id', $tournament->organization_id)
-                        ->where('tournament_id', $tournament->id)
-                        ->where('sport_id', $sport->id)
-                        ->where('sport_category_id', $category->id)
-                        ->first();
+                    $key = $sport->id.'_'.$category->id;
+                    $existingEvent = $existingEvents->get($key)?->first();
 
                     if ($existingEvent) {
                         if ($existingEvent->trashed()) {
