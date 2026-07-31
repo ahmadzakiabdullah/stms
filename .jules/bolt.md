@@ -13,3 +13,7 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+
+## 2026-08-01 - N+1 Query in Nested Loops
+**Learning:** Eager loading relationships inside a nested loop causes N+1 queries. We discovered this pattern in `RankingService::rankByMedalTally` where `$event->matches()->with('result')->get()` was called in a `->each` loop over `$tournaments` and their `$events`. Even when relations are correctly set on each model dynamically, running queries inside a loop is heavily unoptimized.
+**Action:** When eager loading nested relationships on a collection of models that need constraints (e.g. `stage` and `status` in matches), perform a single eager load on the parent collection using `load()` before entering any loops: `$tournaments->load(['events.matches' => function ($query) { ... }])`. Note that `load()` only exists on `Eloquent\Collection`, so ensure the variable is an Eloquent Collection (or cast it if necessary).
