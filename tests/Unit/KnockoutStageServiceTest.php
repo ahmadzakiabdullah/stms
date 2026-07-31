@@ -287,6 +287,35 @@ class KnockoutStageServiceTest extends TestCase
         $this->assertSame($teams['groupA']['a2']->id, $bronze->fresh()->away_participant_id);
     }
 
+    public function test_sync_bracket_fills_each_side_after_single_semi_final(): void
+    {
+        $teams = $this->completeLeague();
+        $this->service->generate($this->event);
+
+        $semis = $this->service->fixtures($this->event);
+        $sf1 = $semis[0];
+
+        // Only SF1 recorded: a1 beats b2.
+        Result::query()->create([
+            'organization_id' => $this->organization->id,
+            'match_id' => $sf1->id,
+            'score_home' => 2,
+            'score_away' => 1,
+            'winner_participant_id' => $teams['groupA']['a1']->id,
+        ]);
+
+        $this->service->syncBracket($this->event);
+
+        $fixtures = $this->service->fixtures($this->event);
+
+        // Final home + Bronze home filled; away sides still TBD.
+        $this->assertSame($teams['groupA']['a1']->id, $fixtures[3]->fresh()->home_participant_id);
+        $this->assertNull($fixtures[3]->fresh()->away_participant_id);
+
+        $this->assertSame($teams['groupB']['b2']->id, $fixtures[2]->fresh()->home_participant_id);
+        $this->assertNull($fixtures[2]->fresh()->away_participant_id);
+    }
+
     public function test_sync_bracket_does_nothing_when_semis_incomplete(): void
     {
         $teams = $this->completeLeague();

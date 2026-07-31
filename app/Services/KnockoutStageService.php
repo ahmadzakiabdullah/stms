@@ -146,6 +146,9 @@ class KnockoutStageService
 
     /**
      * Resolve Bronze and Final participants from completed semi-final results.
+     * Each side is filled as soon as its semi-final has a winner:
+     *   SF1 winner -> Final home, SF1 loser -> Bronze home
+     *   SF2 winner -> Final away, SF2 loser -> Bronze away
      */
     public function syncBracket(Event $event): void
     {
@@ -155,31 +158,37 @@ class KnockoutStageService
             ->orderBy('round')
             ->get();
 
-        if ($semis->count() < 2 || $semis->contains(fn (Fixture $f) => ! $f->result || ! $f->result->winner_participant_id)) {
+        if ($semis->count() < 2) {
             return;
         }
 
-        $winners = $semis->map(fn (Fixture $f) => $f->result->winner_participant_id);
-        $losers = $semis->map(function (Fixture $f) {
-            $winner = $f->result->winner_participant_id;
+        $updates = [];
+        foreach ($semis as $semi) {
+            $result = $semi->result;
 
-            return $winner === $f->home_participant_id ? $f->away_participant_id : $f->home_participant_id;
-        });
+            if (! $result || ! $result->winner_participant_id) {
+                continue;
+            }
 
-        DB::transaction(function () use ($event, $winners, $losers) {
-            $event->matches()
-                ->where('stage', self::STAGE_FINAL)
-                ->update([
-                    'home_participant_id' => $winners->get(0),
-                    'away_participant_id' => $winners->get(1),
-                ]);
+            $winner = $result->winner_participant_id;
+            $loser = $winner === $semi->home_participant_id ? $semi->away_participant_id : $semi->home_participant_id;
 
-            $event->matches()
-                ->where('stage', self::STAGE_BRONZE)
-                ->update([
-                    'home_participant_id' => $losers->get(0),
-                    'away_participant_id' => $losers->get(1),
-                ]);
+            if ($semi->round === 1) {
+                $updates['final']['home_participant_id'] = $winner;
+                $updates['bronze']['home_participant_id'] = $loser;
+            } else {
+                $updates['final']['away_participant_id'] = $winner;
+                $updates['bronze']['away_participant_id'] = $loser;
+            }
+        }
+
+        if ($updates === []) {
+            return;
+        }
+
+        DB::transaction(function () use ($event, $updates) {
+            $event->matches()->where('stage', self::STAGE_FINAL)->update($updates['final'] ?? []);
+            $event->matches()->where('stage', self::STAGE_BRONZE)->update($updates['bronze'] ?? []);
         });
 
         Log::info('Knockout bracket synced', ['event_id' => $event->id]);
