@@ -16,7 +16,6 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FacultyDashboardController extends Controller
 {
@@ -171,7 +170,7 @@ class FacultyDashboardController extends Controller
         }
     }
 
-    public function downloadTemplate(): BinaryFileResponse
+    public function downloadTemplate()
     {
         $headers = ['name', 'role', 'ic_passport', 'phone'];
         $example = [
@@ -180,20 +179,13 @@ class FacultyDashboardController extends Controller
             ['Ahmad bin Jamal', 'manager', '', '019-8765432'],
         ];
 
-        $filename = 'squad-template.csv';
-        $path = storage_path('app/temp/'.$filename);
-
-        if (! is_dir(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0755, true);
-        }
-
-        $handle = fopen($path, 'w');
-        fputcsv($handle, $headers);
-        foreach ($example as $row) {
-            fputcsv($handle, $row);
-        }
-        fclose($handle);
-
-        return response()->download($path, $filename, ['Content-Type' => 'text/csv'])->deleteFileAfterSend(true);
+        return response()->streamDownload(function () use ($headers, $example) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, $headers);
+            foreach ($example as $row) {
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
+        }, 'squad-template.csv', ['Content-Type' => 'text/csv']);
     }
 }
