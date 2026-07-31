@@ -31,7 +31,6 @@ interface DrawResultProps {
     pools: PoolWithRelations[];
     canEdit: boolean;
 }
-
 const statusBadge = (status: string) => {
     const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
         scheduled: { label: 'Scheduled', variant: 'outline' },
@@ -41,6 +40,23 @@ const statusBadge = (status: string) => {
     };
     const s = map[status] || { label: status, variant: 'outline' };
     return <Badge variant={s.variant}>{s.label}</Badge>;
+};
+
+const participantName = (participant?: Participant, fallback = 'TBD') => {
+    if (!participant) return fallback;
+
+    const code = participant.name?.trim();
+
+    // Prefer the short code (e.g. FTKEK); fall back to the full team name
+    // for long/individual names.
+    if (code && code.length <= 12) return code;
+
+    return participant.team_name || code || fallback;
+};
+
+const participantFullName = (participant?: Participant, fallback = '') => {
+    if (!participant) return fallback;
+    return participant.team_name || participant.name || fallback;
 };
 
 export default function DrawResult({ event, pools: initialPools, canEdit }: DrawResultProps) {
@@ -200,7 +216,10 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                                                             </select>
                                                         ) : (
                                                             <span className="font-medium">
-                                                                {ep.participant?.team_name || ep.participant?.name || 'Unknown'}
+                                                                <span title={participantFullName(ep.participant)}>{participantName(ep.participant)}</span>
+                                                                {participantFullName(ep.participant) !== participantName(ep.participant) && (
+                                                                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">{participantFullName(ep.participant)}</span>
+                                                                )}
                                                             </span>
                                                         )}
                                                         {ep.seed_number && !editing && (
@@ -240,13 +259,13 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                                                         </TableCell>
                                                         <TableCell>R{f.round}</TableCell>
                                                         <TableCell className="font-medium">
-                                                            {f.home_participant?.team_name || f.home_participant?.name || 'TBD'}
+                                                            <span title={participantFullName(f.home_participant)}>{participantName(f.home_participant)}</span>
                                                         </TableCell>
                                                         <TableCell className="text-center text-muted-foreground">
                                                             vs
                                                         </TableCell>
                                                         <TableCell className="font-medium">
-                                                            {f.away_participant?.team_name || f.away_participant?.name || 'TBD'}
+                                                            <span title={participantFullName(f.away_participant)}>{participantName(f.away_participant)}</span>
                                                         </TableCell>
                                                         <TableCell>{statusBadge(f.status)}</TableCell>
                                                     </TableRow>

@@ -73,8 +73,22 @@ interface MatchForm {
     notes: string;
 }
 
-const participantName = (participant?: Participant, fallback = 'TBD') =>
-    participant?.team_name || participant?.name || fallback;
+const participantName = (participant?: Participant, fallback = 'TBD') => {
+    if (!participant) return fallback;
+
+    const code = participant.name?.trim();
+
+    // Prefer the short code (e.g. FTKEK); fall back to the full team name
+    // for long/individual names.
+    if (code && code.length <= 12) return code;
+
+    return participant.team_name || code || fallback;
+};
+
+const participantFullName = (participant?: Participant, fallback = '') => {
+    if (!participant) return fallback;
+    return participant.team_name || participant.name || fallback;
+};
 
 const participantInitials = (name: string) =>
     name
@@ -104,7 +118,7 @@ function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: 
     return (
         <div className="flex items-center gap-2">
             <TeamMark participant={participant} fallback={fallback} />
-            <span>{name}</span>
+            <span title={participantFullName(participant)}>{name}</span>
         </div>
     );
 }
@@ -141,7 +155,7 @@ function LeagueTable({ standings }: { standings: StandingRow[] }) {
                 </TableHeader>
                 <TableBody>
                     {standings.map((row, index) => {
-                        const name = row.participant?.team_name || row.participant?.name || 'Unknown';
+                        const name = participantName(row.participant, 'Unknown');
                         const isLeader = index === 0 && row.points > 0;
 
                         return (

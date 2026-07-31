@@ -64,8 +64,22 @@ interface ResultsIndexProps {
     events?: Array<{ id: string; name: string }>;
 }
 
-const participantName = (participant?: Participant, fallback = 'TBD') =>
-    participant?.team_name || participant?.name || fallback;
+const participantName = (participant?: Participant, fallback = 'TBD') => {
+    if (!participant) return fallback;
+
+    const code = participant.name?.trim();
+
+    // Prefer the short code (e.g. FTKEK); full team name used only for
+    // long/individual names or as a subtitle/tooltip.
+    if (code && code.length <= 12) return code;
+
+    return participant.team_name || code || fallback;
+};
+
+const participantFullName = (participant?: Participant, fallback = '') => {
+    if (!participant) return fallback;
+    return participant.team_name || participant.name || fallback;
+};
 
 const participantInitials = (name: string) =>
     name
@@ -93,7 +107,6 @@ const matchLabel = (match?: MatchOption) => {
     if (!match) return '';
     return `#${match.match_number} · ${participantName(match.home_participant)} vs ${participantName(match.away_participant)}`;
 };
-
 function MatchupPreview({ match }: { match?: MatchOption }) {
     if (!match) return null;
 
@@ -112,13 +125,23 @@ function MatchupPreview({ match }: { match?: MatchOption }) {
             <div className="flex items-center justify-center gap-4">
                 <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
                     <TeamMark participant={match.home_participant} />
-                    <span className="truncate text-sm font-semibold">{participantName(match.home_participant)}</span>
+                    <span className="truncate text-sm font-semibold" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
+                    {participantFullName(match.home_participant) !== participantName(match.home_participant) && (
+                        <span className="line-clamp-1 max-w-40 text-[10px] leading-tight text-muted-foreground" title={participantFullName(match.home_participant)}>
+                            {participantFullName(match.home_participant)}
+                        </span>
+                    )}
                     <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Home</span>
                 </div>
                 <span className="shrink-0 text-sm font-bold text-muted-foreground">VS</span>
                 <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
                     <TeamMark participant={match.away_participant} />
-                    <span className="truncate text-sm font-semibold">{participantName(match.away_participant)}</span>
+                    <span className="truncate text-sm font-semibold" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
+                    {participantFullName(match.away_participant) !== participantName(match.away_participant) && (
+                        <span className="line-clamp-1 max-w-40 text-[10px] leading-tight text-muted-foreground" title={participantFullName(match.away_participant)}>
+                            {participantFullName(match.away_participant)}
+                        </span>
+                    )}
                     <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Away</span>
                 </div>
             </div>
@@ -317,8 +340,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                 <option key={m.id} value={m.id}>
                                                     {matchLabel(m)} {m.event?.name ? `(${m.event.name})` : ''}
                                                 </option>
-                                            ))}
-                                        </select>
+                                            ))}                                        </select>
                                         {errors.match_id && <p className="text-sm text-destructive">{errors.match_id.message}</p>}
                                     </div>
 
@@ -465,7 +487,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                     <TableCell>
                                         <div className="flex items-center gap-2">
                                             <TeamMark participant={result.match?.home_participant} size="size-6" />
-                                            <span className="truncate">{participantName(result.match?.home_participant)}</span>
+                                            <span className="truncate" title={participantFullName(result.match?.home_participant)}>{participantName(result.match?.home_participant)}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell className="font-bold text-center">
@@ -474,14 +496,14 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                     <TableCell>
                                         <div className="flex items-center gap-2">
                                             <TeamMark participant={result.match?.away_participant} size="size-6" />
-                                            <span className="truncate">{participantName(result.match?.away_participant)}</span>
+                                            <span className="truncate" title={participantFullName(result.match?.away_participant)}>{participantName(result.match?.away_participant)}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         {result.winner ? (
                                             <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
                                                 <Trophy className="size-3.5" />
-                                                {participantName(result.winner)}
+                                                <span title={participantFullName(result.winner)}>{participantName(result.winner)}</span>
                                             </span>
                                         ) : (
                                             <span className="text-muted-foreground">Draw</span>
