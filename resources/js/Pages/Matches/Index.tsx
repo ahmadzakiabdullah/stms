@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { BarChart3, Eye, Pencil, Plus, RefreshCw, Save, Swords, Trash2, Users } from 'lucide-react';
+import { BarChart3, Eye, Pencil, Plus, RefreshCw, Save, Swords, Trash2, Trophy, Users } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import type { Event, Fixture, Paginated, Participant, Pool, Result } from '@/types';
 
@@ -44,6 +44,12 @@ interface MatchRow extends Fixture {
     away_participant?: Participant;
 }
 
+interface KnockoutData {
+    has_stage: boolean;
+    league_complete: boolean;
+    fixtures: MatchRow[];
+}
+
 interface EventWithRelations extends Event {
     tournament?: { id: string; name: string };
     sport?: { id: string; name: string };
@@ -57,6 +63,7 @@ interface MatchesIndexProps {
     selectedEventId: string | null;
     pools: PoolWithRelations[];
     allFixtures: Paginated<MatchRow> | MatchRow[];
+    knockout: KnockoutData;
     participants: Participant[];
 }
 
@@ -208,9 +215,82 @@ const statusBadge = (status: string) => {
     return <Badge variant={item.variant}>{item.label}</Badge>;
 };
 
+const stageTitle = (stage: string, round?: number | null) => {
+    const map: Record<string, string> = {
+        semi_final: `Semi-Final ${round ?? 1}`,
+        bronze: 'Bronze · 3rd Place',
+        final: 'Final',
+    };
+    return map[stage] || 'Knockout';
+};
+
+const isKnockoutStage = (stage?: string) => !!stage && ['semi_final', 'bronze', 'final'].includes(stage);
+
+function KnockoutStageSection({ knockout }: { knockout: KnockoutData }) {
+    if (knockout.fixtures.length === 0) {
+        return (
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> Knockout Stage</CardTitle>
+                    <CardDescription>
+                        {knockout.league_complete
+                            ? 'League complete — the knockout stage will be generated automatically.'
+                            : 'Not available yet. The knockout stage unlocks once every league fixture has a result.'}
+                    </CardDescription>
+                </CardHeader>
+            </Card>
+        );
+    }
+
+    return (
+        <Card>
+            <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> Knockout Stage</CardTitle>
+                <CardDescription>Semi-finals, bronze and final</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {knockout.fixtures.map((fixture) => {
+                        const scored = fixture.result?.score_home !== null && fixture.result?.score_home !== undefined;
+                        const isFinal = fixture.stage === 'final';
+                        const isBronze = fixture.stage === 'bronze';
+
+                        return (
+                            <div
+                                key={fixture.id}
+                                className={`rounded-lg border p-4 ${isFinal ? 'border-primary/40 bg-primary/5' : ''} ${isBronze ? 'border-amber-400/40 bg-amber-50/50 dark:bg-amber-950/20' : ''}`}
+                            >
+                                <div className="mb-3 flex items-center justify-between gap-2">
+                                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                        {stageTitle(fixture.stage ?? 'semi_final', fixture.round)}
+                                    </span>
+                                    {statusBadge(fixture.status)}
+                                </div>
+                                <div className="flex items-center justify-center gap-3">
+                                    <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
+                                        <TeamMark participant={fixture.home_participant} fallback="TBD" />
+                                        <span className="truncate text-sm font-medium" title={participantFullName(fixture.home_participant)}>{participantName(fixture.home_participant)}</span>
+                                    </div>
+                                    <span className={`shrink-0 text-sm font-bold ${isFinal ? 'text-primary' : 'text-muted-foreground'}`}>
+                                        {scored ? `${fixture.result!.score_home} : ${fixture.result!.score_away}` : 'VS'}
+                                    </span>
+                                    <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
+                                        <TeamMark participant={fixture.away_participant} fallback="TBD" />
+                                        <span className="truncate text-sm font-medium" title={participantFullName(fixture.away_participant)}>{participantName(fixture.away_participant)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 const toDateTimeInput = (value: string | null) => (value ? value.slice(0, 16) : '');
 
-export default function MatchesIndex({ events, drawnEventIds, selectedEventId, nextMatchNumber, pools, allFixtures: allFixturesProp, participants }: MatchesIndexProps) {
+export default function MatchesIndex({ events, drawnEventIds, selectedEventId, nextMatchNumber, pools, allFixtures: allFixturesProp, knockout, participants }: MatchesIndexProps) {
     const { flash } = usePage().props;
     const [filterEventId, setFilterEventId] = useState(selectedEventId || '');
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -308,7 +388,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
 
     const refreshData = () => {
         router.reload({
-            only: ['pools', 'allFixtures'],
+            only: ['pools', 'allFixtures', 'knockout'],
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => setLastUpdated(new Date()),
@@ -384,6 +464,8 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
                             </div>
                         </CardHeader>
                     </Card>
+
+                    {knockout.league_complete && <KnockoutStageSection knockout={knockout} />}
 
                     {pools.map((pool) => (
                         <Card key={pool.id}>

@@ -28,6 +28,7 @@ class Event extends Model
         'registration_deadline',
         'format',
         'pool_size',
+        'qualifiers_per_pool',
         'is_active',
     ];
 
@@ -37,6 +38,7 @@ class Event extends Model
         'registration_deadline' => 'datetime',
         'is_active' => 'boolean',
         'pool_size' => 'integer',
+        'qualifiers_per_pool' => 'integer',
     ];
 
     public function organization()

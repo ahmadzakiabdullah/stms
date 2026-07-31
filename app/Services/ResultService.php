@@ -50,6 +50,7 @@ class ResultService
             $data['organization_id'] = $organization->id;
             $result = Result::create($data);
             $this->markMatchCompleted($result->match_id);
+            $this->advanceKnockoutStage($result->match_id);
             Log::info('Result created', ['id' => $result->id, 'match_id' => $result->match_id, 'org_id' => $organization->id]);
 
             return $result;
@@ -62,6 +63,7 @@ class ResultService
             $result = $this->getById($organization, $id);
             $result->update($data);
             $this->markMatchCompleted($result->match_id);
+            $this->advanceKnockoutStage($result->match_id);
             Log::info('Result updated', ['id' => $id, 'org_id' => $organization->id]);
 
             return $result->fresh();
@@ -78,6 +80,37 @@ class ResultService
 
         if ($match && $match->status !== 'completed') {
             $match->update(['status' => 'completed']);
+        }
+    }
+
+    /**
+     * Progress the tournament flow after a result is recorded:
+     *  - A completed knockout match resolves Bronze/Final participants.
+     *  - A completed league generates the knockout stage automatically.
+     */
+    protected function advanceKnockoutStage(string $matchId): void
+    {
+        $match = Fixture::query()->with('event.pools')->find($matchId);
+
+        if (! $match || ! $match->event) {
+            return;
+        }
+
+        $event = $match->event;
+        $knockout = app(KnockoutStageService::class);
+
+        if (in_array($match->stage, KnockoutStageService::KNOCKOUT_STAGES, true)) {
+            $knockout->syncBracket($event);
+
+            return;
+        }
+
+        if ($knockout->leagueComplete($event) && ! $knockout->hasKnockoutStage($event)) {
+            try {
+                $knockout->generate($event);
+            } catch (\InvalidArgumentException) {
+                // League size may not support a knockout stage (e.g. single group).
+            }
         }
     }
 

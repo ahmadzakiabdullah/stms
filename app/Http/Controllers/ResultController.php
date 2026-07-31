@@ -58,6 +58,8 @@ class ResultController extends Controller
                 'awayParticipant:id,name,team_name,logo_path',
             ])
             ->whereDoesntHave('result')
+            ->whereNotNull('home_participant_id')
+            ->whereNotNull('away_participant_id')
             ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
             ->orderBy('match_number')
             ->get(['id', 'match_number', 'event_id', 'pool_id', 'home_participant_id', 'away_participant_id', 'status', 'scheduled_at']);

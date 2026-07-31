@@ -22,6 +22,7 @@ class Fixture extends Model
         'organization_id',
         'event_id',
         'pool_id',
+        'stage',
         'round',
         'match_number',
         'home_participant_id',

@@ -10,6 +10,7 @@ use App\Http\Requests\Match\UpdateMatchRequest;
 use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Participant;
+use App\Services\KnockoutStageService;
 use App\Services\LeagueTableService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,8 +20,10 @@ use Inertia\Response;
 
 class MatchController extends Controller
 {
-    public function __construct(private readonly LeagueTableService $leagueTableService)
-    {
+    public function __construct(
+        private readonly LeagueTableService $leagueTableService,
+        private readonly KnockoutStageService $knockoutStageService,
+    ) {
     }
 
     public function index(Request $request): Response|RedirectResponse
@@ -93,6 +96,12 @@ class MatchController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $knockout = [
+            'has_stage' => $selectedEvent ? $this->knockoutStageService->hasKnockoutStage($selectedEvent) : false,
+            'league_complete' => $selectedEvent ? $this->knockoutStageService->leagueComplete($selectedEvent) : false,
+            'fixtures' => $selectedEvent ? $this->knockoutStageService->fixtures($selectedEvent)->values() : [],
+        ];
+
         $response = Inertia::render('Matches/Index', [
             'events' => $events,
             'drawnEventIds' => $drawnEventIds,
@@ -102,6 +111,7 @@ class MatchController extends Controller
                 : 1,
             'pools' => $pools,
             'allFixtures' => $allFixtures,
+            'knockout' => $knockout,
             'participants' => Participant::query()->active()->orderBy('name')->get(['id', 'name', 'slug']),
         ]);
 
