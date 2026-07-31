@@ -10,6 +10,7 @@ use App\Http\Requests\Match\UpdateMatchRequest;
 use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Participant;
+use App\Services\LeagueTableService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -18,12 +19,20 @@ use Inertia\Response;
 
 class MatchController extends Controller
 {
+    public function __construct(private readonly LeagueTableService $leagueTableService)
+    {
+    }
+
     public function index(Request $request): Response|RedirectResponse
     {
+        $user = $request->user();
+        $scopeToAdminSports = $user->hasRole('admin-sport') && ! $user->hasRole(['super-admin', 'org-admin']);
+        $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
 
         $events = Event::query()
             ->with(['tournament:id,name', 'sport:id,name', 'sportCategory:id,name'])
             ->withCount('pools')
+            ->when($sportIds !== null, fn ($q) => $q->whereIn('sport_id', $sportIds))
             ->orderBy('name')
             ->get(['id', 'name', 'slug', 'tournament_id', 'sport_id', 'sport_category_id']);
 
@@ -55,10 +64,31 @@ class MatchController extends Controller
                     },
                 ])
                 ->orderBy('sort_order')
-                ->get();
+                ->get()
+                ->map(function ($pool) {
+                    $standings = $this->leagueTableService->standings($pool);
+
+                    $participants = $pool->eventParticipants->pluck('participant');
+
+                    return [
+                        ...$pool->toArray(),
+                        'standings' => $standings->map(function ($row) use ($participants) {
+                            $participant = $participants->firstWhere('id', $row['participant_id']);
+
+                            return [
+                                ...$row,
+                                'participant' => $participant
+                                    ? ['id' => $participant->id, 'name' => $participant->name, 'team_name' => $participant->team_name, 'logo_url' => $participant->logo_url]
+                                    : null,
+                            ];
+                        })->values(),
+                        'has_standings' => $standings->isNotEmpty(),
+                    ];
+                });
         }
 
         $allFixtures = Fixture::with(['event', 'homeParticipant', 'awayParticipant'])
+            ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
             ->orderByDesc('scheduled_at')
             ->paginate(15)
             ->withQueryString();
@@ -80,7 +110,9 @@ class MatchController extends Controller
 
     public function store(StoreMatchRequest $request, StoreMatch $action): RedirectResponse
     {
-        Gate::authorize('create', Fixture::class);
+        $event = Event::query()->findOrFail($request->validated('event_id'));
+
+        Gate::authorize('create', [Fixture::class, $event->sport_id]);
 
         $action->handle(
             auth()->user()->organization,

@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
         // 2. Create roles (requires permission tables from migration)
         $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'org-admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'admin-sport', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'faculty-representative', 'guard_name' => 'web']);
 
@@ -83,6 +84,16 @@ class DatabaseSeeder extends Seeder
                 'create event participants',
                 'edit event participants',
                 'delete event participants',
+            ]);
+        }
+
+        // Admin-sport manages matches & results, but only for the sports assigned
+        // to the user (enforced via sport_user pivot + MatchPolicy/ResultPolicy).
+        $adminSport = Role::where('name', 'admin-sport')->first();
+        if ($adminSport) {
+            $adminSport->givePermissionTo([
+                'manage_matches',
+                'manage_results',
             ]);
         }
 

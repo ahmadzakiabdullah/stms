@@ -33,7 +33,7 @@ import { z } from 'zod';
 import { KeyRound, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
-import type { User, Role, Organization, Participant, Paginated, Flash } from '@/types';
+import type { User, Role, Organization, Participant, Paginated, Flash, Sport } from '@/types';
 
 const createUserSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -42,6 +42,7 @@ const createUserSchema = z.object({
     password_confirmation: z.string().min(1, 'Please confirm password'),
     roles: z.array(z.number()).default([]),
     participant_id: z.string().optional().default(''),
+    sports: z.array(z.string()).default([]),
 });
 
 const editUserSchema = z.object({
@@ -51,6 +52,7 @@ const editUserSchema = z.object({
     password_confirmation: z.string().optional().default(''),
     roles: z.array(z.number()).default([]),
     participant_id: z.string().optional().default(''),
+    sports: z.array(z.string()).default([]),
 });
 
 type CreateUserForm = z.infer<typeof createUserSchema>;
@@ -62,6 +64,7 @@ interface UsersIndexProps {
     roles: Role[];
     organizations: Organization[];
     participants: (Participant & { name: string })[];
+    sports: Sport[];
 }
 
 function UserFormDialog({
@@ -69,11 +72,13 @@ function UserFormDialog({
     editingUser,
     roles,
     participants,
+    sports,
 }: {
     onClose: () => void;
     editingUser: User | null;
     roles: Role[];
     participants: Participant[];
+    sports: Sport[];
 }) {
     const schema = editingUser ? editUserSchema : createUserSchema;
     const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<CreateUserForm>({
@@ -85,16 +90,20 @@ function UserFormDialog({
                   password_confirmation: '',
                   roles: editingUser.roles?.map(r => r.id) ?? [],
                   participant_id: editingUser.participant_id ?? '',
+                  sports: editingUser.sports?.map(s => s.id) ?? [],
               }
-            : { name: '', email: '', password: '', password_confirmation: '', roles: [], participant_id: '' },
+            : { name: '', email: '', password: '', password_confirmation: '', roles: [], participant_id: '', sports: [] },
         resolver: zodResolver(schema),
     });
 
     const selectedRoles = watch('roles');
+    const selectedSports = watch('sports');
     const facultyRepRoleId = roles.find(r => r.name === 'faculty-representative')?.id;
     const isFacultyRepSelected = facultyRepRoleId ? (selectedRoles ?? []).includes(facultyRepRoleId) : false;
     const deanRoleId = roles.find(r => r.name === 'dean')?.id;
     const isDeanSelected = deanRoleId ? (selectedRoles ?? []).includes(deanRoleId) : false;
+    const adminSportRoleId = roles.find(r => r.name === 'admin-sport')?.id;
+    const isAdminSportSelected = adminSportRoleId ? (selectedRoles ?? []).includes(adminSportRoleId) : false;
 
     const toggleRole = (roleId: number) => {
         const current = selectedRoles ?? [];
@@ -102,6 +111,15 @@ function UserFormDialog({
             setValue('roles', current.filter(id => id !== roleId), { shouldValidate: true });
         } else {
             setValue('roles', [...current, roleId], { shouldValidate: true });
+        }
+    };
+
+    const toggleSport = (sportId: string) => {
+        const current = selectedSports ?? [];
+        if (current.includes(sportId)) {
+            setValue('sports', current.filter(id => id !== sportId), { shouldValidate: true });
+        } else {
+            setValue('sports', [...current, sportId], { shouldValidate: true });
         }
     };
 
@@ -190,6 +208,29 @@ function UserFormDialog({
                                 {errors.participant_id && <p className="text-sm text-destructive">{errors.participant_id.message}</p>}
                             </div>
                         )}
+
+                        {isAdminSportSelected && (
+                            <div className="grid gap-2">
+                                <Label>Sports (admin-sport scope) *</Label>
+                                <div className="max-h-48 overflow-y-auto rounded-md border p-2">
+                                    <div className="grid gap-1">
+                                        {sports.map((sport) => (
+                                            <label key={sport.id} className="flex items-center gap-2 text-sm">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedSports?.includes(sport.id) ?? false}
+                                                    onChange={() => toggleSport(sport.id)}
+                                                />
+                                                {sport.name}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                                {selectedSports?.length === 0 && (
+                                    <p className="text-sm text-destructive">Select at least one sport.</p>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <DialogFooter>
@@ -205,7 +246,7 @@ function UserFormDialog({
     );
 }
 
-export default function UsersIndex({ users: usersProp, roles, organizations, participants: participantsProp = [] }: UsersIndexProps) {
+export default function UsersIndex({ users: usersProp, roles, organizations, participants: participantsProp = [], sports: sportsProp = [] }: UsersIndexProps) {
     const { flash } = usePage().props;
     const [dialogMode, setDialogMode] = useState<null | 'create' | User>(null);
     const [deleteUser, setDeleteUser] = useState<User | null>(null);
@@ -216,6 +257,7 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
 
     const users = Array.isArray(usersProp) ? usersProp : (usersProp?.data ?? []);
     const participants = Array.isArray(participantsProp) ? participantsProp : [];
+    const sports = Array.isArray(sportsProp) ? sportsProp : [];
 
     const handleDelete = () => {
         if (!deleteUser) return;
@@ -263,6 +305,7 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                             editingUser={dialogMode === 'create' ? null : dialogMode}
                             roles={roles}
                             participants={participants}
+                            sports={sports}
                         />
                     )}
                 </div>
@@ -292,6 +335,7 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                                 <TableHead>Organization</TableHead>
                                 <TableHead>Faculty</TableHead>
                                 <TableHead>Roles</TableHead>
+                                <TableHead>Sports</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -299,7 +343,7 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                         <TableBody>
                             {users.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                                         No users yet.
                                     </TableCell>
                                 </TableRow>
@@ -313,6 +357,11 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                                     <TableCell>
                                         {user.roles && user.roles.length > 0
                                             ? user.roles.map(r => r.name).join(', ')
+                                            : '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                        {user.sports && user.sports.length > 0
+                                            ? user.sports.map(s => s.name).join(', ')
                                             : '-'}
                                     </TableCell>
                                     <TableCell>

@@ -9,6 +9,7 @@ use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\Organization;
 use App\Models\Participant;
+use App\Models\Sport;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class UserController extends Controller
 
         // Manual scoping kept (trait skips users table for auth safety)
         $users = $this->safePaginatedQuery(function () use ($user) {
-            $query = User::with('roles', 'organization', 'participant');
+            $query = User::with('roles', 'organization', 'participant', 'sports');
 
             if (! $user->hasRole('super-admin')) {
                 $query->where('organization_id', $user->organization_id);
@@ -54,11 +55,18 @@ class UserController extends Controller
                 : Participant::where('organization_id', $user->organization_id)->orderBy('name')->get(['id', 'name']);
         });
 
+        $sports = $this->safeCollectionQuery(function () use ($user) {
+            return $user->hasRole('super-admin')
+                ? Sport::orderBy('name')->get(['id', 'name'])
+                : Sport::where('organization_id', $user->organization_id)->orderBy('name')->get(['id', 'name']);
+        });
+
         return Inertia::render('Users/Index', [
             'users' => $users,
             'roles' => $roles,
             'organizations' => $organizations,
             'participants' => $participants,
+            'sports' => $sports,
         ]);
     }
 

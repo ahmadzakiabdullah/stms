@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Sport;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -27,6 +28,10 @@ class UserService
         if (! empty($data['roles'])) {
             $roles = Role::whereIn('id', $data['roles'])->get();
             $user->syncRoles($roles);
+        }
+
+        if (isset($data['sports'])) {
+            $this->syncUserSports($user, $data['sports']);
         }
 
         Log::info('User created', ['id' => $user->id, 'email' => $user->email, 'org_id' => $user->organization_id]);
@@ -69,9 +74,31 @@ class UserService
             $user->syncRoles($roles);
         }
 
+        if (isset($data['sports'])) {
+            $this->syncUserSports($user, $data['sports']);
+        }
+
         Log::info('User updated', ['id' => $user->id, 'email' => $user->email]);
 
         return $user;
+    }
+
+    /**
+     * Sync the sports an admin-sport user may manage.
+     * Sports are always scoped to the user's organization.
+     */
+    protected function syncUserSports(User $user, array $sports): void
+    {
+        $orgId = $user->organization_id;
+
+        $sportIds = $orgId
+            ? Sport::query()->where('organization_id', $orgId)->whereIn('id', $sports)->pluck('id')->all()
+            : Sport::query()->whereIn('id', $sports)->pluck('id')->all();
+
+        $user->sports()->detach();
+        foreach ($sportIds as $sportId) {
+            $user->sports()->attach($sportId, ['organization_id' => $orgId]);
+        }
     }
 
     /**

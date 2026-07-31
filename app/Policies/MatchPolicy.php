@@ -10,7 +10,7 @@ class MatchPolicy
     public function viewAny(User $user): bool
     {
         return $user->hasPermissionTo('manage_matches')
-            || $user->hasRole(['super-admin', 'org-admin']);
+            || $user->hasRole(['super-admin', 'org-admin', 'admin-sport']);
     }
 
     public function view(User $user, Fixture $match): bool
@@ -22,10 +22,17 @@ class MatchPolicy
         return $user->organization_id === $match->organization_id;
     }
 
-    public function create(User $user): bool
+    public function create(User $user, ?string $sportId = null): bool
     {
-        return $user->hasPermissionTo('manage_matches')
-            || $user->hasRole(['super-admin', 'org-admin']);
+        if ($user->hasRole('super-admin') || $user->hasRole('org-admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('admin-sport')) {
+            return $sportId !== null && $user->canManageSport($sportId);
+        }
+
+        return $user->hasPermissionTo('manage_matches');
     }
 
     public function update(User $user, Fixture $match): bool
@@ -34,8 +41,15 @@ class MatchPolicy
             return true;
         }
 
-        return $user->organization_id === $match->organization_id
-            && ($user->hasPermissionTo('manage_matches') || $user->hasRole('org-admin'));
+        if ($user->organization_id !== $match->organization_id) {
+            return false;
+        }
+
+        if ($user->hasRole('org-admin')) {
+            return true;
+        }
+
+        return $user->canManageSport($match->event->sport_id);
     }
 
     public function delete(User $user, Fixture $match): bool
@@ -44,7 +58,14 @@ class MatchPolicy
             return true;
         }
 
-        return $user->organization_id === $match->organization_id
-            && ($user->hasPermissionTo('manage_matches') || $user->hasRole('org-admin'));
+        if ($user->organization_id !== $match->organization_id) {
+            return false;
+        }
+
+        if ($user->hasRole('org-admin')) {
+            return true;
+        }
+
+        return $user->canManageSport($match->event->sport_id);
     }
 }

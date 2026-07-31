@@ -23,6 +23,7 @@ export interface User {
     organization?: Organization;
     participant?: Participant;
     roles?: Role[];
+    sports?: Sport[];
     created_at: string;
     updated_at: string;
 }

@@ -48,4 +48,14 @@ trait CreatesTenantUsers
 
         return $user;
     }
+
+    protected function createAdminSport(Organization $organization, array $attributes = []): User
+    {
+        $user = $this->createUserInOrganization($organization, $attributes);
+
+        $adminSport = Role::firstOrCreate(['name' => 'admin-sport', 'guard_name' => 'web']);
+        $user->assignRole($adminSport);
+
+        return $user;
+    }
 }

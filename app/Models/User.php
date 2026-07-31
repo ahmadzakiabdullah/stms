@@ -55,6 +55,31 @@ class User extends Authenticatable
         return $this->belongsTo(Participant::class);
     }
 
+    public function sports()
+    {
+        return $this->belongsToMany(Sport::class, 'sport_user', 'user_id', 'sport_id')
+            ->withPivot('organization_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Whether the user may manage matches/results for the given sport.
+     * Admin-sport users are limited to the sports assigned to them.
+     */
+    public function canManageSport(string $sportId): bool
+    {
+        if ($this->hasRole('super-admin') || $this->hasRole('org-admin')) {
+            return true;
+        }
+
+        if ($this->hasRole('admin-sport')) {
+            return $this->sports()->whereKey($sportId)->exists();
+        }
+
+        return $this->hasPermissionTo('manage_matches')
+            || $this->hasPermissionTo('manage_results');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

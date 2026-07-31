@@ -26,6 +26,8 @@ class UpdateUserRequest extends FormRequest
             'is_active' => ['boolean'],
             'roles' => ['array'],
             'roles.*' => ['integer', 'exists:roles,id'],
+            'sports' => ['array'],
+            'sports.*' => ['uuid', 'exists:sports,id'],
         ];
     }
 }

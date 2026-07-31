@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Result;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -48,6 +49,7 @@ class ResultService
         return DB::transaction(function () use ($organization, $data) {
             $data['organization_id'] = $organization->id;
             $result = Result::create($data);
+            $this->markMatchCompleted($result->match_id);
             Log::info('Result created', ['id' => $result->id, 'match_id' => $result->match_id, 'org_id' => $organization->id]);
 
             return $result;
@@ -59,10 +61,24 @@ class ResultService
         return DB::transaction(function () use ($organization, $id, $data) {
             $result = $this->getById($organization, $id);
             $result->update($data);
+            $this->markMatchCompleted($result->match_id);
             Log::info('Result updated', ['id' => $id, 'org_id' => $organization->id]);
 
             return $result->fresh();
         });
+    }
+
+    /**
+     * A recorded result marks the related match as completed so the
+     * league table / rankings pick it up automatically.
+     */
+    protected function markMatchCompleted(string $matchId): void
+    {
+        $match = Fixture::query()->find($matchId);
+
+        if ($match && $match->status !== 'completed') {
+            $match->update(['status' => 'completed']);
+        }
     }
 
     public function delete(Organization $organization, string $id): void

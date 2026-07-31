@@ -23,10 +23,19 @@ class ResultController extends Controller
     {
         $dataLoadFailed = false;
 
-        $results = $this->safePaginatedQuery(function () {
-            return Result::with(['match.event', 'winner'])
-                ->orderByDesc('created_at')
-                ->paginate(15)
+        $user = auth()->user();
+        $scopeToAdminSports = $user->hasRole('admin-sport') && ! $user->hasRole(['super-admin', 'org-admin']);
+        $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
+
+        $results = $this->safePaginatedQuery(function () use ($sportIds) {
+            $query = Result::with(['match.event', 'winner'])
+                ->orderByDesc('created_at');
+
+            if ($sportIds !== null) {
+                $query->whereHas('match.event', fn ($e) => $e->whereIn('sport_id', $sportIds));
+            }
+
+            return $query->paginate(15)
                 ->withQueryString();
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
@@ -36,11 +45,21 @@ class ResultController extends Controller
             ]);
         });
 
+        $matches = Fixture::query()
+            ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
+            ->orderByDesc('match_number')
+            ->get(['id', 'match_number', 'status']);
+
+        $events = Event::query()
+            ->when($sportIds !== null, fn ($q) => $q->whereIn('sport_id', $sportIds))
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug']);
+
         $response = Inertia::render('Results/Index', [
             'results' => $results,
-            'matches' => Fixture::query()->orderByDesc('match_number')->get(['id', 'match_number', 'status']),
+            'matches' => $matches,
             'participants' => Participant::query()->active()->orderBy('name')->get(['id', 'name', 'slug']),
-            'events' => Event::query()->orderBy('name')->get(['id', 'name', 'slug']),
+            'events' => $events,
         ]);
 
         if ($dataLoadFailed) {
@@ -52,7 +71,12 @@ class ResultController extends Controller
 
     public function store(StoreResultRequest $request, StoreResult $action): RedirectResponse
     {
-        Gate::authorize('create', Result::class);
+        $sportId = Fixture::query()->with('event')
+            ->findOrFail($request->validated('match_id'))
+            ->event
+            ->sport_id;
+
+        Gate::authorize('create', [Result::class, $sportId]);
 
         $action->handle(
             auth()->user()->organization,
