@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Participant;
 use App\Models\Result;
 use App\Models\Tournament;
 use Illuminate\Support\Collection;
@@ -80,7 +79,8 @@ class RankingService
 
             foreach ([$homeId, $awayId] as $participantId) {
                 if (! $stats->has($participantId)) {
-                    $participant = Participant::find($participantId);
+                    // Bolt ⚡: Replace N+1 query with eager-loaded relationship
+                    $participant = $participantId === $homeId ? $result->match->homeParticipant : $result->match->awayParticipant;
                     $stats->put($participantId, [
                         'participant_id' => $participantId,
                         'participant_name' => $participant?->name ?? 'Unknown',
