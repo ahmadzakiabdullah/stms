@@ -30,7 +30,7 @@ class RankingService
         $rankings = match ($strategy) {
             self::STRATEGY_POINTS => $this->rankByPoints($participantStats),
             self::STRATEGY_WIN_RATE => $this->rankByWinRate($participantStats),
-            self::STRATEGY_MEDAL_TALLY => $this->rankByMedalTally($participantStats),
+            self::STRATEGY_MEDAL_TALLY => $this->rankByMedalTally($tournament, $participantStats),
             default => $this->rankByPoints($participantStats),
         };
 
@@ -152,23 +152,67 @@ class RankingService
         });
     }
 
-    private function rankByMedalTally(Collection $stats): Collection
+    /**
+     * Real medal tally: for every event in the tournament, the Final winner
+     * earns Gold, the Final runner-up earns Silver, and the Bronze match
+     * winner earns Bronze. Totals are aggregated across all events and
+     * sorted by Gold, then Silver, then Bronze.
+     */
+    private function rankByMedalTally(Tournament $tournament, Collection $stats): Collection
     {
-        return $stats->map(function ($s) {
+        $medals = [];
+
+        $tournament->events()
+            ->with(['matches' => fn ($q) => $q
+                ->with('result')
+                ->whereIn('stage', [KnockoutStageService::STAGE_FINAL, KnockoutStageService::STAGE_BRONZE])
+                ->where('status', 'completed'),
+            ])
+            ->get()
+            ->each(function ($event) use (&$medals) {
+                $final = $event->matches->firstWhere('stage', KnockoutStageService::STAGE_FINAL);
+                $bronze = $event->matches->firstWhere('stage', KnockoutStageService::STAGE_BRONZE);
+
+                if ($final && $final->result && $final->result->winner_participant_id) {
+                    $this->awardMedal($medals, $final->result->winner_participant_id, 'gold');
+                    $loser = $final->home_participant_id === $final->result->winner_participant_id
+                        ? $final->away_participant_id
+                        : $final->home_participant_id;
+
+                    if ($loser) {
+                        $this->awardMedal($medals, $loser, 'silver');
+                    }
+                }
+
+                if ($bronze && $bronze->result && $bronze->result->winner_participant_id) {
+                    $this->awardMedal($medals, $bronze->result->winner_participant_id, 'bronze');
+                }
+            });
+
+        return $stats->map(function ($s) use ($medals) {
             $s['points'] = ($s['wins'] * 3) + $s['draws'];
+            $s['gold'] = $medals[$s['participant_id']]['gold'] ?? 0;
+            $s['silver'] = $medals[$s['participant_id']]['silver'] ?? 0;
+            $s['bronze'] = $medals[$s['participant_id']]['bronze'] ?? 0;
+            $s['total_medals'] = $s['gold'] + $s['silver'] + $s['bronze'];
 
             return $s;
-        })->sortByDesc('points')->values()->map(function ($s, $index) {
-            $s['rank'] = $index + 1;
-            if ($index === 0) {
-                $s['gold'] = 1;
-            } elseif ($index === 1) {
-                $s['silver'] = 1;
-            } elseif ($index === 2) {
-                $s['bronze'] = 1;
-            }
+        })
+            ->sortByDesc(fn ($s) => [$s['gold'], $s['silver'], $s['bronze'], $s['points']])
+            ->values()
+            ->map(function ($s, $index) {
+                $s['rank'] = $index + 1;
 
-            return $s;
-        });
+                return $s;
+            });
+    }
+
+    protected function awardMedal(array &$medals, string $participantId, string $medal): void
+    {
+        if (! isset($medals[$participantId])) {
+            $medals[$participantId] = ['gold' => 0, 'silver' => 0, 'bronze' => 0];
+        }
+
+        $medals[$participantId][$medal]++;
     }
 }

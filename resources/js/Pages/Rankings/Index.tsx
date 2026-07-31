@@ -162,7 +162,54 @@ export default function RankingsIndex({ tournaments, rankings, selectedTournamen
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
+                        {selectedTournamentData?.ranking_strategy === 'medal_tally' ? (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-16">Rank</TableHead>
+                                        <TableHead>Participant</TableHead>
+                                        <TableHead className="w-20 text-center">
+                                            <span className="inline-flex items-center gap-1 text-yellow-600"><Medal className="size-3.5" /> Gold</span>
+                                        </TableHead>
+                                        <TableHead className="w-20 text-center">
+                                            <span className="inline-flex items-center gap-1 text-gray-500"><Medal className="size-3.5" /> Silver</span>
+                                        </TableHead>
+                                        <TableHead className="w-20 text-center">
+                                            <span className="inline-flex items-center gap-1 text-amber-600"><Medal className="size-3.5" /> Bronze</span>
+                                        </TableHead>
+                                        <TableHead className="w-24 text-center">Total</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {rankings.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                                No rankings available. Record match results first.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                    {rankings.map((r) => (
+                                        <TableRow key={r.participant_id}>
+                                            <TableCell>
+                                                <span className={`flex items-center gap-1 ${rankColors[r.rank] || ''}`}>
+                                                    {r.rank <= 3 && <Medal className="size-4" />}
+                                                    {r.rank}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {r.participant_name}
+                                                {r.team_name && <span className="text-muted-foreground ml-1">({r.team_name})</span>}
+                                            </TableCell>
+                                            <TableCell className="text-center font-semibold text-yellow-600">{r.gold ?? 0}</TableCell>
+                                            <TableCell className="text-center font-semibold text-gray-500">{r.silver ?? 0}</TableCell>
+                                            <TableCell className="text-center font-semibold text-amber-600">{r.bronze ?? 0}</TableCell>
+                                            <TableCell className="text-center font-bold">{r.total_medals ?? 0}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        ) : (
+                            <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-16">Rank</TableHead>
@@ -217,6 +264,7 @@ export default function RankingsIndex({ tournaments, rankings, selectedTournamen
                                 ))}
                             </TableBody>
                         </Table>
+                        )}
                     </CardContent>
                 </Card>
             )}

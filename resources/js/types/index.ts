@@ -224,6 +224,7 @@ export interface RankingEntry {
     gold?: number;
     silver?: number;
     bronze?: number;
+    total_medals?: number;
     rank: number;
 }
 
