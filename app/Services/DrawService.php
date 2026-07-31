@@ -82,7 +82,6 @@ class DrawService
 
     /**
      * Generate round-robin fixtures within a pool.
-     * Uses Circle Method algorithm to ensure every participant plays every other participant once.
      */
     public function generateRoundRobinFixtures(Event $event, Pool $pool): int
     {
@@ -97,31 +96,14 @@ class DrawService
 
         $existingCount = Fixture::where('event_id', $event->id)->withTrashed()->max('match_number') ?? 0;
         $orgId = $event->organization_id ?? Auth::user()->organization_id;
+
+        $rounds = $this->calculateRoundRobinPairs($participantIds);
         $fixtures = [];
-        $roundNumber = 1;
 
-        $teams = $participantIds;
-        $numTeams = count($teams);
+        foreach ($rounds as $roundIndex => $matches) {
+            $roundNumber = $roundIndex + 1;
 
-        $hasBye = false;
-        if ($numTeams % 2 !== 0) {
-            $teams[] = null;
-            $numTeams++;
-            $hasBye = true;
-        }
-
-        $numRounds = $numTeams - 1;
-        $half = $numTeams / 2;
-
-        for ($round = 0; $round < $numRounds; $round++) {
-            for ($match = 0; $match < $half; $match++) {
-                $home = $teams[$match];
-                $away = $teams[$numTeams - 1 - $match];
-
-                if ($home === null || $away === null) {
-                    continue;
-                }
-
+            foreach ($matches as $match) {
                 $existingCount++;
                 $fixtures[] = [
                     'id' => (string) Str::uuid(),
@@ -130,13 +112,54 @@ class DrawService
                     'pool_id' => $pool->id,
                     'round' => $roundNumber,
                     'match_number' => $existingCount,
-                    'home_participant_id' => $home,
-                    'away_participant_id' => $away,
+                    'home_participant_id' => $match['home'],
+                    'away_participant_id' => $match['away'],
                     'status' => 'scheduled',
                 ];
             }
-            $roundNumber++;
+        }
 
+        Fixture::insert($fixtures);
+
+        return count($fixtures);
+    }
+
+    /**
+     * Calculate round-robin pairs using the Circle Method algorithm.
+     * Returns an array of rounds, where each round is an array of matches (home and away).
+     */
+    protected function calculateRoundRobinPairs(array $teams): array
+    {
+        $numTeams = count($teams);
+        if ($numTeams % 2 !== 0) {
+            $teams[] = null;
+            $numTeams++;
+        }
+
+        $numRounds = $numTeams - 1;
+        $half = $numTeams / 2;
+        $rounds = [];
+
+        for ($round = 0; $round < $numRounds; $round++) {
+            $roundMatches = [];
+
+            for ($match = 0; $match < $half; $match++) {
+                $home = $teams[$match];
+                $away = $teams[$numTeams - 1 - $match];
+
+                if ($home !== null && $away !== null) {
+                    $roundMatches[] = [
+                        'home' => $home,
+                        'away' => $away,
+                    ];
+                }
+            }
+
+            if (! empty($roundMatches)) {
+                $rounds[] = $roundMatches;
+            }
+
+            // Rotate the array (Circle Method)
             $first = $teams[0];
             $rest = array_slice($teams, 1);
             $last = array_pop($rest);
@@ -144,9 +167,7 @@ class DrawService
             $teams = array_merge([$first], $rest);
         }
 
-        Fixture::insert($fixtures);
-
-        return count($fixtures);
+        return $rounds;
     }
 
     /**
