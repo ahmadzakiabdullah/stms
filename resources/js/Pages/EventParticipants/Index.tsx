@@ -417,10 +417,12 @@ export default function EventParticipantsIndex({
                     {activeTab === 'events' && (
                         <div className="flex items-center gap-1 rounded-lg border bg-muted/20 p-0.5">
                             <button onClick={() => setViewMode('grid')}
-                                className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`rounded-md p-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                aria-label="Grid view"
                                 title="Grid view"><LayoutGrid className="size-3.5" /></button>
                             <button onClick={() => setViewMode('table')}
-                                className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`rounded-md p-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                aria-label="Table view"
                                 title="Table view"><List className="size-3.5" /></button>
                         </div>
                     )}
@@ -495,7 +497,9 @@ export default function EventParticipantsIndex({
                                                 <TableCell><Badge variant={cfg.variant} className="text-[10px] px-1.5">{cfg.label}</Badge></TableCell>
                                                 <TableCell>
                                                     <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Unregister">
+                                                        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive transition"
+                                                        aria-label={`Unregister ${participant.name} from ${evt.name}`}
+                                                        title="Unregister">
                                                         <X className="size-3" />
                                                     </button>
                                                 </TableCell>
@@ -593,7 +597,9 @@ export default function EventParticipantsIndex({
                                                         <span className="truncate flex-1 min-w-0">{p.name}</span>
                                                         <Badge variant={cfg.variant} className="h-4 text-[9px] px-1 shrink-0">{cfg.label}</Badge>
                                                         <button onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
-                                                            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
+                                                            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive shrink-0"
+                                                            aria-label={`Unregister ${p.name} from ${evt.name}`}
+                                                            title="Unregister">
                                                             <X className="size-2.5" />
                                                         </button>
                                                     </div>
