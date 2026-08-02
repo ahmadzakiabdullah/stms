@@ -34,7 +34,7 @@ class UserService
             $this->syncUserSports($user, $data['sports']);
         }
 
-        Log::info('User created', ['id' => $user->id, 'email' => $user->email, 'org_id' => $user->organization_id]);
+        Log::info('User created', ['id' => $user->getKey(), 'email' => $user->email, 'org_id' => $user->organization_id]);
 
         return $user;
     }
@@ -78,7 +78,7 @@ class UserService
             $this->syncUserSports($user, $data['sports']);
         }
 
-        Log::info('User updated', ['id' => $user->id, 'email' => $user->email]);
+        Log::info('User updated', ['id' => $user->getKey(), 'email' => $user->email]);
 
         return $user;
     }
@@ -108,6 +108,6 @@ class UserService
     {
         $user->delete();
 
-        Log::info('User deleted', ['id' => $user->id, 'email' => $user->email]);
+        Log::info('User deleted', ['id' => $user->getKey(), 'email' => $user->email]);
     }
 }

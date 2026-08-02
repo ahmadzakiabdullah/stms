@@ -61,7 +61,7 @@ class DashboardController extends Controller
 
         $isFacultyRep = $user && $user->hasRole('faculty-representative') && $user->participant_id;
 
-        $cacheKey = 'dashboard-v2-'.($user?->id ?? 'guest').'-'.md5(implode('|', [$sportId, $facultyId, $status]));
+        $cacheKey = 'dashboard-v2-'.($user?->getKey() ?? 'guest').'-'.md5(implode('|', [$sportId, $facultyId, $status]));
         $data = Cache::remember($cacheKey, 60, function () use ($safeCount, $safeQuery, $isSuper, $user, $isFacultyRep, $sportId, $facultyId, $status) {
             $stats = [
                 'organizations' => $isSuper

@@ -155,7 +155,7 @@ class ResultController extends Controller
             ->filter()
             ->unique()
             ->flatMap(fn ($participantId) => Participant::find($participantId)?->users ?? collect())
-            ->unique('id');
+            ->unique(fn ($user) => $user->getKey());
 
         foreach ($users as $user) {
             $user->notify(new MatchResultNotification($result, $action));

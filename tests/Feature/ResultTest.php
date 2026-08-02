@@ -190,6 +190,28 @@ class ResultTest extends TestCase
             fn ($n) => $n->action === 'updated');
     }
 
+    public function test_all_users_of_both_participants_are_notified_when_result_is_recorded(): void
+    {
+        Notification::fake();
+
+        $data = $this->seedMatchWithParticipantUsers();
+        $homeDean = User::factory()->create(['participant_id' => $data['home']->id]);
+        $awayDean = User::factory()->create(['participant_id' => $data['away']->id]);
+        $super = $this->createSuperAdmin(['organization_id' => $data['org']->id]);
+
+        $this->actingAs($super)->post(route('results.store'), [
+            'match_id' => $data['match']->id,
+            'score_home' => 3,
+            'score_away' => 1,
+        ])->assertRedirect(route('results.index'));
+
+        Notification::assertSentTo($data['homeUser'], MatchResultNotification::class);
+        Notification::assertSentTo($data['awayUser'], MatchResultNotification::class);
+        Notification::assertSentTo($homeDean, MatchResultNotification::class);
+        Notification::assertSentTo($awayDean, MatchResultNotification::class);
+        Notification::assertCount(4, MatchResultNotification::class);
+    }
+
     public function test_participants_are_notified_when_result_is_removed(): void
     {
         Notification::fake();
