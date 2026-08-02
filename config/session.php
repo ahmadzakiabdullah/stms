@@ -151,7 +151,7 @@ return [
      * Without this, auth cookies are set for "/" and may not be sent
      * for /portal/* requests → users appear logged out or can bypass auth.
      */
-    'path' => env('SESSION_PATH', '/portal'),
+    'path' => env('SESSION_PATH', '/'),
 
     /*
     |--------------------------------------------------------------------------
