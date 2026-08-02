@@ -74,6 +74,12 @@ class DashboardController extends Controller
             $totalEventRegistrations = $safeCount(EventParticipant::class);
             $participantsWithRegistrations = $safeCount(Participant::class, fn ($q) => $q->whereHas('eventParticipants'));
 
+            $registrationPipeline = $safeQuery(fn () => EventParticipant::query()
+                ->selectRaw("status, count(*) as total")
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->all(), []);
+
             $upcomingEvents = $safeQuery(fn () => Event::query()
                 ->with(['sport:id,name', 'sportCategory:id,name', 'tournament:id,name'])
                 ->withCount('eventParticipants')
@@ -155,7 +161,8 @@ class DashboardController extends Controller
                 'stats', 'recentSessions', 'recentTournaments',
                 'totalEventRegistrations', 'participantsWithRegistrations',
                 'upcomingEvents', 'registrationsBySport', 'isFacultyRep', 'myRegistrations',
-                'facultyRegistrations', 'facultyMale', 'facultyFemale', 'facultyOfficials'
+                'facultyRegistrations', 'facultyMale', 'facultyFemale', 'facultyOfficials',
+                'registrationPipeline'
             );
         });
 

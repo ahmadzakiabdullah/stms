@@ -59,6 +59,7 @@ interface ResultsIndexProps {
     matches?: MatchOption[];
     participants?: Participant[];
     events?: Array<{ id: string; name: string; slug?: string }>;
+    canManage?: boolean;
 }
 
 const participantName = (participant?: Participant, fallback = 'TBD') => {
@@ -216,9 +217,10 @@ interface ResultRowViewProps {
     result: ResultRow;
     onEdit: () => void;
     onDelete: () => void;
+    canManage?: boolean;
 }
 
-function ResultRowView({ result, onEdit, onDelete }: ResultRowViewProps) {
+function ResultRowView({ result, onEdit, onDelete, canManage = true }: ResultRowViewProps) {
     const scored = result.score_home !== null && result.score_home !== undefined;
     const isDraw = scored && result.score_home === result.score_away;
 
@@ -260,15 +262,17 @@ function ResultRowView({ result, onEdit, onDelete }: ResultRowViewProps) {
                     <span className="text-sm text-muted-foreground">-</span>
                 )}
             </TableCell>
+            {canManage && (
             <TableCell className="space-x-1 text-right">
                 <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit result"><Pencil className="size-3" /></Button>
                 <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete result"><Trash2 className="size-3" /></Button>
             </TableCell>
+            )}
         </TableRow>
     );
 }
 
-export default function ResultsIndex({ results: resultsProp, matches: matchesProp = [], participants: participantsProp = [], events: eventsProp = [] }: ResultsIndexProps) {
+export default function ResultsIndex({ results: resultsProp, matches: matchesProp = [], participants: participantsProp = [], events: eventsProp = [], canManage = true }: ResultsIndexProps) {
     const { flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const [editingResult, setEditingResult] = useState<ResultRow | null>(null);
@@ -434,6 +438,8 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {canManage && (
+                        <>
                         <Button
                             variant="outline"
                             size="sm"
@@ -448,7 +454,10 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                         >
                             Excel
                         </Button>
+                        </>
+                        )}
 
+                        {canManage && (
                         <Dialog open={open} onOpenChange={(isOpen) => {
                             if (!isOpen) closeDialog();
                             else setOpen(true);
@@ -564,7 +573,8 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                 </DialogFooter>
                             </form>
                         </DialogContent>
-                    </Dialog>
+                        </Dialog>
+                        )}
                     </div>
                 </div>
             }
@@ -669,7 +679,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                     {pending > 0 && <span className="text-amber-600 dark:text-amber-400"> · {pending} pending</span>}
                                                 </CardDescription>
                                             </div>
-                                            {pending > 0 && (
+                                            {pending > 0 && canManage && (
                                                 <Button variant="outline" size="sm" onClick={() => setFilterEventId(event.id)}>
                                                     <Plus className="mr-1 size-3" /> Record Results
                                                 </Button>
@@ -686,7 +696,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                         <TableHead className="w-32">Pool / Stage</TableHead>
                                                         <TableHead>Venue / Time</TableHead>
                                                         <TableHead className="w-32">Winner</TableHead>
-                                                        <TableHead className="text-right">Actions</TableHead>
+                                                        {canManage && <TableHead className="text-right">Actions</TableHead>}
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -696,6 +706,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                             result={result}
                                                             onEdit={() => openEdit(result)}
                                                             onDelete={() => setDeleteResult(result)}
+                                                            canManage={canManage}
                                                         />
                                                     ))}
                                                 </TableBody>
@@ -737,9 +748,11 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                 <span className="max-w-[110px] truncate text-sm font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
                                                 <span className="hidden text-xs text-muted-foreground sm:inline">· {matchDetail(match)}</span>
                                             </div>
+                                            {canManage && (
                                             <Button size="sm" variant="outline" onClick={() => openCreate(match)}>
                                                 <Plus className="mr-1 size-3" /> Record Result
                                             </Button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -765,7 +778,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                 <TableHead className="w-32">Pool / Stage</TableHead>
                                                 <TableHead>Venue / Time</TableHead>
                                                 <TableHead className="w-32">Winner</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
+                                                {canManage && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -775,6 +788,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                     result={result}
                                                     onEdit={() => openEdit(result)}
                                                     onDelete={() => setDeleteResult(result)}
+                                                    canManage={canManage}
                                                 />
                                             ))}
                                         </TableBody>

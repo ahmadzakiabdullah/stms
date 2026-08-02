@@ -79,6 +79,7 @@ interface DashboardProps {
     participantsWithRegistrations?: number;
     upcomingEvents?: UpcomingEvent[];
     registrationsBySport?: SportCount[];
+    registrationPipeline?: Record<string, number>;
     isFacultyRep?: boolean;
     myRegistrations?: number;
     facultyRegistrations?: FacultyRegistration[];
@@ -86,16 +87,6 @@ interface DashboardProps {
     facultyFemale?: number;
     facultyOfficials?: number;
 }
-
-const defaultStats: StatItem[] = [
-    { label: 'Organizations', value: '—', note: 'Tenants in system', icon: Users },
-    { label: 'Active Sessions', value: '—', note: 'Current event cycles', icon: CalendarClock },
-    { label: 'Tournaments', value: '—', note: 'Active competitions', icon: Trophy },
-    { label: 'Sports', value: '—', note: 'Configured sports', icon: Award },
-    { label: 'Events', value: '—', note: 'Defined sub-competitions', icon: Target },
-    { label: 'Matches', value: '—', note: 'Scheduled matches', icon: Scale },
-    { label: 'Results', value: '—', note: 'Recorded results', icon: Trophy },
-];
 
 const sportIcon: Record<string, string> = {
     badminton: '🏸', 'bola sepak': '⚽', 'bola keranjang': '🏀',
@@ -184,6 +175,7 @@ export default function Dashboard({
     participantsWithRegistrations = 0,
     upcomingEvents = [],
     registrationsBySport = [],
+    registrationPipeline = {},
     isFacultyRep = false,
     myRegistrations = 0,
     facultyRegistrations = [],
@@ -194,12 +186,12 @@ export default function Dashboard({
     const { auth, app } = usePage<PageProps>().props;
     const user = auth?.user;
 
-    const valueKeys = ['organizations', 'activeSessions', 'tournaments', 'sports', 'events', 'matches', 'results'];
-    const stats = defaultStats.map((item, index) => {
-        const key = valueKeys[index];
-        const value = backendStats[key] != null ? String(backendStats[key]) : item.value;
-        return { ...item, value };
-    });
+    const registrationsBySportSafe = Array.isArray(registrationsBySport) ? registrationsBySport : [];
+    const upcomingEventsSafe = Array.isArray(upcomingEvents) ? upcomingEvents : [];
+    const recentSessionsSafe = Array.isArray(recentSessions) ? recentSessions : [];
+    const recentTournamentsSafe = Array.isArray(recentTournaments) ? recentTournaments : [];
+    const pipelineSafe =
+        typeof registrationPipeline === 'object' && registrationPipeline !== null ? registrationPipeline : {};
 
     const isEmpty = (backendStats.sports ?? 0) === 0 && (backendStats.activeSessions ?? 0) === 0;
 
@@ -319,21 +311,48 @@ export default function Dashboard({
         );
     }
 
+    const v = backendStats;
+
+    const pipeline = {
+        pending: pipelineSafe.pending ?? 0,
+        confirmed: pipelineSafe.confirmed ?? 0,
+        rejected: pipelineSafe.rejected ?? 0,
+    };
+    const pipelineTotal = pipeline.pending + pipeline.confirmed + pipeline.rejected;
+
+    const primaryStats: StatItem[] = [
+        { label: 'Active Sessions', value: String(v.activeSessions ?? 0), note: `${v.tournaments ?? 0} tournaments across all sessions`, icon: CalendarClock },
+        { label: 'Events', value: String(v.events ?? 0), note: `Competing across ${v.sports ?? 0} sports`, icon: Target },
+        { label: 'Event Registrations', value: String(totalEventRegistrations), note: `${participantsWithRegistrations} participants registered`, icon: ListChecks },
+        { label: 'Matches', value: String(v.matches ?? 0), note: `${v.results ?? 0} results recorded`, icon: Scale },
+    ];
+
+    const secondaryStats: StatItem[] = [
+        { label: 'Organizations', value: String(v.organizations ?? 0), note: 'Tenants', icon: Users },
+        { label: 'Sports', value: String(v.sports ?? 0), note: 'Configured', icon: Award },
+        { label: 'Participants', value: String(v.participants ?? 0), note: 'Faculties & teams', icon: Users },
+        { label: 'Results', value: String(v.results ?? 0), note: 'Recorded', icon: Trophy },
+    ];
+
+    const maxSportRegistrations = Math.max(1, ...registrationsBySportSafe.map((s) => s.total));
+
+    const quickActions = [
+        { label: 'New Session', href: 'sessions.index', icon: CalendarClock, tone: 'bg-blue-50 text-blue-600', desc: 'Start an event cycle' },
+        { label: 'New Event', href: 'events.index', icon: Target, tone: 'bg-purple-50 text-purple-600', desc: 'Define a competition' },
+        { label: 'Add Participant', href: 'participants.index', icon: Users, tone: 'bg-rose-50 text-rose-600', desc: 'Register a faculty' },
+        { label: 'Registrations', href: 'event-participants.index', icon: ListChecks, tone: 'bg-cyan-50 text-cyan-600', desc: 'Approve & manage' },
+    ];
+
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <div className="text-sm text-muted-foreground">Welcome, {user.name}</div>
+                        <div className="text-sm text-muted-foreground">Welcome back, {user.name}</div>
                         <h1 className="mt-1 text-2xl font-semibold tracking-tight">{app?.name || 'Dashboard'}</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">Overview of your sports competition operations</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <Button asChild variant="outline">
-                            <Link href={route('event-participants.index')}>
-                                <ListChecks className="mr-2 size-4" />
-                                Event Registrations
-                            </Link>
-                        </Button>
                         <Button asChild variant="outline">
                             <Link href={route('sessions.index')}>
                                 <CalendarClock className="mr-2 size-4" />
@@ -353,17 +372,17 @@ export default function Dashboard({
             <Head title="Dashboard" />
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {stats.map((item) => {
+                {primaryStats.map((item) => {
                     const Icon = item.icon;
                     return (
                         <Card key={item.label}>
                             <CardHeader className="flex flex-row items-center justify-between gap-3">
                                 <div>
                                     <CardDescription>{item.label}</CardDescription>
-                                    <CardTitle className="mt-2 text-3xl">{item.value}</CardTitle>
+                                    <CardTitle className="mt-2 text-3xl tabular-nums">{item.value}</CardTitle>
                                 </div>
-                                <div className="flex size-11 items-center justify-center rounded-lg bg-muted">
-                                    <Icon className="size-5 text-muted-foreground" />
+                                <div className="flex size-11 items-center justify-center rounded-lg bg-primary/10">
+                                    <Icon className="size-5 text-primary" />
                                 </div>
                             </CardHeader>
                             <CardContent>
@@ -372,44 +391,111 @@ export default function Dashboard({
                         </Card>
                     );
                 })}
+            </div>
 
-                {isFacultyRep ? (
-                    <Card className="border-primary/30">
-                        <CardHeader className="flex flex-row items-center justify-between gap-3">
-                            <div>
-                                <CardDescription>My Event Registrations</CardDescription>
-                                <CardTitle className="mt-2 text-3xl">{myRegistrations}</CardTitle>
+            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {secondaryStats.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                        <Card key={item.label}>
+                            <CardContent className="flex items-center justify-between py-4">
+                                <div>
+                                    <div className="text-sm text-muted-foreground">{item.label}</div>
+                                    <div className="mt-1 text-2xl font-semibold tabular-nums">{item.value}</div>
+                                </div>
+                                <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
+                                    <Icon className="size-4 text-muted-foreground" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+            </div>
+
+            <div className="mt-6 grid gap-4 xl:grid-cols-3">
+                <Card className="xl:col-span-2">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Registration Pipeline</CardTitle>
+                            <CardDescription>Event registration approvals across all events</CardDescription>
+                        </div>
+                        <Button asChild variant="ghost" size="sm">
+                            <Link href={route('event-participants.index')}>Review</Link>
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                                className="bg-amber-400 transition-all"
+                                style={{ width: `${pipelineTotal > 0 ? (pipeline.pending / pipelineTotal) * 100 : 0}%` }}
+                            />
+                            <div
+                                className="bg-emerald-500 transition-all"
+                                style={{ width: `${pipelineTotal > 0 ? (pipeline.confirmed / pipelineTotal) * 100 : 0}%` }}
+                            />
+                            <div
+                                className="bg-rose-400 transition-all"
+                                style={{ width: `${pipelineTotal > 0 ? (pipeline.rejected / pipelineTotal) * 100 : 0}%` }}
+                            />
+                        </div>
+                        <div className="mt-4 grid grid-cols-3 gap-3">
+                            <div className="rounded-lg border bg-amber-50/50 p-3">
+                                <div className="text-xs text-muted-foreground">Pending</div>
+                                <div className="mt-1 text-2xl font-semibold tabular-nums text-amber-700">{pipeline.pending}</div>
                             </div>
-                            <div className="flex size-11 items-center justify-center rounded-lg bg-primary/10">
-                                <ListChecks className="size-5 text-primary" />
+                            <div className="rounded-lg border bg-emerald-50/50 p-3">
+                                <div className="text-xs text-muted-foreground">Confirmed</div>
+                                <div className="mt-1 text-2xl font-semibold tabular-nums text-emerald-700">{pipeline.confirmed}</div>
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                            <Button asChild variant="link" className="h-auto p-0 text-sm">
-                                <Link href={route('event-participants.index')}>
-                                    Manage registrations <ArrowRight className="ml-1 size-3" />
-                                </Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between gap-3">
-                            <div>
-                                <CardDescription>Event Registrations</CardDescription>
-                                <CardTitle className="mt-2 text-3xl">{totalEventRegistrations}</CardTitle>
+                            <div className="rounded-lg border bg-rose-50/50 p-3">
+                                <div className="text-xs text-muted-foreground">Rejected</div>
+                                <div className="mt-1 text-2xl font-semibold tabular-nums text-rose-700">{pipeline.rejected}</div>
                             </div>
-                            <div className="flex size-11 items-center justify-center rounded-lg bg-muted">
-                                <ListChecks className="size-5 text-muted-foreground" />
+                        </div>
+                        {pipeline.pending > 0 && (
+                            <div className="mt-3">
+                                <Button asChild size="sm" variant="outline" className="text-amber-700 hover:text-amber-800">
+                                    <Link href={route('event-participants.index')}>
+                                        <ArrowRight className="mr-1 size-3.5" />
+                                        Review {pipeline.pending} pending registration{pipeline.pending > 1 ? 's' : ''}
+                                    </Link>
+                                </Button>
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-sm text-muted-foreground">
-                                {participantsWithRegistrations} participants registered
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Registrations by Sport</CardTitle>
+                        <CardDescription>Top sports by registration count</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {registrationsBySportSafe.length > 0 ? (
+                            <div className="space-y-3">
+                                {registrationsBySportSafe.map((s) => (
+                                    <div key={s.name}>
+                                        <div className="mb-1 flex items-center justify-between text-sm">
+                                            <span className="flex items-center gap-2">
+                                                <span className="text-base">{getSportIcon(s.name)}</span>
+                                                {s.name}
+                                            </span>
+                                            <span className="font-medium tabular-nums">{s.total}</span>
+                                        </div>
+                                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                            <div
+                                                className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary transition-all"
+                                                style={{ width: `${(s.total / maxSportRegistrations) * 100}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </CardContent>
-                    </Card>
-                )}
+                        ) : (
+                            <p className="text-sm text-muted-foreground">No registrations yet.</p>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
 
             <div className="mt-6 grid gap-4 xl:grid-cols-3">
@@ -424,9 +510,9 @@ export default function Dashboard({
                         </Button>
                     </CardHeader>
                     <CardContent>
-                        {upcomingEvents.length > 0 ? (
+                        {upcomingEventsSafe.length > 0 ? (
                             <div className="space-y-2">
-                                {upcomingEvents.map((e) => (
+                                {upcomingEventsSafe.map((e) => (
                                     <div key={e.id} className="flex items-center gap-3 rounded border p-2.5 text-sm">
                                         <span className="text-lg">{getSportIcon(e.sport?.name)}</span>
                                         <div className="min-w-0 flex-1">
@@ -453,25 +539,29 @@ export default function Dashboard({
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Registrations by Sport</CardTitle>
-                        <CardDescription>Top sports by registration count</CardDescription>
+                        <CardTitle>Quick Actions</CardTitle>
+                        <CardDescription>Common setup tasks</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        {registrationsBySport.length > 0 ? (
-                            <div className="space-y-2">
-                                {registrationsBySport.map((s) => (
-                                    <div key={s.name} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg">{getSportIcon(s.name)}</span>
-                                            <span className="text-sm">{s.name}</span>
-                                        </div>
-                                        <Badge variant="secondary">{s.total}</Badge>
+                    <CardContent className="space-y-2">
+                        {quickActions.map((a) => {
+                            const Icon = a.icon;
+                            return (
+                                <Link
+                                    key={a.label}
+                                    href={route(a.href)}
+                                    className="flex items-center gap-3 rounded-lg border p-3 text-sm transition hover:bg-accent"
+                                >
+                                    <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${a.tone}`}>
+                                        <Icon className="size-4" />
                                     </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-muted-foreground">No registrations yet.</p>
-                        )}
+                                    <div className="min-w-0 flex-1">
+                                        <div className="font-medium">{a.label}</div>
+                                        <div className="text-xs text-muted-foreground">{a.desc}</div>
+                                    </div>
+                                    <ArrowRight className="size-4 text-muted-foreground" />
+                                </Link>
+                            );
+                        })}
                     </CardContent>
                 </Card>
             </div>
@@ -488,9 +578,9 @@ export default function Dashboard({
                         </Button>
                     </CardHeader>
                     <CardContent>
-                        {recentSessions.length > 0 ? (
+                        {recentSessionsSafe.length > 0 ? (
                             <div className="space-y-2 text-sm">
-                                {recentSessions.map((s) => (
+                                {recentSessionsSafe.map((s) => (
                                     <div key={s.id} className="flex items-center justify-between rounded border p-2">
                                         <div>
                                             <div className="font-medium">{s.name}</div>
@@ -523,9 +613,9 @@ export default function Dashboard({
                         </Button>
                     </CardHeader>
                     <CardContent>
-                        {recentTournaments.length > 0 ? (
+                        {recentTournamentsSafe.length > 0 ? (
                             <div className="space-y-2 text-sm">
-                                {recentTournaments.map((t) => (
+                                {recentTournamentsSafe.map((t) => (
                                     <div key={t.id} className="flex items-center justify-between rounded border p-2">
                                         <div>
                                             <div className="font-medium">{t.name}</div>

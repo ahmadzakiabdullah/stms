@@ -89,6 +89,7 @@ class FacultyDashboardController extends Controller
             'event_participant_id' => ['required', 'uuid', 'exists:event_participants,id'],
             'name' => ['required', 'string', 'max:255'],
             'role' => ['required', 'in:athlete_male,athlete_female,assistant_manager,manager,coach,physio'],
+            'matrix_no' => ['required', 'string', 'max:20'],
             'identification_no' => ['nullable', 'string', 'max:20'],
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
@@ -97,6 +98,17 @@ class FacultyDashboardController extends Controller
 
         if ($ep->participant_id !== Auth::user()->participant_id) {
             abort(403, 'Unauthorized action.');
+        }
+
+        if ($ep->status !== 'confirmed') {
+            return redirect()->route('faculty.dashboard')
+                ->with('error', 'Only confirmed registrations can add squad members.');
+        }
+
+        $isOfficial = in_array($validated['role'], ['assistant_manager', 'manager', 'coach', 'physio'], true);
+        if ($isOfficial && blank($validated['phone'])) {
+            return redirect()->route('faculty.dashboard')
+                ->with('error', 'Officials must provide a phone number.');
         }
 
         $quotaError = $quotaService->validateAddition($ep, $validated['role']);
@@ -109,6 +121,7 @@ class FacultyDashboardController extends Controller
             'event_participant_id' => $ep->id,
             'organization_id' => $ep->event?->organization_id ?? Auth::user()->organization_id,
             'name' => $validated['name'],
+            'matrix_no' => $validated['matrix_no'],
             'role' => $validated['role'],
             'identification_no' => $validated['identification_no'],
             'phone' => $validated['phone'],
@@ -170,11 +183,11 @@ class FacultyDashboardController extends Controller
 
     public function downloadTemplate()
     {
-        $headers = ['name', 'role', 'ic_passport', 'phone'];
+        $headers = ['name', 'role', 'matrix_no', 'ic_passport', 'phone'];
         $example = [
-            ['Ali bin Ahmad', 'athlete_male', '010203-10-1234', '012-3456789'],
-            ['Siti binti Ali', 'athlete_female', '020304-10-5678', '012-9876543'],
-            ['Ahmad bin Jamal', 'manager', '', '019-8765432'],
+            ['Ali bin Ahmad', 'athlete_male', 'B062310001', '010203-10-1234', '012-3456789'],
+            ['Siti binti Ali', 'athlete_female', 'B062310002', '020304-10-5678', '012-9876543'],
+            ['Ahmad bin Jamal', 'manager', 'B062310003', '', '019-8765432'],
         ];
 
         return response()->streamDownload(function () use ($headers, $example) {

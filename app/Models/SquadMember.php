@@ -17,6 +17,7 @@ class SquadMember extends Model
         'event_participant_id',
         'organization_id',
         'name',
+        'matrix_no',
         'role',
         'identification_no',
         'phone',

@@ -66,6 +66,7 @@ class FacultyDashboardControllerTest extends TestCase
             'event_participant_id' => $ep2->id,
             'name' => 'John Doe',
             'role' => 'athlete_male',
+            'matrix_no' => 'B062310001',
         ]);
 
         $response->assertForbidden();

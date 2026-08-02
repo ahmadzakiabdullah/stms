@@ -67,6 +67,7 @@ interface MatchesIndexProps {
     allFixtures: MatchRow[];
     knockout: KnockoutData;
     participants: Participant[];
+    canManage?: boolean;
 }
 
 interface MatchForm {
@@ -225,7 +226,7 @@ const stageTitle = (stage: string, round?: number | null) => {
     return map[stage] || 'Knockout';
 };
 
-function KnockoutStageSection({ knockout }: { knockout: KnockoutData }) {
+function KnockoutStageSection({ knockout, canManage = true }: { knockout: KnockoutData; canManage?: boolean }) {
     const [generating, setGenerating] = useState(false);
     const generate = () => {
         setGenerating(true);
@@ -245,7 +246,7 @@ function KnockoutStageSection({ knockout }: { knockout: KnockoutData }) {
                             ? 'League complete — generate the knockout stage to continue.'
                             : 'Not available yet. The knockout stage unlocks once every league fixture has a result.'}
                     </CardDescription>
-                    {knockout.league_complete && (
+                    {knockout.league_complete && canManage && (
                         <Button onClick={generate} disabled={generating} className="mt-2 w-fit">
                             <Trophy className="mr-2 size-4" /> {generating ? 'Generating…' : 'Generate Knockout Stage'}
                         </Button>
@@ -308,9 +309,10 @@ interface MatchRowViewProps {
     onEdit: () => void;
     onDelete: () => void;
     eventCode?: string;
+    canManage?: boolean;
 }
 
-function MatchRowView({ match, onEdit, onDelete, eventCode: code = '' }: MatchRowViewProps) {
+function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage = true }: MatchRowViewProps) {
     const scored = match.result?.score_home !== null && match.result?.score_home !== undefined;
     const detail = match.pool?.name ?? (match.stage ? stageTitle(match.stage, match.round) : `Round ${match.round || 1}`);
     const label = code
@@ -340,15 +342,17 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '' }: MatchRo
                 <div className="text-xs text-muted-foreground">{formatDateTime(match.scheduled_at)}</div>
             </TableCell>
             <TableCell>{statusBadge(match.status)}</TableCell>
+            {canManage && (
             <TableCell className="space-x-1 text-right">
                 <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit match"><Pencil className="size-3" /></Button>
                 <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete match"><Trash2 className="size-3" /></Button>
             </TableCell>
+            )}
         </TableRow>
     );
 }
 
-export default function MatchesIndex({ events, drawnEventIds, selectedEventId, pools, allFixtures, knockout, participants }: MatchesIndexProps) {
+export default function MatchesIndex({ events, drawnEventIds, selectedEventId, pools, allFixtures, knockout, participants, canManage = true }: MatchesIndexProps) {
     const { flash } = usePage().props;
     const [query, setQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
@@ -510,9 +514,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         <h1 className="text-2xl font-semibold tracking-tight">Matches</h1>
                         <p className="text-sm text-muted-foreground">Browse and manage all fixtures across every event.</p>
                     </div>
+                    {canManage && (
                     <Button onClick={() => openCreate()} disabled={!selectedEventId}>
                         <Plus className="mr-2 size-4" /> Add Match
                     </Button>
+                    )}
                 </div>
             }
         >
@@ -654,19 +660,20 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                                         <TableHead>Matchup</TableHead>
                                                         <TableHead className="w-32">Pool / Stage</TableHead>
                                                         <TableHead>Venue / Time</TableHead>
-                                                        <TableHead className="w-28">Status</TableHead>
-                                                        <TableHead className="text-right">Actions</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {shown.map((match) => (
-                                                        <MatchRowView
-                                                            key={match.id}
-                                                            match={match}
-                                                            onEdit={() => openEdit(match)}
-                                                            onDelete={() => setDeleteMatch(match)}
-                                                        />
-                                                    ))}
+                                                <TableHead className="w-28">Status</TableHead>
+                                                {canManage && <TableHead className="text-right">Actions</TableHead>}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {shown.map((match) => (
+                                                <MatchRowView
+                                                    key={match.id}
+                                                    match={match}
+                                                    onEdit={() => openEdit(match)}
+                                                    onDelete={() => setDeleteMatch(match)}
+                                                    canManage={canManage}
+                                                />
+                                            ))}
                                                 </TableBody>
                                             </Table>
                                         </div>
@@ -712,8 +719,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         </CardHeader>
                     </Card>
 
-                    {knockout.league_complete && <KnockoutStageSection knockout={knockout} />}
-
+                    {knockout.league_complete && <KnockoutStageSection knockout={knockout} canManage={canManage} />}
                     {pools.length === 0 && (
                         <Card>
                             <CardHeader>
@@ -724,9 +730,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-wrap gap-2">
+                                    {canManage && (
                                     <Button variant="outline" size="sm" onClick={() => openCreate()}>
                                         <Plus className="mr-1 size-3" /> Add Match
                                     </Button>
+                                    )}
                                     <Link href={route('events.draw-result', selectedEvent.slug)}>
                                         <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
                                     </Link>
@@ -743,19 +751,21 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                         <CardTitle className="flex items-center gap-2 text-lg"><Users className="size-4" /> {pool.name}</CardTitle>
                                         <CardDescription>{pool.event_participants.length} participants · {pool.fixtures.length} fixtures</CardDescription>
                                     </div>
+                                    {canManage && (
                                     <Button variant="outline" size="sm" onClick={() => openCreate(pool)}>
                                         <Plus className="mr-1 size-3" /> Add to {pool.name}
                                     </Button>
+                                    )}
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-5">
-                                <div className="flex flex-wrap gap-2">
-                                    {pool.event_participants.map((entry) => (
-                                        <div key={entry.id} className="rounded-md border px-3 py-2 text-sm">
-                                            <ParticipantIdentity participant={entry.participant} fallback="Unknown" />
-                                        </div>
-                                    ))}
-                                </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {pool.event_participants.map((entry) => (
+                                            <div key={entry.id} className="rounded-md border px-3 py-2 text-sm">
+                                                <ParticipantIdentity participant={entry.participant} fallback="Unknown" />
+                                            </div>
+                                        ))}
+                                    </div>
 
                                 {pool.has_standings && (
                                     <div className="space-y-2">
@@ -776,12 +786,12 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                                 <TableHead className="w-32">Pool / Stage</TableHead>
                                                 <TableHead>Venue / Time</TableHead>
                                                 <TableHead className="w-28">Status</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
+                                                {canManage && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {pool.fixtures.length === 0 && (
-                                                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No fixtures in this pool.</TableCell></TableRow>
+                                                <TableRow><TableCell colSpan={canManage ? 6 : 5} className="text-center text-muted-foreground">No fixtures in this pool.</TableCell></TableRow>
                                             )}
                                             {pool.fixtures.map((fixture) => (
                                                 <MatchRowView
@@ -790,6 +800,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                                     eventCode={eventCode(selectedEvent.name)}
                                                     onEdit={() => openEdit(fixture)}
                                                     onDelete={() => setDeleteMatch(fixture)}
+                                                    canManage={canManage}
                                                 />
                                             ))}
                                         </TableBody>

@@ -80,6 +80,7 @@ class ResultController extends Controller
             'matches' => $matches,
             'participants' => Participant::query()->active()->orderBy('name')->get(['id', 'name', 'slug']),
             'events' => $events,
+            'canManage' => $user->hasAnyRole(['super-admin', 'org-admin', 'admin-sport']),
         ]);
 
         if ($dataLoadFailed) {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\EventParticipant;
 use App\Models\Fixture;
 use App\Services\DrawService;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,23 @@ class DrawController extends Controller
         $format = $request->input('format', 'group_knockout');
         if (! in_array($format, ['league', 'group_knockout', 'knockout'], true)) {
             $format = 'group_knockout';
+        }
+
+        $incompleteSquads = EventParticipant::query()
+            ->where('event_id', $event->id)
+            ->where('status', 'confirmed')
+            ->with('participant:id,name')
+            ->get()
+            ->filter(fn (EventParticipant $ep) => $ep->squadMembers()
+                ->whereIn('role', ['athlete_male', 'athlete_female'])
+                ->count() === 0)
+            ->pluck('participant.name')
+            ->filter()
+            ->values();
+
+        if ($incompleteSquads->isNotEmpty()) {
+            return redirect()->route('events.index')
+                ->with('error', 'Draw blocked: '.$incompleteSquads->implode(', ').' '.($incompleteSquads->count() === 1 ? 'has' : 'have').' a confirmed registration but no athletes yet. Complete the squads before drawing.');
         }
 
         try {

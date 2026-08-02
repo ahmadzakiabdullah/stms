@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Refactored the super-admin experience: redesigned the dashboard into an operations command center with prioritized KPI cards (sessions, events, registrations, matches), a registration approval pipeline (pending/confirmed/rejected) with progress bar, registrations-by-sport bar chart, and a quick actions panel.
+- Restructured the sidebar navigation by workflow (Overview, Competition Setup, Registration, Competition, Administration, Reports), fixed the duplicate Roles/Settings icon, added an active-item accent indicator, and added an organization context chip for super-admins.
+- Added squad member `matrix_no` field (required on the faculty dashboard) and updated the CSV import template headers to `name, role, matrix_no, ic_passport, phone`.
+- Redesigned the faculty dashboard registration cards with color-coded quota progress bars (male/female/officials), quota-complete checkmarks, and a green "Squad complete" badge once athlete and official quotas are filled.
 - Reconciled a drifted MySQL schema without resetting data, including user soft deletes, settings, activity logging, UUID primary keys, and all remaining domain migrations.
 - Made the user UUID backfill portable across MySQL and SQLite and made the legacy participant-column cleanup tolerate databases without the historical indexes.
 - Created and verified an encrypted pre-migration backup before schema reconciliation.

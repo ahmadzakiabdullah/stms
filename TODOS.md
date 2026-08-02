@@ -99,6 +99,21 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] `DatabaseSeeder` — now calls `SAF2026DataSeeder`
 - [x] Dean role created with proper permissions
 
+### 10. Squad Quota UX & Matrix No (2 Ogos 2026)
+- [x] `matrix_no` column on `squad_members` (nullable, unique per event participant)
+- [x] Required `matrix_no` on squad member form + per-row delete confirmations
+- [x] CSV import template updated to `name, role, matrix_no, ic_passport, phone` with matrix_no required per row
+- [x] Color-coded quota progress bars (male/female/officials) in faculty registration cards
+- [x] Quota-complete checkmarks + green "Squad complete" badge when quotas filled
+
+### 11. Super-Admin UI/UX Refactor (2 Ogos 2026)
+- [x] Sidebar regrouped by workflow: Overview / Competition Setup / Registration / Competition / Administration / Reports
+- [x] Unique icons per menu item (Roles now uses KeySquare) + active-item accent indicator
+- [x] Organization context chip for super-admins at sidebar bottom
+- [x] Dashboard: prioritized KPI cards (sessions, events, registrations, matches) + compact secondary stats
+- [x] Registration pipeline card (pending/confirmed/rejected) with progress bar and review action
+- [x] Registrations-by-sport bar chart + Quick Actions panel
+
 ---
 
 ## ⏳ Deferred (Ciri Lanjutan)

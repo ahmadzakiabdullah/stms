@@ -45,6 +45,7 @@ interface FacultyDashboardProps {
 interface SquadMemberForm {
     name: string;
     role: SquadMember['role'];
+    matrix_no: string;
     identification_no: string;
     phone: string;
 }
@@ -67,6 +68,21 @@ const roleColors: Record<SquadMember['role'], string> = {
     physio: 'bg-teal-100 text-teal-700',
 };
 
+function QuotaBar({ label, current, max, color }: { label: string; current: number; max: number; color: string }) {
+    const pct = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
+
+    return (
+        <div className="flex items-center gap-2 text-xs">
+            <span className="w-16 shrink-0 text-muted-foreground">{label}</span>
+            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-gray-200">
+                <div className={`h-full ${color}`} style={{ width: `${pct}%` }} />
+            </div>
+            <span className="tabular-nums text-muted-foreground">{current}/{max}</span>
+            {max > 0 && current >= max && <span className="text-emerald-600">✓</span>}
+        </div>
+    );
+}
+
 export default function FacultyDashboard({
     participant,
     registrations,
@@ -79,7 +95,7 @@ export default function FacultyDashboard({
     const [addSquadOpen, setAddSquadOpen] = useState(false);
     const [newRegOpen, setNewRegOpen] = useState(false);
     const [squadForm, setSquadForm] = useState<SquadMemberForm>({
-        name: '', role: 'athlete_male', identification_no: '', phone: '',
+        name: '', role: 'athlete_male', matrix_no: '', identification_no: '', phone: '',
     });
     const [selectedEventId, setSelectedEventId] = useState('');
     const [deleteSquadId, setDeleteSquadId] = useState<string | null>(null);
@@ -141,7 +157,7 @@ export default function FacultyDashboard({
             preserveScroll: true,
             onSuccess: () => {
                 setAddSquadOpen(false);
-                setSquadForm({ name: '', role: 'athlete_male', identification_no: '', phone: '' });
+                setSquadForm({ name: '', role: 'athlete_male', matrix_no: '', identification_no: '', phone: '' });
             },
         });
     };
@@ -296,6 +312,11 @@ export default function FacultyDashboard({
                                         {registrations.map((reg) => {
                                             const q = getQuota(reg);
                                             const scfg = statusConfig[reg.status] ?? statusConfig.pending;
+                                            const squadIncomplete = reg.status === 'confirmed' && q.currentAthletes === 0;
+                                            const athleteQuotaFull = q.isTotalBased
+                                                ? q.currentAthletes >= q.totalAthletes
+                                                : (q.male === 0 || q.currentMale >= q.male) && (q.female === 0 || q.currentFemale >= q.female);
+                                            const squadComplete = reg.status === 'confirmed' && athleteQuotaFull && q.currentOfficials >= q.officials;
                                             return (
                                                 <div key={reg.id} className="rounded-lg border">
                                                     <button
@@ -309,6 +330,16 @@ export default function FacultyDashboard({
                                                                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium leading-none ${scfg.class}`}>
                                                                     {scfg.label}
                                                                 </span>
+                                                                {squadIncomplete && (
+                                                                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium leading-none text-amber-700">
+                                                                        Squad incomplete — add athletes
+                                                                    </span>
+                                                                )}
+                                                                {squadComplete && (
+                                                                    <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium leading-none text-emerald-700">
+                                                                        Squad complete ✓
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                             <div className="text-xs text-muted-foreground">
                                                                 {reg.event?.sport?.name} · {reg.event?.sport_category?.name}
@@ -333,23 +364,20 @@ export default function FacultyDashboard({
                                                                 </p>
                                                             ) : (
                                                                 <>
-                                                                    <div className="flex items-center justify-between">
-                                                                        <div className="flex gap-3 text-xs">
+                                                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                                                        <div className="flex flex-col gap-1.5">
                                                                             {q.isTotalBased ? (
-                                                                                <span className="text-blue-600">
-                                                                                    Athletes: {q.currentAthletes}/{q.totalAthletes}
-                                                                                    {(q.minMale || q.minFemale) ? ` (min M ${q.minMale}, min F ${q.minFemale})` : ''}
-                                                                                </span>
+                                                                                <QuotaBar label="Athletes" current={q.currentAthletes} max={q.totalAthletes} color="bg-blue-500" />
                                                                             ) : (
                                                                                 <>
-                                                                                    <span className="text-blue-600">Male: {q.currentMale}/{q.male}</span>
-                                                                                    <span className="text-pink-600">Female: {q.currentFemale}/{q.female}</span>
+                                                                                    {q.male > 0 && <QuotaBar label="Male" current={q.currentMale} max={q.male} color="bg-blue-500" />}
+                                                                                    {q.female > 0 && <QuotaBar label="Female" current={q.currentFemale} max={q.female} color="bg-pink-500" />}
                                                                                 </>
                                                                             )}
-                                                                            <span className="text-purple-600">Officials: {q.currentOfficials}/{q.officials}</span>
+                                                                            <QuotaBar label="Officials" current={q.currentOfficials} max={q.officials} color="bg-purple-500" />
                                                                         </div>
                                                                         <div className="flex gap-2">
-                                                                            <Button size="sm" onClick={() => { setAddSquadOpen(true); setSquadForm({ name: '', role: activeRegAllowedRoles[0], identification_no: '', phone: '' }); }}>
+                                                                            <Button size="sm" onClick={() => { setAddSquadOpen(true); setSquadForm({ name: '', role: activeRegAllowedRoles[0], matrix_no: '', identification_no: '', phone: '' }); }}>
                                                                                 <Plus className="mr-1 size-3" /> Add Member
                                                                             </Button>
                                                                             <Button variant="outline" size="sm" onClick={() => { setImportRegId(reg.id); setImportOpen(true); }}>
@@ -363,6 +391,7 @@ export default function FacultyDashboard({
                                                                             <TableRow>
                                                                                 <TableHead>Name</TableHead>
                                                                                 <TableHead>Role</TableHead>
+                                                                                <TableHead>Matrix No.</TableHead>
                                                                                 <TableHead>IC / Passport</TableHead>
                                                                                 <TableHead>Phone</TableHead>
                                                                                 <TableHead className="w-12" />
@@ -370,7 +399,7 @@ export default function FacultyDashboard({
                                                                         </TableHeader>
                                                                         <TableBody>
                                                                             {(reg.squad_members?.length ?? 0) === 0 ? (
-                                                                                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground text-sm">No squad members yet.</TableCell></TableRow>
+                                                                                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground text-sm">No squad members yet.</TableCell></TableRow>
                                                                             ) : (
                                                                                 reg.squad_members?.map((m) => (
                                                                                     <TableRow key={m.id}>
@@ -378,6 +407,7 @@ export default function FacultyDashboard({
                                                                                         <TableCell>
                                                                                             <span className={`rounded-full px-2 py-0.5 text-xs ${roleColors[m.role]}`}>{roleLabels[m.role]}</span>
                                                                                         </TableCell>
+                                                                                        <TableCell className="font-mono text-xs">{m.matrix_no || '-'}</TableCell>
                                                                                         <TableCell>{m.identification_no || '-'}</TableCell>
                                                                                         <TableCell>{m.phone || '-'}</TableCell>
                                                                                         <TableCell>
@@ -504,11 +534,11 @@ export default function FacultyDashboard({
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="member-name">Full Name</Label>
+                            <Label htmlFor="member-name">Full Name <span className="text-destructive">*</span></Label>
                             <Input id="member-name" value={squadForm.name} onChange={(e) => setSquadForm({ ...squadForm, name: e.target.value })} placeholder="e.g. Ali bin Ahmad" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="member-role">Role</Label>
+                            <Label htmlFor="member-role">Role <span className="text-destructive">*</span></Label>
                             <select
                                 id="member-role"
                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
@@ -519,19 +549,37 @@ export default function FacultyDashboard({
                                      <option key={value} value={value}>{roleLabels[value]}</option>
                                  ))}
                             </select>
+                            <p className="text-xs text-muted-foreground">
+                                {officialRoles.includes(squadForm.role as any)
+                                    ? 'Officials: phone number is required.'
+                                    : 'Athletes: matrix number is required.'}
+                            </p>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="member-ic">IC / Passport (optional)</Label>
-                            <Input id="member-ic" value={squadForm.identification_no} onChange={(e) => setSquadForm({ ...squadForm, identification_no: e.target.value })} />
+                            <Label htmlFor="member-matrix">Matrix No. <span className="text-destructive">*</span></Label>
+                            <Input id="member-matrix" value={squadForm.matrix_no} onChange={(e) => setSquadForm({ ...squadForm, matrix_no: e.target.value })} placeholder="e.g. B062310001" />
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="member-phone">Phone (optional)</Label>
-                            <Input id="member-phone" value={squadForm.phone} onChange={(e) => setSquadForm({ ...squadForm, phone: e.target.value })} />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="member-ic">IC / Passport</Label>
+                                <Input id="member-ic" value={squadForm.identification_no} onChange={(e) => setSquadForm({ ...squadForm, identification_no: e.target.value })} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="member-phone">
+                                    Phone {officialRoles.includes(squadForm.role as any) && <span className="text-destructive">*</span>}
+                                </Label>
+                                <Input id="member-phone" value={squadForm.phone} onChange={(e) => setSquadForm({ ...squadForm, phone: e.target.value })} />
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setAddSquadOpen(false)}>Cancel</Button>
-                        <Button onClick={handleAddSquad} disabled={!squadForm.name}>Add</Button>
+                        <Button
+                            onClick={handleAddSquad}
+                            disabled={!squadForm.name || !squadForm.matrix_no || (officialRoles.includes(squadForm.role as any) && !squadForm.phone)}
+                        >
+                            Add
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -560,7 +608,7 @@ export default function FacultyDashboard({
                                 accept=".xlsx,.xls,.csv"
                                 onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
                             />
-                            <p className="text-xs text-muted-foreground">Columns: name, role, ic_passport, phone</p>
+                            <p className="text-xs text-muted-foreground">Columns: name, role, matrix_no, ic_passport, phone</p>
                         </div>
                     </div>
                     <DialogFooter>

@@ -121,6 +121,7 @@ class MatchController extends Controller
             'allFixtures' => $allFixtures,
             'knockout' => $knockout,
             'participants' => Participant::query()->active()->orderBy('name')->get(['id', 'name', 'slug']),
+            'canManage' => $user->hasAnyRole(['super-admin', 'org-admin', 'admin-sport']),
         ]);
 
         return $response;

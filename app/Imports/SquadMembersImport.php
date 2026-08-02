@@ -26,6 +26,7 @@ class SquadMembersImport implements ToCollection, WithHeadingRow
         foreach ($rows as $index => $row) {
             $name = trim($row['name'] ?? '');
             $role = trim($row['role'] ?? '');
+            $matrixNo = trim($row['matrix_no'] ?? '');
             $ic = trim($row['ic_passport'] ?? '');
             $phone = trim($row['phone'] ?? '');
 
@@ -42,6 +43,19 @@ class SquadMembersImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
+            if (empty($matrixNo)) {
+                $errors[] = 'Row '.($index + 2).': matrix number is required.';
+
+                continue;
+            }
+
+            $isOfficial = in_array($role, ['assistant_manager', 'manager', 'coach', 'physio'], true);
+            if ($isOfficial && empty($phone)) {
+                $errors[] = 'Row '.($index + 2).': officials must provide a phone number.';
+
+                continue;
+            }
+
             $quotaError = $quotaService->validateAddition($this->eventParticipant, $role);
             if ($quotaError) {
                 $errors[] = 'Row '.($index + 2).": {$quotaError}";
@@ -53,6 +67,7 @@ class SquadMembersImport implements ToCollection, WithHeadingRow
                 'event_participant_id' => $this->eventParticipant->id,
                 'organization_id' => $this->organizationId,
                 'name' => $name,
+                'matrix_no' => $matrixNo,
                 'role' => $role,
                 'identification_no' => $ic ?: null,
                 'phone' => $phone ?: null,
