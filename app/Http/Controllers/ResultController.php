@@ -11,6 +11,7 @@ use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Participant;
 use App\Models\Result;
+use App\Notifications\MatchResultNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -99,10 +100,12 @@ class ResultController extends Controller
 
         Gate::authorize('create', [Result::class, $sportId]);
 
-        $action->handle(
+        $result = $action->handle(
             auth()->user()->organization,
             $request->validated()
         );
+
+        $this->notifyMatchParticipants($result, 'recorded');
 
         return redirect()->route('results.index')
             ->with('success', 'Result recorded successfully.');
@@ -112,11 +115,13 @@ class ResultController extends Controller
     {
         Gate::authorize('update', $result);
 
-        $action->handle(
+        $result = $action->handle(
             auth()->user()->organization,
             $result->id,
             $request->validated()
         );
+
+        $this->notifyMatchParticipants($result, 'updated');
 
         return redirect()->route('results.index')
             ->with('success', 'Result updated successfully.');
@@ -131,7 +136,29 @@ class ResultController extends Controller
             $result->id
         );
 
+        $this->notifyMatchParticipants($result, 'removed');
+
         return redirect()->route('results.index')
             ->with('success', 'Result deleted successfully.');
+    }
+
+    private function notifyMatchParticipants(Result $result, string $action): void
+    {
+        $match = $result->match()->with(['event', 'homeParticipant', 'awayParticipant'])->first();
+        $result->loadMissing('winner');
+
+        if (! $match) {
+            return;
+        }
+
+        $users = collect([$match->home_participant_id, $match->away_participant_id])
+            ->filter()
+            ->unique()
+            ->flatMap(fn ($participantId) => Participant::find($participantId)?->users ?? collect())
+            ->unique('id');
+
+        foreach ($users as $user) {
+            $user->notify(new MatchResultNotification($result, $action));
+        }
     }
 }

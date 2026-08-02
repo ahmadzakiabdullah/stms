@@ -12,6 +12,7 @@ use App\Models\SportCategory;
 use App\Models\SquadMember;
 use App\Models\Tournament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
@@ -134,6 +135,27 @@ class DashboardTest extends TestCase
 
         $this->assertEquals(1, $props['facultyStats'][0]['total'] ?? 0);
         $this->assertEquals(1, $props['eventStats']['data'][0]['total'] ?? 0);
+    }
+
+    public function test_dashboard_loads_for_faculty_representative(): void
+    {
+        $orgA = Organization::factory()->create();
+        $sessionA = Session::factory()->create(['organization_id' => $orgA->id]);
+        $facA = Participant::factory()->create(['organization_id' => $orgA->id, 'session_id' => $sessionA->id, 'name' => 'Fakulti Sains']);
+
+        $user = $this->createUserInOrganization($orgA, ['participant_id' => $facA->id]);
+        $user->assignRole(Role::firstOrCreate(['name' => 'faculty-representative', 'guard_name' => 'web']));
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $props = $response->viewData('page')['props'] ?? [];
+
+        $this->assertTrue($props['isFacultyRep'] ?? false);
+        $this->assertEquals(0, $props['myRegistrations'] ?? -1);
+        $this->assertArrayHasKey('registrationStats', $props);
+        $this->assertNull($props['registrationStats']);
+        $this->assertSame([], $props['squadStats'] ?? null);
     }
 
     public function test_dashboard_includes_squad_composition_stats_and_respects_filters(): void

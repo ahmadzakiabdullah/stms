@@ -125,6 +125,7 @@ class DashboardController extends Controller
             $eventStats = collect();
             $sports = collect();
             $faculties = collect();
+            $squadStats = [];
 
             if ($isFacultyRep) {
                 $myRegistrations = $safeCount(EventParticipant::class, fn ($q) => $q->where('participant_id', $user->participant_id));

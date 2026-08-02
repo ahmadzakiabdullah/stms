@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Notifications: participants (faculty reps/deans of the home and away faculties) are now notified when a match result involving them is recorded, updated, or removed, via the new `MatchResultNotification`.
 - Layout: sidebar is now pinned to the viewport (`h-screen sticky top-0`) so the organization chip and user card stay visible at the bottom while only the navigation scrolls; on long pages the footer no longer slides below the fold.
 - Dashboard: added compact "Squad Composition" stat cards (total members, male/female athletes, officials) to the Registration Overview section, respecting the sport/faculty/status filters. Added `SquadMemberFactory`.
 - Merged the Participant Dashboard into the main Dashboard (`/dashboard`): new "Registration Overview" section with stat cards, sport/faculty/status filters, per-faculty and per-event breakdown tables. Removed `/participant-dashboard` route, `ParticipantDashboardController`, its page, and the sidebar item.

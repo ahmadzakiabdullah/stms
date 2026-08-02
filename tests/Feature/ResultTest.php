@@ -5,8 +5,16 @@ namespace Tests\Feature;
 use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Organization;
+use App\Models\Participant;
 use App\Models\Result;
+use App\Models\Session;
+use App\Models\Sport;
+use App\Models\SportCategory;
+use App\Models\Tournament;
+use App\Models\User;
+use App\Notifications\MatchResultNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
@@ -111,5 +119,95 @@ class ResultTest extends TestCase
         $response = $this->actingAs($super)->delete(route('results.destroy', $result));
         $response->assertRedirect(route('results.index'));
         $this->assertSoftDeleted('results', ['id' => $result->id]);
+    }
+
+    private function seedMatchWithParticipantUsers(): array
+    {
+        $org = Organization::factory()->create();
+        $session = Session::factory()->create(['organization_id' => $org->id]);
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id, 'session_id' => $session->id]);
+        $sport = Sport::factory()->create(['organization_id' => $org->id, 'name' => 'Badminton']);
+        $cat = SportCategory::factory()->create(['organization_id' => $org->id, 'sport_id' => $sport->id, 'name' => 'Singles']);
+        $event = Event::factory()->create([
+            'organization_id' => $org->id, 'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id, 'sport_category_id' => $cat->id, 'name' => 'Badminton - Singles',
+        ]);
+
+        $home = Participant::factory()->create(['organization_id' => $org->id, 'session_id' => $session->id, 'name' => 'Fakulti Kejuruteraan']);
+        $away = Participant::factory()->create(['organization_id' => $org->id, 'session_id' => $session->id, 'name' => 'Fakulti Teknologi']);
+
+        $homeUser = User::factory()->create(['participant_id' => $home->id]);
+        $awayUser = User::factory()->create(['participant_id' => $away->id]);
+
+        $match = Fixture::factory()->create([
+            'organization_id' => $org->id, 'event_id' => $event->id,
+            'home_participant_id' => $home->id, 'away_participant_id' => $away->id, 'match_number' => 3,
+        ]);
+
+        return compact('org', 'match', 'home', 'away', 'homeUser', 'awayUser');
+    }
+
+    public function test_participants_are_notified_when_result_is_recorded(): void
+    {
+        Notification::fake();
+
+        $data = $this->seedMatchWithParticipantUsers();
+        $super = $this->createSuperAdmin(['organization_id' => $data['org']->id]);
+
+        $this->actingAs($super)->post(route('results.store'), [
+            'match_id' => $data['match']->id,
+            'score_home' => 3,
+            'score_away' => 1,
+            'winner_participant_id' => $data['home']->id,
+        ])->assertRedirect(route('results.index'));
+
+        Notification::assertSentTo($data['homeUser'], MatchResultNotification::class,
+            fn ($n) => $n->action === 'recorded' && str_contains($n->result->match->event->name, 'Badminton'));
+        Notification::assertSentTo($data['awayUser'], MatchResultNotification::class,
+            fn ($n) => $n->action === 'recorded');
+    }
+
+    public function test_participants_are_notified_when_result_is_updated(): void
+    {
+        Notification::fake();
+
+        $data = $this->seedMatchWithParticipantUsers();
+        $super = $this->createSuperAdmin(['organization_id' => $data['org']->id]);
+
+        $result = $this->actingAs($super)->post(route('results.store'), [
+            'match_id' => $data['match']->id, 'score_home' => 2, 'score_away' => 0,
+        ])->assertRedirect(route('results.index'));
+
+        $resultRow = Result::where('match_id', $data['match']->id)->first();
+
+        $this->actingAs($super)->put(route('results.update', $resultRow), [
+            'match_id' => $data['match']->id, 'score_home' => 2, 'score_away' => 1,
+        ])->assertRedirect(route('results.index'));
+
+        Notification::assertSentTo($data['homeUser'], MatchResultNotification::class,
+            fn ($n) => $n->action === 'updated');
+        Notification::assertSentTo($data['awayUser'], MatchResultNotification::class,
+            fn ($n) => $n->action === 'updated');
+    }
+
+    public function test_participants_are_notified_when_result_is_removed(): void
+    {
+        Notification::fake();
+
+        $data = $this->seedMatchWithParticipantUsers();
+        $super = $this->createSuperAdmin(['organization_id' => $data['org']->id]);
+
+        $result = Result::factory()->create([
+            'organization_id' => $data['org']->id, 'match_id' => $data['match']->id,
+            'score_home' => 1, 'score_away' => 0,
+        ]);
+
+        $this->actingAs($super)->delete(route('results.destroy', $result))
+            ->assertRedirect(route('results.index'));
+
+        Notification::assertSentTo($data['homeUser'], MatchResultNotification::class,
+            fn ($n) => $n->action === 'removed');
+        Notification::assertSentTo($data['awayUser'], MatchResultNotification::class,
+            fn ($n) => $n->action === 'removed');
     }
 }
