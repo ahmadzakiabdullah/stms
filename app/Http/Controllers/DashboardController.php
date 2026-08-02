@@ -11,7 +11,9 @@ use App\Models\Registration;
 use App\Models\Result;
 use App\Models\Session;
 use App\Models\Sport;
+use App\Models\SquadMember;
 use App\Models\Tournament;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -19,11 +21,15 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('view-dashboard');
 
         $user = auth()->user();
+
+        $sportId = $request->input('sport_id');
+        $facultyId = $request->input('faculty_id');
+        $status = $request->input('status');
 
         $safeCount = function (string $modelClass, $query = null) {
             try {
@@ -55,8 +61,8 @@ class DashboardController extends Controller
 
         $isFacultyRep = $user && $user->hasRole('faculty-representative') && $user->participant_id;
 
-        $cacheKey = 'dashboard-v2-'.($user?->id ?? 'guest');
-        $data = Cache::remember($cacheKey, 60, function () use ($safeCount, $safeQuery, $isSuper, $user, $isFacultyRep) {
+        $cacheKey = 'dashboard-v2-'.($user?->id ?? 'guest').'-'.md5(implode('|', [$sportId, $facultyId, $status]));
+        $data = Cache::remember($cacheKey, 60, function () use ($safeCount, $safeQuery, $isSuper, $user, $isFacultyRep, $sportId, $facultyId, $status) {
             $stats = [
                 'organizations' => $isSuper
                     ? $safeCount(Organization::class)
@@ -114,6 +120,12 @@ class DashboardController extends Controller
             $facultyFemale = 0;
             $facultyOfficials = 0;
 
+            $registrationStats = null;
+            $facultyStats = collect();
+            $eventStats = collect();
+            $sports = collect();
+            $faculties = collect();
+
             if ($isFacultyRep) {
                 $myRegistrations = $safeCount(EventParticipant::class, fn ($q) => $q->where('participant_id', $user->participant_id));
 
@@ -144,6 +156,64 @@ class DashboardController extends Controller
                 $facultyOfficials = $allSquad->whereIn('role', ['manager', 'coach', 'physio'])->count();
             }
 
+            if (! $isFacultyRep) {
+                $registrationStats = [
+                    'totalRegistrations' => $totalEventRegistrations,
+                    'pending' => $registrationPipeline['pending'] ?? 0,
+                    'confirmed' => $registrationPipeline['confirmed'] ?? 0,
+                    'totalFaculties' => $safeCount(Participant::class, fn ($q) => $q->where('is_active', true)),
+                    'totalEvents' => $safeCount(Event::class, fn ($q) => $q->where('is_active', true)),
+                ];
+
+                $facultyStats = $safeQuery(fn () => Participant::query()
+                    ->where('is_active', true)
+                    ->withCount(['eventParticipants as total' => function ($q) use ($sportId, $status) {
+                        if ($sportId) {
+                            $q->whereHas('event', fn ($q) => $q->where('sport_id', $sportId));
+                        }
+                        if ($status) {
+                            $q->where('status', $status);
+                        }
+                    }])
+                    ->withCount(['eventParticipants as pending' => fn ($q) => $q->where('status', 'pending')])
+                    ->withCount(['eventParticipants as confirmed' => fn ($q) => $q->where('status', 'confirmed')])
+                    ->withCount(['eventParticipants as rejected' => fn ($q) => $q->where('status', 'rejected')])
+                    ->orderBy('name')
+                    ->get(['id', 'name']), collect());
+
+                $eventStats = $safeQuery(fn () => Event::query()
+                    ->where('is_active', true)
+                    ->with(['sport', 'sportCategory', 'tournament'])
+                    ->withCount(['eventParticipants as total' => function ($q) use ($facultyId, $status) {
+                        if ($facultyId) {
+                            $q->where('participant_id', $facultyId);
+                        }
+                        if ($status) {
+                            $q->where('status', $status);
+                        }
+                    }])
+                    ->orderBy('name')
+                    ->paginate(20)
+                    ->withQueryString(), collect());
+
+                $sports = $safeQuery(fn () => Sport::query()->orderBy('name')->get(['id', 'name']), collect());
+                $faculties = $safeQuery(fn () => Participant::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']), collect());
+
+                $squadStats = $safeQuery(function () use ($sportId, $facultyId, $status) {
+                    return SquadMember::query()
+                        ->join('event_participants', 'squad_members.event_participant_id', '=', 'event_participants.id')
+                        ->join('events', 'event_participants.event_id', '=', 'events.id')
+                        ->where('squad_members.is_active', true)
+                        ->when($sportId, fn ($q) => $q->where('events.sport_id', $sportId))
+                        ->when($facultyId, fn ($q) => $q->where('event_participants.participant_id', $facultyId))
+                        ->when($status, fn ($q) => $q->where('event_participants.status', $status))
+                        ->selectRaw('squad_members.role, count(*) as total')
+                        ->groupBy('squad_members.role')
+                        ->pluck('total', 'role')
+                        ->all();
+                }, []);
+            }
+
             $recentSessions = $safeQuery(fn () => Session::query()
                 ->when(! $isSuper && $user, fn ($q) => $q->where('organization_id', $user->organization_id))
                 ->orderBy('start_date', 'desc')
@@ -162,7 +232,7 @@ class DashboardController extends Controller
                 'totalEventRegistrations', 'participantsWithRegistrations',
                 'upcomingEvents', 'registrationsBySport', 'isFacultyRep', 'myRegistrations',
                 'facultyRegistrations', 'facultyMale', 'facultyFemale', 'facultyOfficials',
-                'registrationPipeline'
+                'registrationPipeline', 'registrationStats', 'facultyStats', 'eventStats', 'sports', 'faculties', 'squadStats'
             );
         });
 

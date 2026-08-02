@@ -8,7 +8,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Activity,
     ArrowRight,
@@ -22,8 +22,10 @@ import {
     Users,
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import FacultyDashboard from '@/Pages/Dashboard/FacultyDashboard';
-import { type PageProps, type Session, type Tournament } from '@/types';
+import Pagination from '@/components/Pagination';
+import { type Event, type PageProps, type Paginated, type Session, type Tournament } from '@/types';
 
 interface BackendStats {
     organizations?: number;
@@ -71,6 +73,30 @@ interface FacultyRegistration {
     squad_members: { role: string }[];
 }
 
+interface FacultyStat {
+    id: string;
+    name: string;
+    total: number;
+    pending: number;
+    confirmed: number;
+    rejected: number;
+}
+
+interface RegistrationEventRow extends Event {
+    sport?: { name: string };
+    sportCategory?: { name: string };
+    tournament?: { name: string };
+    total?: number;
+}
+
+interface RegistrationStats {
+    totalRegistrations: number;
+    pending: number;
+    confirmed: number;
+    totalFaculties: number;
+    totalEvents: number;
+}
+
 interface DashboardProps {
     stats?: BackendStats;
     recentSessions?: Session[];
@@ -86,6 +112,12 @@ interface DashboardProps {
     facultyMale?: number;
     facultyFemale?: number;
     facultyOfficials?: number;
+    registrationStats?: RegistrationStats;
+    facultyStats?: FacultyStat[];
+    eventStats?: Paginated<RegistrationEventRow> | RegistrationEventRow[];
+    sports?: { id: string; name: string }[];
+    faculties?: { id: string; name: string }[];
+    squadStats?: Record<string, number>;
 }
 
 const sportIcon: Record<string, string> = {
@@ -182,9 +214,58 @@ export default function Dashboard({
     facultyMale = 0,
     facultyFemale = 0,
     facultyOfficials = 0,
+    registrationStats: registrationStatsProp,
+    facultyStats: facultyStatsProp = [],
+    eventStats: eventStatsProp = [],
+    sports: sportsProp = [],
+    faculties: facultiesProp = [],
+    squadStats: squadStatsProp = {},
 }: DashboardProps) {
     const { auth, app } = usePage<PageProps>().props;
     const user = auth?.user;
+
+    const facultyStats = Array.isArray(facultyStatsProp) ? facultyStatsProp : [];
+    const sports = Array.isArray(sportsProp) ? sportsProp : [];
+    const faculties = Array.isArray(facultiesProp) ? facultiesProp : [];
+    const eventStats = Array.isArray(eventStatsProp) ? eventStatsProp : (eventStatsProp?.data ?? []);
+    const registrationStats = (registrationStatsProp && typeof registrationStatsProp === 'object') ? registrationStatsProp : {};
+    const squadStats = (squadStatsProp && typeof squadStatsProp === 'object' && !Array.isArray(squadStatsProp)) ? squadStatsProp : {};
+
+    const squadTotal = useMemo(() => Object.values(squadStats).reduce((sum, n) => sum + (Number(n) || 0), 0), [squadStats]);
+    const squadMale = Number(squadStats.athlete_male) || 0;
+    const squadFemale = Number(squadStats.athlete_female) || 0;
+    const squadOfficials = Math.max(0, squadTotal - squadMale - squadFemale);
+
+    const [regSportFilter, setRegSportFilter] = useState('');
+    const [regFacultyFilter, setRegFacultyFilter] = useState('');
+    const [regStatusFilter, setRegStatusFilter] = useState('');
+    const regFilterTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+    useEffect(() => {
+        const p = new URLSearchParams(window.location.search);
+        setRegSportFilter(p.get('sport_id') ?? '');
+        setRegFacultyFilter(p.get('faculty_id') ?? '');
+        setRegStatusFilter(p.get('status') ?? '');
+    }, []);
+
+    const navigateWithRegFilters = () => {
+        const params: Record<string, string> = {};
+        if (regSportFilter) params.sport_id = regSportFilter;
+        if (regFacultyFilter) params.faculty_id = regFacultyFilter;
+        if (regStatusFilter) params.status = regStatusFilter;
+        router.get(route('dashboard'), params, { preserveScroll: true, preserveState: true });
+    };
+
+    const handleRegFilterChange = (setter: (v: string) => void) => (value: string) => {
+        setter(value);
+        if (regFilterTimerRef.current) clearTimeout(regFilterTimerRef.current);
+        regFilterTimerRef.current = setTimeout(navigateWithRegFilters, 250);
+    };
+
+    const clearRegFilters = () => {
+        setRegSportFilter(''); setRegFacultyFilter(''); setRegStatusFilter('');
+        router.get(route('dashboard'), {}, { preserveScroll: true, preserveState: true });
+    };
 
     const registrationsBySportSafe = Array.isArray(registrationsBySport) ? registrationsBySport : [];
     const upcomingEventsSafe = Array.isArray(upcomingEvents) ? upcomingEvents : [];
@@ -496,6 +577,116 @@ export default function Dashboard({
                         )}
                     </CardContent>
                 </Card>
+            </div>
+
+            <div className="mt-8">
+                <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                        <h2 className="text-lg font-semibold tracking-tight">Registration Overview</h2>
+                        <p className="text-sm text-muted-foreground">Registrations across faculties and events</p>
+                    </div>
+                    {(regSportFilter || regFacultyFilter || regStatusFilter) && (
+                        <button onClick={clearRegFilters} className="text-xs text-muted-foreground underline-offset-4 hover:underline">
+                            Clear filters
+                        </button>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{registrationStats.totalRegistrations ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Total Registrations</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-amber-600">{registrationStats.pending ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Pending</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-emerald-600">{registrationStats.confirmed ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Confirmed</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{registrationStats.totalFaculties ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Faculties</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{registrationStats.totalEvents ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Events</p></CardHeader></Card>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <select value={regSportFilter} onChange={(e) => handleRegFilterChange(setRegSportFilter)(e.target.value)}
+                        className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="">All Sports</option>
+                        {sports.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                    <select value={regFacultyFilter} onChange={(e) => handleRegFilterChange(setRegFacultyFilter)(e.target.value)}
+                        className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="">All Faculties</option>
+                        {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+                    </select>
+                    <select value={regStatusFilter} onChange={(e) => handleRegFilterChange(setRegStatusFilter)(e.target.value)}
+                        className="h-9 rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{squadTotal}</CardTitle><p className="text-xs text-center text-muted-foreground">Squad Members</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-blue-600">{squadMale}</CardTitle><p className="text-xs text-center text-muted-foreground">Male Athletes</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-pink-600">{squadFemale}</CardTitle><p className="text-xs text-center text-muted-foreground">Female Athletes</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-purple-600">{squadOfficials}</CardTitle><p className="text-xs text-center text-muted-foreground">Officials</p></CardHeader></Card>
+                </div>
+
+                <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                    <Card>
+                        <CardHeader><CardTitle className="text-sm">Per-Faculty Breakdown</CardTitle></CardHeader>
+                        <CardContent className="p-0">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b text-left text-xs text-muted-foreground">
+                                        <th className="px-4 py-2 font-medium">Faculty</th>
+                                        <th className="px-4 py-2 font-medium text-center">Total</th>
+                                        <th className="px-4 py-2 font-medium text-center">Pending</th>
+                                        <th className="px-4 py-2 font-medium text-center">Confirmed</th>
+                                        <th className="px-4 py-2 font-medium text-center">Rejected</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {facultyStats.length === 0 && (
+                                        <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">No data.</td></tr>
+                                    )}
+                                    {facultyStats.map((f) => (
+                                        <tr key={f.id} className="border-b last:border-0 hover:bg-muted/50">
+                                            <td className="px-4 py-2 font-medium">{f.name}</td>
+                                            <td className="px-4 py-2 text-center tabular-nums">{f.total}</td>
+                                            <td className="px-4 py-2 text-center tabular-nums"><span className="text-amber-600">{f.pending}</span></td>
+                                            <td className="px-4 py-2 text-center tabular-nums"><span className="text-emerald-600">{f.confirmed}</span></td>
+                                            <td className="px-4 py-2 text-center tabular-nums"><span className="text-red-600">{f.rejected}</span></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader><CardTitle className="text-sm">Per-Event Breakdown</CardTitle></CardHeader>
+                        <CardContent className="p-0">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b text-left text-xs text-muted-foreground">
+                                        <th className="px-4 py-2 font-medium">Event</th>
+                                        <th className="px-4 py-2 font-medium">Sport / Category</th>
+                                        <th className="px-4 py-2 font-medium text-center">Registrations</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {eventStats.length === 0 && (
+                                        <tr><td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">No data.</td></tr>
+                                    )}
+                                    {eventStats.map((e) => (
+                                        <tr key={e.id} className="border-b last:border-0 hover:bg-muted/50">
+                                            <td className="px-4 py-2 font-medium">{e.name}</td>
+                                            <td className="px-4 py-2 text-muted-foreground">{e.sport?.name} / {e.sportCategory?.name}</td>
+                                            <td className="px-4 py-2 text-center tabular-nums">{e.total ?? 0}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </CardContent>
+                        <Pagination paginator={eventStatsProp} />
+                    </Card>
+                </div>
             </div>
 
             <div className="mt-6 grid gap-4 xl:grid-cols-3">

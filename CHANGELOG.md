@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Layout: sidebar is now pinned to the viewport (`h-screen sticky top-0`) so the organization chip and user card stay visible at the bottom while only the navigation scrolls; on long pages the footer no longer slides below the fold.
+- Dashboard: added compact "Squad Composition" stat cards (total members, male/female athletes, officials) to the Registration Overview section, respecting the sport/faculty/status filters. Added `SquadMemberFactory`.
+- Merged the Participant Dashboard into the main Dashboard (`/dashboard`): new "Registration Overview" section with stat cards, sport/faculty/status filters, per-faculty and per-event breakdown tables. Removed `/participant-dashboard` route, `ParticipantDashboardController`, its page, and the sidebar item.
+- Event Registrations page: added clickable status stat cards (All/Pending/Confirmed/Rejected), a status filter, and Approve/Reject actions for super-admins/org-admins (notifies the faculty representative, matching the dean flow). Added `PATCH /event-participants/{eventParticipant}/status`.
+- Fixed Event Registrations filtering: sport/category/search filters now narrow the registration rows and the All Events tab (previously only the participant list was filtered, leaving unrelated registrations visible).
+- Added squad member listings for super-admins on the Event Registrations page: expandable rows show every athlete and official (with role badges and matrix numbers) per participant per event.
 - Refactored the super-admin experience: redesigned the dashboard into an operations command center with prioritized KPI cards (sessions, events, registrations, matches), a registration approval pipeline (pending/confirmed/rejected) with progress bar, registrations-by-sport bar chart, and a quick actions panel.
 - Restructured the sidebar navigation by workflow (Overview, Competition Setup, Registration, Competition, Administration, Reports), fixed the duplicate Roles/Settings icon, added an active-item accent indicator, and added an organization context chip for super-admins.
 - Added squad member `matrix_no` field (required on the faculty dashboard) and updated the CSV import template headers to `name, role, matrix_no, ic_passport, phone`.

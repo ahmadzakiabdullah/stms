@@ -51,7 +51,6 @@ const navSections: NavSection[] = [
         title: 'Overview',
         items: [
             { label: 'Dashboard', icon: LayoutDashboard, href: 'dashboard', active: 'dashboard' },
-            { label: 'Overview Dashboard', icon: BarChart3, href: 'participant-dashboard.index', active: 'participant-dashboard*', requireSuper: true },
             { label: 'Faculty Dashboard', icon: Users, href: 'faculty.dashboard', active: 'faculty.dashboard', requireFacultyRep: true },
             { label: 'Dean Dashboard', icon: ShieldCheck, href: 'dean.dashboard', active: 'dean.dashboard', requireDean: true },
         ],
@@ -124,8 +123,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
     const logoUrl = (settings as Record<string, string>)?.logo_url;
 
     return (
-        <aside className={mobile ? 'flex h-full flex-col bg-sidebar' : 'hidden min-h-screen w-72 shrink-0 border-r bg-sidebar lg:flex lg:flex-col'}>
-            <div className="flex h-16 items-center gap-3 border-b px-5">
+        <aside className={mobile ? 'flex h-full flex-col bg-sidebar' : 'hidden h-screen w-72 shrink-0 border-r bg-sidebar lg:sticky lg:top-0 lg:flex lg:flex-col'}>            <div className="flex h-16 items-center gap-3 border-b px-5">
                 {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="h-9 w-auto rounded object-contain" />
                 ) : (

@@ -257,6 +257,7 @@ export interface SquadMember {
     event_participant_id: string;
     organization_id: string;
     name: string;
+    matrix_no: string | null;
     role: 'athlete_male' | 'athlete_female' | 'assistant_manager' | 'manager' | 'coach' | 'physio';
     identification_no: string | null;
     phone: string | null;

@@ -7,6 +7,8 @@ use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Participant;
 use App\Models\User;
+use App\Notifications\EventParticipantConfirmed;
+use App\Notifications\EventParticipantRejected;
 use App\Notifications\NewEventRegistration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,10 +33,21 @@ class EventParticipantController extends Controller
         $sportId = $request->input('sport_id');
         $categoryId = $request->input('category_id');
         $participantId = $request->input('participant_id');
+        $status = $request->input('status');
 
-        $participants = $this->safePaginatedQuery(function () use ($hasParticipant, $user, $search, $sportId, $categoryId, $participantId) {
+        $participants = $this->safePaginatedQuery(function () use ($hasParticipant, $user, $search, $sportId, $categoryId, $participantId, $status) {
             $query = Participant::query()
-                ->with(['eventParticipants.event.sport', 'eventParticipants.event.sportCategory', 'eventParticipants.event.tournament'])
+                ->with(['eventParticipants' => function ($q) use ($search, $sportId, $categoryId, $status) {
+                    $q->with(['event.sport', 'event.sportCategory', 'event.tournament', 'squadMembers'])
+                        ->when($search, fn ($q, $v) => $q->where(fn ($q) =>
+                            $q->whereHas('event', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                                ->orWhereHas('event.sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                                ->orWhereHas('event.sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                        ))
+                        ->when($sportId, fn ($q) => $q->whereHas('event', fn ($q) => $q->where('sport_id', $sportId)))
+                        ->when($categoryId, fn ($q) => $q->whereHas('event', fn ($q) => $q->where('sport_category_id', $categoryId)))
+                        ->when($status, fn ($q, $v) => $q->where('status', $v));
+                }])
                 ->where('is_active', true);
 
             if ($hasParticipant) {
@@ -44,7 +57,14 @@ class EventParticipantController extends Controller
             }
 
             $query
-                ->when($search, fn ($q, $v) => $q->where('name', 'like', "%{$v}%"))
+                ->when($search, function ($q, $v) {
+                    $q->where(function ($q) use ($v) {
+                        $q->where('name', 'like', "%{$v}%")
+                            ->orWhereHas('eventParticipants.event', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                            ->orWhereHas('eventParticipants.event.sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                            ->orWhereHas('eventParticipants.event.sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"));
+                    });
+                })
                 ->when($sportId, fn ($q, $v) => $q->whereHas('eventParticipants.event', fn ($q) => $q->where('sport_id', $v)))
                 ->when($categoryId, fn ($q, $v) => $q->whereHas('eventParticipants.event', fn ($q) => $q->where('sport_category_id', $v)))
                 ->when($participantId, fn ($q, $v) => $q->where('id', $v))
@@ -59,10 +79,17 @@ class EventParticipantController extends Controller
             ]);
         });
 
-        $events = $this->safeCollectionQuery(function () {
+        $events = $this->safeCollectionQuery(function () use ($search, $sportId, $categoryId) {
             return Event::query()
                 ->with(['sport', 'sportCategory', 'tournament'])
                 ->where('is_active', true)
+                ->when($search, fn ($q, $v) => $q->where(fn ($q) =>
+                    $q->where('name', 'like', "%{$v}%")
+                        ->orWhereHas('sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                        ->orWhereHas('sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                ))
+                ->when($sportId, fn ($q, $v) => $q->where('sport_id', $v))
+                ->when($categoryId, fn ($q, $v) => $q->where('sport_category_id', $v))
                 ->orderBy('name')
                 ->get();
         }, function () use (&$dataLoadFailed) {
@@ -82,11 +109,33 @@ class EventParticipantController extends Controller
             return collect();
         });
 
+        $statusCounts = $this->safeCollectionQuery(function () use ($hasParticipant, $user, $search, $sportId, $categoryId, $participantId) {
+            $query = EventParticipant::query()
+                ->when($search, fn ($q, $v) => $q->where(fn ($q) =>
+                    $q->whereHas('participant', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                        ->orWhereHas('event', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                        ->orWhereHas('event.sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                        ->orWhereHas('event.sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                ))
+                ->when($sportId, fn ($q, $v) => $q->whereHas('event', fn ($q) => $q->where('sport_id', $v)))
+                ->when($categoryId, fn ($q, $v) => $q->whereHas('event', fn ($q) => $q->where('sport_category_id', $v)))
+                ->when($participantId, fn ($q, $v) => $q->where('participant_id', $v));
+
+            if ($hasParticipant) {
+                $query->where('participant_id', $user->participant_id);
+            }
+
+            return $query->selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
+        }, fn () => collect(['pending' => 0, 'confirmed' => 0, 'rejected' => 0]));
+
         $response = Inertia::render('EventParticipants/Index', [
             'participants' => $participants,
             'events' => $events,
             'faculties' => $faculties,
             'isFacultyRepresentative' => $isWakil,
+            'statusCounts' => $statusCounts,
         ]);
 
         if ($dataLoadFailed) {
@@ -153,5 +202,30 @@ class EventParticipantController extends Controller
 
         return redirect()->route('event-participants.index')
             ->with('success', 'Event registration deleted.');
+    }
+
+    public function updateStatus(Request $request, EventParticipant $eventParticipant): RedirectResponse
+    {
+        Gate::authorize('update', $eventParticipant);
+
+        $validated = $request->validate([
+            'status' => 'required|string|in:confirmed,rejected',
+        ]);
+
+        $eventParticipant->update(['status' => $validated['status']]);
+
+        if ($eventParticipant->participant?->users) {
+            foreach ($eventParticipant->participant->users as $user) {
+                $user->notify($validated['status'] === 'confirmed'
+                    ? new EventParticipantConfirmed($eventParticipant)
+                    : new EventParticipantRejected($eventParticipant));
+            }
+        }
+
+        return redirect()->route('event-participants.index', collect($request->query())->only([
+            'search', 'sport_id', 'category_id', 'participant_id', 'status',
+        ])->filter(fn ($v) => $v !== null && $v !== '')->all())->with('success', $validated['status'] === 'confirmed'
+            ? 'Registration approved.'
+            : 'Registration rejected.');
     }
 }

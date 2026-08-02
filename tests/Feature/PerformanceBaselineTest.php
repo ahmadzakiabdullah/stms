@@ -66,10 +66,11 @@ class PerformanceBaselineTest extends TestCase
 
         $this->actingAs($admin)->get('/dashboard')->assertOk();
 
+        // Budget: dashboard core + registration overview (faculty/event breakdowns, squad composition).
         $this->assertLessThanOrEqual(
-            40,
+            42,
             $queries,
-            "Dashboard query budget exceeded: {$queries} queries (budget: 40)."
+            "Dashboard query budget exceeded: {$queries} queries (budget: 42)."
         );
     }
 }

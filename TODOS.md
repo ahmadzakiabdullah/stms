@@ -65,10 +65,9 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Import dialog + template download in Faculty Dashboard
 - [x] Flexible athlete quota modes for categories: gender-based, open total, mixed total with optional minimum male/female counts
 
-### 5. Participant Dashboard
-- [x] `ParticipantDashboardController` — stats, per-faculty breakdown, per-event breakdown
-- [x] Sport/faculty/status filters
-- [x] `/participant-dashboard` route in Overview section
+### 5. Registration Overview (merged into Dashboard)
+- [x] Registration Overview section (stats, per-faculty breakdown, per-event breakdown + filters) merged into `/dashboard` — `ParticipantDashboardController`, `/participant-dashboard` route and page removed
+- [x] Squad Composition cards (total/male/female athletes/officials) in Registration Overview, filter-aware
 
 ### 6. Logo/Crest Upload
 - [x] Migration `2026_07_08_000003` — `logo_path` on `participants`
@@ -113,6 +112,9 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Dashboard: prioritized KPI cards (sessions, events, registrations, matches) + compact secondary stats
 - [x] Registration pipeline card (pending/confirmed/rejected) with progress bar and review action
 - [x] Registrations-by-sport bar chart + Quick Actions panel
+- [x] Squad member listings for super-admins on Event Registrations page (expandable rows with role badges and matrix numbers)
+- [x] Event Registrations page: clickable status stat cards, status filter, and Approve/Reject actions for super-admins (notifies faculty representative)
+- [x] Event Registrations filtering fixed: sport/category/search now filter registration rows and All Events tab, not just the participant list
 
 ---
 

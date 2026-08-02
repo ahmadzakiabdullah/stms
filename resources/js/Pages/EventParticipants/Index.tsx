@@ -28,14 +28,15 @@ import {
 
 import Pagination from '@/components/Pagination';
 import { Head, router, usePage } from '@inertiajs/react';
-import { LayoutGrid, List, Plus, Search, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, Check, CircleX, LayoutGrid, List, Plus, Search, X } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type {
     Event as EventType,
     EventParticipant as EventParticipantType,
     Participant,
     Paginated,
     Flash,
+    SquadMember,
 } from '@/types';
 
 interface ParticipantWithEvents extends Participant {
@@ -49,7 +50,17 @@ interface EventParticipantsIndexProps {
     events: (EventType & { sport?: { name: string }; sport_category?: { name: string }; tournament?: { name: string } })[];
     faculties?: { id: string; name: string }[];
     isFacultyRepresentative?: boolean;
+    statusCounts?: Record<string, number>;
 }
+
+const squadRoleConfig: Record<string, { label: string; class: string }> = {
+    athlete_male: { label: 'Male Athlete', class: 'bg-blue-100 text-blue-700' },
+    athlete_female: { label: 'Female Athlete', class: 'bg-pink-100 text-pink-700' },
+    assistant_manager: { label: 'Asst. Manager', class: 'bg-orange-100 text-orange-700' },
+    manager: { label: 'Manager', class: 'bg-purple-100 text-purple-700' },
+    coach: { label: 'Coach', class: 'bg-amber-100 text-amber-700' },
+    physio: { label: 'Physio', class: 'bg-teal-100 text-teal-700' },
+};
 
 const statusConfig: Record<string, { label: string; class: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
     pending: { label: 'Pending', class: 'bg-amber-100 text-amber-700 border-amber-200', variant: 'outline' },
@@ -227,31 +238,52 @@ function ConfirmUnregisterDialog({ open, onClose, onConfirm, participantName, ev
     );
 }
 
+function ConfirmRejectDialog({ open, onClose, onConfirm, participantName, eventName }: {
+    open: boolean; onClose: () => void; onConfirm: () => void; participantName: string; eventName: string;
+}) {
+    return (
+        <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Reject registration?</DialogTitle>
+                    <DialogDescription>Reject <strong>{participantName}</strong> from <strong>{eventName}</strong>? The faculty representative will be notified.</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button variant="destructive" onClick={onConfirm}>Yes, Reject</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export default function EventParticipantsIndex({
     participants: participantsProp, events: eventsProp = [], faculties: facultiesProp = [],
-    isFacultyRepresentative = false,
+    isFacultyRepresentative = false, statusCounts: statusCountsProp = {},
 }: EventParticipantsIndexProps) {
     const { flash } = usePage().props;
     const participantsList = Array.isArray(participantsProp) ? participantsProp : participantsProp?.data ?? [];
     const events = Array.isArray(eventsProp) ? eventsProp : eventsProp ?? [];
     const faculties = Array.isArray(facultiesProp) ? facultiesProp : [];
+    const statusCounts = (statusCountsProp && typeof statusCountsProp === 'object' && !Array.isArray(statusCountsProp)) ? statusCountsProp : {};
 
     const defaultTab = isFacultyRepresentative ? 'events' : 'registrations';
     const [activeTab, setActiveTab] = useState<'registrations' | 'events'>(defaultTab);
     const [viewMode, setViewMode] = useState<'grid' | 'table'>(isFacultyRepresentative ? 'grid' : 'table');
 
     const searchTimerRef = useRef<ReturnType<typeof setTimeout>>();
-    const filtersRef = useRef({ search: '', sport_id: '', category_id: '', participant_id: '' });
+    const filtersRef = useRef({ search: '', sport_id: '', category_id: '', participant_id: '', status: '' });
     const [searchInput, setSearchInput] = useState('');
     const [filterSportId, setFilterSportId] = useState('');
     const [filterCategoryId, setFilterCategoryId] = useState('');
     const [filterParticipantId, setFilterParticipantId] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
 
     useEffect(() => {
         const p = new URLSearchParams(window.location.search);
-        const initial = { search: p.get('search') ?? '', sport_id: p.get('sport_id') ?? '', category_id: p.get('category_id') ?? '', participant_id: p.get('participant_id') ?? '' };
+        const initial = { search: p.get('search') ?? '', sport_id: p.get('sport_id') ?? '', category_id: p.get('category_id') ?? '', participant_id: p.get('participant_id') ?? '', status: p.get('status') ?? '' };
         filtersRef.current = initial;
-        setSearchInput(initial.search); setFilterSportId(initial.sport_id); setFilterCategoryId(initial.category_id); setFilterParticipantId(initial.participant_id);
+        setSearchInput(initial.search); setFilterSportId(initial.sport_id); setFilterCategoryId(initial.category_id); setFilterParticipantId(initial.participant_id); setFilterStatus(initial.status);
     }, []);
 
     const doNavigate = () => {
@@ -261,6 +293,7 @@ export default function EventParticipantsIndex({
         if (f.sport_id) params.sport_id = f.sport_id;
         if (f.category_id) params.category_id = f.category_id;
         if (f.participant_id) params.participant_id = f.participant_id;
+        if (f.status) params.status = f.status;
         router.get(route('event-participants.index'), params, { preserveScroll: true, preserveState: true });
     };
 
@@ -292,10 +325,17 @@ export default function EventParticipantsIndex({
         doNavigate();
     };
 
+    const handleStatusChange = (value: string) => {
+        if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+        setFilterStatus(value);
+        filtersRef.current.status = value;
+        doNavigate();
+    };
+
     const handleClearFilters = () => {
         if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-        setSearchInput(''); setFilterSportId(''); setFilterCategoryId(''); setFilterParticipantId('');
-        filtersRef.current = { search: '', sport_id: '', category_id: '', participant_id: '' };
+        setSearchInput(''); setFilterSportId(''); setFilterCategoryId(''); setFilterParticipantId(''); setFilterStatus('');
+        filtersRef.current = { search: '', sport_id: '', category_id: '', participant_id: '', status: '' };
         router.get(route('event-participants.index'), {}, { preserveScroll: true, preserveState: true });
     };
 
@@ -317,13 +357,41 @@ export default function EventParticipantsIndex({
 
     const totalRegistrations = useMemo(() => participantsList.reduce((sum, p) => sum + (p.event_participants?.length ?? 0), 0), [participantsList]);
 
+    const statusCards = useMemo(() => {
+        const cards: Array<{ key: string; label: string; count: number }> = [
+            { key: '', label: 'All', count: totalRegistrations },
+            { key: 'pending', label: 'Pending', count: statusCounts.pending ?? 0 },
+            { key: 'confirmed', label: 'Confirmed', count: statusCounts.confirmed ?? 0 },
+            { key: 'rejected', label: 'Rejected', count: statusCounts.rejected ?? 0 },
+        ];
+        for (const k of ['withdrawn', 'disqualified']) {
+            if ((statusCounts[k] ?? 0) > 0) cards.push({ key: k, label: statusConfig[k]?.label ?? k, count: statusCounts[k] ?? 0 });
+        }
+        return cards;
+    }, [statusCounts, totalRegistrations]);
+
     const [addTarget, setAddTarget] = useState<{ id: string; name: string } | null>(null);
     const [unregTarget, setUnregTarget] = useState<{ id: string; participantName: string; eventName: string } | null>(null);
+    const [rejectTarget, setRejectTarget] = useState<{ epId: string; participantName: string; eventName: string } | null>(null);
+    const [expandedEp, setExpandedEp] = useState<string | null>(null);
 
     const handleUnregister = () => {
         if (!unregTarget) return;
         router.delete(route('event-participants.destroy', unregTarget.id), {
             preserveScroll: true, onSuccess: () => setUnregTarget(null),
+        });
+    };
+
+    const approveRegistration = (epId: string) => {
+        router.patch(route('event-participants.status', epId), { status: 'confirmed' }, {
+            preserveScroll: true,
+        });
+    };
+
+    const rejectRegistration = () => {
+        if (!rejectTarget) return;
+        router.patch(route('event-participants.status', rejectTarget.epId), { status: 'rejected' }, {
+            preserveScroll: true, onSuccess: () => setRejectTarget(null),
         });
     };
 
@@ -333,7 +401,7 @@ export default function EventParticipantsIndex({
         });
     };
 
-    const hasActiveFilters = searchInput || filterSportId || filterCategoryId || filterParticipantId;
+    const hasActiveFilters = searchInput || filterSportId || filterCategoryId || filterParticipantId || filterStatus;
 
     const registeredEventIds = useMemo(() => {
         const ids = new Set<string>();
@@ -389,13 +457,22 @@ export default function EventParticipantsIndex({
             {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
             {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
 
-            {/* Mini Stats */}
-            <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{participantsList.length} {isFacultyRepresentative ? 'faculties' : 'participants'}</span>
-                <span className="text-muted-foreground/30">|</span>
-                <span>{totalRegistrations} registrations</span>
-                <span className="text-muted-foreground/30">|</span>
-                <span>{events.length} events</span>
+            {/* Status stat cards */}
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                {statusCards.map((card) => {
+                    const isActive = filterStatus === card.key;
+                    return (
+                        <button key={card.key || 'all'} type="button" onClick={() => handleStatusChange(card.key)}
+                            className={`flex flex-col items-start gap-0.5 rounded-lg border bg-card px-3 py-2 text-left transition ${isActive ? 'border-primary ring-1 ring-primary' : 'hover:bg-muted/50'}`}>
+                            <span className="text-lg font-semibold leading-none tabular-nums">{card.count}</span>
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{card.label}</span>
+                        </button>
+                    );
+                })}
+                <div className="flex flex-col items-start gap-0.5 rounded-lg border bg-card px-3 py-2">
+                    <span className="text-lg font-semibold leading-none tabular-nums">{events.length}</span>
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Events</span>
+                </div>
             </div>
 
             {/* Tabs + View toggle */}
@@ -458,6 +535,14 @@ export default function EventParticipantsIndex({
                     </select>
                 )}
 
+                <select value={filterStatus} onChange={(e) => handleStatusChange(e.target.value)}
+                    className="h-8 rounded-md border border-input bg-background px-2 text-xs">
+                    <option value="">All Statuses</option>
+                    {Object.entries(statusConfig).map(([key, cfg]) => (
+                        <option key={key} value={key}>{cfg.label}</option>
+                    ))}
+                </select>
+
                 {hasActiveFilters && (
                     <Button variant="ghost" size="sm" onClick={handleClearFilters} className="h-8 text-xs">Clear</Button>
                 )}
@@ -479,6 +564,7 @@ export default function EventParticipantsIndex({
                                         {!isFacultyRepresentative && <TableHead>Faculty</TableHead>}
                                         <TableHead>Sport / Category</TableHead>
                                         <TableHead>Tournament</TableHead>
+                                        {!isFacultyRepresentative && <TableHead>Squad</TableHead>}
                                         <TableHead>Status</TableHead>
                                         <TableHead className="w-10" />
                                     </TableRow>
@@ -486,20 +572,87 @@ export default function EventParticipantsIndex({
                                 <TableBody>
                                     {registrationRows.map(({ ep, participant, event: evt }) => {
                                         const cfg = statusConfig[ep.status] ?? statusConfig.pending;
+                                        const members: SquadMember[] = Array.isArray(ep.squad_members) ? ep.squad_members : [];
+                                        const maleCount = members.filter((m) => m.role === 'athlete_male').length;
+                                        const femaleCount = members.filter((m) => m.role === 'athlete_female').length;
+                                        const officialCount = members.filter((m) => m.role !== 'athlete_male' && m.role !== 'athlete_female').length;
+                                        const isExpanded = expandedEp === ep.id;
                                         return (
-                                            <TableRow key={ep.id}>
-                                                <TableCell className="font-medium text-xs">{evt.name}</TableCell>
-                                                {!isFacultyRepresentative && <TableCell className="text-xs">{participant.name}</TableCell>}
-                                                <TableCell className="text-xs text-muted-foreground">{evt.sport?.name}{evt.sport_category?.name ? ` / ${evt.sport_category.name}` : ''}</TableCell>
-                                                <TableCell className="text-xs text-muted-foreground">{evt.tournament?.name || '-'}</TableCell>
-                                                <TableCell><Badge variant={cfg.variant} className="text-[10px] px-1.5">{cfg.label}</Badge></TableCell>
-                                                <TableCell>
-                                                    <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Unregister">
-                                                        <X className="size-3" />
-                                                    </button>
-                                                </TableCell>
-                                            </TableRow>
+                                            <Fragment key={ep.id}>
+                                                <TableRow className={isExpanded ? 'bg-muted/30' : undefined}>
+                                                    <TableCell className="font-medium text-xs">{evt.name}</TableCell>
+                                                    {!isFacultyRepresentative && <TableCell className="text-xs">{participant.name}</TableCell>}
+                                                    <TableCell className="text-xs text-muted-foreground">{evt.sport?.name}{evt.sport_category?.name ? ` / ${evt.sport_category.name}` : ''}</TableCell>
+                                                    <TableCell className="text-xs text-muted-foreground">{evt.tournament?.name || '-'}</TableCell>
+                                                    {!isFacultyRepresentative && (
+                                                        <TableCell>
+                                                            {members.length > 0 ? (
+                                                                <button
+                                                                    onClick={() => setExpandedEp(isExpanded ? null : ep.id)}
+                                                                    className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                                                    title="View squad members"
+                                                                >
+                                                                    <ChevronDown className={`size-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                                                    {members.length} member{members.length > 1 ? 's' : ''}
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-[10px] text-muted-foreground">—</span>
+                                                            )}
+                                                        </TableCell>
+                                                    )}
+                                                    <TableCell><Badge variant={cfg.variant} className="text-[10px] px-1.5">{cfg.label}</Badge></TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-0.5">
+                                                            {!isFacultyRepresentative && ep.status === 'pending' && (
+                                                                <>
+                                                                    <button onClick={() => approveRegistration(ep.id)}
+                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-600 hover:text-white transition" title="Approve">
+                                                                        <Check className="size-3" />
+                                                                    </button>
+                                                                    <button onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Reject">
+                                                                        <CircleX className="size-3" />
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                            <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Unregister">
+                                                                <X className="size-3" />
+                                                            </button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                                {isExpanded && (
+                                                    <TableRow className="bg-muted/20">
+                                                        <TableCell colSpan={isFacultyRepresentative ? 5 : 7} className="p-0">
+                                                            <div className="px-4 py-3">
+                                                                <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                                                                    <span className="font-semibold">Squad ({members.length})</span>
+                                                                    <span className="text-blue-600">{maleCount} male</span>
+                                                                    <span className="text-pink-600">{femaleCount} female</span>
+                                                                    <span className="text-purple-600">{officialCount} official{officialCount !== 1 ? 's' : ''}</span>
+                                                                </div>
+                                                                {members.length > 0 ? (
+                                                                    <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
+                                                                        {members.map((m) => {
+                                                                            const rc = squadRoleConfig[m.role] ?? { label: m.role, class: 'bg-gray-100 text-gray-600' };
+                                                                            return (
+                                                                                <div key={m.id} className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-xs">
+                                                                                    <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${rc.class}`}>{rc.label}</span>
+                                                                                    <span className="truncate font-medium">{m.name}</span>
+                                                                                    {m.matrix_no && <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">{m.matrix_no}</span>}
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-xs text-muted-foreground">No squad members added yet.</p>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </Fragment>
                                         );
                                     })}
                                 </TableBody>
@@ -620,6 +773,10 @@ export default function EventParticipantsIndex({
             <ConfirmUnregisterDialog open={!!unregTarget} onClose={() => setUnregTarget(null)}
                 onConfirm={handleUnregister} participantName={unregTarget?.participantName ?? ''}
                 eventName={unregTarget?.eventName ?? ''} />
+
+            <ConfirmRejectDialog open={!!rejectTarget} onClose={() => setRejectTarget(null)}
+                onConfirm={rejectRegistration} participantName={rejectTarget?.participantName ?? ''}
+                eventName={rejectTarget?.eventName ?? ''} />
         </AuthenticatedLayout>
     );
 }

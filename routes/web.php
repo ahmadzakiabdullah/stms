@@ -13,7 +13,6 @@ use App\Http\Controllers\MatchController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ParticipantController;
-use App\Http\Controllers\ParticipantDashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RankingController;
 use App\Http\Controllers\RegistrationController;
@@ -116,9 +115,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/events/{event}/draw/move-participant', [DrawController::class, 'moveParticipant'])->name('events.draw.move-participant');
     Route::post('/events/batch-delete', [EventController::class, 'batchDestroy'])->name('events.batch-destroy');
 
-    // Participant Dashboard (consolidated overview)
-    Route::get('/participant-dashboard', [ParticipantDashboardController::class, 'index'])->name('participant-dashboard.index');
-
     // M3: Participant & Registration
     Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
     Route::post('/participants', [ParticipantController::class, 'store'])->name('participants.store');
@@ -132,6 +128,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/event-participants', [EventParticipantController::class, 'index'])->name('event-participants.index');
     Route::post('/event-participants', [EventParticipantController::class, 'store'])->name('event-participants.store');
+    Route::patch('/event-participants/{eventParticipant}/status', [EventParticipantController::class, 'updateStatus'])->name('event-participants.status');
     Route::delete('/event-participants/{eventParticipant}', [EventParticipantController::class, 'destroy'])->name('event-participants.destroy');
 
     // M4: Match Scheduling
