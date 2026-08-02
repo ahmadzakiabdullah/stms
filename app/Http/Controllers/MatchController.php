@@ -90,11 +90,21 @@ class MatchController extends Controller
                 });
         }
 
-        $allFixtures = Fixture::with(['event', 'homeParticipant', 'awayParticipant', 'result'])
-            ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
-            ->orderByDesc('scheduled_at')
-            ->paginate(15)
-            ->withQueryString();
+        $allFixtures = Fixture::query()
+            ->join('events', fn ($join) => $join->on('events.id', '=', 'matches.event_id')
+                ->whereNull('events.deleted_at'))
+            ->with([
+                'event:id,name,slug',
+                'pool:id,name',
+                'homeParticipant:id,name,team_name,logo_path',
+                'awayParticipant:id,name,team_name,logo_path',
+                'result',
+            ])
+            ->when($sportIds !== null, fn ($q) => $q->whereIn('events.sport_id', $sportIds))
+            ->select('matches.*')
+            ->orderBy('events.name')
+            ->orderBy('matches.match_number')
+            ->get();
 
         $knockout = [
             'has_stage' => $selectedEvent ? $this->knockoutStageService->hasKnockoutStage($selectedEvent) : false,
@@ -107,9 +117,6 @@ class MatchController extends Controller
             'events' => $events,
             'drawnEventIds' => $drawnEventIds,
             'selectedEventId' => $selectedEvent?->id,
-            'nextMatchNumber' => $selectedEvent
-                ? ((int) Fixture::query()->where('event_id', $selectedEvent->id)->max('match_number')) + 1
-                : 1,
             'pools' => $pools,
             'allFixtures' => $allFixtures,
             'knockout' => $knockout,

@@ -1,5 +1,4 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Pagination from '@/components/Pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { BarChart3, Eye, Pencil, Plus, RefreshCw, Save, Swords, Trash2, Trophy, Users } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
-import type { Event, Fixture, Paginated, Participant, Pool, Result } from '@/types';
+import { BarChart3, CalendarDays, Eye, Pencil, Plus, RefreshCw, Save, Search, Swords, Trash2, Trophy, Users } from 'lucide-react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { eventCode, matchNumberLabel } from '@/lib/matchNumber';
+import { matchProgress } from '@/lib/matchProgress';
+import type { Event, Fixture, Participant, Pool, Result } from '@/types';
 
 interface StandingRow {
     participant_id: string;
@@ -63,7 +64,7 @@ interface MatchesIndexProps {
     drawnEventIds: string[];
     selectedEventId: string | null;
     pools: PoolWithRelations[];
-    allFixtures: Paginated<MatchRow> | MatchRow[];
+    allFixtures: MatchRow[];
     knockout: KnockoutData;
     participants: Participant[];
 }
@@ -106,15 +107,18 @@ const participantInitials = (name: string) =>
         .map((part) => part[0]?.toUpperCase() || '')
         .join('');
 
-function TeamMark({ participant, fallback = 'TBD' }: { participant?: Participant; fallback?: string }) {
+const formatDateTime = (value: string | null | undefined) =>
+    value ? new Date(value).toLocaleString() : 'Time TBD';
+
+function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { participant?: Participant; fallback?: string; size?: string }) {
     const name = participantName(participant, fallback);
 
     if (participant?.logo_url) {
-        return <img src={participant.logo_url} alt={name} className="size-9 shrink-0 object-contain" />;
+        return <img src={participant.logo_url} alt={name} className={`${size} shrink-0 object-contain`} />;
     }
 
     return (
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-muted text-[10px] font-semibold text-muted-foreground">
+        <span className={`flex ${size} shrink-0 items-center justify-center rounded-md border bg-muted text-[10px] font-semibold text-muted-foreground`}>
             {participantInitials(name)}
         </span>
     );
@@ -125,29 +129,25 @@ function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: 
 
     return (
         <div className="flex items-center gap-2">
-            <TeamMark participant={participant} fallback={fallback} />
+            <TeamMark participant={participant} fallback={fallback} size="size-6" />
             <span title={participantFullName(participant)}>{name}</span>
         </div>
     );
 }
 
-function Matchup({ home, away, result }: { home?: Participant; away?: Participant; result?: Result }) {
-    const scored = result?.score_home !== null && result?.score_home !== undefined;
+function StatCard({ label, value, tone }: { label: string; value: number; tone?: 'default' | 'emerald' | 'destructive' }) {
+    const toneClass =
+        tone === 'emerald' ? 'text-emerald-600 dark:text-emerald-400'
+        : tone === 'destructive' ? 'text-destructive'
+        : '';
 
     return (
-        <div className="grid min-w-[360px] grid-cols-[minmax(90px,1fr)_36px_40px_36px_minmax(90px,1fr)] items-center gap-2">
-            <span className="truncate text-right font-medium">{participantName(home)}</span>
-            <TeamMark participant={home} />
-            {scored ? (
-                <span className="text-center text-sm font-bold">
-                    {result.score_home} : {result.score_away}
-                </span>
-            ) : (
-                <span className="text-center text-xs font-bold text-muted-foreground">VS</span>
-            )}
-            <TeamMark participant={away} />
-            <span className="truncate font-medium">{participantName(away)}</span>
-        </div>
+        <Card>
+            <CardContent className="p-4">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+                <p className={`mt-1 text-2xl font-bold tabular-nums ${toneClass}`}>{value}</p>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -206,14 +206,14 @@ function LeagueTable({ standings }: { standings: StandingRow[] }) {
 }
 
 const statusBadge = (status: string) => {
-    const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-        scheduled: { label: 'Scheduled', variant: 'outline' },
-        in_progress: { label: 'In Progress', variant: 'default' },
-        completed: { label: 'Completed', variant: 'secondary' },
-        cancelled: { label: 'Cancelled', variant: 'destructive' },
+    const map: Record<string, { label: string; cls: string }> = {
+        scheduled: { label: 'Scheduled', cls: 'bg-yellow-100 text-yellow-700' },
+        in_progress: { label: 'In Progress', cls: 'bg-blue-100 text-blue-700' },
+        completed: { label: 'Completed', cls: 'bg-emerald-100 text-emerald-700' },
+        cancelled: { label: 'Cancelled', cls: 'bg-red-100 text-red-700' },
     };
-    const item = map[status] || { label: status, variant: 'outline' };
-    return <Badge variant={item.variant}>{item.label}</Badge>;
+    const item = map[status] || { label: status, cls: 'bg-gray-100 text-gray-600' };
+    return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${item.cls}`}>{item.label}</span>;
 };
 
 const stageTitle = (stage: string, round?: number | null) => {
@@ -224,8 +224,6 @@ const stageTitle = (stage: string, round?: number | null) => {
     };
     return map[stage] || 'Knockout';
 };
-
-const isKnockoutStage = (stage?: string) => !!stage && ['semi_final', 'bronze', 'final'].includes(stage);
 
 function KnockoutStageSection({ knockout }: { knockout: KnockoutData }) {
     const [generating, setGenerating] = useState(false);
@@ -305,13 +303,60 @@ function KnockoutStageSection({ knockout }: { knockout: KnockoutData }) {
 
 const toDateTimeInput = (value: string | null) => (value ? value.slice(0, 16) : '');
 
-export default function MatchesIndex({ events, drawnEventIds, selectedEventId, nextMatchNumber, pools, allFixtures: allFixturesProp, knockout, participants }: MatchesIndexProps) {
+interface MatchRowViewProps {
+    match: MatchRow;
+    onEdit: () => void;
+    onDelete: () => void;
+    eventCode?: string;
+}
+
+function MatchRowView({ match, onEdit, onDelete, eventCode: code = '' }: MatchRowViewProps) {
+    const scored = match.result?.score_home !== null && match.result?.score_home !== undefined;
+    const detail = match.pool?.name ?? (match.stage ? stageTitle(match.stage, match.round) : `Round ${match.round || 1}`);
+    const label = code
+        ? `${code}${match.match_number}`
+        : matchNumberLabel(match.match_number, match.event?.name);
+
+    return (
+        <TableRow key={match.id}>
+            <TableCell className="w-14 font-medium text-muted-foreground">#{label}</TableCell>
+            <TableCell>
+                <div className="flex min-w-[260px] items-center gap-2">
+                    <TeamMark participant={match.home_participant} size="size-6" />
+                    <span className="max-w-[110px] truncate font-medium" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
+                    <span className={`mx-1 shrink-0 rounded-md px-2 py-0.5 text-sm font-bold tabular-nums ${scored ? 'bg-muted' : 'text-muted-foreground'}`}>
+                        {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : 'VS'}
+                    </span>
+                    <TeamMark participant={match.away_participant} size="size-6" />
+                    <span className="max-w-[110px] truncate font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
+                </div>
+            </TableCell>
+            <TableCell className="text-sm text-muted-foreground">{detail}</TableCell>
+            <TableCell className="text-sm">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <CalendarDays className="size-3" />
+                    {match.venue || 'Venue TBD'}
+                </div>
+                <div className="text-xs text-muted-foreground">{formatDateTime(match.scheduled_at)}</div>
+            </TableCell>
+            <TableCell>{statusBadge(match.status)}</TableCell>
+            <TableCell className="space-x-1 text-right">
+                <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit match"><Pencil className="size-3" /></Button>
+                <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete match"><Trash2 className="size-3" /></Button>
+            </TableCell>
+        </TableRow>
+    );
+}
+
+export default function MatchesIndex({ events, drawnEventIds, selectedEventId, pools, allFixtures, knockout, participants }: MatchesIndexProps) {
     const { flash } = usePage().props;
-    const [filterEventId, setFilterEventId] = useState(selectedEventId || '');
+    const [query, setQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingMatch, setEditingMatch] = useState<MatchRow | null>(null);
     const [deleteMatch, setDeleteMatch] = useState<MatchRow | null>(null);
-    const fixtures = Array.isArray(allFixturesProp) ? allFixturesProp : (allFixturesProp?.data ?? []);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const fixtures = useMemo(() => (Array.isArray(allFixtures) ? allFixtures : []), [allFixtures]);
     const selectedEvent = events.find((event) => event.id === selectedEventId);
 
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm<MatchForm>({
@@ -327,8 +372,45 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
         notes: '',
     });
 
+    const filteredFixtures = useMemo(() => {
+        const q = query.trim().toLowerCase();
+
+        return fixtures.filter((match) => {
+            if (statusFilter && match.status !== statusFilter) return false;
+            if (!q) return true;
+
+            const haystack = [
+                String(match.match_number),
+                matchNumberLabel(match.match_number, match.event?.name),
+                match.venue || '',
+                participantFullName(match.home_participant),
+                participantFullName(match.away_participant),
+                match.event?.name || '',
+                match.pool?.name || '',
+            ].join(' ').toLowerCase();
+
+            return haystack.includes(q);
+        });
+    }, [fixtures, query, statusFilter]);
+
+    const groupedByEvent = useMemo(
+        () =>
+            events
+                .map((event) => ({
+                    event,
+                    fixtures: fixtures.filter((match) => match.event_id === event.id),
+                }))
+                .filter((group) => group.fixtures.length > 0),
+        [events, fixtures]
+    );
+
+    const counts = useMemo(() => {
+        const c: Record<MatchRow['status'], number> = { scheduled: 0, in_progress: 0, completed: 0, cancelled: 0 };
+        for (const match of fixtures) c[match.status]++;
+        return c;
+    }, [fixtures]);
+
     const handleFilterChange = (eventId: string) => {
-        setFilterEventId(eventId);
         const event = events.find((item) => item.id === eventId);
         router.get(route('matches.index'), event ? { event: event.slug } : {}, {
             preserveState: true,
@@ -337,14 +419,14 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
     };
 
     const openCreate = (pool?: PoolWithRelations) => {
-        const poolFixtures = pool?.fixtures ?? [];
-        const nextMatchNumber = Math.max(0, ...pools.flatMap((item) => item.fixtures.map((fixture) => fixture.match_number))) + 1;
+        const eventId = pool?.event_id ?? selectedEventId ?? '';
+        const nextMatchNumber = Math.max(0, ...fixtures.filter((f) => f.event_id === eventId).map((f) => f.match_number)) + 1;
         setEditingMatch(null);
         clearErrors();
         setData({
-            event_id: selectedEventId || '',
+            event_id: eventId,
             pool_id: pool?.id || '',
-            round: Math.max(1, ...poolFixtures.map((fixture) => fixture.round || 1)),
+            round: Math.max(1, ...(pool?.fixtures ?? []).map((fixture) => fixture.round || 1)),
             match_number: nextMatchNumber,
             home_participant_id: '',
             away_participant_id: '',
@@ -399,8 +481,6 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
         });
     };
 
-    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-
     const refreshData = () => {
         router.reload({
             only: ['pools', 'allFixtures', 'knockout'],
@@ -420,13 +500,15 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dialogOpen, processing, deleteMatch]);
 
+    const eventPools = pools.filter((pool) => pool.event_id === data.event_id);
+
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-semibold tracking-tight">Matches</h1>
-                        <p className="text-sm text-muted-foreground">Browse and manage fixtures by event and pool.</p>
+                        <p className="text-sm text-muted-foreground">Browse and manage all fixtures across every event.</p>
                     </div>
                     <Button onClick={() => openCreate()} disabled={!selectedEventId}>
                         <Plus className="mr-2 size-4" /> Add Match
@@ -439,32 +521,180 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
             {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
             {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
 
-            <div className="mb-6 flex flex-wrap items-center gap-4">
-                <select
-                    className="flex h-9 w-80 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                    value={filterEventId}
-                    onChange={(event) => handleFilterChange(event.target.value)}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Button
+                    variant={!selectedEventId ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleFilterChange('')}
                 >
-                    <option value="">-- All Events --</option>
-                    {events.map((event) => (
-                        <option key={event.id} value={event.id}>
-                            {event.name} {drawnEventIds.includes(event.id) ? '• Drawn' : ''}
-                        </option>
-                    ))}
-                </select>
-                {!selectedEventId && <span className="text-sm text-muted-foreground">Select an event to enable Add Match.</span>}
+                    All Matches
+                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">{fixtures.length}</span>
+                </Button>
+                {events.map((event) => {
+                    const count = fixtures.filter((match) => match.event_id === event.id).length;
+                    if (count === 0 && !drawnEventIds.includes(event.id)) return null;
+
+                    const completed = fixtures.filter((match) => match.event_id === event.id && match.status === 'completed').length;
+                    const progress = drawnEventIds.includes(event.id) ? matchProgress(count, completed) : null;
+
+                    return (
+                        <Button
+                            key={event.id}
+                            variant={selectedEventId === event.id ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handleFilterChange(event.id)}
+                        >
+                            {event.name}
+                            {progress && <span className={`ml-1.5 size-1.5 rounded-full ${progress.bar}`} />}
+                            <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">{count}</span>
+                        </Button>
+                    );
+                })}
             </div>
 
-            {selectedEvent && pools.length > 0 ? (
+            {!selectedEvent ? (
+                <>
+                    <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+                        <StatCard label="Total Matches" value={counts.scheduled + counts.in_progress + counts.completed + counts.cancelled} />
+                        <StatCard label="Completed" value={counts.completed} tone="emerald" />
+                        <StatCard label="In Progress" value={counts.in_progress} />
+                        <StatCard label="Scheduled" value={counts.scheduled} />
+                        <StatCard label="Cancelled" value={counts.cancelled} tone="destructive" />
+                    </div>
+
+                    <div className="mb-4 flex flex-wrap items-center gap-3">
+                        <div className="relative">
+                            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder="Search team, venue, match #…"
+                                value={query}
+                                onChange={(event) => setQuery(event.target.value)}
+                                className="w-72 pl-8"
+                            />
+                        </div>
+                        <select
+                            value={statusFilter}
+                            onChange={(event) => setStatusFilter(event.target.value)}
+                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                            <option value="">All Statuses</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <span className="text-sm text-muted-foreground">
+                            Showing {filteredFixtures.length} of {fixtures.length} matches
+                        </span>
+                    </div>
+
+                    <div className="space-y-6">
+                        {groupedByEvent.length === 0 && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>No Matches</CardTitle>
+                                    <CardDescription>
+                                        {query || statusFilter
+                                            ? 'No matches match your search or filters.'
+                                            : 'No matches scheduled yet. Select an event above and add a match.'}
+                                    </CardDescription>
+                                </CardHeader>
+                            </Card>
+                        )}
+
+                        {groupedByEvent.map(({ event, fixtures: eventFixtures }) => {
+                            const shown = eventFixtures.filter((match) => filteredFixtures.includes(match));
+                            if (shown.length === 0) return null;
+
+                            const completed = eventFixtures.filter((match) => match.status === 'completed').length;
+                            const eventHasDraw = drawnEventIds.includes(event.id);
+                            const progress = matchProgress(eventFixtures.length, completed);
+
+                            return (
+                                <Card key={event.id}>
+                                    <CardHeader className="pb-3">
+                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                            <div>
+                                                <CardTitle className="flex items-center gap-2 text-lg">
+                                                    {event.name}
+                                                    {eventHasDraw && <Badge variant="outline">Drawn</Badge>}
+                                                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${progress.badge}`}>{progress.label}</span>
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    {event.tournament?.name} · {event.sport?.name}
+                                                    {event.sportCategory && ` — ${event.sportCategory.name}`}
+                                                    <span className="mx-1.5">·</span>
+                                                    {eventFixtures.length} matches
+                                                    <span className="ml-2 inline-flex items-center gap-1.5 align-middle">
+                                                        <span className="inline-block h-1 w-16 overflow-hidden rounded-full bg-gray-200">
+                                                            <span className={`block h-full ${progress.bar}`} style={{ width: `${progress.pct}%` }} />
+                                                        </span>
+                                                        <span className="text-[10px] tabular-nums">{completed}/{eventFixtures.length}</span>
+                                                    </span>
+                                                </CardDescription>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                {eventHasDraw && (
+                                                    <Link href={route('events.draw-result', event.slug)}>
+                                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                                    </Link>
+                                                )}
+                                                <Button variant="outline" size="sm" onClick={() => handleFilterChange(event.id)}>
+                                                    <Swords className="mr-1 size-3" /> Open Event
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="overflow-x-auto">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="w-14">#</TableHead>
+                                                        <TableHead>Matchup</TableHead>
+                                                        <TableHead className="w-32">Pool / Stage</TableHead>
+                                                        <TableHead>Venue / Time</TableHead>
+                                                        <TableHead className="w-28">Status</TableHead>
+                                                        <TableHead className="text-right">Actions</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {shown.map((match) => (
+                                                        <MatchRowView
+                                                            key={match.id}
+                                                            match={match}
+                                                            onEdit={() => openEdit(match)}
+                                                            onDelete={() => setDeleteMatch(match)}
+                                                        />
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                        {shown.length < eventFixtures.length && (
+                                            <p className="mt-3 text-xs text-muted-foreground">
+                                                Showing {shown.length} of {eventFixtures.length} matches.
+                                            </p>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                </>
+            ) : (
                 <div className="space-y-6">
                     <Card>
                         <CardHeader className="pb-3">
                             <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <CardTitle>{selectedEvent.name}</CardTitle>
+                                    <CardTitle className="flex items-center gap-2 text-lg">
+                                        {selectedEvent.name}
+                                        {drawnEventIds.includes(selectedEvent.id) && <Badge variant="outline">Drawn</Badge>}
+                                    </CardTitle>
                                     <CardDescription>
                                         {selectedEvent.tournament?.name} · {selectedEvent.sport?.name}
-                                        {selectedEvent.sportCategory && ` — ${selectedEvent.sportCategory.name}`} · {pools.length} Pool
+                                        {selectedEvent.sportCategory && ` — ${selectedEvent.sportCategory.name}`}
+                                        {pools.length > 0 && ` · ${pools.length} Pool${pools.length > 1 ? 's' : ''}`}
                                     </CardDescription>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -472,15 +702,38 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
                                         <RefreshCw className="size-3 animate-spin [animation-duration:3s]" />
                                         {lastUpdated ? `Auto-updated ${lastUpdated.toLocaleTimeString()}` : 'Auto-updates every 15s'}
                                     </span>
-                                    <Link href={route('events.draw-result', selectedEvent.slug)}>
-                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
-                                    </Link>
+                                    {drawnEventIds.includes(selectedEvent.id) && (
+                                        <Link href={route('events.draw-result', selectedEvent.slug)}>
+                                            <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         </CardHeader>
                     </Card>
 
                     {knockout.league_complete && <KnockoutStageSection knockout={knockout} />}
+
+                    {pools.length === 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>No Pools</CardTitle>
+                                <CardDescription>
+                                    This event has no pools yet. You can still add matches directly, or run a draw to create pools.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex flex-wrap gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => openCreate()}>
+                                        <Plus className="mr-1 size-3" /> Add Match
+                                    </Button>
+                                    <Link href={route('events.draw-result', selectedEvent.slug)}>
+                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                    </Link>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {pools.map((pool) => (
                         <Card key={pool.id}>
@@ -514,72 +767,38 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
                                     </div>
                                 )}
 
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-14">#</TableHead>
-                                            <TableHead className="w-16">Round</TableHead>
-                                            <TableHead>Matchup</TableHead>
-                                            <TableHead>Venue / Time</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {pool.fixtures.length === 0 && (
-                                            <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No fixtures in this pool.</TableCell></TableRow>
-                                        )}
-                                        {pool.fixtures.map((fixture) => (
-                                            <TableRow key={fixture.id}>
-                                                <TableCell>{fixture.match_number}</TableCell>
-                                                <TableCell>R{fixture.round || 1}</TableCell>
-                                                <TableCell><Matchup home={fixture.home_participant} away={fixture.away_participant} result={fixture.result} /></TableCell>
-                                                <TableCell className="text-sm">
-                                                    <div>{fixture.venue || 'Venue TBD'}</div>
-                                                    <div className="text-muted-foreground">{fixture.scheduled_at ? new Date(fixture.scheduled_at).toLocaleString() : 'Time TBD'}</div>
-                                                </TableCell>
-                                                <TableCell>{statusBadge(fixture.status)}</TableCell>
-                                                <TableCell className="space-x-1 text-right">
-                                                    <Button variant="outline" size="icon-sm" onClick={() => openEdit(fixture)} aria-label="Edit match"><Pencil className="size-3" /></Button>
-                                                    <Button variant="destructive" size="icon-sm" onClick={() => setDeleteMatch(fixture)} aria-label="Delete match"><Trash2 className="size-3" /></Button>
-                                                </TableCell>
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-14">#</TableHead>
+                                                <TableHead>Matchup</TableHead>
+                                                <TableHead className="w-32">Pool / Stage</TableHead>
+                                                <TableHead>Venue / Time</TableHead>
+                                                <TableHead className="w-28">Status</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {pool.fixtures.length === 0 && (
+                                                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No fixtures in this pool.</TableCell></TableRow>
+                                            )}
+                                            {pool.fixtures.map((fixture) => (
+                                                <MatchRowView
+                                                    key={fixture.id}
+                                                    match={fixture}
+                                                    eventCode={eventCode(selectedEvent.name)}
+                                                    onEdit={() => openEdit(fixture)}
+                                                    onDelete={() => setDeleteMatch(fixture)}
+                                                />
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
-            ) : (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>All Matches</CardTitle>
-                        <CardDescription>{selectedEventId ? 'This event has no pools yet.' : 'Select an event to view and manage its pool fixtures.'}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Event</TableHead><TableHead>Matchup</TableHead><TableHead>Venue / Time</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-                            <TableBody>
-                                {fixtures.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No matches scheduled yet.</TableCell></TableRow>}
-                                {fixtures.map((match) => (
-                                    <TableRow key={match.id}>
-                                        <TableCell>{match.match_number}</TableCell>
-                                        <TableCell>{match.event?.name || '-'}</TableCell>
-                                        <TableCell><Matchup home={match.home_participant} away={match.away_participant} result={match.result} /></TableCell>
-                                        <TableCell className="text-sm"><div>{match.venue || 'Venue TBD'}</div><div className="text-muted-foreground">{match.scheduled_at ? new Date(match.scheduled_at).toLocaleString() : 'Time TBD'}</div></TableCell>
-                                        <TableCell>{statusBadge(match.status)}</TableCell>
-                                        <TableCell className="space-x-1 text-right">
-                                            <Button variant="outline" size="icon-sm" onClick={() => openEdit(match)} aria-label="Edit match"><Pencil className="size-3" /></Button>
-                                            <Button variant="destructive" size="icon-sm" onClick={() => setDeleteMatch(match)} aria-label="Delete match"><Trash2 className="size-3" /></Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        {!Array.isArray(allFixturesProp) && allFixturesProp.links && <div className="mt-4"><Pagination links={allFixturesProp.links} /></div>}
-                    </CardContent>
-                </Card>
             )}
 
             <Dialog open={dialogOpen} onOpenChange={(open) => open ? setDialogOpen(true) : closeDialog()}>
@@ -602,7 +821,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
                                 <Label htmlFor="pool_id">Pool</Label>
                                 <select id="pool_id" value={data.pool_id} onChange={(event) => setData('pool_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm">
                                     <option value="">-- No Pool --</option>
-                                    {pools.map((pool) => <option key={pool.id} value={pool.id}>{pool.name}</option>)}
+                                    {eventPools.map((pool) => <option key={pool.id} value={pool.id}>{pool.name}</option>)}
                                 </select>
                                 {errors.pool_id && <p className="text-sm text-destructive">{errors.pool_id}</p>}
                             </div>
@@ -631,7 +850,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, n
 
             <Dialog open={!!deleteMatch} onOpenChange={(open) => !open && setDeleteMatch(null)}>
                 <DialogContent>
-                    <DialogHeader><DialogTitle>Delete Match?</DialogTitle><DialogDescription>Match #{deleteMatch?.match_number} will be removed. This action cannot be undone.</DialogDescription></DialogHeader>
+                    <DialogHeader><DialogTitle>Delete Match?</DialogTitle><DialogDescription>Match #{matchNumberLabel(deleteMatch?.match_number, deleteMatch?.event?.name ?? selectedEvent?.name)} will be removed. This action cannot be undone.</DialogDescription></DialogHeader>
                     <DialogFooter><Button variant="outline" onClick={() => setDeleteMatch(null)}>Cancel</Button><Button variant="destructive" onClick={confirmDelete}><Trash2 className="mr-2 size-4" />Delete Match</Button></DialogFooter>
                 </DialogContent>
             </Dialog>

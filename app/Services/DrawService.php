@@ -32,9 +32,11 @@ class DrawService
         }
 
         return DB::transaction(function () use ($event, $confirmedParticipants) {
-            Fixture::where('event_id', $event->id)->delete();
+            // Hard-delete previous fixtures (and their results via cascade) so
+            // match numbers restart cleanly at 1 on every re-draw.
+            Fixture::where('event_id', $event->id)->forceDelete();
             EventParticipant::where('event_id', $event->id)->update(['pool_id' => null]);
-            Pool::where('event_id', $event->id)->delete();
+            Pool::where('event_id', $event->id)->forceDelete();
 
             $orgId = $event->organization_id ?? Auth::user()->organization_id;
             $poolSize = $event->pool_size ?? 4;
@@ -95,7 +97,7 @@ class DrawService
             return 0;
         }
 
-        $existingCount = Fixture::where('event_id', $event->id)->withTrashed()->max('match_number') ?? 0;
+        $existingCount = Fixture::where('event_id', $event->id)->max('match_number') ?? 0;
         $orgId = $event->organization_id ?? Auth::user()->organization_id;
         $fixtures = [];
         $roundNumber = 1;
@@ -177,7 +179,7 @@ class DrawService
                 if ($pool) {
                     Fixture::where('event_id', $event->id)
                         ->where('pool_id', $poolId)
-                        ->delete();
+                        ->forceDelete();
                     $this->generateRoundRobinFixtures($event, $pool);
                 }
             }

@@ -119,6 +119,8 @@ export interface Event {
     sport?: Sport;
     sport_category?: SportCategory;
     pools_count?: number;
+    matches_count?: number;
+    completed_matches_count?: number;
     created_at: string;
     updated_at: string;
 }
@@ -177,6 +179,9 @@ export interface Fixture {
     id: string;
     organization_id: string;
     event_id: string;
+    pool_id: string | null;
+    stage: 'semi_final' | 'bronze' | 'final' | null;
+    round: number | null;
     match_number: number;
     home_participant_id: string | null;
     away_participant_id: string | null;
@@ -185,6 +190,7 @@ export interface Fixture {
     status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
     notes: string | null;
     event?: Event;
+    pool?: { id: string; name: string };
     home_participant?: Participant;
     away_participant?: Participant;
     result?: Result;

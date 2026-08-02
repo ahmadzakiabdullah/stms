@@ -15,12 +15,19 @@ use Inertia\Response;
 
 class DrawController extends Controller
 {
-    public function draw(Event $event, DrawService $drawService): RedirectResponse
+    public function draw(Request $request, Event $event, DrawService $drawService): RedirectResponse
     {
         Gate::authorize('update', $event);
 
+        $format = $request->input('format', 'group_knockout');
+        if (! in_array($format, ['league', 'group_knockout', 'knockout'], true)) {
+            $format = 'group_knockout';
+        }
+
         try {
             $result = $drawService->drawAndGenerateFixtures($event);
+
+            $event->update(['format' => $format]);
 
             activity()
                 ->performedOn($event)

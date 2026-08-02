@@ -108,7 +108,7 @@ class KnockoutStageService
             $sf2Home = $qualifiers[$poolB->id]->get(0);
             $sf2Away = $qualifiers[$poolA->id]->get(1);
 
-            $matchNumber = ((int) Fixture::query()->where('event_id', $event->id)->withTrashed()->max('match_number')) + 1;
+            $matchNumber = ((int) Fixture::query()->where('event_id', $event->id)->max('match_number')) + 1;
 
             $orgId = $event->organization_id;
             $fixtures = [];

@@ -33,6 +33,7 @@ import { z } from 'zod';
 import { Eye, Pencil, Plus, Save, Target, Trash2, Trash } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
+import { matchProgress } from '@/lib/matchProgress';
 import type { Event, Tournament, Sport, SportCategory, Paginated, Flash } from '@/types';
 
 const eventSchema = z.object({
@@ -74,6 +75,7 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [batchDelete, setBatchDelete] = useState(false);
     const [drawEvent, setDrawEvent] = useState<EventRow | null>(null);
+    const [drawFormat, setDrawFormat] = useState('group_knockout');
 
     const events = Array.isArray(eventsProp) ? eventsProp : (eventsProp?.data ?? []);
     const tournaments = Array.isArray(tournamentsProp) ? tournamentsProp : (tournamentsProp ?? []);
@@ -99,7 +101,16 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     const selectedTournamentId = watch('tournament_id');
     const selectedSportId = watch('sport_id');
 
-    const formatForDateInput = (dateStr: string | null | undefined) => {
+    const formatLabel = (format?: string | null) => {
+    const map: Record<string, string> = {
+        group_knockout: 'Group Knockout',
+        league: 'League',
+        knockout: 'Knockout',
+    };
+    return format ? map[format] || format : '—';
+};
+
+const formatForDateInput = (dateStr: string | null | undefined) => {
         if (!dateStr) return '';
         return dateStr.split('T')[0];
     };
@@ -213,6 +224,10 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     };
 
     const handleDraw = (event: EventRow) => {
+        const existing = ['league', 'group_knockout', 'knockout'].includes((event as any).format)
+            ? (event as any).format
+            : 'group_knockout';
+        setDrawFormat(existing);
         setDrawEvent(event);
     };
 
@@ -463,7 +478,10 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
                                     </TableCell>
                                 </TableRow>
                             )}
-                            {events.map((event) => (
+                            {events.map((event) => {
+                                const ep = matchProgress(event.matches_count ?? 0, event.completed_matches_count ?? 0);
+
+                                return (
                                 <TableRow key={event.id}>
                                     {isSuperAdmin && (
                                     <TableCell>
@@ -487,12 +505,30 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
                                         {(event as any).registration_deadline ? new Date((event as any).registration_deadline).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                                     </TableCell>
                                     <TableCell>
-                                        <span className="capitalize text-xs">{(event as any).format || '—'}</span>
+                                        <span className="text-xs">{formatLabel((event as any).format)}</span>
                                     </TableCell>
                                     <TableCell>
-                                        <span className={event.is_active ? 'rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700' : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'}>
-                                            {event.is_active ? 'Active' : 'Inactive'}
-                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className={event.is_active ? 'rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700' : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'}>
+                                                {event.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                            <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-xs ${ep.badge}`}>
+                                                {ep.label}
+                                            </span>
+                                            {(event.matches_count ?? 0) > 0 && (
+                                                <div className="flex items-center gap-1">
+                                                    <div className="h-1 w-16 overflow-hidden rounded-full bg-gray-200">
+                                                        <div
+                                                            className={`h-full ${ep.bar}`}
+                                                            style={{ width: `${ep.pct}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[10px] tabular-nums text-muted-foreground">
+                                                        {event.completed_matches_count ?? 0}/{event.matches_count ?? 0}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </TableCell>
                                     {isSuperAdmin && (
                                     <TableCell className="text-right space-x-2">
@@ -515,7 +551,8 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
                                     </TableCell>
                                     )}
                                 </TableRow>
-                            ))}
+                                );
+                            })}
                         </TableBody>
                     </Table>
                 </CardContent>
@@ -554,12 +591,25 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
                             Any existing fixtures for this event will be replaced.
                         </DialogDescription>
                     </DialogHeader>
+                    <div className="grid gap-2 py-2">
+                        <Label htmlFor="draw_format">Format</Label>
+                        <select
+                            id="draw_format"
+                            value={drawFormat}
+                            onChange={(e) => setDrawFormat(e.target.value)}
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                        >
+                            <option value="group_knockout">Group + Knockout</option>
+                            <option value="league">League (Round Robin)</option>
+                            <option value="knockout">Knockout</option>
+                        </select>
+                    </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDrawEvent(null)}>Cancel</Button>
                         <Button onClick={() => {
                             const e = drawEvent;
                             setDrawEvent(null);
-                            if (e) router.post(route('events.draw', e.slug), {}, { preserveScroll: true });
+                            if (e) router.post(route('events.draw', e.slug), { format: drawFormat }, { preserveScroll: true });
                         }}>Yes, Draw</Button>
                     </DialogFooter>
                 </DialogContent>

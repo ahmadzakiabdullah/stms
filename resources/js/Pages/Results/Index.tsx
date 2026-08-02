@@ -27,14 +27,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import Pagination from '@/components/Pagination';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Pencil, Plus, Save, Swords, Trash2, Trophy } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Pencil, Plus, Save, Search, Swords, Trash2, Trophy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import type { Result, Fixture, Participant, Paginated, Flash, Event } from '@/types';
+import { matchNumberLabel } from '@/lib/matchNumber';
+import type { Result, Fixture, Participant, Event } from '@/types';
 
 const resultSchema = z.object({
     match_id: z.string().min(1, 'Match is required'),
@@ -46,22 +46,19 @@ const resultSchema = z.object({
 
 type ResultForm = z.infer<typeof resultSchema>;
 
-interface ResultRow extends Result {
-    slug?: string;
-}
+type ResultRow = Result;
 
 interface MatchOption extends Fixture {
-    pool?: { id: string; name: string } | null;
     event?: Event & { sport?: { id: string; name: string } };
     home_participant?: Participant;
     away_participant?: Participant;
 }
 
 interface ResultsIndexProps {
-    results: Paginated<ResultRow> | ResultRow[];
+    results: ResultRow[];
     matches?: MatchOption[];
     participants?: Participant[];
-    events?: Array<{ id: string; name: string }>;
+    events?: Array<{ id: string; name: string; slug?: string }>;
 }
 
 const participantName = (participant?: Participant, fallback = 'TBD') => {
@@ -89,6 +86,9 @@ const participantInitials = (name: string) =>
         .map((part) => part[0]?.toUpperCase() || '')
         .join('');
 
+const formatDateTime = (value: string | null | undefined) =>
+    value ? new Date(value).toLocaleString() : 'Time TBD';
+
 function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { participant?: Participant; fallback?: string; size?: string }) {
     const name = participantName(participant, fallback);
 
@@ -103,10 +103,43 @@ function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { particip
     );
 }
 
+const stageTitle = (stage: string | null | undefined, round?: number | null) => {
+    const map: Record<string, string> = {
+        semi_final: `Semi-Final ${round ?? 1}`,
+        bronze: 'Bronze · 3rd Place',
+        final: 'Final',
+    };
+    return map[stage ?? ''] || 'Knockout';
+};
+
+const matchDetail = (match?: MatchOption) => {
+    if (!match) return '';
+    if (match.pool?.name) return match.pool.name;
+    if (match.stage) return stageTitle(match.stage, match.round);
+    return `Round ${match.round || 1}`;
+};
+
 const matchLabel = (match?: MatchOption) => {
     if (!match) return '';
-    return `#${match.match_number} · ${participantName(match.home_participant)} vs ${participantName(match.away_participant)}`;
+    return `#${matchNumberLabel(match.match_number, match.event?.name)} · ${participantName(match.home_participant)} vs ${participantName(match.away_participant)}`;
 };
+
+function StatCard({ label, value, tone }: { label: string; value: number; tone?: 'default' | 'emerald' | 'destructive' }) {
+    const toneClass =
+        tone === 'emerald' ? 'text-emerald-600 dark:text-emerald-400'
+        : tone === 'destructive' ? 'text-destructive'
+        : '';
+
+    return (
+        <Card>
+            <CardContent className="p-4">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+                <p className={`mt-1 text-2xl font-bold tabular-nums ${toneClass}`}>{value}</p>
+            </CardContent>
+        </Card>
+    );
+}
+
 function MatchupPreview({ match }: { match?: MatchOption }) {
     if (!match) return null;
 
@@ -118,7 +151,7 @@ function MatchupPreview({ match }: { match?: MatchOption }) {
                     <span>{match.event?.name || 'Match'}</span>
                     {match.pool?.name && <Badge variant="outline">{match.pool.name}</Badge>}
                     {match.scheduled_at && (
-                        <span>{new Date(match.scheduled_at).toLocaleString()}</span>
+                        <span>{formatDateTime(match.scheduled_at)}</span>
                     )}
                 </div>
             </div>
@@ -179,17 +212,74 @@ function WinnerHint({
     );
 }
 
+interface ResultRowViewProps {
+    result: ResultRow;
+    onEdit: () => void;
+    onDelete: () => void;
+}
+
+function ResultRowView({ result, onEdit, onDelete }: ResultRowViewProps) {
+    const scored = result.score_home !== null && result.score_home !== undefined;
+    const isDraw = scored && result.score_home === result.score_away;
+
+    return (
+        <TableRow key={result.id}>
+            <TableCell className="w-14 font-medium text-muted-foreground">#{matchNumberLabel(result.match?.match_number, result.match?.event?.name)}</TableCell>
+            <TableCell>
+                <div className="flex min-w-[260px] items-center gap-2">
+                    <TeamMark participant={result.match?.home_participant} size="size-6" />
+                    <span className="max-w-[110px] truncate font-medium" title={participantFullName(result.match?.home_participant)}>{participantName(result.match?.home_participant)}</span>
+                    <span className={`mx-1 shrink-0 rounded-md px-2 py-0.5 text-sm font-bold tabular-nums ${scored ? 'bg-muted' : 'text-muted-foreground'}`}>
+                        {scored ? `${result.score_home} : ${result.score_away}` : 'VS'}
+                    </span>
+                    <TeamMark participant={result.match?.away_participant} size="size-6" />
+                    <span className="max-w-[110px] truncate font-medium" title={participantFullName(result.match?.away_participant)}>{participantName(result.match?.away_participant)}</span>
+                </div>
+            </TableCell>
+            <TableCell className="text-sm text-muted-foreground">
+                {result.match?.pool?.name || (result.match?.stage ? stageTitle(result.match.stage, result.match.round) : `Round ${result.match?.round || 1}`)}
+            </TableCell>
+            <TableCell className="text-sm">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <CalendarDays className="size-3" />
+                    {result.match?.venue || 'Venue TBD'}
+                </div>
+                <div className="text-xs text-muted-foreground">{formatDateTime(result.match?.scheduled_at)}</div>
+            </TableCell>
+            <TableCell>
+                {isDraw ? (
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                        Draw
+                    </span>
+                ) : result.winner ? (
+                    <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                        <Trophy className="size-3.5" />
+                        <span title={participantFullName(result.winner)}>{participantName(result.winner)}</span>
+                    </span>
+                ) : (
+                    <span className="text-sm text-muted-foreground">-</span>
+                )}
+            </TableCell>
+            <TableCell className="space-x-1 text-right">
+                <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit result"><Pencil className="size-3" /></Button>
+                <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete result"><Trash2 className="size-3" /></Button>
+            </TableCell>
+        </TableRow>
+    );
+}
+
 export default function ResultsIndex({ results: resultsProp, matches: matchesProp = [], participants: participantsProp = [], events: eventsProp = [] }: ResultsIndexProps) {
     const { flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const [editingResult, setEditingResult] = useState<ResultRow | null>(null);
     const [deleteResult, setDeleteResult] = useState<ResultRow | null>(null);
     const [filterEventId, setFilterEventId] = useState('');
+    const [query, setQuery] = useState('');
 
-    const results = Array.isArray(resultsProp) ? resultsProp : (resultsProp?.data ?? []);
-    const matches = Array.isArray(matchesProp) ? matchesProp : (matchesProp ?? []);
-    const participants = Array.isArray(participantsProp) ? participantsProp : (participantsProp ?? []);
-    const events = Array.isArray(eventsProp) ? eventsProp : (eventsProp ?? []);
+    const results = useMemo(() => (Array.isArray(resultsProp) ? resultsProp : []), [resultsProp]);
+    const matches = useMemo(() => (Array.isArray(matchesProp) ? matchesProp : []), [matchesProp]);
+    const participants = useMemo(() => (Array.isArray(participantsProp) ? participantsProp : []), [participantsProp]);
+    const events = useMemo(() => (Array.isArray(eventsProp) ? eventsProp : []), [eventsProp]);
 
     const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<ResultForm>({
         resolver: zodResolver(resultSchema),
@@ -225,10 +315,65 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
         setValue('winner_participant_id', winnerId ?? '', { shouldValidate: false });
     }, [scoreHome, scoreAway, selectedMatch, setValue]);
 
-    const openCreate = () => {
+    const pendingMatches = useMemo(
+        () => (filterEventId ? matches.filter((m) => m.event_id === filterEventId) : matches),
+        [matches, filterEventId]
+    );
+
+    const filteredResults = useMemo(() => {
+        const q = query.trim().toLowerCase();
+
+        return results.filter((result) => {
+            if (filterEventId && result.match?.event_id !== filterEventId) return false;
+            if (!q) return true;
+
+            const haystack = [
+                String(result.match?.match_number ?? ''),
+                matchNumberLabel(result.match?.match_number, result.match?.event?.name),
+                result.match?.event?.name || '',
+                result.match?.pool?.name || '',
+                participantFullName(result.match?.home_participant),
+                participantFullName(result.match?.away_participant),
+                participantFullName(result.winner),
+                result.notes || '',
+            ].join(' ').toLowerCase();
+
+            return haystack.includes(q);
+        });
+    }, [results, filterEventId, query]);
+
+    const countsByEvent = useMemo(() => {
+        const map = new Map<string, { results: number; pending: number }>();
+
+        for (const result of results) {
+            const eventId = result.match?.event_id ?? '';
+            const entry = map.get(eventId) ?? { results: 0, pending: 0 };
+            entry.results++;
+            map.set(eventId, entry);
+        }
+
+        for (const match of matches) {
+            const entry = map.get(match.event_id) ?? { results: 0, pending: 0 };
+            entry.pending++;
+            map.set(match.event_id, entry);
+        }
+
+        return map;
+    }, [results, matches]);
+
+    const drawCount = useMemo(() => results.filter((r) => r.score_home !== null && r.score_home === r.score_away).length, [results]);
+    const homeWinCount = useMemo(() => results.filter((r) => r.score_home !== null && r.score_away !== null && r.score_home > r.score_away).length, [results]);
+    const awayWinCount = useMemo(() => results.filter((r) => r.score_home !== null && r.score_away !== null && r.score_away > r.score_home).length, [results]);
+
+    const dialogMatches = useMemo(
+        () => (filterEventId ? matches.filter((m) => m.event_id === filterEventId) : matches),
+        [matches, filterEventId]
+    );
+
+    const openCreate = (match?: MatchOption) => {
         setEditingResult(null);
         reset({
-            match_id: matches.length > 0 ? matches[0].id : '',
+            match_id: match?.id ?? dialogMatches[0]?.id ?? '',
             score_home: null,
             score_away: null,
             winner_participant_id: '',
@@ -275,9 +420,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
         });
     };
 
-    const filteredResults = results.filter(
-        (result) => !filterEventId || result.match?.event_id === filterEventId
-    );
+    const selectedEvent = events.find((event) => event.id === filterEventId);
 
     return (
         <AuthenticatedLayout
@@ -311,12 +454,12 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                             else setOpen(true);
                         }}>
                         <DialogTrigger asChild>
-                            <Button onClick={openCreate} disabled={matches.length === 0}>
+                            <Button onClick={() => openCreate()} disabled={dialogMatches.length === 0}>
                                 <Plus className="mr-2 size-4" />
                                 Add Result
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-lg">
+                        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <DialogHeader>
                                     <DialogTitle>{editingResult ? 'Edit Result' : 'Record Result'}</DialogTitle>
@@ -336,12 +479,16 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                             required
                                         >
                                             <option value="">-- Select Match --</option>
-                                            {matches.map((m) => (
+                                            {dialogMatches.map((m) => (
                                                 <option key={m.id} value={m.id}>
                                                     {matchLabel(m)} {m.event?.name ? `(${m.event.name})` : ''}
                                                 </option>
-                                            ))}                                        </select>
+                                            ))}
+                                        </select>
                                         {errors.match_id && <p className="text-sm text-destructive">{errors.match_id.message}</p>}
+                                        {dialogMatches.length === 0 && (
+                                            <p className="text-sm text-muted-foreground">No matches awaiting a result in this event.</p>
+                                        )}
                                     </div>
 
                                     <MatchupPreview match={selectedMatch} />
@@ -435,107 +582,216 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                 </div>
             )}
 
-            <div className="mb-4">
-                <select
-                    className="flex h-9 w-80 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                    value={filterEventId}
-                    onChange={(e) => setFilterEventId(e.target.value)}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Button
+                    variant={!filterEventId ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilterEventId('')}
                 >
-                    <option value="">-- All Events --</option>
-                    {events.map((event) => (
-                        <option key={event.id} value={event.id}>{event.name}</option>
-                    ))}
-                </select>
+                    All Events
+                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">{results.length}</span>
+                </Button>
+                {events.map((event) => {
+                    const counts = countsByEvent.get(event.id);
+                    const total = (counts?.results ?? 0) + (counts?.pending ?? 0);
+                    if (total === 0) return null;
+
+                    return (
+                        <Button
+                            key={event.id}
+                            variant={filterEventId === event.id ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setFilterEventId(event.id)}
+                        >
+                            {event.name}
+                            {counts && counts.pending > 0 && <span className="ml-1.5 size-1.5 rounded-full bg-amber-500" />}
+                            <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">{total}</span>
+                        </Button>
+                    );
+                })}
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Match Results</CardTitle>
-                    <CardDescription>
-                        All recorded match results. Track scores and winners.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Match</TableHead>
-                                <TableHead>Event</TableHead>
-                                <TableHead>Home</TableHead>
-                                <TableHead>Score</TableHead>
-                                <TableHead>Away</TableHead>
-                                <TableHead>Winner</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredResults.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                                        No results recorded yet.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                            {filteredResults.map((result) => (
-                                <TableRow key={result.id}>
-                                    <TableCell className="font-medium">
-                                        #{result.match?.match_number ?? '-'}
-                                    </TableCell>
-                                    <TableCell className="text-sm text-muted-foreground">
-                                        {result.match?.event?.name || '-'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <TeamMark participant={result.match?.home_participant} size="size-6" />
-                                            <span className="truncate" title={participantFullName(result.match?.home_participant)}>{participantName(result.match?.home_participant)}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="font-bold text-center">
-                                        {result.score_home ?? '-'} : {result.score_away ?? '-'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <TeamMark participant={result.match?.away_participant} size="size-6" />
-                                            <span className="truncate" title={participantFullName(result.match?.away_participant)}>{participantName(result.match?.away_participant)}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        {result.winner ? (
-                                            <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
-                                                <Trophy className="size-3.5" />
-                                                <span title={participantFullName(result.winner)}>{participantName(result.winner)}</span>
-                                            </span>
-                                        ) : (
-                                            <span className="text-muted-foreground">Draw</span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="text-right space-x-2">
-                                        <Button variant="outline" size="sm" onClick={() => openEdit(result)}>
-                                            <Pencil className="mr-1 size-3" /> Edit
-                                        </Button>
-                                        <Button variant="destructive" size="sm" onClick={() => setDeleteResult(result)}>
-                                            <Trash2 className="mr-1 size-3" /> Delete
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+                <StatCard label="Total Results" value={results.length} />
+                <StatCard label="Pending Matches" value={pendingMatches.length} tone="destructive" />
+                <StatCard label="Draws" value={drawCount} />
+                <StatCard label="Home Wins" value={homeWinCount} tone="emerald" />
+                <StatCard label="Away Wins" value={awayWinCount} />
+            </div>
 
-                    {resultsProp?.links && (
-                        <div className="mt-4">
-                            <Pagination links={resultsProp.links} />
-                        </div>
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+                <div className="relative">
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Search team, match #, venue…"
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        className="w-72 pl-8"
+                    />
+                </div>
+                <span className="text-sm text-muted-foreground">
+                    Showing {filteredResults.length} of {results.length} results
+                </span>
+            </div>
+
+            {!selectedEvent ? (
+                <div className="space-y-6">
+                    {filteredResults.length === 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>No Results</CardTitle>
+                                <CardDescription>
+                                    {query
+                                        ? 'No results match your search.'
+                                        : 'No results recorded yet. Use "Add Result" to record the first match outcome.'}
+                                </CardDescription>
+                            </CardHeader>
+                        </Card>
                     )}
-                </CardContent>
-            </Card>
+
+                    {events
+                        .map((event) => ({
+                            event,
+                            eventResults: filteredResults.filter((result) => result.match?.event_id === event.id),
+                        }))
+                        .filter((group) => group.eventResults.length > 0)
+                        .map(({ event, eventResults }) => {
+                            const pending = countsByEvent.get(event.id)?.pending ?? 0;
+
+                            return (
+                                <Card key={event.id}>
+                                    <CardHeader className="pb-3">
+                                        <div className="flex flex-wrap items-start justify-between gap-3">
+                                            <div>
+                                                <CardTitle className="text-lg">{event.name}</CardTitle>
+                                                <CardDescription>
+                                                    {eventResults.length} results
+                                                    {pending > 0 && <span className="text-amber-600 dark:text-amber-400"> · {pending} pending</span>}
+                                                </CardDescription>
+                                            </div>
+                                            {pending > 0 && (
+                                                <Button variant="outline" size="sm" onClick={() => setFilterEventId(event.id)}>
+                                                    <Plus className="mr-1 size-3" /> Record Results
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="overflow-x-auto">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="w-14">#</TableHead>
+                                                        <TableHead>Matchup</TableHead>
+                                                        <TableHead className="w-32">Pool / Stage</TableHead>
+                                                        <TableHead>Venue / Time</TableHead>
+                                                        <TableHead className="w-32">Winner</TableHead>
+                                                        <TableHead className="text-right">Actions</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {eventResults.map((result) => (
+                                                        <ResultRowView
+                                                            key={result.id}
+                                                            result={result}
+                                                            onEdit={() => openEdit(result)}
+                                                            onDelete={() => setDeleteResult(result)}
+                                                        />
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg">{selectedEvent.name}</CardTitle>
+                            <CardDescription>
+                                {filteredResults.length} results
+                                {pendingMatches.length > 0 && <span className="text-amber-600 dark:text-amber-400"> · {pendingMatches.length} pending</span>}
+                            </CardDescription>
+                        </CardHeader>
+                    </Card>
+
+                    {pendingMatches.length > 0 && (
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="flex items-center gap-2 text-lg"><CheckCircle2 className="size-4 text-amber-500" /> Pending Matches</CardTitle>
+                                <CardDescription>Matches awaiting a recorded result.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-2">
+                                    {pendingMatches.map((match) => (
+                                        <div key={match.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2">
+                                            <div className="flex min-w-0 items-center gap-3">
+                                                <span className="w-14 shrink-0 text-sm font-semibold text-muted-foreground">#{matchNumberLabel(match.match_number, match.event?.name)}</span>
+                                                <TeamMark participant={match.home_participant} size="size-6" />
+                                                <span className="max-w-[110px] truncate text-sm font-medium" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
+                                                <span className="text-xs font-bold text-muted-foreground">VS</span>
+                                                <TeamMark participant={match.away_participant} size="size-6" />
+                                                <span className="max-w-[110px] truncate text-sm font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
+                                                <span className="hidden text-xs text-muted-foreground sm:inline">· {matchDetail(match)}</span>
+                                            </div>
+                                            <Button size="sm" variant="outline" onClick={() => openCreate(match)}>
+                                                <Plus className="mr-1 size-3" /> Record Result
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg">Recorded Results</CardTitle>
+                            <CardDescription>{filteredResults.length} result{filteredResults.length === 1 ? '' : 's'} for {selectedEvent.name}.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {filteredResults.length === 0 ? (
+                                <p className="text-center text-sm text-muted-foreground">No results recorded yet.</p>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-14">#</TableHead>
+                                                <TableHead>Matchup</TableHead>
+                                                <TableHead className="w-32">Pool / Stage</TableHead>
+                                                <TableHead>Venue / Time</TableHead>
+                                                <TableHead className="w-32">Winner</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filteredResults.map((result) => (
+                                                <ResultRowView
+                                                    key={result.id}
+                                                    result={result}
+                                                    onEdit={() => openEdit(result)}
+                                                    onDelete={() => setDeleteResult(result)}
+                                                />
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
             <Dialog open={!!deleteResult} onOpenChange={(isOpen) => !isOpen && setDeleteResult(null)}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Delete Result?</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete this result? This action cannot be undone.
+                            Result for Match #{matchNumberLabel(deleteResult?.match?.match_number, deleteResult?.match?.event?.name)} will be removed. This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
@@ -548,10 +804,6 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <div className="mt-6 text-xs text-muted-foreground">
-                M4: Result entry module. Record match scores and winners.
-            </div>
         </AuthenticatedLayout>
     );
 }

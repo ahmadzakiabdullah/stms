@@ -12,7 +12,6 @@ use App\Models\Fixture;
 use App\Models\Participant;
 use App\Models\Result;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,27 +26,32 @@ class ResultController extends Controller
         $scopeToAdminSports = $user->hasRole('admin-sport') && ! $user->hasRole(['super-admin', 'org-admin']);
         $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
 
-        $results = $this->safePaginatedQuery(function () use ($sportIds) {
-            $query = Result::with([
-                'match.event',
-                'match.homeParticipant:id,name,team_name,logo_path',
-                'match.awayParticipant:id,name,team_name,logo_path',
-                'winner:id,name,team_name',
-            ])
-                ->orderByDesc('created_at');
+        $results = $this->safeCollectionQuery(function () use ($sportIds) {
+            $query = Result::query()
+                ->join('matches', fn ($join) => $join->on('matches.id', '=', 'results.match_id')
+                    ->whereNull('matches.deleted_at'))
+                ->join('events', fn ($join) => $join->on('events.id', '=', 'matches.event_id')
+                    ->whereNull('events.deleted_at'))
+                ->with([
+                    'match.event',
+                    'match.pool:id,name',
+                    'match.homeParticipant:id,name,team_name,logo_path',
+                    'match.awayParticipant:id,name,team_name,logo_path',
+                    'winner:id,name,team_name',
+                ])
+                ->select('results.*')
+                ->orderBy('events.name')
+                ->orderBy('matches.match_number');
 
             if ($sportIds !== null) {
-                $query->whereHas('match.event', fn ($e) => $e->whereIn('sport_id', $sportIds));
+                $query->whereIn('events.sport_id', $sportIds);
             }
 
-            return $query->paginate(15)
-                ->withQueryString();
+            return $query->get();
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
 
-            return new LengthAwarePaginator([], 0, 15, 1, [
-                'path' => request()->url(),
-            ]);
+            return collect();
         });
 
         $matches = Fixture::query()
@@ -61,8 +65,9 @@ class ResultController extends Controller
             ->whereNotNull('home_participant_id')
             ->whereNotNull('away_participant_id')
             ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
+            ->orderBy(Event::select('name')->whereColumn('id', 'matches.event_id'))
             ->orderBy('match_number')
-            ->get(['id', 'match_number', 'event_id', 'pool_id', 'home_participant_id', 'away_participant_id', 'status', 'scheduled_at']);
+            ->get(['id', 'match_number', 'event_id', 'pool_id', 'round', 'stage', 'home_participant_id', 'away_participant_id', 'status', 'scheduled_at']);
 
         $events = Event::query()
             ->with('sport:id,name')

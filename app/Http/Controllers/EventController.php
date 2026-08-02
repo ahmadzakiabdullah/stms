@@ -33,7 +33,12 @@ class EventController extends Controller
         $dataLoadFailed = false;
 
         $events = $this->safePaginatedQuery(function () {
-            $query = Event::with(['tournament', 'sport', 'sportCategory', 'organization'])->withCount('pools');
+            $query = Event::with(['tournament', 'sport', 'sportCategory', 'organization'])
+                ->withCount('pools')
+                ->withCount([
+                    'matches as matches_count',
+                    'matches as completed_matches_count' => fn ($q) => $q->where('status', 'completed'),
+                ]);
 
             if ($tournamentId = request('tournament_id')) {
                 $query->where('tournament_id', $tournamentId);
