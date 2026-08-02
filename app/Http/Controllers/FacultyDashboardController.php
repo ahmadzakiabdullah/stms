@@ -42,9 +42,12 @@ class FacultyDashboardController extends Controller
                 ->get();
 
             foreach ($registrations as $reg) {
-                $totalMale += $reg->squadMembers->where('role', 'athlete_male')->count();
-                $totalFemale += $reg->squadMembers->where('role', 'athlete_female')->count();
-                $totalOfficials += $reg->squadMembers->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->count();
+                // ⚡ BOLT OPTIMIZATION: Replaced multiple O(N) `where(...)->count()` calls
+                // with a single O(N) `countBy` pass, reducing redundant iterations.
+                $squadCounts = $reg->squadMembers->countBy('role');
+                $totalMale += $squadCounts->get('athlete_male', 0);
+                $totalFemale += $squadCounts->get('athlete_female', 0);
+                $totalOfficials += $squadCounts->only(['assistant_manager', 'manager', 'coach', 'physio'])->sum();
             }
         }
 
