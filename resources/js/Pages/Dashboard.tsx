@@ -650,7 +650,7 @@ export default function Dashboard({
                                             <td className="px-4 py-2 font-medium">{f.name}</td>
                                             <td className="px-4 py-2 text-center tabular-nums">{f.total}</td>
                                             <td className="px-4 py-2 text-center tabular-nums"><span className="text-amber-600">{f.pending}</span></td>
-                                            <td className="px-4 py-2 text-center tabular-nums"><span className="text-emerald-600">{f.confirmed}</span></td>
+                                            <td className="px-4 py-2 text-center tabular-nums"><span className="text-emerald-700 dark:text-emerald-400">{f.confirmed}</span></td>
                                             <td className="px-4 py-2 text-center tabular-nums"><span className="text-red-600">{f.rejected}</span></td>
                                         </tr>
                                     ))}
