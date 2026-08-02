@@ -495,10 +495,10 @@ export default function EventParticipantsIndex({
                         <div className="flex items-center gap-1 rounded-lg border bg-muted/20 p-0.5">
                             <button onClick={() => setViewMode('grid')}
                                 className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Grid view"><LayoutGrid className="size-3.5" /></button>
+                                title="Grid view" aria-label="Grid view"><LayoutGrid className="size-3.5" /></button>
                             <button onClick={() => setViewMode('table')}
                                 className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Table view"><List className="size-3.5" /></button>
+                                title="Table view" aria-label="Table view"><List className="size-3.5" /></button>
                         </div>
                     )}
                 </div>
@@ -591,6 +591,7 @@ export default function EventParticipantsIndex({
                                                                     onClick={() => setExpandedEp(isExpanded ? null : ep.id)}
                                                                     className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
                                                                     title="View squad members"
+                                                                    aria-label="View squad members"
                                                                 >
                                                                     <ChevronDown className={`size-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                                                     {members.length} member{members.length > 1 ? 's' : ''}
@@ -606,17 +607,17 @@ export default function EventParticipantsIndex({
                                                             {!isFacultyRepresentative && ep.status === 'pending' && (
                                                                 <>
                                                                     <button onClick={() => approveRegistration(ep.id)}
-                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-600 hover:text-white transition" title="Approve">
+                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-600 hover:text-white transition" title="Approve" aria-label="Approve">
                                                                         <Check className="size-3" />
                                                                     </button>
                                                                     <button onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Reject">
+                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Reject" aria-label="Reject">
                                                                         <CircleX className="size-3" />
                                                                     </button>
                                                                 </>
                                                             )}
                                                             <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                                className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Unregister">
+                                                                className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Unregister" aria-label="Unregister">
                                                                 <X className="size-3" />
                                                             </button>
                                                         </div>
@@ -746,7 +747,7 @@ export default function EventParticipantsIndex({
                                                         <span className="truncate flex-1 min-w-0">{p.name}</span>
                                                         <Badge variant={cfg.variant} className="h-4 text-[9px] px-1 shrink-0">{cfg.label}</Badge>
                                                         <button onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
-                                                            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
+                                                            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister" aria-label="Unregister">
                                                             <X className="size-2.5" />
                                                         </button>
                                                     </div>
