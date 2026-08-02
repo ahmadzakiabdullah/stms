@@ -29,7 +29,7 @@ The project is currently focused on delivering a **Minimum Viable Product (MVP)*
 
 ## Tech Stack
 
-- **Backend**: PHP 8.3, Laravel 13
+- **Backend**: PHP 8.4, Laravel 13
 - **Frontend**: React 18, TypeScript, Vite
 - **UI Framework**: Inertia.js
 - **Styling**: Tailwind CSS with shadcn/ui components

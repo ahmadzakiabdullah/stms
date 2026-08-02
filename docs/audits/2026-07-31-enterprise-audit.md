@@ -19,7 +19,7 @@ Production-hardening Sprints 1-3 closed the immediate registration, proxy, seede
 
 ## Current System State
 
-- Laravel 13.8+, PHP requirement `^8.3`; audit runtime used PHP 8.4.16.
+- Laravel 13.8+, PHP requirement `^8.4`; audit runtime used PHP 8.4.16.
 - React 18, Inertia 2, TypeScript, Vite 8, Tailwind/shadcn-oriented UI.
 - Web/Inertia application only; no `/api/v1` implementation.
 - Column-based tenancy via `organization_id` and `BelongsToOrganization` global scope.

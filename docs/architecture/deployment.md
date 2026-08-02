@@ -7,7 +7,7 @@
 
 ## Prerequisites
 
-- [ ] PHP 8.3+ with extensions: `pdo_mysql`, `mbstring`, `xml`, `curl`, `gd`, `zip`, `bcmath`, `redis`
+- [ ] PHP 8.4+ with extensions: `pdo_mysql`, `mbstring`, `xml`, `curl`, `gd`, `zip`, `bcmath`, `redis`
 - [ ] MySQL 8.0+
 - [ ] Redis 7+ (optional but recommended)
 - [ ] Composer 2.x

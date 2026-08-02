@@ -47,7 +47,7 @@
 - [x] Test drift fixed for event participant pending status and sport-category slug generation
 
 ## Infrastructure (Completed)
-- [x] **Docker Setup** — Dockerfile (PHP 8.3 FPM + Nginx), docker-compose.yml (app + MySQL 8 + Redis)
+- [x] **Docker Setup** — Dockerfile (PHP 8.4 FPM + Nginx), docker-compose.yml (app + MySQL 8 + Redis)
 - [x] **CI/CD Pipeline** — GitHub Actions: Pint lint → PHPUnit → npm build
 - [x] **Health Check Endpoint** — GET /health returns {status, database, cache, timestamp}
 - [x] **Production env config** — .env.production.example with secure defaults

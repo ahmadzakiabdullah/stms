@@ -10,7 +10,7 @@ COPY public ./public
 COPY vite.config.js tailwind.config.js postcss.config.js tsconfig.json components.json ./
 RUN npm run build
 
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 RUN apk add --no-cache nginx supervisor curl git unzip mariadb-client libzip-dev \
     libpng-dev libjpeg-turbo-dev freetype-dev libwebp-dev \

@@ -383,7 +383,7 @@
 | Aspek | Status | Nota |
 |-------|--------|------|
 | Environment Management | Baik | .env + .env.example + .env.production.example |
-| Docker | **Selesai** | Dockerfile (PHP 8.3 FPM + Nginx), docker-compose.yml (app + MySQL 8 + Redis), supervisor config |
+| Docker | **Selesai** | Dockerfile (PHP 8.4 FPM + Nginx), docker-compose.yml (app + MySQL 8 + Redis), supervisor config |
 | CI/CD | **Selesai** | `.github/workflows/ci.yml` — Pint lint → PHPUnit (MySQL service) → npm build + artifact |
 | Deployment | Hybrid | Manual deploy via UNC + Docker-ready |
 | Monitoring | Asas | Health check endpoint (`GET /health`) wujud. Sentry dialih keluar (vendor issue) |
