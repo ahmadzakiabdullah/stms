@@ -82,7 +82,7 @@ interface FacultyStat {
     rejected: number;
 }
 
-interface RegistrationEventRow extends Event {
+interface RegistrationEventRow extends Omit<Event, 'sport' | 'tournament'> {
     sport?: { name: string };
     sportCategory?: { name: string };
     tournament?: { name: string };
@@ -228,7 +228,7 @@ export default function Dashboard({
     const sports = Array.isArray(sportsProp) ? sportsProp : [];
     const faculties = Array.isArray(facultiesProp) ? facultiesProp : [];
     const eventStats = Array.isArray(eventStatsProp) ? eventStatsProp : (eventStatsProp?.data ?? []);
-    const registrationStats = (registrationStatsProp && typeof registrationStatsProp === 'object') ? registrationStatsProp : {};
+    const registrationStats: Partial<RegistrationStats> = registrationStatsProp ?? {};
     const squadStats = (squadStatsProp && typeof squadStatsProp === 'object' && !Array.isArray(squadStatsProp)) ? squadStatsProp : {};
 
     const squadTotal = useMemo(() => Object.values(squadStats).reduce((sum, n) => sum + (Number(n) || 0), 0), [squadStats]);
@@ -383,7 +383,7 @@ export default function Dashboard({
                 </div>
             }>
                 <FacultyDashboard
-                    facultyRegistrations={facultyRegistrations}
+                    facultyRegistrations={facultyRegistrations as any}
                     facultyMale={facultyMale}
                     facultyFemale={facultyFemale}
                     facultyOfficials={facultyOfficials}
@@ -601,17 +601,17 @@ export default function Dashboard({
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <select value={regSportFilter} onChange={(e) => handleRegFilterChange(setRegSportFilter)(e.target.value)}
+                    <select aria-label="Filter registrations by sport" value={regSportFilter} onChange={(e) => handleRegFilterChange(setRegSportFilter)(e.target.value)}
                         className="h-9 rounded-md border border-input bg-background px-3 text-sm">
                         <option value="">All Sports</option>
                         {sports.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
-                    <select value={regFacultyFilter} onChange={(e) => handleRegFilterChange(setRegFacultyFilter)(e.target.value)}
+                    <select aria-label="Filter registrations by faculty" value={regFacultyFilter} onChange={(e) => handleRegFilterChange(setRegFacultyFilter)(e.target.value)}
                         className="h-9 rounded-md border border-input bg-background px-3 text-sm">
                         <option value="">All Faculties</option>
                         {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
                     </select>
-                    <select value={regStatusFilter} onChange={(e) => handleRegFilterChange(setRegStatusFilter)(e.target.value)}
+                    <select aria-label="Filter registrations by status" value={regStatusFilter} onChange={(e) => handleRegFilterChange(setRegStatusFilter)(e.target.value)}
                         className="h-9 rounded-md border border-input bg-background px-3 text-sm">
                         <option value="">All Status</option>
                         <option value="pending">Pending</option>

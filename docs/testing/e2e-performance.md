@@ -21,7 +21,7 @@ The CI job uses `database/e2e.sqlite`, enables demo seeding only in the testing 
 
 Mutation-heavy draw, import, result-entry, and export content assertions should be added after the first connected CI run confirms stable accessible selectors.
 
-Local execution on 31 July 2026 prepared and seeded the isolated E2E database successfully. All six desktop/mobile Chromium journeys passed, including the login/dashboard axe checks. Connected CI remains the repeatable enforcement environment.
+Local execution on 2 August 2026 prepared and seeded the isolated E2E database successfully. All six desktop/mobile Chromium journeys pass, including the login/dashboard axe checks. Connected CI remains the repeatable enforcement environment.
 
 ## Coverage Policy
 
@@ -36,4 +36,14 @@ PCOV generates a Clover artifact in CI. Record the first successful percentage i
 
 ## TypeScript Status
 
-`npm run build` succeeds, but `npx tsc --noEmit` is not yet a passing gate. Current debt includes declarations for legacy JSX UI components, Ziggy's global `route`, and page/model/form type mismatches. Do not equate Vite transpilation success with strict TypeScript correctness.
+`npm run typecheck` runs `tsc --noEmit` and is enforced before the production build in CI. Shared declarations cover Ziggy, Inertia page props, and the remaining legacy JSX compatibility boundary; page payload and pagination types are checked in TypeScript.
+
+## Authenticated k6 Scenario
+
+The default scenario checks `/health`. Supplying controlled, non-production load-test credentials also signs in and exercises `/dashboard`:
+
+```bash
+k6 run -e BASE_URL=https://staging.example.test -e AUTH_EMAIL=loadtest@example.test -e AUTH_PASSWORD=secret -e VUS=10 -e DURATION=30s tests/performance/smoke.js
+```
+
+Use a dedicated least-privilege staging account and inject its password through the CI secret store. Never commit credentials or point mutation/load tests at production without explicit approval.

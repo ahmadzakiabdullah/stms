@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\EventParticipant;
 use App\Models\SquadMember;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DummySquadSeeder extends Seeder
 {
@@ -122,7 +123,7 @@ class DummySquadSeeder extends Seeder
         $firstName = $firstNames[($eventIdx + $seq) % count($firstNames)];
 
         return [
-            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'id' => (string) Str::uuid(),
             'event_participant_id' => $ep->id,
             'organization_id' => $ep->event->organization_id ?? $ep->organization_id,
             'name' => $firstName.' '.($isMale ? 'bin' : 'binti').' '.$family,

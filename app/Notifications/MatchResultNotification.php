@@ -55,6 +55,9 @@ class MatchResultNotification extends Notification
             'winner_name' => $winner?->name,
             'message' => $message,
             'type' => 'result_'.$this->action,
+            'severity' => $this->action === 'removed' ? 'warning' : 'info',
+            'organization_id' => $result->organization_id,
+            'organization_name' => $match?->event?->tournament?->organization?->name,
         ];
     }
 }

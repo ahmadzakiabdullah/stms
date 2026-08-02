@@ -6,6 +6,7 @@
         "build": "vite build",
         "build:budget": "node scripts/check-bundle-budget.mjs",
         "dev": "vite",
+        "typecheck": "tsc --noEmit",
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui"
     },

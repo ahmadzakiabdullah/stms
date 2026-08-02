@@ -303,7 +303,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                                     {...register('max_athletes_total')}
                                                     placeholder="e.g. 6"
                                                 />
-                                                {errors.max_athletes_total && <p className="text-sm text-destructive">{errors.max_athletes_total.message}</p>}
+                                                {errors.max_athletes_total && <p className="text-sm text-destructive">{String(errors.max_athletes_total.message ?? '')}</p>}
                                             </div>
                                             )}
                                             <div className="grid gap-2">
@@ -315,7 +315,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                                     {...register('max_male_athletes')}
                                                     placeholder="e.g. 12"
                                                 />
-                                                {errors.max_male_athletes && <p className="text-sm text-destructive">{errors.max_male_athletes.message}</p>}
+                                                {errors.max_male_athletes && <p className="text-sm text-destructive">{String(errors.max_male_athletes.message ?? '')}</p>}
                                             </div>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="max_female_athletes">Max Female Athletes</Label>
@@ -326,7 +326,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                                     {...register('max_female_athletes')}
                                                     placeholder="e.g. 12"
                                                 />
-                                                {errors.max_female_athletes && <p className="text-sm text-destructive">{errors.max_female_athletes.message}</p>}
+                                                {errors.max_female_athletes && <p className="text-sm text-destructive">{String(errors.max_female_athletes.message ?? '')}</p>}
                                             </div>
                                             {quotaMode === 'mixed_total' && (
                                             <>
@@ -339,7 +339,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                                         {...register('min_male_athletes')}
                                                         placeholder="e.g. 2"
                                                     />
-                                                    {errors.min_male_athletes && <p className="text-sm text-destructive">{errors.min_male_athletes.message}</p>}
+                                                    {errors.min_male_athletes && <p className="text-sm text-destructive">{String(errors.min_male_athletes.message ?? '')}</p>}
                                                 </div>
                                                 <div className="grid gap-2">
                                                     <Label htmlFor="min_female_athletes">Min Female Athletes</Label>
@@ -350,7 +350,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                                         {...register('min_female_athletes')}
                                                         placeholder="e.g. 2"
                                                     />
-                                                    {errors.min_female_athletes && <p className="text-sm text-destructive">{errors.min_female_athletes.message}</p>}
+                                                    {errors.min_female_athletes && <p className="text-sm text-destructive">{String(errors.min_female_athletes.message ?? '')}</p>}
                                                 </div>
                                             </>
                                             )}
@@ -363,7 +363,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                                     {...register('max_officials')}
                                                     placeholder="e.g. 5"
                                                 />
-                                                {errors.max_officials && <p className="text-sm text-destructive">{errors.max_officials.message}</p>}
+                                                {errors.max_officials && <p className="text-sm text-destructive">{String(errors.max_officials.message ?? '')}</p>}
                                             </div>
                                         </div>
                                     </div>

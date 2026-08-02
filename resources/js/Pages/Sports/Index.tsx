@@ -524,18 +524,18 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                             {...catReg('max_athletes_total')}
                                             placeholder="e.g. 6"
                                         />
-                                        {catErrors.max_athletes_total && <p className="text-sm text-destructive">{catErrors.max_athletes_total.message}</p>}
+                                        {catErrors.max_athletes_total && <p className="text-sm text-destructive">{String(catErrors.max_athletes_total.message ?? '')}</p>}
                                     </div>
                                     )}
                                     <div className="grid gap-2">
                                         <Label htmlFor="cat-max-male">Max Male Athletes</Label>
                                         <Input id="cat-max-male" type="number" min="0" {...catReg('max_male_athletes')} placeholder="e.g. 12" />
-                                        {catErrors.max_male_athletes && <p className="text-sm text-destructive">{catErrors.max_male_athletes.message}</p>}
+                                        {catErrors.max_male_athletes && <p className="text-sm text-destructive">{String(catErrors.max_male_athletes.message ?? '')}</p>}
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="cat-max-female">Max Female Athletes</Label>
                                         <Input id="cat-max-female" type="number" min="0" {...catReg('max_female_athletes')} placeholder="e.g. 12" />
-                                        {catErrors.max_female_athletes && <p className="text-sm text-destructive">{catErrors.max_female_athletes.message}</p>}
+                                        {catErrors.max_female_athletes && <p className="text-sm text-destructive">{String(catErrors.max_female_athletes.message ?? '')}</p>}
                                     </div>
                                     {catQuotaMode === 'mixed_total' && (
                                     <>
@@ -548,7 +548,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                                 {...catReg('min_male_athletes')}
                                                 placeholder="e.g. 2"
                                             />
-                                            {catErrors.min_male_athletes && <p className="text-sm text-destructive">{catErrors.min_male_athletes.message}</p>}
+                                            {catErrors.min_male_athletes && <p className="text-sm text-destructive">{String(catErrors.min_male_athletes.message ?? '')}</p>}
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="cat-min-female">Min Female Athletes</Label>
@@ -559,14 +559,14 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                                 {...catReg('min_female_athletes')}
                                                 placeholder="e.g. 2"
                                             />
-                                            {catErrors.min_female_athletes && <p className="text-sm text-destructive">{catErrors.min_female_athletes.message}</p>}
+                                            {catErrors.min_female_athletes && <p className="text-sm text-destructive">{String(catErrors.min_female_athletes.message ?? '')}</p>}
                                         </div>
                                     </>
                                     )}
                                     <div className="grid gap-2">
                                         <Label htmlFor="cat-max-officials">Max Officials</Label>
                                         <Input id="cat-max-officials" type="number" min="0" {...catReg('max_officials')} placeholder="e.g. 5" />
-                                        {catErrors.max_officials && <p className="text-sm text-destructive">{catErrors.max_officials.message}</p>}
+                                        {catErrors.max_officials && <p className="text-sm text-destructive">{String(catErrors.max_officials.message ?? '')}</p>}
                                     </div>
                                 </div>
                             </div>

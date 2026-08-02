@@ -1,6 +1,6 @@
 # Database Schema
 
-The schema is migration-driven. There are 51 migration files as of 31 July 2026; do not infer the final table count from migration count because several migrations alter or rename existing tables.
+The schema is migration-driven. There are 56 migration files as of 2 August 2026; do not infer the final table count from migration count because several migrations alter or rename existing tables.
 
 ## Tables Overview
 
@@ -31,7 +31,7 @@ The schema is migration-driven. There are 51 migration files as of 31 July 2026;
 
 ### Squad Management
 
-- **`squad_members`** — Roster members within an event participant. Roles: athlete_male, athlete_female, manager, coach, physio. Has identification_no, phone, and `organization_id`.
+- **`squad_members`** — Roster members within an event participant. Roles: athlete_male, athlete_female, assistant_manager, manager, coach, physio. Has `matrix_no` (unique within an event registration), identification/passport data, phone, and `organization_id`.
 
 ### Draws, Configuration, Notifications, and Audit
 

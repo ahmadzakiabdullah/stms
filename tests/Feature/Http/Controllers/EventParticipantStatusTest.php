@@ -13,6 +13,7 @@ use App\Models\Tournament;
 use App\Models\User;
 use App\Notifications\EventParticipantConfirmed;
 use App\Notifications\EventParticipantRejected;
+use App\Notifications\NewEventRegistration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
@@ -50,7 +51,42 @@ class EventParticipantStatusTest extends TestCase
 
         $ep = EventParticipant::create(['organization_id' => $org->id, 'event_id' => $event->id, 'participant_id' => $facA->id, 'status' => 'pending']);
 
-        return ['org' => $org, 'facA' => $facA, 'ep' => $ep];
+        return ['org' => $org, 'session' => $session, 'event' => $event, 'facA' => $facA, 'ep' => $ep];
+    }
+
+    public function test_new_registration_notifies_same_organization_admins_and_dean(): void
+    {
+        Notification::fake();
+
+        $actor = $this->seedSuperAdmin();
+        $data = $this->seedData();
+        Role::firstOrCreate(['name' => 'org-admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'dean', 'guard_name' => 'web']);
+
+        $participant = Participant::factory()->create([
+            'organization_id' => $data['org']->id,
+            'session_id' => $data['session']->id,
+        ]);
+        $orgAdmin = User::factory()->create(['organization_id' => $data['org']->id]);
+        $orgAdmin->assignRole('org-admin');
+        $dean = User::factory()->create([
+            'organization_id' => $data['org']->id,
+            'participant_id' => $participant->id,
+        ]);
+        $dean->assignRole('dean');
+
+        $otherOrganization = Organization::factory()->create();
+        $otherAdmin = User::factory()->create(['organization_id' => $otherOrganization->id]);
+        $otherAdmin->assignRole('org-admin');
+
+        $this->actingAs($actor)->post(route('event-participants.store'), [
+            'event_id' => $data['event']->id,
+            'participant_id' => $participant->id,
+        ])->assertRedirect(route('event-participants.index'));
+
+        Notification::assertSentTo($orgAdmin, NewEventRegistration::class);
+        Notification::assertSentTo($dean, NewEventRegistration::class);
+        Notification::assertNotSentTo($otherAdmin, NewEventRegistration::class);
     }
 
     public function test_super_admin_can_approve_pending_registration(): void

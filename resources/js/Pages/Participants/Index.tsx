@@ -242,7 +242,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                         </TableBody>
                     </Table>
 
-                    {participantsProp?.links && (
+                    {!Array.isArray(participantsProp) && participantsProp?.links && (
                         <div className="mt-4">
                             <Pagination links={participantsProp.links} />
                         </div>

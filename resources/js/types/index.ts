@@ -1,5 +1,4 @@
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
-
 // ─── Organization ───
 export interface Organization {
     id: string;
@@ -26,6 +25,7 @@ export interface User {
     sports?: Sport[];
     created_at: string;
     updated_at: string;
+    is_active?: boolean;
 }
 
 export interface Role {
@@ -121,6 +121,8 @@ export interface Event {
     pools_count?: number;
     matches_count?: number;
     completed_matches_count?: number;
+    format?: string | null;
+    pool_size?: number | null;
     created_at: string;
     updated_at: string;
 }

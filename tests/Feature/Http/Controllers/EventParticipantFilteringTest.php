@@ -121,7 +121,7 @@ class EventParticipantFilteringTest extends TestCase
         $response->assertOk();
         $response->assertInertia(function ($page) use ($d) {
             $data = $page->toArray()['props']['participants']['data'];
-$this->assertCount(1, $data, 'badminton search');
+            $this->assertCount(1, $data, 'badminton search');
             $this->assertEquals($d['facA']->id, $data[0]['id']);
             $this->assertCount(1, $data[0]['event_participants'], 'badminton search regs');
             $this->assertEquals($d['eventBadminton']->id, $data[0]['event_participants'][0]['event_id']);
@@ -130,7 +130,7 @@ $this->assertCount(1, $data, 'badminton search');
         $response2 = $this->actingAs($user)->get(route('event-participants.index', ['search' => 'Teknologi']));
         $response2->assertInertia(function ($page) {
             $data = $page->toArray()['props']['participants']['data'];
-$this->assertCount(1, $data);
+            $this->assertCount(1, $data);
         });
     }
 }

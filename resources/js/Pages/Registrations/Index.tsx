@@ -323,7 +323,7 @@ export default function RegistrationsIndex({ registrations: registrationsProp, t
                         </TableBody>
                     </Table>
 
-                    {registrationsProp?.links && (
+                    {!Array.isArray(registrationsProp) && registrationsProp?.links && (
                         <div className="mt-4">
                             <Pagination links={registrationsProp.links} />
                         </div>

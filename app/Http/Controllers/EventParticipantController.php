@@ -39,10 +39,9 @@ class EventParticipantController extends Controller
             $query = Participant::query()
                 ->with(['eventParticipants' => function ($q) use ($search, $sportId, $categoryId, $status) {
                     $q->with(['event.sport', 'event.sportCategory', 'event.tournament', 'squadMembers'])
-                        ->when($search, fn ($q, $v) => $q->where(fn ($q) =>
-                            $q->whereHas('event', fn ($q) => $q->where('name', 'like', "%{$v}%"))
-                                ->orWhereHas('event.sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
-                                ->orWhereHas('event.sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                        ->when($search, fn ($q, $v) => $q->where(fn ($q) => $q->whereHas('event', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                            ->orWhereHas('event.sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                            ->orWhereHas('event.sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
                         ))
                         ->when($sportId, fn ($q) => $q->whereHas('event', fn ($q) => $q->where('sport_id', $sportId)))
                         ->when($categoryId, fn ($q) => $q->whereHas('event', fn ($q) => $q->where('sport_category_id', $categoryId)))
@@ -83,10 +82,9 @@ class EventParticipantController extends Controller
             return Event::query()
                 ->with(['sport', 'sportCategory', 'tournament'])
                 ->where('is_active', true)
-                ->when($search, fn ($q, $v) => $q->where(fn ($q) =>
-                    $q->where('name', 'like', "%{$v}%")
-                        ->orWhereHas('sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
-                        ->orWhereHas('sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                ->when($search, fn ($q, $v) => $q->where(fn ($q) => $q->where('name', 'like', "%{$v}%")
+                    ->orWhereHas('sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                    ->orWhereHas('sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
                 ))
                 ->when($sportId, fn ($q, $v) => $q->where('sport_id', $v))
                 ->when($categoryId, fn ($q, $v) => $q->where('sport_category_id', $v))
@@ -111,11 +109,10 @@ class EventParticipantController extends Controller
 
         $statusCounts = $this->safeCollectionQuery(function () use ($hasParticipant, $user, $search, $sportId, $categoryId, $participantId) {
             $query = EventParticipant::query()
-                ->when($search, fn ($q, $v) => $q->where(fn ($q) =>
-                    $q->whereHas('participant', fn ($q) => $q->where('name', 'like', "%{$v}%"))
-                        ->orWhereHas('event', fn ($q) => $q->where('name', 'like', "%{$v}%"))
-                        ->orWhereHas('event.sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
-                        ->orWhereHas('event.sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                ->when($search, fn ($q, $v) => $q->where(fn ($q) => $q->whereHas('participant', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                    ->orWhereHas('event', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                    ->orWhereHas('event.sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
+                    ->orWhereHas('event.sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
                 ))
                 ->when($sportId, fn ($q, $v) => $q->whereHas('event', fn ($q) => $q->where('sport_id', $v)))
                 ->when($categoryId, fn ($q, $v) => $q->whereHas('event', fn ($q) => $q->where('sport_category_id', $v)))
@@ -185,8 +182,13 @@ class EventParticipantController extends Controller
             $deanUsers = User::where('participant_id', $participant->id)
                 ->role('dean')
                 ->get();
-            foreach ($deanUsers as $deanUser) {
-                $deanUser->notify(new NewEventRegistration($ep));
+
+            $adminUsers = User::where('organization_id', $ep->organization_id)
+                ->role(['super-admin', 'org-admin'])
+                ->get();
+
+            foreach ($deanUsers->concat($adminUsers)->unique('uuid') as $recipient) {
+                $recipient->notify(new NewEventRegistration($ep));
             }
         }
 

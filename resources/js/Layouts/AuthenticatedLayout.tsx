@@ -275,7 +275,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
         const next = !notifOpen;
         setNotifOpen(next);
         if (next) {
-            router.reload({ only: ['notifications', 'notification_count'], preserveState: true, preserveScroll: true });
+            router.reload({ only: ['notifications', 'notification_count'], preserveScroll: true });
         }
     };
 

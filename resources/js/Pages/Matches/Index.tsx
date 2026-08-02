@@ -52,7 +52,7 @@ interface KnockoutData {
     fixtures: MatchRow[];
 }
 
-interface EventWithRelations extends Event {
+interface EventWithRelations extends Omit<Event, 'tournament' | 'sport'> {
     tournament?: { id: string; name: string };
     sport?: { id: string; name: string };
     sportCategory?: { id: string; name: string };
@@ -83,7 +83,9 @@ interface MatchForm {
     notes: string;
 }
 
-const participantName = (participant?: Participant, fallback = 'TBD') => {
+type ParticipantSummary = Pick<Participant, 'id' | 'name'> & Partial<Pick<Participant, 'team_name' | 'logo_url'>>;
+
+const participantName = (participant?: ParticipantSummary | null, fallback = 'TBD') => {
     if (!participant) return fallback;
 
     const code = participant.name?.trim();
@@ -95,7 +97,7 @@ const participantName = (participant?: Participant, fallback = 'TBD') => {
     return participant.team_name || code || fallback;
 };
 
-const participantFullName = (participant?: Participant, fallback = '') => {
+const participantFullName = (participant?: ParticipantSummary | null, fallback = '') => {
     if (!participant) return fallback;
     return participant.team_name || participant.name || fallback;
 };
@@ -111,7 +113,7 @@ const participantInitials = (name: string) =>
 const formatDateTime = (value: string | null | undefined) =>
     value ? new Date(value).toLocaleString() : 'Time TBD';
 
-function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { participant?: Participant; fallback?: string; size?: string }) {
+function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { participant?: ParticipantSummary | null; fallback?: string; size?: string }) {
     const name = participantName(participant, fallback);
 
     if (participant?.logo_url) {
@@ -125,7 +127,7 @@ function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { particip
     );
 }
 
-function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: Participant; fallback?: string }) {
+function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: ParticipantSummary | null; fallback?: string }) {
     const name = participantName(participant, fallback);
 
     return (
@@ -417,7 +419,6 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
     const handleFilterChange = (eventId: string) => {
         const event = events.find((item) => item.id === eventId);
         router.get(route('matches.index'), event ? { event: event.slug } : {}, {
-            preserveState: true,
             preserveScroll: true,
         });
     };

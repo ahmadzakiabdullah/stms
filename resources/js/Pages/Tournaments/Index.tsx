@@ -46,7 +46,7 @@ const tournamentSchema = z.object({
 
 type TournamentForm = z.infer<typeof tournamentSchema>;
 
-interface TournamentRow extends Tournament {
+interface TournamentRow extends Omit<Tournament, 'session'> {
     session?: { name: string } | null;
     sports?: Sport[];
 }

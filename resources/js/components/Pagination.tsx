@@ -4,15 +4,20 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { type Paginated } from '@/types';
 
 interface PaginationProps<T> {
-    paginator: Paginated<T>;
+    paginator?: Partial<Paginated<T>> | T[] | null;
+    links?: Paginated<T>['links'];
 }
 
-export default function Pagination<T>({ paginator }: PaginationProps<T>) {
-    if (!paginator || !paginator.links || paginator.links.length < 3) {
-        return null;
-    }
+export default function Pagination<T>({ paginator, links: legacyLinks }: PaginationProps<T>) {
+    if (Array.isArray(paginator)) return null;
 
-    const { current_page, last_page, total, links } = paginator;
+    const links = paginator?.links ?? legacyLinks ?? [];
+    if (links.length < 3) return null;
+
+    const current_page = paginator?.current_page ?? 1;
+    const last_page = paginator?.last_page ?? 1;
+    const per_page = paginator?.per_page ?? 0;
+    const total = paginator?.total ?? 0;
 
     const prevLink = links.find((l) => l.label.includes('Previous') || l.label.includes('‹'));
     const nextLink = links.find((l) => l.label.includes('Next') || l.label.includes('›'));
@@ -22,8 +27,8 @@ export default function Pagination<T>({ paginator }: PaginationProps<T>) {
         pages.push(i);
     }
 
-    const from = (current_page - 1) * paginator.per_page + 1;
-    const to = Math.min(current_page * paginator.per_page, total);
+    const from = total === 0 ? 0 : (current_page - 1) * per_page + 1;
+    const to = Math.min(current_page * per_page, total);
 
     return (
         <div className="mt-4 flex flex-col items-center justify-between gap-3 px-2 text-sm text-muted-foreground sm:flex-row">
@@ -37,7 +42,6 @@ export default function Pagination<T>({ paginator }: PaginationProps<T>) {
                 {prevLink && (
                     <Link
                         href={prevLink.url || '#'}
-                        preserveScroll
                         className={!prevLink.url ? 'pointer-events-none opacity-40' : ''}
                     >
                         <Button variant="outline" size="sm" disabled={!prevLink.url}>
@@ -55,7 +59,7 @@ export default function Pagination<T>({ paginator }: PaginationProps<T>) {
 
                         if (pageLink && pageLink.url) {
                             return (
-                                <Link key={page} href={pageLink.url} preserveScroll>
+                                <Link key={page} href={pageLink.url}>
                                     <Button
                                         variant={isActive ? 'default' : 'ghost'}
                                         size="sm"
@@ -78,7 +82,6 @@ export default function Pagination<T>({ paginator }: PaginationProps<T>) {
                 {nextLink && (
                     <Link
                         href={nextLink.url || '#'}
-                        preserveScroll
                         className={!nextLink.url ? 'pointer-events-none opacity-40' : ''}
                     >
                         <Button variant="outline" size="sm" disabled={!nextLink.url}>

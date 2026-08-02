@@ -53,7 +53,7 @@ const eventSchema = z.object({
 
 type EventForm = z.infer<typeof eventSchema>;
 
-interface EventRow extends Event {
+interface EventRow extends Omit<Event, 'tournament' | 'sport'> {
     tournament?: { name: string } | null;
     sport?: { name: string } | null;
     sportCategory?: { name: string } | null;

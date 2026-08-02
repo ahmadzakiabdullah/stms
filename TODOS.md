@@ -26,7 +26,7 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Add dashboard query budget and k6 health/load scenario with p95/error thresholds.
 - [x] Add frontend JS/CSS bundle budgets and remove Tailwind 3/4 mismatch; production build is warning-free.
 - [ ] Execute the Playwright suite in connected CI and triage any real browser/accessibility findings.
-- [ ] Establish a clean `tsc --noEmit` gate by typing legacy JSX UI modules, Ziggy's global `route`, and remaining page/model mismatches.
+- [x] Establish a clean `tsc --noEmit` gate with legacy JSX compatibility declarations, Ziggy global typing, corrected Inertia v2 options, and aligned page/model payload types; enforce it in CI.
 - [ ] Execute production-sized MySQL restore, authenticated k6 scenarios, and external alert delivery drills.
 
 - [x] Matches page CRUD restored with pool/round fields and Name–Logo–VS–Logo–Name fixture layout.
@@ -115,6 +115,7 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Squad member listings for super-admins on Event Registrations page (expandable rows with role badges and matrix numbers)
 - [x] Event Registrations page: clickable status stat cards, status filter, and Approve/Reject actions for super-admins (notifies faculty representative)
 - [x] Event Registrations filtering fixed: sport/category/search now filter registration rows and All Events tab, not just the participant list
+- [x] Super-admin notification triage: Action Required default tab, personal inbox, organization/type/read filters, severity metadata, same-organization admin recipients, and separately filtered System Activity
 
 ---
 
@@ -150,4 +151,4 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 
 ---
 
-*Fail ini dikemaskini 31 Julai 2026 — Sprint 1 production hardening selesai; fokus seterusnya ialah dependency audit, operasi/restore, observability, dan quality baselines.*
+*Fail ini dikemaskini 2 Ogos 2026 — local PHPUnit, Pint, TypeScript, build/budget, dependency audit, dan Playwright/axe gates telah disahkan; connected-CI dan production operational drills masih memerlukan bukti persekitaran.*

@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Notifications: added a super-admin `Action Required` default view, personal inbox tab, read/type/organization filters, organization and severity badges, and a direct link to filtered system activity. New pending registrations now notify same-organization super/org admins plus the participant dean without cross-tenant delivery.
+- Activity logs: super-admins can audit all organizations with organization/event/date filters, while org-admins remain restricted to their own tenant.
+- Fixed a pagination runtime regression when an Inertia fallback supplies a partial paginator object without a `links` array.
+- Quality gates: restored repository-wide Pint compliance and added `npm run typecheck` to connected CI.
+- Frontend typing: added Ziggy/Inertia shared declarations, legacy JSX compatibility declarations, corrected Inertia v2 reload/link options, normalized pagination fallbacks, and aligned nested page payload types.
+- Accessibility: added accessible names to the dashboard sport, faculty, and status filters so desktop/mobile axe checks pass.
+- Documentation: refreshed current test/migration counts, squad `matrix_no` schema, multi-tenant creation behavior, and the 2 August 2026 verification status.
+
 - Notifications: participants (faculty reps/deans of the home and away faculties) are now notified when a match result involving them is recorded, updated, or removed, via the new `MatchResultNotification`.
 - Layout: sidebar is now pinned to the viewport (`h-screen sticky top-0`) so the organization chip and user card stay visible at the bottom while only the navigation scrolls; on long pages the footer no longer slides below the fold.
 - Dashboard: added compact "Squad Composition" stat cards (total members, male/female athletes, officials) to the Registration Overview section, respecting the sport/faculty/status filters. Added `SquadMemberFactory`.

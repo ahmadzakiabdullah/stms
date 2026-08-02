@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import Pagination from '@/components/Pagination';
 import type { Paginated } from '@/types';
 
@@ -19,6 +19,9 @@ interface ActivityLogItem {
 
 interface Props {
     activities: Paginated<ActivityLogItem>;
+    filters: { organization_id: string; event: string; from: string; to: string };
+    isSuperAdmin: boolean;
+    organizations: Array<{ id: string; name: string }>;
 }
 
 function subjectLabel(type: string): string {
@@ -26,7 +29,13 @@ function subjectLabel(type: string): string {
     return parts[parts.length - 1] || type;
 }
 
-export default function ActivityLogsIndex({ activities }: Props) {
+export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, organizations }: Props) {
+    const visit = (changes: Partial<Props['filters']>) => router.get(
+        route('activity-logs.index'),
+        { ...filters, ...changes },
+        { preserveState: true, preserveScroll: true, replace: true },
+    );
+
     return (
         <AuthenticatedLayout
             header={
@@ -39,6 +48,36 @@ export default function ActivityLogsIndex({ activities }: Props) {
                 <CardHeader>
                     <CardTitle>System Activity Log</CardTitle>
                 </CardHeader>
+                <CardContent className="border-b pt-0">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        {isSuperAdmin && (
+                            <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+                                Organization
+                                <select aria-label="Filter activity by organization" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.organization_id} onChange={(event) => visit({ organization_id: event.target.value })}>
+                                    <option value="">All organizations</option>
+                                    {organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
+                                </select>
+                            </label>
+                        )}
+                        <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+                            Event
+                            <select aria-label="Filter activity by event" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.event} onChange={(event) => visit({ event: event.target.value })}>
+                                <option value="">All events</option>
+                                <option value="created">Created</option>
+                                <option value="updated">Updated</option>
+                                <option value="deleted">Deleted</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+                            From
+                            <input aria-label="Activity start date" type="date" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.from} onChange={(event) => visit({ from: event.target.value })} />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+                            To
+                            <input aria-label="Activity end date" type="date" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.to} onChange={(event) => visit({ to: event.target.value })} />
+                        </label>
+                    </div>
+                </CardContent>
                 <CardContent className="p-0">
                     {activities.data.length === 0 ? (
                         <p className="p-6 text-center text-sm text-muted-foreground">No activity logs yet.</p>

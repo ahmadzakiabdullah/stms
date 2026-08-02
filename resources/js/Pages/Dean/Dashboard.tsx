@@ -22,7 +22,7 @@ import { Check, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import type { Paginated, Flash, EventParticipant, Event as EventType } from '@/types';
 
-interface RegEventParticipant extends EventParticipant {
+interface RegEventParticipant extends Omit<EventParticipant, 'event' | 'participant'> {
     event?: EventType & {
         sport?: { id: string; name: string };
         sport_category?: { id: string; name: string };

@@ -3,8 +3,11 @@
 namespace Tests\Unit;
 
 use App\Models\Event;
+use App\Models\EventParticipant;
 use App\Models\Fixture;
 use App\Models\Organization;
+use App\Models\Participant;
+use App\Models\Pool;
 use App\Models\Result;
 use App\Services\ResultService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -121,13 +124,13 @@ class ResultServiceTest extends TestCase
         $org = Organization::factory()->create();
         $event = Event::factory()->create(['organization_id' => $org->id, 'pool_size' => 4, 'qualifiers_per_pool' => 2]);
 
-        $poolA = \App\Models\Pool::query()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'name' => 'Group A', 'sort_order' => 0]);
-        $poolB = \App\Models\Pool::query()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'name' => 'Group B', 'sort_order' => 1]);
+        $poolA = Pool::query()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'name' => 'Group A', 'sort_order' => 0]);
+        $poolB = Pool::query()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'name' => 'Group B', 'sort_order' => 1]);
 
         $teams = [];
         foreach ([['a1', $poolA], ['a2', $poolA], ['b1', $poolB], ['b2', $poolB]] as [$slug, $pool]) {
-            $team = \App\Models\Participant::factory()->create(['organization_id' => $org->id, 'slug' => $slug]);
-            \App\Models\EventParticipant::query()->create([
+            $team = Participant::factory()->create(['organization_id' => $org->id, 'slug' => $slug]);
+            EventParticipant::query()->create([
                 'organization_id' => $org->id,
                 'event_id' => $event->id,
                 'participant_id' => $team->id,

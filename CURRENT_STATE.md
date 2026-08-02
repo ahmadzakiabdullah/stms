@@ -4,7 +4,7 @@
 > This document reflects the reality as of the latest full system review. It should be read together with `CLAUDE.md`, `AGENTS.md`, `TODOS.md`, and `ROADMAP.md`.
 
 **Overall Status:** MVP functionality is implemented for SAF 2026. Core flows cover Organization/User/RBAC → Sport/Category/Session/Tournament/Event → Participant/Registration → Squad Management → Match/Result → Rankings → Exports/Reporting → Dean Verification → Draw/Groups → Notifications → Settings and Activity Logs.
-**Code Maturity:** Operational MVP with production-hardening Sprints 1-3 implemented in the repository. CI covers lint, PHPUnit, dependency audits, PCOV coverage artifacts, build budgets, and Playwright desktop/mobile journeys with axe. Backend query and k6 thresholds are defined; encrypted backup/restore and internal health monitoring are implemented. Connected-CI browser/coverage results, production MySQL/off-site restore, authenticated load tests, and external alert drills still require environment evidence.
+**Code Maturity:** Operational MVP with production-hardening Sprints 1-3 implemented in the repository. CI covers lint, TypeScript, PHPUnit, dependency audits, PCOV coverage artifacts, build budgets, and Playwright desktop/mobile journeys with axe. Backend query and k6 thresholds are defined; encrypted backup/restore and internal health monitoring are implemented. Connected-CI browser/coverage results, production MySQL/off-site restore, authenticated load tests, and external alert drills still require environment evidence.
 
 ---
 
@@ -21,7 +21,7 @@
 | Authorization  | Spatie + 12 Policies + Gate in controllers   | Spatie Laravel Permission + Policies + Gates | Implemented |
 | Domain Models  | 16 model files, including tenant/domain models and Setting | Full hierarchy | Implemented |
 | API            | None (web/Inertia only)                      | RESTful `/api/v1` (future)                   | Future      |
-| Tests          | 69 PHP test files; 266 tests and 810 assertions passing on 31 July 2026, plus 6 passing Playwright/axe journeys | PHP + browser + accessibility | Coverage measurement configured in CI; first percentage pending |
+| Tests          | 76 PHP test files; 318 tests and 1,207 assertions passing on 2 August 2026, plus 6 Playwright/axe journeys | PHP + browser + accessibility | Type-check and local browser/accessibility gates pass; connected-CI coverage percentage pending |
 
 ---
 
@@ -37,20 +37,20 @@
 - **Reports**: Dashboard with stats, completion rate, recent results, quick export links.
 - **Faculty Dashboard**: Squad member management with role-based and total-athlete quota validation. Bulk Excel/CSV import uses the same quota rules.
 - **Dean Verification**: Event participant approval/rejection workflow + notifications.
-- **In-App Notifications**: Bell dropdown in header, full notification page, dean approval notifications.
+- **In-App Notifications**: Bell dropdown, personal inbox, super-admin Action Required queue, read/type/organization filters, severity badges, and dean/admin registration notifications. System Activity remains a separate tenant-safe audit view.
 - **Role Management UI**: Full CRUD at `/roles` with grouped permission checkboxes.
 - **Draw/Group Allocation**: Random balloting with round-robin fixture generation via Circle Method.
 - **Participant Dashboard**: Stats cards, per-faculty breakdown, per-event breakdown with filters.
 - **Logo Upload**: Faculty crest/logo upload and display.
 - **Dashboard**: Real data with safe guards, Cache, try/catch (prevents 500s on partial prod DBs).
 - **Routes**: 104 application routes (web + auth); no REST API routes.
-- **Migrations**: 51 migration files covering domain, framework, fixes, and later features.
+- **Migrations**: 56 migration files covering domain, framework, fixes, and later features.
 - **Seeding**: `DatabaseSeeder` seeds the 24-sport SAF master list, then `SAF2026DataSeeder` seeds SAF 2026 categories/events with quota fields. Reusable and idempotent.
-- **Tests**: 69 PHP test files; `php artisan test` passes 266 tests / 810 assertions, plus 6 Playwright desktop/mobile and axe journeys passing locally and committed for connected CI.
+- **Tests**: 76 PHP test files; `php artisan test` passes 318 tests / 1,207 assertions. Six Playwright desktop/mobile journeys, including axe checks, pass locally and are committed for connected CI.
 - **Docker**: `Dockerfile` + `docker-compose.yml` + nginx/supervisor config.
 - **CI/CD**: `.github/workflows/ci.yml` (Pint lint → PHPUnit → npm build).
 - **Assurance**: PCOV/Clover reporting, Playwright critical journeys, axe WCAG checks, dashboard query budget, k6 thresholds, and frontend bundle budgets.
-- **Known frontend debt**: Vite production build is clean, but `tsc --noEmit` still reports legacy `.jsx` declaration gaps, missing Ziggy global typing, and several model/form type mismatches.
+- **Frontend quality**: Vite production build, bundle budget, and `npm run typecheck` are clean. Legacy JSX components are covered by explicit compatibility declarations while new and migrated application pages remain TypeScript.
 - **Operations**: encrypted backup/restore commands, daily retention schedule, supervised Redis queue worker and scheduler.
 - **Health check**: `GET /health` and `stms:health-check` cover database, cache, queue, and disk without exposing exception details.
 
@@ -95,4 +95,4 @@ Production defaults to `SEED_DEMO_DATA=false`; `DatabaseSeeder` then creates onl
 
 ---
 
-**Last Updated:** 31 July 2026 — verified against routes, migrations, source, seeders, and the full automated test suite. Production-hardening gaps are tracked in the dated enterprise audit.
+**Last Updated:** 2 August 2026 — verified against routes, migrations, source, seeders, PHPUnit, Pint, TypeScript, Vite, dependency audits, and the local Playwright/axe suite. Environment-dependent production drills remain tracked in `TODOS.md`.

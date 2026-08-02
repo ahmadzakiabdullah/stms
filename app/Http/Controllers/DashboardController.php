@@ -81,7 +81,7 @@ class DashboardController extends Controller
             $participantsWithRegistrations = $safeCount(Participant::class, fn ($q) => $q->whereHas('eventParticipants'));
 
             $registrationPipeline = $safeQuery(fn () => EventParticipant::query()
-                ->selectRaw("status, count(*) as total")
+                ->selectRaw('status, count(*) as total')
                 ->groupBy('status')
                 ->pluck('total', 'status')
                 ->all(), []);

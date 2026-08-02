@@ -7,6 +7,7 @@ use App\Models\Fixture;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class KnockoutStageService
 {
@@ -120,7 +121,7 @@ class KnockoutStageService
                 ['stage' => self::STAGE_FINAL, 'round' => 4, 'home' => null, 'away' => null],
             ] as $fixture) {
                 $fixtures[] = [
-                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'id' => (string) Str::uuid(),
                     'organization_id' => $orgId,
                     'event_id' => $event->id,
                     'pool_id' => null,

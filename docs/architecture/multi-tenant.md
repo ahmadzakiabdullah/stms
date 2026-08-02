@@ -34,7 +34,7 @@ Contoh jadual: `tournaments`, `participants`, `sports`, `events`, `users`, dll.
 Satu trait Eloquent, `App\Models\Concerns\BelongsToOrganization`, digunakan pada semua model spesifik-tenant. Trait ini bertanggungjawab untuk:
 
 1.  **Menerapkan Global Scope:** Secara automatik menambah klausa `WHERE organization_id = ?` pada semua query Eloquent. Ini adalah mekanisme utama untuk pengasingan data secara automatik.
-2.  **Mengisi `organization_id`:** Semasa mencipta rekod baharu, trait ini (melalui *model events*) secara automatik menetapkan `organization_id` berdasarkan organisasi pengguna yang sedang log masuk.
+2.  **Menyediakan skop eksplisit:** Trait menyediakan `forOrganization()` dan `withoutOrganizationScope()` untuk operasi yang telah diberi kuasa. `organization_id` semasa penciptaan ditetapkan secara eksplisit oleh Service/Action; trait tidak mengisi medan ini secara automatik.
 3.  **Menyediakan Relasi:** Mendefinisikan relasi `belongsTo(Organization::class)`.
 
 ### 2.3. Policies

@@ -23,8 +23,7 @@ class MatchController extends Controller
     public function __construct(
         private readonly LeagueTableService $leagueTableService,
         private readonly KnockoutStageService $knockoutStageService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): Response|RedirectResponse
     {
