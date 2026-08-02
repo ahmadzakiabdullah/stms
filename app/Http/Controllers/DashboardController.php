@@ -152,9 +152,13 @@ class DashboardController extends Controller
                     ]));
 
                 $allSquad = $facultyRegistrations->flatMap(fn ($r) => $r['squad_members'] ?? []);
-                $facultyMale = $allSquad->where('role', 'athlete_male')->count();
-                $facultyFemale = $allSquad->where('role', 'athlete_female')->count();
-                $facultyOfficials = $allSquad->whereIn('role', ['manager', 'coach', 'physio'])->count();
+
+                // ⚡ BOLT OPTIMIZATION: Replaced multiple O(N) `where(...)->count()` calls
+                // with a single O(N) `countBy` pass, reducing redundant iterations.
+                $squadCounts = $allSquad->countBy('role');
+                $facultyMale = $squadCounts->get('athlete_male', 0);
+                $facultyFemale = $squadCounts->get('athlete_female', 0);
+                $facultyOfficials = $squadCounts->only(['manager', 'coach', 'physio'])->sum();
             }
 
             if (! $isFacultyRep) {
