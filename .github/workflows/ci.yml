@@ -12,12 +12,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           tools: composer
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v3
         with:
           node-version: '22'
           cache: 'npm'
@@ -27,7 +27,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -47,7 +47,7 @@ jobs:
         ports:
           - 3306:3306
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -68,7 +68,7 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -81,7 +81,7 @@ jobs:
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         with:
           name: php-coverage
           path: coverage.xml
@@ -89,8 +89,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: '22'
           cache: 'npm'
@@ -98,7 +98,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm run build:budget
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         with:
           name: build
           path: public/build/
@@ -106,12 +106,12 @@ jobs:
   browser-e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           tools: composer
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v3
         with:
           node-version: '22'
           cache: 'npm'
@@ -145,7 +145,7 @@ jobs:
           QUEUE_CONNECTION: sync
           SESSION_DRIVER: file
           CI: 'true'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: playwright-report
