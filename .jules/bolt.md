@@ -13,9 +13,3 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
-## 2026-08-03 - [Optimize Collection Aggregation with countBy]
-**Learning:** When needing multiple counts from the same collection based on a specific attribute (like counting different roles in a squad), chaining multiple  passes results in iterating the collection multiple times (O(k*N) complexity where k is the number of aggregations).
-**Action:** Replace multiple  calls with a single  pass to build a frequency map (O(N) complexity). Then, extract the desired counts using  or . This drastically improves performance, especially within loops like those found in dashboard iterations.
-## 2026-08-03 - [Optimize Collection Aggregation with countBy]
-**Learning:** When needing multiple counts from the same collection based on a specific attribute (like counting different roles in a squad), chaining multiple `where(...)->count()` passes results in iterating the collection multiple times (O(k*N) complexity where k is the number of aggregations).
-**Action:** Replace multiple `where(...)->count()` calls with a single `$collection->countBy('attribute')` pass to build a frequency map (O(N) complexity). Then, extract the desired counts using `$counts->get('value', 0)` or `$counts->only([...])->sum()`. This drastically improves performance, especially within loops like those found in dashboard iterations.
