@@ -39,9 +39,11 @@ class FacultyDashboardService
                 ->get();
 
             foreach ($registrations as $reg) {
-                $totalMale += $reg->squadMembers->where('role', 'athlete_male')->count();
-                $totalFemale += $reg->squadMembers->where('role', 'athlete_female')->count();
-                $totalOfficials += $reg->squadMembers->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->count();
+                // ⚡ Bolt: Use countBy to iterate over squad members only once instead of multiple where/count calls
+                $roleCounts = $reg->squadMembers->countBy('role');
+                $totalMale += $roleCounts->get('athlete_male', 0);
+                $totalFemale += $roleCounts->get('athlete_female', 0);
+                $totalOfficials += $roleCounts->only(['assistant_manager', 'manager', 'coach', 'physio'])->sum();
             }
         }
 
