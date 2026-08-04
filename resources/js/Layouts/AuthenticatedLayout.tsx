@@ -11,6 +11,7 @@ import {
     Calendar,
     ChevronDown,
     ClipboardList,
+    FileCheck2,
     KeySquare,
     LayoutDashboard,
     List,
@@ -35,10 +36,7 @@ interface NavItem {
     icon: LucideIcon;
     href: string;
     active: string;
-    requireSuper?: boolean;
-    requireFacultyRep?: boolean;
-    requireDean?: boolean;
-    adminOnly?: boolean;
+    roles?: string[];
 }
 
 interface NavSection {
@@ -46,59 +44,66 @@ interface NavSection {
     items: NavItem[];
 }
 
+const systemRoles = {
+    administrators: ['super-admin', 'org-admin'],
+    competition: ['super-admin', 'org-admin', 'admin-sport'],
+    reports: ['super-admin', 'org-admin', 'staff'],
+    faculty: ['faculty-representative'],
+    dean: ['dean'],
+};
+
 const navSections: NavSection[] = [
     {
         title: 'Overview',
         items: [
-            { label: 'Dashboard', icon: LayoutDashboard, href: 'dashboard', active: 'dashboard' },
-            { label: 'Faculty Dashboard', icon: Users, href: 'faculty.dashboard', active: 'faculty.dashboard', requireFacultyRep: true },
-            { label: 'Dean Dashboard', icon: ShieldCheck, href: 'dean.dashboard', active: 'dean.dashboard', requireDean: true },
+            { label: 'Dashboard', icon: LayoutDashboard, href: 'dashboard', active: 'dashboard', roles: ['super-admin', 'org-admin', 'admin-sport', 'staff', 'faculty-representative'] },
+            { label: 'Dean Dashboard', icon: ShieldCheck, href: 'dean.dashboard', active: 'dean.dashboard', roles: systemRoles.dean },
+            { label: 'Notifications', icon: Bell, href: 'notifications.index', active: 'notifications.index' },
         ],
     },
     {
         title: 'Competition Setup',
         items: [
-            { label: 'Sessions', icon: Calendar, href: 'sessions.index', active: 'sessions.index', requireSuper: true },
-            { label: 'Sports', icon: Award, href: 'sports.index', active: 'sports.index', adminOnly: true },
-            { label: 'Categories', icon: List, href: 'sport-categories.index', active: 'sport-categories.index', adminOnly: true },
-            { label: 'Tournaments', icon: Trophy, href: 'tournaments.index', active: 'tournaments.index', requireSuper: true },
-            { label: 'Events', icon: Target, href: 'events.index', active: 'events.index' },
+            { label: 'Sessions', icon: Calendar, href: 'sessions.index', active: 'sessions.index', roles: systemRoles.administrators },
+            { label: 'Sports', icon: Award, href: 'sports.index', active: 'sports.index', roles: systemRoles.administrators },
+            { label: 'Categories', icon: List, href: 'sport-categories.index', active: 'sport-categories.index', roles: systemRoles.administrators },
+            { label: 'Tournaments', icon: Trophy, href: 'tournaments.index', active: 'tournaments.index', roles: systemRoles.administrators },
+            { label: 'Events', icon: Target, href: 'events.index', active: 'events.index', roles: systemRoles.administrators },
         ],
     },
     {
         title: 'Registration',
         items: [
-            { label: 'Participants', icon: Users, href: 'participants.index', active: 'participants.index', requireSuper: true },
-            { label: 'Event Registrations', icon: ClipboardList, href: 'event-participants.index', active: 'event-participants.index', adminOnly: true },
+            { label: 'Participants', icon: Users, href: 'participants.index', active: 'participants.index', roles: systemRoles.administrators },
+            { label: 'Event Registrations', icon: ClipboardList, href: 'event-participants.index', active: 'event-participants.index', roles: systemRoles.administrators },
+            { label: 'Participation Confirmation', icon: FileCheck2, href: 'participation-confirmations.index', active: 'participation-confirmations.index', roles: [...systemRoles.administrators, ...systemRoles.faculty, ...systemRoles.dean] },
         ],
     },
     {
-        title: 'Competition',
+        title: 'Competition Operations',
         items: [
-            { label: 'Matches', icon: Swords, href: 'matches.index', active: 'matches.index' },
-            { label: 'Results', icon: Trophy, href: 'results.index', active: 'results.index' },
-            { label: 'Rankings', icon: Award, href: 'rankings.index', active: 'rankings.index' },
-        ],
-    },
-    {
-        title: 'Administration',
-        items: [
-            { label: 'Users', icon: UserCircle, href: 'users.index', active: 'users.index', requireSuper: true },
-            { label: 'Roles', icon: KeySquare, href: 'roles.index', active: 'roles.index', requireSuper: true },
-            { label: 'Organizations', icon: Building2, href: 'organizations.index', active: 'organizations.index', requireSuper: true },
-            { label: 'Settings', icon: Settings, href: 'settings.index', active: 'settings.index', requireSuper: true },
-            { label: 'Activity Logs', icon: Activity, href: 'activity-logs.index', active: 'activity-logs.index', requireSuper: true },
+            { label: 'Matches', icon: Swords, href: 'matches.index', active: 'matches.index', roles: systemRoles.competition },
+            { label: 'Results', icon: Trophy, href: 'results.index', active: 'results.index', roles: systemRoles.competition },
+            { label: 'Rankings', icon: Award, href: 'rankings.index', active: 'rankings.index', roles: systemRoles.competition },
         ],
     },
     {
         title: 'Reports',
         items: [
-            { label: 'Analytics', icon: BarChart3, href: 'reports.index', active: 'reports.index', requireSuper: true },
-            { label: 'Notifications', icon: Bell, href: 'notifications.index', active: 'notifications.index' },
+            { label: 'Analytics', icon: BarChart3, href: 'reports.index', active: 'reports.index', roles: systemRoles.reports },
+        ],
+    },
+    {
+        title: 'Administration',
+        items: [
+            { label: 'Organizations', icon: Building2, href: 'organizations.index', active: 'organizations.index', roles: ['super-admin'] },
+            { label: 'Users', icon: UserCircle, href: 'users.index', active: 'users.index', roles: systemRoles.administrators },
+            { label: 'Roles & Permissions', icon: KeySquare, href: 'roles.index', active: 'roles.index', roles: ['super-admin'] },
+            { label: 'Settings', icon: Settings, href: 'settings.index', active: 'settings.index', roles: systemRoles.administrators },
+            { label: 'Activity Logs', icon: Activity, href: 'activity-logs.index', active: 'activity-logs.index', roles: systemRoles.administrators },
         ],
     },
 ];
-
 function initials(name = 'User'): string {
     return name
         .split(' ')
@@ -141,12 +146,9 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
 
             <nav className="flex-1 space-y-2 px-3 py-4 overflow-y-auto">
                 {navSections.map((section, sectionIdx) => {
+                    const userRoles = new Set(user.roles?.map((role) => role.name) ?? []);
                     const visibleItems = section.items.filter(
-                        (item) =>
-                            (!item.requireSuper || isSuperAdmin) &&
-                            (!item.requireFacultyRep || isFacultyRep) &&
-                            (!item.requireDean || isDean) &&
-                            (!item.adminOnly || !(isFacultyRep || isDean))
+                        (item) => !item.roles || item.roles.some((role) => userRoles.has(role))
                     );
 
                     if (visibleItems.length === 0) return null;

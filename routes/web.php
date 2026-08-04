@@ -13,6 +13,7 @@ use App\Http\Controllers\MatchController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\ParticipationConfirmationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RankingController;
 use App\Http\Controllers\RegistrationController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SportCategoryController;
 use App\Http\Controllers\SportController;
+use App\Http\Controllers\TeamRegistrationFormController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -49,8 +51,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Faculty Dashboard (for faculty-representative role)
-    Route::get('/faculty', [FacultyDashboardController::class, 'index'])->name('faculty.dashboard');
+    // Faculty Dashboard is merged into the main dashboard (see DashboardController)
+    Route::redirect('/faculty', '/dashboard');
+
+    // Faculty squad management (faculty-representative role)
     Route::post('/faculty/squad', [FacultyDashboardController::class, 'storeSquad'])->name('faculty.squad.store');
     Route::post('/faculty/squad/import', [FacultyDashboardController::class, 'importSquad'])->name('faculty.squad.import');
     Route::get('/faculty/squad/template', [FacultyDashboardController::class, 'downloadTemplate'])->name('faculty.squad.template');
@@ -127,7 +131,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/registrations/{registration}', [RegistrationController::class, 'destroy'])->name('registrations.destroy');
 
     Route::get('/event-participants', [EventParticipantController::class, 'index'])->name('event-participants.index');
+    Route::get('/participation-confirmations', [ParticipationConfirmationController::class, 'index'])->name('participation-confirmations.index');
+    Route::get('/event-participants/{eventParticipant}/team-form', [TeamRegistrationFormController::class, 'show'])->name('event-participants.team-form');
     Route::post('/event-participants', [EventParticipantController::class, 'store'])->name('event-participants.store');
+    Route::post('/dashboard/registrations', [EventParticipantController::class, 'storeBatch'])->name('event-participants.store-batch');
     Route::patch('/event-participants/{eventParticipant}/status', [EventParticipantController::class, 'updateStatus'])->name('event-participants.status');
     Route::delete('/event-participants/{eventParticipant}', [EventParticipantController::class, 'destroy'])->name('event-participants.destroy');
 

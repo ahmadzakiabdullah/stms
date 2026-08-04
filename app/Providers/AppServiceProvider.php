@@ -19,6 +19,7 @@ use App\Policies\EventPolicy;
 use App\Policies\ExportPolicy;
 use App\Policies\MatchPolicy;
 use App\Policies\OrganizationPolicy;
+use App\Policies\ParticipationConfirmationPolicy;
 use App\Policies\ReportingPolicy;
 use App\Policies\ResultPolicy;
 use App\Policies\RolePolicy;
@@ -49,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (app()->environment('production')) {
+            URL::forceRootUrl(rtrim((string) config('app.url'), '/'));
             URL::forceScheme('https');
         }
         $trustedProxies = config('app.trusted_proxies', []);
@@ -100,6 +102,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('view-activity-logs', [ActivityLogPolicy::class, 'viewAny']);
         Gate::define('export-data', [ExportPolicy::class, 'viewAny']);
         Gate::define('view-reports', [ReportingPolicy::class, 'viewAny']);
+        Gate::define('view-participation-confirmations', [ParticipationConfirmationPolicy::class, 'viewAny']);
         Gate::define('view-settings', [SettingPolicy::class, 'viewAny']);
         Gate::define('update-settings', [SettingPolicy::class, 'update']);
         Gate::define('view-dean-dashboard', [DeanVerificationPolicy::class, 'viewAny']);

@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/table';
 
 import Pagination from '@/components/Pagination';
-import { Head, router, usePage } from '@inertiajs/react';
-import { ChevronDown, Check, CircleX, LayoutGrid, List, Plus, Search, X } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ChevronDown, Check, CircleX, FileText, LayoutGrid, List, Plus, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type {
     Event as EventType,
@@ -566,7 +566,7 @@ export default function EventParticipantsIndex({
                                         <TableHead>Tournament</TableHead>
                                         {!isFacultyRepresentative && <TableHead>Squad</TableHead>}
                                         <TableHead>Status</TableHead>
-                                        <TableHead className="w-10" />
+                                        <TableHead className="w-36 text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -603,6 +603,14 @@ export default function EventParticipantsIndex({
                                                     <TableCell><Badge variant={cfg.variant} className="text-[10px] px-1.5">{cfg.label}</Badge></TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-0.5">
+                                                            <Link
+                                                                href={route('event-participants.team-form', ep.id)}
+                                                                className="inline-flex h-6 items-center gap-1 rounded-md border px-1.5 text-[10px] font-medium text-muted-foreground transition hover:bg-primary hover:text-primary-foreground"
+                                                                title="View team registration form"
+                                                                aria-label={`View team form for ${participant.name} - ${evt.name}`}
+                                                            >
+                                                                <FileText className="size-3" /> Form
+                                                            </Link>
                                                             {!isFacultyRepresentative && ep.status === 'pending' && (
                                                                 <>
                                                                     <button onClick={() => approveRegistration(ep.id)}

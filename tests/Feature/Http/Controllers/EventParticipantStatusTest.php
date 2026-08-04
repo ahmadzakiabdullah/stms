@@ -89,6 +89,131 @@ class EventParticipantStatusTest extends TestCase
         Notification::assertNotSentTo($otherAdmin, NewEventRegistration::class);
     }
 
+    public function test_faculty_representative_can_register_multiple_events_at_once(): void
+    {
+        Notification::fake();
+
+        Role::firstOrCreate(['name' => 'faculty-representative', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'dean', 'guard_name' => 'web']);
+
+        $data = $this->seedData();
+        $eventB = Event::factory()->create([
+            'organization_id' => $data['org']->id,
+            'tournament_id' => $data['event']->tournament_id,
+            'sport_id' => Sport::factory()->create(['organization_id' => $data['org']->id, 'name' => 'Football'])->id,
+            'sport_category_id' => SportCategory::factory()->create(['organization_id' => $data['org']->id, 'name' => 'Team'])->id,
+            'name' => 'Football - Team',
+        ]);
+        $eventC = Event::factory()->create([
+            'organization_id' => $data['org']->id,
+            'tournament_id' => $data['event']->tournament_id,
+            'sport_id' => Sport::factory()->create(['organization_id' => $data['org']->id, 'name' => 'Netball'])->id,
+            'sport_category_id' => SportCategory::factory()->create(['organization_id' => $data['org']->id, 'name' => 'Women'])->id,
+            'name' => 'Netball - Women',
+        ]);
+
+        $dean = User::factory()->create([
+            'organization_id' => $data['org']->id,
+            'participant_id' => $data['facA']->id,
+        ]);
+        $dean->assignRole('dean');
+
+        $facRep = User::factory()->create([
+            'organization_id' => $data['org']->id,
+            'participant_id' => $data['facA']->id,
+        ]);
+        $facRep->assignRole('faculty-representative');
+
+        $response = $this->actingAs($facRep)
+            ->post(route('event-participants.store-batch'), [
+                'event_ids' => [$eventB->id, $eventC->id],
+            ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', 'Registered for 2 event(s).');
+
+        $this->assertDatabaseHas('event_participants', [
+            'event_id' => $eventB->id,
+            'participant_id' => $data['facA']->id,
+        ]);
+        $this->assertDatabaseHas('event_participants', [
+            'event_id' => $eventC->id,
+            'participant_id' => $data['facA']->id,
+        ]);
+
+        Notification::assertSentToTimes($dean, NewEventRegistration::class, 2);
+    }
+
+    public function test_faculty_representative_batch_registration_skips_deadline_passed_events(): void
+    {
+        Role::firstOrCreate(['name' => 'faculty-representative', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'dean', 'guard_name' => 'web']);
+
+        $data = $this->seedData();
+        $freshEvent = Event::factory()->create([
+            'organization_id' => $data['org']->id,
+            'tournament_id' => $data['event']->tournament_id,
+            'sport_id' => Sport::factory()->create(['organization_id' => $data['org']->id, 'name' => 'Football'])->id,
+            'sport_category_id' => SportCategory::factory()->create(['organization_id' => $data['org']->id, 'name' => 'Team'])->id,
+            'name' => 'Football - Team',
+        ]);
+        $expiredEvent = Event::factory()->create([
+            'organization_id' => $data['org']->id,
+            'tournament_id' => $data['event']->tournament_id,
+            'sport_id' => Sport::factory()->create(['organization_id' => $data['org']->id, 'name' => 'Netball'])->id,
+            'sport_category_id' => SportCategory::factory()->create(['organization_id' => $data['org']->id, 'name' => 'Women'])->id,
+            'name' => 'Netball - Women',
+            'registration_deadline' => now()->subDay(),
+        ]);
+
+        $facRep = User::factory()->create([
+            'organization_id' => $data['org']->id,
+            'participant_id' => $data['facA']->id,
+        ]);
+        $facRep->assignRole('faculty-representative');
+
+        $response = $this->actingAs($facRep)
+            ->post(route('event-participants.store-batch'), [
+                'event_ids' => [$freshEvent->id, $expiredEvent->id],
+            ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $response->assertSessionHas('success', 'Registered for 1 event(s).');
+        $response->assertSessionHas('error');
+
+        $this->assertDatabaseHas('event_participants', [
+            'event_id' => $freshEvent->id,
+            'participant_id' => $data['facA']->id,
+        ]);
+        $this->assertDatabaseMissing('event_participants', [
+            'event_id' => $expiredEvent->id,
+            'participant_id' => $data['facA']->id,
+        ]);
+    }
+
+    public function test_faculty_representative_registration_redirects_back_to_dashboard(): void
+    {
+        Role::firstOrCreate(['name' => 'faculty-representative', 'guard_name' => 'web']);
+
+        $data = $this->seedData();
+        $facRep = User::factory()->create([
+            'organization_id' => $data['org']->id,
+            'participant_id' => $data['facA']->id,
+        ]);
+        $facRep->assignRole('faculty-representative');
+
+        $this->actingAs($facRep)
+            ->post(route('event-participants.store'), [
+                'event_id' => $data['event']->id,
+            ])
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas('event_participants', [
+            'event_id' => $data['event']->id,
+            'participant_id' => $data['facA']->id,
+        ]);
+    }
+
     public function test_super_admin_can_approve_pending_registration(): void
     {
         Notification::fake();

@@ -7,6 +7,15 @@ use Illuminate\Validation\Rule;
 
 class StoreSportRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (in_array($this->input('is_active'), ['true', 'false'], true)) {
+            $this->merge([
+                'is_active' => $this->input('is_active') === 'true',
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user() !== null;
@@ -33,6 +42,7 @@ class StoreSportRequest extends FormRequest
                     ->ignore($this->route('sport')),
             ],
             'icon' => ['nullable', 'string', 'max:255'],
+            'icon_file' => ['nullable', 'file', 'mimes:png,jpg,jpeg,svg,webp', 'max:2048'],
             'is_active' => ['boolean'],
         ];
     }

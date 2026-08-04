@@ -162,13 +162,13 @@ class FacultyDashboardControllerTest extends TestCase
             ->andThrow($validationException);
 
         $response = $this->actingAs($user)
-            ->from(route('faculty.dashboard'))
+            ->from(route('dashboard'))
             ->post(route('faculty.squad.import'), [
                 'event_participant_id' => $ep->id,
                 'file' => $file,
             ]);
 
-        $response->assertRedirect(route('faculty.dashboard'));
+        $response->assertRedirect(route('dashboard'));
         $response->assertSessionHasErrors(['file' => 'name and role are required']);
     }
 
@@ -217,7 +217,7 @@ class FacultyDashboardControllerTest extends TestCase
             'file' => $file,
         ]);
 
-        $response->assertRedirect(route('faculty.dashboard'));
+        $response->assertRedirect(route('dashboard'));
         $response->assertSessionHas('error', 'Failed to import file: Mocked Excel error');
     }
 

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Organization;
 use App\Models\Sport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
@@ -127,5 +129,116 @@ class SportTest extends TestCase
             'slug' => 'same-slug',
         ]);
         $this->assertContains($response->status(), [302, 201]);
+    }
+
+    public function test_sport_can_be_created_with_external_icon_url(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+
+        $this->actingAs($admin)->post(route('sports.store'), [
+            'name' => 'Badminton',
+            'slug' => 'badminton',
+            'icon' => 'https://cdn.simpleicons.org/badminton',
+        ])->assertRedirect(route('sports.index'));
+
+        $this->assertDatabaseHas('sports', [
+            'name' => 'Badminton',
+            'icon' => 'https://cdn.simpleicons.org/badminton',
+        ]);
+    }
+
+    public function test_sport_can_be_created_with_uploaded_icon_file(): void
+    {
+        Storage::fake('public');
+
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+
+        $this->actingAs($admin)->post(route('sports.store'), [
+            'name' => 'Football',
+            'slug' => 'football',
+            'icon_file' => UploadedFile::fake()->image('football.png'),
+        ])->assertRedirect(route('sports.index'));
+
+        $sport = Sport::where('slug', 'football')->first();
+
+        $this->assertNotNull($sport);
+        $this->assertStringStartsWith('/storage/sport-icons/', $sport->icon);
+        Storage::disk('public')->assertExists(substr($sport->icon, strlen('/storage/')));
+    }
+
+    public function test_sport_icon_upload_accepts_form_data_boolean_strings(): void
+    {
+        Storage::fake('public');
+
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+
+        $this->actingAs($admin)->post(route('sports.store'), [
+            'name' => 'Inactive Football',
+            'slug' => 'inactive-football',
+            'is_active' => 'false',
+            'icon_file' => UploadedFile::fake()->image('football.png'),
+        ])->assertRedirect(route('sports.index'));
+
+        $this->assertDatabaseHas('sports', [
+            'slug' => 'inactive-football',
+            'is_active' => false,
+        ]);
+    }
+
+    public function test_updating_icon_file_replaces_and_deletes_previous_icon(): void
+    {
+        Storage::fake('public');
+
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $sport = Sport::factory()->create(['organization_id' => $org->id]);
+
+        $this->actingAs($admin)->put(route('sports.update', $sport), [
+            'name' => $sport->name,
+            'slug' => $sport->slug,
+            'icon_file' => UploadedFile::fake()->image('icon-v1.png'),
+        ])->assertRedirect(route('sports.index'));
+
+        $sport->refresh();
+        $firstIconPath = substr($sport->icon, strlen('/storage/'));
+        Storage::disk('public')->assertExists($firstIconPath);
+
+        $this->actingAs($admin)->put(route('sports.update', $sport), [
+            'name' => $sport->name,
+            'slug' => $sport->slug,
+            'icon_file' => UploadedFile::fake()->image('icon-v2.png'),
+        ])->assertRedirect(route('sports.index'));
+
+        $sport->refresh();
+
+        $this->assertNotEquals($firstIconPath, substr($sport->icon, strlen('/storage/')));
+        Storage::disk('public')->assertMissing($firstIconPath);
+        Storage::disk('public')->assertExists(substr($sport->icon, strlen('/storage/')));
+    }
+
+    public function test_external_icon_url_is_not_deleted_when_replaced(): void
+    {
+        Storage::fake('public');
+
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $sport = Sport::factory()->create([
+            'organization_id' => $org->id,
+            'icon' => 'https://cdn.simpleicons.org/football',
+        ]);
+
+        $this->actingAs($admin)->put(route('sports.update', $sport), [
+            'name' => $sport->name,
+            'slug' => $sport->slug,
+            'icon_file' => UploadedFile::fake()->image('icon-new.png'),
+        ])->assertRedirect(route('sports.index'));
+
+        $sport->refresh();
+
+        $this->assertStringStartsWith('/storage/sport-icons/', $sport->icon);
+        Storage::disk('public')->assertExists(substr($sport->icon, strlen('/storage/')));
     }
 }

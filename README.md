@@ -1,65 +1,47 @@
 # STMS - Sports Tournament Management System
 
-**STMS** is an enterprise-grade, multi-tenant platform designed to manage sports tournaments for organizations of various scales — from schools and universities to national sports associations and international multi-sport events.
+STMS is a multi-tenant sports tournament platform for organizations ranging from schools and universities to national and international event operators. This repository currently hosts the SAF 2026 / UTeM web implementation.
 
-## Current Focus (MVP)
+## Current status
 
-This workspace (`saf/portal`) is a specific implementation/context of the STMS platform (currently carrying "Portal SAF" / UTeM branding in the UI).
+The web MVP is operational and in production-hardening/maintenance mode. Implemented flows cover:
 
-The project is currently focused on delivering a **Minimum Viable Product (MVP)** with the following core features:
+- Organization, users, RBAC, settings, and activity logs
+- Session, tournament, sport, category, and event setup
+- Faculty/event registration, dean verification, squad quotas, bulk import, and printable team forms
+- Draws, pools, fixtures, results, configurable rankings, exports, reports, and notifications
+- Role-aware dashboards and sidebar navigation for super-admin, org-admin, admin-sport, staff, faculty representative, and dean
+- CI quality gates, encrypted backup/restore tooling, and internal health checks
 
-- Organization & User Management with RBAC
-- Session Management
-- Configurable Sports, Categories & Events
-- Tournament Management
-- Participant Registration
-- Match Scheduling & Result Entry
-- Basic Ranking Engine
+REST APIs, accreditation, live scoring, mobile apps, advanced analytics, and AI remain deferred. Files under `docs/api/` describe future contracts and are not available endpoints.
 
-## SAF 2026 Seed Data
+## SAF 2026 data profile
 
-`DatabaseSeeder` seeds the SAF sport master list, and `SAF2026DataSeeder` then seeds the SAF 2026 operational data:
+The guarded SAF data seeder can provide one UTeM organization, one SAF 2026 session, two tournament phases, 24 sports, 30 category/events, eight faculties, representatives/deans, and event registrations. Demo accounts use a shared development password and must not be seeded unchanged in production.
 
-- 1 organization: Universiti Teknikal Malaysia Melaka
-- 1 session: Sukan Antara Fakulti 2026
-- 2 tournaments: Fasa 1 and Fasa 2
-- 24 sports
-- 30 categories/events with athlete and official quota fields
-- 8 faculties with faculty representative and dean users
+## Technology
 
-## Tech Stack
+- PHP 8.4 and Laravel 13
+- React 18, TypeScript, Inertia.js, Vite
+- Tailwind CSS and shadcn/ui; Lucide icons
+- React Hook Form and Zod where forms have been migrated
+- MySQL 8 in production; SQLite for isolated tests
+- UUID domain keys, soft deletes, Spatie RBAC
+- Column-based multi-tenancy using `organization_id` and model scopes
+- Database or Redis-backed cache/queues depending on environment
 
-- **Backend**: PHP 8.4, Laravel 13
-- **Frontend**: React 18, TypeScript, Vite
-- **UI Framework**: Inertia.js
-- **Styling**: Tailwind CSS with shadcn/ui components
-- **Forms**: React Hook Form with Zod for validation
-- **Tables**: TanStack Table
-- **Database**: MySQL 8 (using SQLite for local development)
-- **Primary Keys**: UUIDs
-- **Authorization**: Spatie Laravel Permission
-- **Multi-Tenancy**: Single database with `organization_id` scoping
-- **Cache Driver**: `database` (Recommended: `redis` for production)
-- **Queue Driver**: `database` (Recommended: `redis` for production)
+## Start here
 
-## Documentation
+1. [`CLAUDE.md`](./CLAUDE.md) — product and architecture rules
+2. [`AGENTS.md`](./AGENTS.md) — contributor/agent rules
+3. [`CURRENT_STATE.md`](./CURRENT_STATE.md) — honest implementation snapshot
+4. [`TODOS.md`](./TODOS.md) — current operational focus
+5. [`ROADMAP.md`](./ROADMAP.md) — completed and deferred phases
+6. [`docs/design-system/navigation.md`](./docs/design-system/navigation.md) — role menu matrix
 
-- [CLAUDE.md](./CLAUDE.md)
-- [AGENTS.md](./AGENTS.md)
-- [CURRENT_STATE.md](./CURRENT_STATE.md) ← **Read this for honest current implementation status**
-- [ROADMAP.md](./ROADMAP.md)
-- [TODOS.md](./TODOS.md)
-- [Architecture Overview](./docs/architecture/system-overview.md)
-- [Domain Model](./docs/architecture/domain-model.md)
-- [Architecture Decision Records](./docs/adr/)
+## Development principles
 
-## Development Principles
-
-- Follow SOLID principles and Laravel best practices
-- Prefer configuration over hardcoding
-- All data must be scoped to `organization_id`
-- Use Service Layer + Action Classes pattern
-- Write tests for every feature
+Keep tenant data isolated, prefer configuration over hardcoding, use policies and service/action patterns, reuse shadcn/ui components, and add proportionate automated tests for every change.
 
 ## License
 

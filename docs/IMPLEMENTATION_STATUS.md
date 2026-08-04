@@ -3,7 +3,7 @@
 ## Milestone 1: Foundation ✅
 - [x] Laravel 13 + Breeze Inertia + shadcn/ui
 - [x] Organization model + CRUD + multi-tenancy (BelongsToOrganization trait)
-- [x] User CRUD + Spatie RBAC (roles: super-admin, org-admin, staff)
+- [x] User CRUD + Spatie RBAC (roles: super-admin, org-admin, admin-sport, staff, faculty-representative, dean)
 - [x] Role & Permission seeding
 - [x] UUID primary keys on all models
 - [x] Soft deletes on all domain models
@@ -35,6 +35,8 @@
 - [x] Excel exports (Fixtures, Results, Rankings)
 - [x] Printable match sheet
 - [x] Reporting dashboard
+- [x] Role-aware operational dashboard and policy-aligned sidebar navigation
+- [x] Faculty participation confirmation and per-event printable team registration forms
 
 ## Post-Audit Hardening ✅
 - [x] Policy assertion fixes

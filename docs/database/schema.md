@@ -1,6 +1,6 @@
 # Database Schema
 
-The schema is migration-driven. There are 56 migration files as of 2 August 2026; do not infer the final table count from migration count because several migrations alter or rename existing tables.
+The schema is migration-driven. There are 56 migration files as of 4 August 2026; do not infer the final table count from migration count because several migrations alter or rename existing tables.
 
 ## Tables Overview
 

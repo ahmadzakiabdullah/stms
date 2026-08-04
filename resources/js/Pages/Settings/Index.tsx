@@ -11,6 +11,8 @@ interface Props {
         app_name: string;
         logo_url: string | null;
         favicon_url: string | null;
+        tournament_logo_url: string | null;
+        secretariat_address: string;
     };
 }
 
@@ -19,6 +21,8 @@ export default function SettingsIndex({ settings }: Props) {
     const [appName, setAppName] = useState(settings.app_name);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [faviconFile, setFaviconFile] = useState<File | null>(null);
+    const [tournamentLogoFile, setTournamentLogoFile] = useState<File | null>(null);
+    const [secretariatAddress, setSecretariatAddress] = useState(settings.secretariat_address);
     const [saving, setSaving] = useState(false);
 
     const handleSave = () => {
@@ -26,6 +30,8 @@ export default function SettingsIndex({ settings }: Props) {
         fd.append('app_name', appName);
         if (logoFile) fd.append('logo', logoFile);
         if (faviconFile) fd.append('favicon', faviconFile);
+        if (tournamentLogoFile) fd.append('tournament_logo', tournamentLogoFile);
+        fd.append('secretariat_address', secretariatAddress);
 
         setSaving(true);
         router.post(route('settings.update'), fd, {
@@ -74,6 +80,29 @@ export default function SettingsIndex({ settings }: Props) {
                         </div>
                     </CardContent>
                 </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Participation Form Branding</CardTitle>
+                        <CardDescription>Configure the tournament logo and secretariat address shown on the printable confirmation form.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {settings.tournament_logo_url && (
+                            <div>
+                                <Label>Current Tournament Logo</Label>
+                                <img src={settings.tournament_logo_url} alt="Tournament logo" className="mt-2 h-20 w-auto rounded border object-contain" />
+                            </div>
+                        )}
+                        <div className="space-y-2">
+                            <Label htmlFor="tournament_logo">Upload Tournament Logo</Label>
+                            <Input id="tournament_logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={(e) => setTournamentLogoFile(e.target.files?.[0] || null)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="secretariat_address">Secretariat Address</Label>
+                            <textarea id="secretariat_address" rows={4} className="w-full rounded-md border bg-background px-3 py-2 text-sm" value={secretariatAddress} onChange={(e) => setSecretariatAddress(e.target.value)} placeholder="Enter the full secretariat address" />
+                        </div>
+                    </CardContent>
+                </Card>
+
 
                 <Card>
                     <CardHeader>

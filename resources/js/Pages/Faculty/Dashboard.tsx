@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/table';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Download, Plus, Search, Trash2, Upload, Users } from 'lucide-react';
+import { Download, FileText, Plus, Search, Trash2, Upload, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { Event, EventParticipant, Participant, SportCategory, SquadMember } from '@/types';
 
@@ -97,14 +97,13 @@ export default function FacultyDashboard({
     const [squadForm, setSquadForm] = useState<SquadMemberForm>({
         name: '', role: 'athlete_male', matrix_no: '', identification_no: '', phone: '',
     });
-    const [selectedEventId, setSelectedEventId] = useState('');
+    const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
     const [deleteSquadId, setDeleteSquadId] = useState<string | null>(null);
     const [importOpen, setImportOpen] = useState(false);
     const [importRegId, setImportRegId] = useState<string | null>(null);
     const [importFile, setImportFile] = useState<File | null>(null);
 
     const activeReg = registrations.find(r => r.id === activeRegId);
-    const selectedEvent = availableEvents.find(e => e.id === selectedEventId);
 
     const registeredEventIds = new Set(registrations.map(r => r.event?.id).filter(Boolean));
     const unregisteredEvents = availableEvents.filter(e => !registeredEventIds.has(e.id));
@@ -181,16 +180,19 @@ export default function FacultyDashboard({
         });
     };
 
+    const toggleEvent = (id: string) => {
+        setSelectedEventIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+    };
+
     const handleNewRegistration = () => {
-        if (!selectedEventId || !participant) return;
-        router.post(route('event-participants.store'), {
-            event_id: selectedEventId,
-            participant_id: participant.id,
+        if (selectedEventIds.length === 0 || !participant) return;
+        router.post(route('event-participants.store-batch'), {
+            event_ids: selectedEventIds,
         }, {
             preserveScroll: true,
             onSuccess: () => {
                 setNewRegOpen(false);
-                setSelectedEventId('');
+                setSelectedEventIds([]);
             },
         });
     };
@@ -245,9 +247,9 @@ export default function FacultyDashboard({
                             {participant ? participant.name : 'No faculty profile linked'}
                         </p>
                     </div>
-                    <Button onClick={() => { setNewRegOpen(true); setSelectedEventId(''); }} disabled={!participant}>
+                    <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
                         <Plus className="mr-2 size-4" />
-                        Register for Event
+                        Register for Events
                     </Button>
                 </div>
             }
@@ -376,7 +378,12 @@ export default function FacultyDashboard({
                                                                             )}
                                                                             <QuotaBar label="Officials" current={q.currentOfficials} max={q.officials} color="bg-purple-500" />
                                                                         </div>
-                                                                        <div className="flex gap-2">
+                                                                        <div className="flex flex-wrap gap-2">
+                                                                            <Button asChild variant="outline" size="sm">
+                                                                                <Link href={route('event-participants.team-form', reg.id)}>
+                                                                                    <FileText className="mr-1 size-3" /> Team Form
+                                                                                </Link>
+                                                                            </Button>
                                                                             <Button size="sm" onClick={() => { setAddSquadOpen(true); setSquadForm({ name: '', role: activeRegAllowedRoles[0], matrix_no: '', identification_no: '', phone: '' }); }}>
                                                                                 <Plus className="mr-1 size-3" /> Add Member
                                                                             </Button>
@@ -436,12 +443,12 @@ export default function FacultyDashboard({
             )}
 
             {/* Register for Event Dialog */}
-            <Dialog open={newRegOpen} onOpenChange={(o) => { if (!o) { setNewRegOpen(false); setRegSearch(''); setSelectedEventId(''); } }}>
+            <Dialog open={newRegOpen} onOpenChange={(o) => { if (!o) { setNewRegOpen(false); setRegSearch(''); setSelectedEventIds([]); } }}>
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>Register for Event</DialogTitle>
+                        <DialogTitle>Register for Events</DialogTitle>
                         <DialogDescription>
-                            {participant ? `Choose a sport/category for ${participant.name}` : 'Select an event to register'}
+                            {participant ? `Select one or more sports for ${participant.name}` : 'Select events to register'}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -456,68 +463,88 @@ export default function FacultyDashboard({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label>Available Events</Label>
+                            <div className="flex items-center justify-between">
+                                <Label>Available Events</Label>
+                                {filteredUnregEvents.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedEventIds(prev =>
+                                            prev.length === filteredUnregEvents.length
+                                                ? []
+                                                : filteredUnregEvents.map(e => e.id)
+                                        )}
+                                        className="text-xs text-primary underline-offset-4 hover:underline"
+                                    >
+                                        {selectedEventIds.length === filteredUnregEvents.length ? 'Clear all' : 'Select all'}
+                                    </button>
+                                )}
+                            </div>
                             <div className="max-h-64 overflow-y-auto rounded-md border">
                                 {filteredUnregEvents.length === 0 && (
                                     <p className="p-3 text-sm text-muted-foreground">
                                         {regSearch ? 'No matching events.' : 'Already registered for all events.'}
                                     </p>
                                 )}
-                                {Object.entries(filteredUnregGrouped).map(([tournamentName, evts], gi) => (
+                                {Object.entries(filteredUnregGrouped).map(([tournamentName, evts]) => (
                                     <div key={tournamentName}>
                                         <div className="sticky top-0 bg-muted/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur flex items-center gap-2">
                                             <span className="inline-block size-2 rounded-full bg-primary/60" />
                                             {tournamentName}
                                             <span className="font-normal text-[10px]">({evts.length})</span>
                                         </div>
-                                        {evts.map((evt) => (
-                                            <label
-                                                key={evt.id}
-                                                className={`flex items-center gap-3 px-3 py-2 text-sm cursor-pointer transition ${
-                                                    selectedEventId === evt.id
-                                                        ? 'bg-primary/10 font-medium'
-                                                        : 'hover:bg-muted/50'
-                                                }`}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="event"
-                                                    value={evt.id}
-                                                    checked={selectedEventId === evt.id}
-                                                    onChange={(e) => setSelectedEventId(e.target.value)}
-                                                    className="size-4"
-                                                    disabled={(evt as any).registration_deadline ? new Date((evt as any).registration_deadline) < new Date() : false}
-                                                />
-                                                <span className="text-lg">
-                                                    {evt.sport?.name === 'Badminton' ? '🏸' : evt.sport?.name === 'Football' ? '⚽' : evt.sport?.name === 'Basketball' ? '🏀' : '🏅'}
-                                                </span>
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="truncate">{evt.sport?.name} — {evt.sport_category?.name}</div>
-                                                    <div className="text-xs text-muted-foreground truncate">{evt.name}</div>
-                                                    {(evt as any).registration_deadline && new Date((evt as any).registration_deadline) < new Date() && (
-                                                        <span className="text-[10px] text-destructive">(Deadline passed)</span>
-                                                    )}
-                                                </div>
-                                            </label>
-                                        ))}
+                                        {evts.map((evt) => {
+                                            const deadlinePassed = (evt as any).registration_deadline
+                                                ? new Date((evt as any).registration_deadline) < new Date()
+                                                : false;
+
+                                            return (
+                                                <label
+                                                    key={evt.id}
+                                                    className={`flex items-center gap-3 px-3 py-2 text-sm cursor-pointer transition ${
+                                                        selectedEventIds.includes(evt.id)
+                                                            ? 'bg-primary/10 font-medium'
+                                                            : 'hover:bg-muted/50'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        value={evt.id}
+                                                        checked={selectedEventIds.includes(evt.id)}
+                                                        onChange={() => toggleEvent(evt.id)}
+                                                        disabled={deadlinePassed}
+                                                        className="size-4"
+                                                    />
+                                                    <span className="text-lg">
+                                                        {evt.sport?.name === 'Badminton' ? '🏸' : evt.sport?.name === 'Football' ? '⚽' : evt.sport?.name === 'Basketball' ? '🏀' : '🏅'}
+                                                    </span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="truncate">{evt.sport?.name} — {evt.sport_category?.name}</div>
+                                                        <div className="text-xs text-muted-foreground truncate">{evt.name}</div>
+                                                        {deadlinePassed && (
+                                                            <span className="text-[10px] text-destructive">(Deadline passed)</span>
+                                                        )}
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {selectedEvent && (
+                        {selectedEventIds.length > 0 && (
                             <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
-                                {selectedEvent.tournament?.name} · {selectedEvent.sport?.name} · {selectedEvent.sport_category?.name}
+                                {selectedEventIds.length} event(s) selected
                             </div>
                         )}
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => { setNewRegOpen(false); setRegSearch(''); setSelectedEventId(''); }}>
+                        <Button variant="outline" onClick={() => { setNewRegOpen(false); setRegSearch(''); setSelectedEventIds([]); }}>
                             Cancel
                         </Button>
-                        <Button onClick={handleNewRegistration} disabled={!selectedEventId}>
+                        <Button onClick={handleNewRegistration} disabled={selectedEventIds.length === 0}>
                             <Plus className="mr-2 size-4" />
-                            Register
+                            Register ({selectedEventIds.length})
                         </Button>
                     </DialogFooter>
                 </DialogContent>

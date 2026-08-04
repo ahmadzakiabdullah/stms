@@ -1,51 +1,40 @@
 # Navigation
 
-## Layout Structure
+## Current implementation
 
-The application shell consists of two primary navigation areas:
+The authenticated shell uses a fixed desktop sidebar and a mobile sheet. Navigation is defined in `resources/js/Layouts/AuthenticatedLayout.tsx`, rendered with Inertia `Link`, Lucide icons, active-route highlighting, and tenant branding.
 
-1. **Sidebar** — persistent left-side navigation for primary section access
-2. **Top bar** — user profile, notifications, theme toggle, and logout
+Visibility is controlled by an explicit role matrix aligned with Laravel policies. It does not rely on mixed `requireSuper`, `adminOnly`, or faculty flags.
 
-## Sidebar Navigation
+## Role menu matrix
 
-The sidebar contains the main menu items organized into sections with role-based visibility (super admin, faculty rep, dean). Each item uses a **Lucide icon** and is linked via Inertia's `<Link>` component.
+| Section | Super Admin | Org Admin | Admin Sport | Staff | Faculty Representative | Dean |
+|---|---:|---:|---:|---:|---:|---:|
+| Dashboard | Yes | Yes | Yes | Yes | Faculty workspace | Dean verification workspace |
+| Notifications | Yes | Yes | Yes | Yes | Yes | Yes |
+| Competition Setup | Full | Tenant-scoped | No | No | No | No |
+| Registration | Full | Tenant-scoped | No | No | Participation Confirmation | Participation Confirmation |
+| Competition Operations | Full | Tenant-scoped | Assigned sports | No | No | No |
+| Analytics | Yes | Yes | No | Yes | No | No |
+| Organizations | Yes | No | No | No | No | No |
+| Users / Settings / Activity Logs | Yes | Yes | No | No | No | No |
+| Roles & Permissions | Yes | No | No | No | No | No |
 
-```tsx
-const navSections = [
-  { title: null, items: [
-    { label: 'Dashboard', icon: LayoutDashboard, href: 'dashboard' },
-  ]},
-  { title: 'Event Planning', items: [
-    { label: 'Sessions', icon: Calendar, href: 'sessions.index' },
-    { label: 'Tournaments', icon: Trophy, href: 'tournaments.index' },
-    { label: 'Events', icon: Target, href: 'events.index' },
-  ]},
-  // ...
-];
-```
+`Notifications` is a global utility under Overview rather than a report. Role-specific home behavior is:
 
-Menu items are highlighted using `route().current()`. The sidebar is collapsible on smaller screens via a hamburger toggle (`Menu` icon).
+- `faculty-representative`: `/dashboard` renders `Faculty/Dashboard` for registration and squad work.
+- `dean`: `/dashboard` redirects to `/dean` for verification work.
+- `admin-sport`: `/dashboard` shows competition-operation actions.
+- `super-admin`, `org-admin`, and `staff`: `/dashboard` shows the operational overview with actions restricted by role.
 
-## Top Navigation
+## Interaction and accessibility
 
-The top bar is minimal and focused on user actions:
+- Desktop sidebar remains pinned while its navigation region scrolls.
+- Mobile navigation uses a sheet opened from the top bar.
+- Every item has visible text; icons never carry meaning alone.
+- Current-page state uses `route().current()` and a left accent marker.
+- Role filtering is presentation-level only; Laravel Policies and Gates remain authoritative.
 
-- **Organization selector** (multi-tenant switch)
-- **Theme toggle** (light/dark/system)
-- **User dropdown** (profile, settings, logout)
+## Shared state
 
-## Implementation
-
-Navigation state is managed via Inertia shared data. The current user, organization, and role flags (`isSuperAdmin`, `isFacultyRep`, `isDean`) are passed as shared props. Navigation items are defined inline in `AuthenticatedLayout.tsx` with filter logic based on role flags.
-
-```tsx
-// AuthenticatedLayout.tsx
-<Sidebar
-  user={user}
-  isSuperAdmin={isSuperAdmin}
-  isFacultyRep={isFacultyRep}
-  isDean={isDean}
-  app={app}
-/>
-```
+`HandleInertiaRequests` shares the authenticated user with loaded roles, tenant context, branding settings, and notification summary. The sidebar derives its role set from `auth.user.roles`.

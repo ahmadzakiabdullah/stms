@@ -1,4 +1,4 @@
-﻿# ROADMAP
+# ROADMAP
 
 > Status terkini STMS — semua fasa MVP telah selesai.
 
@@ -29,6 +29,8 @@
 | Logo/Crest Upload | ✅ |
 | Draw/Group Allocation + Fixtures | ✅ |
 | SAF 2026 Complete Data Seeding | ✅ |
+| Role-aware Dashboard + Policy-aligned Navigation | ✅ |
+| Participation Confirmation + Team Registration Forms | ✅ |
 
 ## Current Production Data
 

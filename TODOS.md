@@ -9,6 +9,10 @@
 
 ### Current Focus (MVP): Production Hardening
 
+- [x] Add a faculty participation confirmation page with tenant-safe filters, role-based faculty access, squad totals, and an A4 printable form.
+- [x] Add a per-event Team Registration Form with roster auto-fill, tenant/role-safe access, exact quota rows, English A4 printing, faculty-dashboard access, and administrator access from Event Registrations.
+- [x] Refactor `/dashboard` into attention-first role-aware workspaces and replace mixed sidebar flags with an explicit policy-aligned role matrix.
+
 - [x] Disable public registration by default in production and remove first-organization fallback; invitation-based onboarding remains a future enhancement.
 - [x] Restrict trusted proxies to explicit environment-provided IPs/CIDRs.
 - [x] Split production bootstrap from SAF/demo account seeding and guard direct demo seeding in production.
@@ -117,6 +121,18 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Event Registrations filtering fixed: sport/category/search now filter registration rows and All Events tab, not just the participant list
 - [x] Super-admin notification triage: Action Required default tab, personal inbox, organization/type/read filters, severity metadata, same-organization admin recipients, and separately filtered System Activity
 
+### 12. Faculty Dashboard Merged into `/dashboard` (3 Ogos 2026)
+- [x] Faculty representatives now do everything on the single `/dashboard` page: register their faculty for sports (searchable, grouped by tournament) and manage squad members with quota bars
+- [x] `/faculty` redirects to `/dashboard`; removed the `faculty.dashboard` route, `FacultyDashboardController::index`, and the dashboard summary component (`Dashboard/FacultyDashboard`)
+- [x] Faculty dashboard data assembled by new `FacultyDashboardService` (used by `DashboardController`)
+- [x] Event registration by faculty reps redirects back to `/dashboard` (was the admin Event Registrations page)
+- [x] Sidebar uses an explicit role matrix: faculty representatives see Dashboard, Participation Confirmation, and Notifications; deans see verification, confirmation, and notifications; admin-sport sees competition operations; administrators see policy-authorized setup/administration.
+
+### 13. Multi-Select Event Registration (3 Ogos 2026)
+- [x] "Register for Events" dialog supports multi-select: checkboxes, search, grouped by tournament, Select all/Clear all toggle, deadline-passed events disabled
+- [x] New batch endpoint `POST /dashboard/registrations` (`event-participants.store-batch`) registers multiple events in one submit; per-event dean/admin notifications; deadline-passed or already-registered events skipped with error summary
+- [x] `notifyRegistrationRecipients` helper extracted in `EventParticipantController` (shared by single and batch registration)
+
 ---
 
 ## ⏳ Deferred (Ciri Lanjutan)
@@ -136,7 +152,7 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - **UNC path**: `\\10.1.2.22\e\others\saf\portal` cannot run CLI directly — use local drive or `u:;` mapping
 - **Production DB**: Must run `php artisan migrate` on server after deploying new migrations
 - **OPcache**: Server may cache old PHP files — needs cache clear after deploying PHP changes
-- **`npm run build`**: Requires build step on server after React/JSX changes
+- **`npm run build`**: Requires build step on server after React/TypeScript changes
 
 ---
 
@@ -151,4 +167,4 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 
 ---
 
-*Fail ini dikemaskini 2 Ogos 2026 — local PHPUnit, Pint, TypeScript, build/budget, dependency audit, dan Playwright/axe gates telah disahkan; connected-CI dan production operational drills masih memerlukan bukti persekitaran.*
+*Fail ini dikemaskini 4 Ogos 2026 — 113 routes, 56 migrations, 37 controllers, 36 TypeScript pages, 78 PHP test files, PHPUnit/Pint/type-check/build gates, role-aware navigation, and printable registration forms have been reconciled. Connected-CI browser and production operational drills still require environment evidence.*

@@ -7,6 +7,15 @@ use Illuminate\Validation\Rule;
 
 class UpdateSportRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (in_array($this->input('is_active'), ['true', 'false'], true)) {
+            $this->merge([
+                'is_active' => $this->input('is_active') === 'true',
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user() !== null;
@@ -35,6 +44,7 @@ class UpdateSportRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'icon' => ['nullable', 'string', 'max:255'],
+            'icon_file' => ['nullable', 'file', 'mimes:png,jpg,jpeg,svg,webp', 'max:2048'],
             'is_active' => ['boolean'],
         ];
     }

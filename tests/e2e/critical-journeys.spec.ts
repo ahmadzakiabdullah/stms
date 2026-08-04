@@ -30,7 +30,7 @@ test('super-admin can reach core competition and administration journeys', async
 
 test('faculty and dean dashboards enforce their role journeys', async ({ page }) => {
     await login(page, 'ftkek@utem.edu.my');
-    await expect((await page.goto('/faculty'))?.status()).toBeLessThan(400);
+    await expect((await page.goto('/dashboard'))?.status()).toBeLessThan(400);
     await page.context().clearCookies();
 
     await login(page, 'dean@ftkek.utem.edu.my');

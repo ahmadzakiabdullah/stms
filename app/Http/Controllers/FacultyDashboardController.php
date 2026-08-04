@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Imports\SquadMembersImport;
-use App\Models\Event;
 use App\Models\EventParticipant;
-use App\Models\SportCategory;
 use App\Models\SquadMember;
 use App\Services\SquadQuotaService;
 use Illuminate\Http\RedirectResponse;
@@ -13,76 +11,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
-use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
 
 class FacultyDashboardController extends Controller
 {
-    public function index(): Response
-    {
-        $user = Auth::user();
-
-        $participant = $user->participant;
-
-        $registrations = collect();
-        $totalMale = 0;
-        $totalFemale = 0;
-        $totalOfficials = 0;
-
-        if ($participant) {
-            $registrations = EventParticipant::with([
-                'event.sport',
-                'event.sportCategory',
-                'event.tournament.session',
-                'squadMembers',
-            ])
-                ->where('participant_id', $participant->id)
-                ->orderBy('created_at', 'desc')
-                ->get();
-
-            foreach ($registrations as $reg) {
-                $totalMale += $reg->squadMembers->where('role', 'athlete_male')->count();
-                $totalFemale += $reg->squadMembers->where('role', 'athlete_female')->count();
-                $totalOfficials += $reg->squadMembers->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->count();
-            }
-        }
-
-        $availableEvents = Event::with(['sport', 'sportCategory', 'tournament'])
-            ->where('is_active', true)
-            ->orderBy('start_date')
-            ->get(['id', 'name', 'sport_id', 'sport_category_id', 'tournament_id', 'start_date']);
-
-        return Inertia::render('Faculty/Dashboard', [
-            'participant' => $participant,
-            'registrations' => $registrations,
-            'totals' => [
-                'male' => $totalMale,
-                'female' => $totalFemale,
-                'officials' => $totalOfficials,
-            ],
-            'availableEvents' => $availableEvents,
-            'sportCategories' => SportCategory::with('sport')
-                ->orderBy('name')
-                ->get()
-                ->map(fn ($sc) => array_merge(
-                    $sc->only([
-                        'id',
-                        'name',
-                        'sport_id',
-                        'quota_mode',
-                        'max_athletes_total',
-                        'max_male_athletes',
-                        'max_female_athletes',
-                        'min_male_athletes',
-                        'min_female_athletes',
-                        'max_officials',
-                    ]),
-                    ['allowed_roles' => $sc->allowedAthleteRoles()]
-                )),
-        ]);
-    }
-
     public function storeSquad(Request $request, SquadQuotaService $quotaService): RedirectResponse
     {
         $validated = $request->validate([
@@ -101,19 +33,19 @@ class FacultyDashboardController extends Controller
         }
 
         if ($ep->status !== 'confirmed') {
-            return redirect()->route('faculty.dashboard')
+            return redirect()->route('dashboard')
                 ->with('error', 'Only confirmed registrations can add squad members.');
         }
 
         $isOfficial = in_array($validated['role'], ['assistant_manager', 'manager', 'coach', 'physio'], true);
         if ($isOfficial && blank($validated['phone'])) {
-            return redirect()->route('faculty.dashboard')
+            return redirect()->route('dashboard')
                 ->with('error', 'Officials must provide a phone number.');
         }
 
         $quotaError = $quotaService->validateAddition($ep, $validated['role']);
         if ($quotaError) {
-            return redirect()->route('faculty.dashboard')
+            return redirect()->route('dashboard')
                 ->with('error', $quotaError);
         }
 
@@ -127,7 +59,7 @@ class FacultyDashboardController extends Controller
             'phone' => $validated['phone'],
         ]);
 
-        return redirect()->route('faculty.dashboard')
+        return redirect()->route('dashboard')
             ->with('success', 'Squad member added.');
     }
 
@@ -140,7 +72,7 @@ class FacultyDashboardController extends Controller
 
         $squadMember->delete();
 
-        return redirect()->route('faculty.dashboard')
+        return redirect()->route('dashboard')
             ->with('success', 'Squad member removed.');
     }
 
@@ -158,7 +90,7 @@ class FacultyDashboardController extends Controller
         }
 
         if ($ep->status !== 'confirmed') {
-            return redirect()->route('faculty.dashboard')
+            return redirect()->route('dashboard')
                 ->with('error', 'Only confirmed registrations can add squad members.');
         }
 
@@ -168,7 +100,7 @@ class FacultyDashboardController extends Controller
                 $request->file('file')
             );
 
-            return redirect()->route('faculty.dashboard')
+            return redirect()->route('dashboard')
                 ->with('success', 'Squad members imported successfully.');
         } catch (ValidationException $e) {
             return redirect()->back()
@@ -176,7 +108,7 @@ class FacultyDashboardController extends Controller
         } catch (\Throwable $e) {
             Log::error('Squad import failed', ['error' => $e->getMessage()]);
 
-            return redirect()->route('faculty.dashboard')
+            return redirect()->route('dashboard')
                 ->with('error', 'Failed to import file: '.$e->getMessage());
         }
     }

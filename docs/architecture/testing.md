@@ -1,41 +1,31 @@
 # Testing Strategy
 
-STMS uses PHPUnit for both Feature and Unit tests. The testing philosophy is to cover every feature with at least one Feature test that exercises the full request cycle (route → controller → service → database), and supplement with Unit tests for isolated business logic, Services, and Actions.
+## Current baseline
 
-## Test Setup
+As of 4 August 2026, the repository contains 78 PHP test files. The local suite covers 334 tests and 1,319 assertions across Feature and Unit layers. The final release gate also includes Pint, `tsc --noEmit`, the Vite production build, dependency audits, bundle budgets, Playwright journeys, axe checks, and performance thresholds.
 
-- **RefreshDatabase** trait is used on every test class to ensure a clean database state between tests.
-- **Factories** are defined for all domain models with realistic default states and relationships.
-- **Test traits** provide reusable setup — `CreateApplication` (bootstraps the app), `ActAsSuperAdmin` (bypasses tenancy), `ActAsOrgUser` (creates authenticated tenant user), and `RefreshTenantDatabase` (ensures tenant-scoped data is recreated).
-- **Database Seeds** — a common `TestSeeder` creates the minimal required reference data (default permissions, roles, a base organization).
+## Test layers
 
-## Feature Tests
+- **Feature tests** exercise authentication, policies, tenant isolation, requests, controllers, Inertia props, redirects, notifications, exports, commands, backups, health checks, and role-specific workflows.
+- **Unit tests** cover service logic such as rankings, draws, league/knockout progression, quota rules, assets, and domain CRUD services.
+- **Browser tests** cover super-admin, faculty representative, and dean critical journeys on desktop/mobile Chromium with axe checks.
+- **Performance tests** enforce a dashboard query budget and provide k6 health/authenticated scenarios.
 
-Feature tests simulate HTTP requests using Laravel's `get`, `post`, `put`, `delete` helpers and assert on response status, redirects, session errors, and database state. They test:
+`RefreshDatabase`, model factories, and `Tests\Traits\CreatesTenantUsers` are the primary reusable test infrastructure. Cross-tenant tests generally expect scoped resources to return 404 and explicit authorization failures to return 403.
 
-- Authentication flows (login, registration, verification, password reset)
-- Authorization (permission denied responses, policy enforcement)
-- CRUD operations (create, read, update, soft-delete, restore)
-- Tenant isolation (cross-organization access returns 403)
-
-## Unit Tests
-
-Unit tests cover Service classes and Action classes in isolation. Domain models are mocked or constructed via factories. These tests focus on business logic — ranking calculations, schedule conflict detection, status transitions — without HTTP or database overhead where possible.
-
-## Running Tests
+## Commands
 
 ```bash
-php artisan test              # all tests
-php artisan test --filter=Tournament  # specific feature group
-```
-
-## Coverage and Browser Assurance
-
-CI installs PCOV and publishes `coverage.xml` in Clover format. The first connected CI run establishes the measured baseline; only then should a minimum threshold be added and ratcheted upward.
-
-Playwright runs critical super-admin, faculty, and dean journeys on desktop and mobile Chromium. Axe scans login and dashboard against WCAG A/AA tags and fails on serious or critical violations. Failure traces, screenshots, video, and the HTML report are retained as CI artifacts.
-
-```bash
+php artisan test
+vendor/bin/pint --test
+npm run typecheck
+npm run build
+npm run build:budget
 npm run test:e2e
-npm run test:e2e:ui
 ```
+
+Use a mapped local drive on Windows because PHP subprocesses cannot reliably execute from a UNC working directory.
+
+## CI and evidence
+
+CI publishes PCOV Clover artifacts and Playwright failure artifacts. The first connected coverage result is still required before setting a ratcheting percentage threshold. Production-sized restore, authenticated load, external alert, and connected-browser drills remain environment-dependent tasks in `TODOS.md`.

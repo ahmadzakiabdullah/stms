@@ -21,7 +21,7 @@ The CI job uses `database/e2e.sqlite`, enables demo seeding only in the testing 
 
 Mutation-heavy draw, import, result-entry, and export content assertions should be added after the first connected CI run confirms stable accessible selectors.
 
-Local execution on 2 August 2026 prepared and seeded the isolated E2E database successfully. All six desktop/mobile Chromium journeys pass, including the login/dashboard axe checks. Connected CI remains the repeatable enforcement environment.
+The six committed desktop/mobile Chromium journeys cover the role-aware dashboard shell, faculty workspace, dean verification and core super-admin pages. The last recorded local browser run passed on 2 August 2026; connected CI remains the authoritative repeatable browser/accessibility environment. The 4 August dashboard/sidebar refactor passed PHPUnit, Pint, TypeScript and production build checks, while direct production browser inspection was unavailable because the local Windows browser sandbox could not initialize.
 
 ## Coverage Policy
 

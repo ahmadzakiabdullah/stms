@@ -1,5 +1,7 @@
 # Testing Strategy
 
+> **Current baseline (4 August 2026):** 78 PHP test files, 334 tests, and 1,319 assertions. PHPUnit, Pint, TypeScript and Vite build gates pass locally; connected Playwright/coverage evidence remains environment-dependent.
+
 Dokumen ini menggariskan falsafah, strategi, dan amalan terbaik untuk ujian automatik (automated testing) dalam aplikasi STMS. Matlamat utama ujian adalah untuk memastikan ketepatan kod, mencegah regresi, dan menguatkuasakan keselamatan data, terutamanya dalam konteks multi-tenancy.
 
 ## 1. Falsafah Ujian

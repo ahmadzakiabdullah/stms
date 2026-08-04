@@ -141,21 +141,40 @@ class DashboardTest extends TestCase
     {
         $orgA = Organization::factory()->create();
         $sessionA = Session::factory()->create(['organization_id' => $orgA->id]);
+        $tournamentA = Tournament::factory()->create(['organization_id' => $orgA->id, 'session_id' => $sessionA->id]);
+        $sportA = Sport::factory()->create(['organization_id' => $orgA->id, 'name' => 'Badminton']);
+        $catA = SportCategory::factory()->create(['organization_id' => $orgA->id, 'sport_id' => $sportA->id, 'name' => 'Singles']);
+        $eventA = Event::factory()->create([
+            'organization_id' => $orgA->id,
+            'tournament_id' => $tournamentA->id,
+            'sport_id' => $sportA->id,
+            'sport_category_id' => $catA->id,
+            'name' => 'Badminton - Singles',
+        ]);
         $facA = Participant::factory()->create(['organization_id' => $orgA->id, 'session_id' => $sessionA->id, 'name' => 'Fakulti Sains']);
 
         $user = $this->createUserInOrganization($orgA, ['participant_id' => $facA->id]);
         $user->assignRole(Role::firstOrCreate(['name' => 'faculty-representative', 'guard_name' => 'web']));
+
+        $ep = EventParticipant::create(['organization_id' => $orgA->id, 'event_id' => $eventA->id, 'participant_id' => $facA->id, 'status' => 'confirmed']);
+        SquadMember::factory()->create(['organization_id' => $orgA->id, 'event_participant_id' => $ep->id, 'role' => 'athlete_male']);
+        SquadMember::factory()->create(['organization_id' => $orgA->id, 'event_participant_id' => $ep->id, 'role' => 'coach']);
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertOk();
         $props = $response->viewData('page')['props'] ?? [];
 
-        $this->assertTrue($props['isFacultyRep'] ?? false);
-        $this->assertEquals(0, $props['myRegistrations'] ?? -1);
-        $this->assertArrayHasKey('registrationStats', $props);
-        $this->assertNull($props['registrationStats']);
-        $this->assertSame([], $props['squadStats'] ?? null);
+        $this->assertEquals('Faculty/Dashboard', $response->viewData('page')['component'] ?? null);
+        $this->assertEquals($facA->id, $props['participant']['id'] ?? null);
+        $this->assertCount(1, $props['registrations'] ?? []);
+        $this->assertEquals('Badminton - Singles', $props['registrations'][0]['event']['name'] ?? null);
+        $this->assertCount(2, $props['registrations'][0]['squad_members'] ?? []);
+        $this->assertEquals(1, $props['totals']['male'] ?? 0);
+        $this->assertEquals(0, $props['totals']['female'] ?? 0);
+        $this->assertEquals(1, $props['totals']['officials'] ?? 0);
+        $this->assertGreaterThanOrEqual(1, count($props['availableEvents'] ?? []));
+        $this->assertCount(1, $props['sportCategories'] ?? []);
     }
 
     public function test_dashboard_includes_squad_composition_stats_and_respects_filters(): void
@@ -196,5 +215,17 @@ class DashboardTest extends TestCase
         $propsPending = $this->actingAs($staff)->get(route('dashboard', ['status' => 'pending']))->viewData('page')['props'] ?? [];
         $this->assertEquals(1, $propsPending['squadStats']['manager'] ?? 0);
         $this->assertArrayNotHasKey('athlete_male', $propsPending['squadStats'] ?? []);
+    }
+
+    public function test_dean_dashboard_route_redirects_to_verification_workspace(): void
+    {
+        $organization = Organization::factory()->create();
+        $participant = Participant::factory()->create(['organization_id' => $organization->id]);
+        $dean = $this->createUserInOrganization($organization, ['participant_id' => $participant->id]);
+        $dean->assignRole(Role::firstOrCreate(['name' => 'dean', 'guard_name' => 'web']));
+
+        $this->actingAs($dean)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('dean.dashboard'));
     }
 }

@@ -69,6 +69,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     const [deleteSport, setDeleteSport] = useState<Sport | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [serverError, setServerError] = useState<string | null>(null);
+    const [iconFile, setIconFile] = useState<File | null>(null);
 
     // ── Category dialog state ──
     const [catOpen, setCatOpen] = useState(false);
@@ -90,6 +91,8 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     });
     const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = sportForm;
     const name = watch('name');
+    const iconValue = watch('icon');
+    const iconPreview = iconFile ? URL.createObjectURL(iconFile) : iconValue;
 
     useEffect(() => {
         if (!editingSport && autoSlugRef.current && name) {
@@ -100,6 +103,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     const openCreate = () => {
         setEditingSport(null);
         setServerError(null);
+        setIconFile(null);
         autoSlugRef.current = true;
         reset({ name: '', slug: '', icon: '', is_active: true });
         setOpen(true);
@@ -108,6 +112,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     const openEdit = (sport: Sport) => {
         setEditingSport(sport);
         setServerError(null);
+        setIconFile(null);
         autoSlugRef.current = false;
         reset({ name: sport.name, slug: sport.slug, icon: sport.icon || '', is_active: sport.is_active });
         setOpen(true);
@@ -117,19 +122,33 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
         setOpen(false);
         setEditingSport(null);
         setServerError(null);
+        setIconFile(null);
         reset();
     };
 
     const onSubmit = (formData: SportForm) => {
         setServerError(null);
+
+        const fd = new FormData();
+        fd.append('name', formData.name);
+        fd.append('slug', formData.slug);
+        fd.append('icon', formData.icon ?? '');
+        fd.append('is_active', formData.is_active ? '1' : '0');
+        if (iconFile) {
+            fd.append('icon_file', iconFile);
+        }
+        if (editingSport) {
+            fd.append('_method', 'put');
+        }
+
         const cb = {
             onSuccess: () => closeDialog(),
             onError: (err: Record<string, string>) => setServerError(Object.values(err).join(', ')),
         };
         if (editingSport) {
-            router.put(route('sports.update', editingSport.slug), formData, cb);
+            router.post(route('sports.update', editingSport.slug), fd, cb);
         } else {
-            router.post(route('sports.store'), formData, cb);
+            router.post(route('sports.store'), fd, cb);
         }
     };
 
@@ -315,7 +334,19 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                                 ? <ChevronDown className="size-4 text-muted-foreground" />
                                                 : <ChevronRight className="size-4 text-muted-foreground" />}
                                         </TableCell>
-                                        <TableCell className="font-medium">{sport.name}</TableCell>
+                                        <TableCell className="font-medium">
+                                            <span className="flex items-center gap-2">
+                                                {sport.icon && (
+                                                    <img
+                                                        src={sport.icon}
+                                                        alt=""
+                                                        className="size-5 rounded object-contain"
+                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                    />
+                                                )}
+                                                {sport.name}
+                                            </span>
+                                        </TableCell>
                                         <TableCell>
                                             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{sport.slug}</code>
                                         </TableCell>
@@ -432,8 +463,26 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                 {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="icon">Icon (Lucide name, optional)</Label>
-                                <Input id="icon" {...register('icon')} placeholder="trophy or badminton" />
+                                <Label htmlFor="icon">Icon URL (optional)</Label>
+                                <Input id="icon" {...register('icon')} placeholder="https://cdn.simpleicons.org/badminton or any image URL" />
+                                <p className="text-xs text-muted-foreground">
+                                    Paste an image link from any icon provider (Simple Icons, Font Awesome CDN, emoji CDN, etc.).
+                                </p>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="icon-file">Or upload an icon image</Label>
+                                <Input
+                                    id="icon-file"
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                                    onChange={(e) => setIconFile(e.target.files?.[0] ?? null)}
+                                />
+                                {iconPreview && (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <img src={iconPreview} alt="Icon preview" className="size-6 rounded border object-contain" />
+                                        Preview
+                                    </div>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="is_active">Status</Label>

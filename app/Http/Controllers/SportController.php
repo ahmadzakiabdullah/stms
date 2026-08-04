@@ -8,6 +8,7 @@ use App\Actions\Sports\UpdateSport;
 use App\Http\Requests\Sport\StoreSportRequest;
 use App\Http\Requests\Sport\UpdateSportRequest;
 use App\Models\Sport;
+use App\Services\SportIconService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -30,21 +31,42 @@ class SportController extends Controller
         ]);
     }
 
-    public function store(StoreSportRequest $request, CreateSport $action): RedirectResponse
+    public function store(StoreSportRequest $request, CreateSport $action, SportIconService $iconService): RedirectResponse
     {
         Gate::authorize('create', Sport::class);
 
-        $action->handle($request->validated());
+        $data = $request->validated();
+        unset($data['icon_file']);
+
+        if ($request->hasFile('icon_file')) {
+            $data['icon'] = $iconService->store($request->file('icon_file'));
+        }
+
+        $action->handle($data);
 
         return redirect()->route('sports.index')
             ->with('success', 'Sport created successfully.');
     }
 
-    public function update(UpdateSportRequest $request, Sport $sport, UpdateSport $action): RedirectResponse
+    public function update(UpdateSportRequest $request, Sport $sport, UpdateSport $action, SportIconService $iconService): RedirectResponse
     {
         Gate::authorize('update', $sport);
 
-        $action->handle($sport, $request->validated());
+        $data = $request->validated();
+        unset($data['icon_file']);
+
+        $previousIcon = null;
+
+        if ($request->hasFile('icon_file')) {
+            $previousIcon = $sport->icon;
+            $data['icon'] = $iconService->store($request->file('icon_file'));
+        }
+
+        $action->handle($sport, $data);
+
+        if ($previousIcon !== null) {
+            $iconService->delete($previousIcon);
+        }
 
         return redirect()->route('sports.index')
             ->with('success', 'Sport updated successfully.');

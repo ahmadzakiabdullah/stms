@@ -74,14 +74,17 @@ Styling dikendalikan sepenuhnya oleh **Tailwind CSS**.
 
 ## 8. Amalan Terbaik
 
-1.  **Fail `.jsx` ke `.tsx`:** Semua fail `.jsx` sedia ada perlu dipindahkan ke `.tsx` secara berperingkat (Rujuk Tugasan 2.2).
+1.  **TypeScript pages:** All 36 Inertia page components are `.tsx`. A small compatibility boundary remains only for reusable legacy `.jsx` components; new and modified application pages must stay strongly typed.
 2.  **Komponen Kecil & Fokus:** Pecahkan UI kepada komponen yang lebih kecil dan boleh diguna semula.
 3.  **Elakkan State Global:** Cuba elakkan penggunaan perpustakaan pengurusan *state* global (seperti Redux atau Zustand) melainkan jika benar-benar perlu. Seni bina Inertia mengurangkan keperluan untuknya.
 4.  **Aksesibiliti (a11y):** Pastikan komponen yang dibina adalah mudah diakses, menggunakan atribut ARIA yang betul dan elemen HTML semantik. Komponen `shadcn/ui` menyediakan asas yang baik untuk ini.
 
 ## 9. Quality Gate
 
-`npm run typecheck` menjalankan `tsc --noEmit` dan mesti lulus dalam CI sebelum build production. Komponen JSX lama berada di belakang compatibility declarations; halaman aplikasi dan payload Inertia baharu hendaklah terus menggunakan jenis TypeScript yang nyata.
+
+`npm run typecheck` runs `tsc --noEmit` before the production build in CI. Shared Ziggy/Inertia declarations and explicit page payload types are maintained in `resources/js/types`; the Vite build is also protected by JavaScript and CSS bundle budgets.
+
+The authenticated shell and dashboard are role-aware. See `docs/design-system/navigation.md` for the policy-aligned menu matrix and `docs/design-system/dashboard.md` for role-specific landing behavior.
 # Build Quality Gates
 
 The project standardizes on Tailwind CSS 3. Dialog and sheet state animations are defined in `tailwind.config.js`; Tailwind 4-only stylesheets are not imported. This avoids mixed compiler semantics and produces a warning-free build.

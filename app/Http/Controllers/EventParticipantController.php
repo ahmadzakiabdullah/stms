@@ -163,14 +163,14 @@ class EventParticipantController extends Controller
 
         $event = Event::findOrFail($eventId);
         if ($event->registration_deadline && now()->greaterThan($event->registration_deadline)) {
-            return redirect()->route('event-participants.index')
+            return redirect()->route($isWakil ? 'dashboard' : 'event-participants.index')
                 ->with('error', 'Registration deadline for this event has passed.');
         }
 
         try {
             $action->handle($participant, $eventId);
         } catch (ValidationException $e) {
-            return redirect()->route('event-participants.index')
+            return redirect()->route($isWakil ? 'dashboard' : 'event-participants.index')
                 ->with('error', $e->getMessage());
         }
 
@@ -179,21 +179,92 @@ class EventParticipantController extends Controller
             ->latest()
             ->first();
         if ($ep) {
-            $deanUsers = User::where('participant_id', $participant->id)
-                ->role('dean')
-                ->get();
+            $this->notifyRegistrationRecipients($ep);
+        }
 
-            $adminUsers = User::where('organization_id', $ep->organization_id)
-                ->role(['super-admin', 'org-admin'])
-                ->get();
+        return redirect()->route($isWakil ? 'dashboard' : 'event-participants.index')
+            ->with('success', 'Participant registered to event successfully.');
+    }
 
-            foreach ($deanUsers->concat($adminUsers)->unique('uuid') as $recipient) {
-                $recipient->notify(new NewEventRegistration($ep));
+    public function storeBatch(Request $request, RegisterParticipantToEvent $action): RedirectResponse
+    {
+        $user = Auth::user();
+        $isWakil = $user->hasRole('faculty-representative') && $user->participant_id;
+
+        if ($isWakil) {
+            $participant = Participant::findOrFail($user->participant_id);
+        } else {
+            Gate::authorize('create', EventParticipant::class);
+            $participant = Participant::findOrFail($request->validate([
+                'participant_id' => 'required|string|exists:participants,id',
+            ])['participant_id']);
+        }
+
+        $validated = $request->validate([
+            'event_ids' => ['required', 'array', 'min:1'],
+            'event_ids.*' => ['required', 'string', 'exists:events,id'],
+        ]);
+
+        $registered = 0;
+        $failures = [];
+        $created = [];
+
+        foreach (array_unique($validated['event_ids']) as $eventId) {
+            $event = Event::find($eventId);
+
+            if ($event && $event->registration_deadline && now()->greaterThan($event->registration_deadline)) {
+                $failures[] = "{$event->name} — registration deadline has passed.";
+
+                continue;
+            }
+
+            try {
+                $action->handle($participant, $eventId);
+                $registered++;
+
+                $ep = EventParticipant::where('event_id', $eventId)
+                    ->where('participant_id', $participant->id)
+                    ->latest()
+                    ->first();
+                if ($ep) {
+                    $created[] = $ep;
+                }
+            } catch (ValidationException $e) {
+                $failures[] = "{$event?->name}: {$e->getMessage()}";
+            } catch (\Throwable $e) {
+                $failures[] = "{$event?->name}: failed to register.";
             }
         }
 
-        return redirect()->route('event-participants.index')
-            ->with('success', 'Participant registered to event successfully.');
+        foreach ($created as $ep) {
+            $this->notifyRegistrationRecipients($ep);
+        }
+
+        $redirect = $isWakil ? 'dashboard' : 'event-participants.index';
+
+        if ($registered === 0 && count($failures) > 0) {
+            return redirect()->route($redirect)
+                ->with('error', implode(' ', $failures));
+        }
+
+        return redirect()->route($redirect)
+            ->with('success', "Registered for {$registered} event(s).")
+            ->with('error', count($failures) > 0 ? implode(' ', $failures) : null);
+    }
+
+    private function notifyRegistrationRecipients(EventParticipant $ep): void
+    {
+        $deanUsers = User::where('participant_id', $ep->participant_id)
+            ->role('dean')
+            ->get();
+
+        $adminUsers = User::where('organization_id', $ep->organization_id)
+            ->role(['super-admin', 'org-admin'])
+            ->get();
+
+        foreach ($deanUsers->concat($adminUsers)->unique('uuid') as $recipient) {
+            $recipient->notify(new NewEventRegistration($ep));
+        }
     }
 
     public function destroy(EventParticipant $eventParticipant): RedirectResponse

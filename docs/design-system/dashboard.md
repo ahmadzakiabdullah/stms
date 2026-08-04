@@ -1,61 +1,35 @@
 # Dashboard
 
-## Layout
+## Current implementation
 
-The dashboard is the default landing page after login. It follows a **stats + recent activity** layout:
+The application has one role-aware entry point at `/dashboard`:
 
-```
-┌──────────────────────────────────────────────┐
-│  Dashboard                      [org switcher]│
-├────────┬────────┬────────┬────────────────────┤
-│  Stats  │  Stats  │  Stats  │  Stats           │
-│  Card   │  Card   │  Card   │  Card            │
-├────────┴────────┴────────┴────────────────────┤
-│  Recent Sessions                  View All →   │
-│  ┌──────────────────────────────────────────┐  │
-│  │ Session 1         status · date          │  │
-│  │ Session 2         status · date          │  │
-│  └──────────────────────────────────────────┘  │
-├────────────────────────────────────────────────┤
-│  Recent Tournaments                View All →  │
-│  ┌──────────────────────────────────────────┐  │
-│  │ Tournament 1      status · date          │  │
-│  │ Tournament 2      status · date          │  │
-│  └──────────────────────────────────────────┘  │
-└──────────────────────────────────────────────┘
-```
+- **Super Admin / Org Admin** — operational overview for registration readiness, competition setup, matches, users, and tenant-scoped administration.
+- **Admin Sport** — competition workspace with direct actions for assigned-sport matches, results, and rankings.
+- **Staff** — reporting and notification entry points.
+- **Faculty Representative** — dedicated registration and squad-management page (`Faculty/Dashboard`).
+- **Dean** — redirected to the verification workspace (`/dean`).
 
-## Stats Cards
+## Administrator dashboard hierarchy
 
-Each stat card displays a metric (total sessions, active tournaments, participants, matches) with an icon and trend indicator. Cards use the shadcn/ui `<Card>` component:
+The generic administrator dashboard intentionally avoids duplicating full module tables. Information is ordered by urgency:
 
-```tsx
-<Card>
-  <CardHeader className="flex flex-row items-center justify-between pb-2">
-    <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
-    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-  </CardHeader>
-  <CardContent>
-    <div className="text-2xl font-bold">{sessionCount}</div>
-  </CardContent>
-</Card>
-```
+1. Role and organization context
+2. Pending-registration attention banner
+3. Four operational KPIs: active sessions, events, team registrations, and matches
+4. Registration-readiness pipeline
+5. Role-safe quick actions
+6. Upcoming events and registrations by sport
+7. Compact secondary totals and recent configuration records
 
-## Inertia Page Structure
+Detailed registration, fixture, result, ranking, and analytics tables remain on their dedicated pages.
 
-The dashboard is an Inertia page (`Pages/Dashboard.tsx`) that receives data via `props`:
+## Data contract
 
-```tsx
-interface DashboardProps {
-  stats: {
-    sessionCount: number;
-    tournamentCount: number;
-    participantCount: number;
-    matchCount: number;
-  };
-  recentSessions: Session[];
-  recentTournaments: Tournament[];
-}
-```
+`DashboardController` supplies tenant-scoped stats, upcoming events, registration pipeline counts, registrations by sport, recent sessions/tournaments, and detailed registration data retained for controller tests and future drill-downs. Dashboard queries are cached for 60 seconds per user and filter combination.
 
-Data is fetched in the controller using eager-loaded queries scoped to the current organization.
+The frontend uses shadcn/ui cards, badges, and buttons; Lucide icons; responsive Tailwind layouts; semantic headings; and English interface text.
+
+## Quality gates
+
+Dashboard changes must pass PHPUnit dashboard and query-budget tests, `npm run typecheck`, the Vite production build, and the Playwright/axe dashboard journey when browser execution is available.

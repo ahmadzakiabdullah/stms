@@ -1,5 +1,7 @@
 # System Overview
 
+> **Current status (4 August 2026):** The Laravel/Inertia web MVP is operational with 113 web/auth routes, 56 migrations, 37 controllers, 36 TypeScript pages, role-aware dashboards/navigation, printable registration forms, and no REST API. Deferred modules remain listed in CURRENT_STATE.md.
+
 Dokumen ini memberikan gambaran keseluruhan peringkat tinggi mengenai seni bina aplikasi Sistem Pengurusan Kejohanan Sukan (STMS). Ia bertujuan untuk menjadi titik permulaan bagi pembangun baharu untuk memahami komponen utama, corak reka bentuk, dan aliran data dalam sistem.
 
 ## 1. Pengenalan
