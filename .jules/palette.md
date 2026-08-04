@@ -1,0 +1,3 @@
+## 2024-05-18 - Semantic HTML & Nested Interactions with Inertia
+**Learning:** Nesting a `<button>` inside an Inertia `<Link>` (or standard `<a>`) creates invalid HTML and breaks accessibility. Screen readers and keyboard navigation struggle with nested interactive elements.
+**Action:** When using Inertia `<Link>` components with Radix UI/shadcn components (like `<Button>`), always use the `asChild` prop on the UI component (e.g., `<Button asChild><Link href="...">...</Link></Button>`). Furthermore, always wrap pagination controls in a `<nav aria-label="Pagination">` and apply proper `aria-current="page"` and `aria-label` attributes.
