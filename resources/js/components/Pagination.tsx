@@ -31,7 +31,7 @@ export default function Pagination<T>({ paginator, links: legacyLinks }: Paginat
     const to = Math.min(current_page * per_page, total);
 
     return (
-        <div className="mt-4 flex flex-col items-center justify-between gap-3 px-2 text-sm text-muted-foreground sm:flex-row">
+        <nav aria-label="Pagination" className="mt-4 flex flex-col items-center justify-between gap-3 px-2 text-sm text-muted-foreground sm:flex-row">
             <div>
                 Showing <span className="font-medium text-foreground">{from}</span> to{' '}
                 <span className="font-medium text-foreground">{to}</span> of{' '}
@@ -40,34 +40,44 @@ export default function Pagination<T>({ paginator, links: legacyLinks }: Paginat
 
             <div className="flex items-center gap-1">
                 {prevLink && (
-                    <Link
-                        href={prevLink.url || '#'}
-                        className={!prevLink.url ? 'pointer-events-none opacity-40' : ''}
-                    >
-                        <Button variant="outline" size="sm" disabled={!prevLink.url}>
-                            <ChevronLeft className="mr-1 size-4" />
+                    prevLink.url ? (
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={prevLink.url} aria-label="Go to previous page">
+                                <ChevronLeft className="mr-1 size-4" aria-hidden="true" />
+                                Prev
+                            </Link>
+                        </Button>
+                    ) : (
+                        <Button variant="outline" size="sm" disabled aria-disabled="true">
+                            <ChevronLeft className="mr-1 size-4" aria-hidden="true" />
                             Prev
                         </Button>
-                    </Link>
+                    )
                 )}
 
                 <div className="flex items-center gap-1 px-2 text-xs">
-                    {current_page > 2 && <span className="px-1">...</span>}
+                    {current_page > 2 && <span className="px-1" aria-hidden="true">...</span>}
                     {pages.map((page) => {
                         const pageLink = links.find((l) => parseInt(l.label) === page);
                         const isActive = page === current_page;
 
                         if (pageLink && pageLink.url) {
                             return (
-                                <Link key={page} href={pageLink.url}>
-                                    <Button
-                                        variant={isActive ? 'default' : 'ghost'}
-                                        size="sm"
-                                        className="h-8 w-8 p-0 text-xs"
+                                <Button
+                                    key={page}
+                                    asChild
+                                    variant={isActive ? 'default' : 'ghost'}
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-xs"
+                                >
+                                    <Link
+                                        href={pageLink.url}
+                                        aria-label={isActive ? `Page ${page}` : `Go to page ${page}`}
+                                        aria-current={isActive ? 'page' : undefined}
                                     >
                                         {page}
-                                    </Button>
-                                </Link>
+                                    </Link>
+                                </Button>
                             );
                         }
                         return (
@@ -76,21 +86,25 @@ export default function Pagination<T>({ paginator, links: legacyLinks }: Paginat
                             </span>
                         );
                     })}
-                    {current_page < last_page - 1 && <span className="px-1">...</span>}
+                    {current_page < last_page - 1 && <span className="px-1" aria-hidden="true">...</span>}
                 </div>
 
                 {nextLink && (
-                    <Link
-                        href={nextLink.url || '#'}
-                        className={!nextLink.url ? 'pointer-events-none opacity-40' : ''}
-                    >
-                        <Button variant="outline" size="sm" disabled={!nextLink.url}>
-                            Next
-                            <ChevronRight className="ml-1 size-4" />
+                    nextLink.url ? (
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={nextLink.url} aria-label="Go to next page">
+                                Next
+                                <ChevronRight className="ml-1 size-4" aria-hidden="true" />
+                            </Link>
                         </Button>
-                    </Link>
+                    ) : (
+                        <Button variant="outline" size="sm" disabled aria-disabled="true">
+                            Next
+                            <ChevronRight className="ml-1 size-4" aria-hidden="true" />
+                        </Button>
+                    )
                 )}
             </div>
-        </div>
+        </nav>
     );
 }
