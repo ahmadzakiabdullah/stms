@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm'
+          cache: 'npm'
       - run: composer audit --locked --no-interaction --abandoned=fail
       - run: pnpm audit --audit-level=high
 
@@ -99,7 +99,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm'
+          cache: 'npm'
       - run: pnpm install
       - run: pnpm run typecheck
       - run: pnpm run build
@@ -123,7 +123,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'pnpm'
+          cache: 'npm'
       - run: composer install --no-interaction --no-progress
       - run: pnpm install
       - run: pnpm run build
