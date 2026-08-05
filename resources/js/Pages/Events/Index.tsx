@@ -458,6 +458,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                         className="size-4"
                                         checked={events.length > 0 && selectedIds.size === events.length}
                                         onChange={toggleSelectAll}
+                                        aria-label="Select all events"
                                     />
                                 </TableHead>}
                                 <TableHead>Name</TableHead>
@@ -490,6 +491,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             className="size-4"
                                             checked={selectedIds.has(event.id)}
                                             onChange={() => toggleSelect(event.id)}
+                                            aria-label={`Select ${event.name}`}
                                         />
                                     </TableCell>
                                     )}
