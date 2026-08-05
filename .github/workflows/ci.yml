@@ -17,12 +17,15 @@ jobs:
         with:
           php-version: '8.4'
           tools: composer
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'pnpm'
       - run: composer audit --locked --no-interaction --abandoned=fail
-      - run: npm audit --audit-level=high
+      - run: pnpm audit --audit-level=high
 
   lint:
     runs-on: ubuntu-latest
@@ -90,14 +93,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run build
-      - run: npm run build:budget
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm run typecheck
+      - run: pnpm run build
+      - run: pnpm run build:budget
       - uses: actions/upload-artifact@v4
         with:
           name: build
@@ -111,13 +117,16 @@ jobs:
         with:
           php-version: '8.4'
           tools: composer
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'pnpm'
       - run: composer install --no-interaction --no-progress
-      - run: npm ci
-      - run: npm run build
+      - run: pnpm install
+      - run: pnpm run build
       - run: npx playwright install --with-deps chromium
       - run: touch database/e2e.sqlite
       - run: php artisan migrate:fresh --seed --force
@@ -132,7 +141,7 @@ jobs:
           CACHE_STORE: array
           QUEUE_CONNECTION: sync
           SESSION_DRIVER: file
-      - run: npm run test:e2e
+      - run: pnpm run test:e2e
         env:
           APP_ENV: testing
           APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
