@@ -40,15 +40,15 @@ export default function Pagination<T>({ paginator, links: legacyLinks }: Paginat
 
             <div className="flex items-center gap-1">
                 {prevLink && (
-                    <Link
-                        href={prevLink.url || '#'}
-                        className={!prevLink.url ? 'pointer-events-none opacity-40' : ''}
-                    >
-                        <Button variant="outline" size="sm" disabled={!prevLink.url}>
+                    <Button asChild variant="outline" size="sm" disabled={!prevLink.url}>
+                        <Link
+                            href={prevLink.url || '#'}
+                            className={!prevLink.url ? 'pointer-events-none opacity-40' : ''}
+                        >
                             <ChevronLeft className="mr-1 size-4" />
                             Prev
-                        </Button>
-                    </Link>
+                        </Link>
+                    </Button>
                 )}
 
                 <div className="flex items-center gap-1 px-2 text-xs">
@@ -59,15 +59,17 @@ export default function Pagination<T>({ paginator, links: legacyLinks }: Paginat
 
                         if (pageLink && pageLink.url) {
                             return (
-                                <Link key={page} href={pageLink.url}>
-                                    <Button
-                                        variant={isActive ? 'default' : 'ghost'}
-                                        size="sm"
-                                        className="h-8 w-8 p-0 text-xs"
-                                    >
+                                <Button
+                                    key={page}
+                                    asChild
+                                    variant={isActive ? 'default' : 'ghost'}
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-xs"
+                                >
+                                    <Link href={pageLink.url}>
                                         {page}
-                                    </Button>
-                                </Link>
+                                    </Link>
+                                </Button>
                             );
                         }
                         return (
@@ -80,15 +82,15 @@ export default function Pagination<T>({ paginator, links: legacyLinks }: Paginat
                 </div>
 
                 {nextLink && (
-                    <Link
-                        href={nextLink.url || '#'}
-                        className={!nextLink.url ? 'pointer-events-none opacity-40' : ''}
-                    >
-                        <Button variant="outline" size="sm" disabled={!nextLink.url}>
+                    <Button asChild variant="outline" size="sm" disabled={!nextLink.url}>
+                        <Link
+                            href={nextLink.url || '#'}
+                            className={!nextLink.url ? 'pointer-events-none opacity-40' : ''}
+                        >
                             Next
                             <ChevronRight className="ml-1 size-4" />
-                        </Button>
-                    </Link>
+                        </Link>
+                    </Button>
                 )}
             </div>
         </div>
