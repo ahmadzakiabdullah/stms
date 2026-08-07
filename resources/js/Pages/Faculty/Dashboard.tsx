@@ -418,7 +418,7 @@ export default function FacultyDashboard({
                                                                                         <TableCell>{m.identification_no || '-'}</TableCell>
                                                                                         <TableCell>{m.phone || '-'}</TableCell>
                                                                                         <TableCell>
-                                                                                            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteSquadId(m.id)}>
+                                                                                            <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteSquadId(m.id)} aria-label="Remove squad member">
                                                                                                 <Trash2 className="size-3" />
                                                                                             </Button>
                                                                                         </TableCell>
