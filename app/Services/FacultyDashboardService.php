@@ -38,10 +38,15 @@ class FacultyDashboardService
                 ->orderBy('created_at', 'desc')
                 ->get();
 
+            // Optimization: Use a single pass countBy to avoid O(N*3) multiple where()->count() passes on the collection
             foreach ($registrations as $reg) {
-                $totalMale += $reg->squadMembers->where('role', 'athlete_male')->count();
-                $totalFemale += $reg->squadMembers->where('role', 'athlete_female')->count();
-                $totalOfficials += $reg->squadMembers->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->count();
+                $roleCounts = $reg->squadMembers->countBy('role');
+                $totalMale += $roleCounts->get('athlete_male', 0);
+                $totalFemale += $roleCounts->get('athlete_female', 0);
+                $totalOfficials += $roleCounts->get('assistant_manager', 0)
+                                 + $roleCounts->get('manager', 0)
+                                 + $roleCounts->get('coach', 0)
+                                 + $roleCounts->get('physio', 0);
             }
         }
 
