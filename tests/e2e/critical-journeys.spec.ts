@@ -3,7 +3,7 @@ import { expect, Page, test } from '@playwright/test';
 
 async function login(page: Page, email: string): Promise<void> {
     await page.goto('/login');
-    await page.locator('input[name="email"]').fill(email);
+    await page.getByRole('textbox', { name: /email or username/i }).fill(email);
     await page.locator('input[name="password"]').fill('password');
     await page.getByRole('button', { name: /log in/i }).click();
     await expect(page).not.toHaveURL(/\/login$/);
