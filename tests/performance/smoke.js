@@ -1,5 +1,5 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check, fail, sleep } from 'k6';
 
 export const options = {
     vus: Number(__ENV.VUS || 10),
@@ -10,48 +10,78 @@ export const options = {
     },
 };
 
-const baseUrl = __ENV.BASE_URL || 'http://127.0.0.1:8000';
-const authEmail = __ENV.AUTH_EMAIL;
-const authPassword = __ENV.AUTH_PASSWORD;
+const baseUrl = (__ENV.BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
+const authLogins = (__ENV.AUTH_LOGINS || __ENV.AUTH_LOGIN || __ENV.AUTH_EMAIL || '')
+    .split(',').map((value) => value.trim()).filter(Boolean);
+const authPasswords = (__ENV.AUTH_PASSWORDS || __ENV.AUTH_PASSWORD || '')
+    .split(',').map((value) => value.trim()).filter(Boolean);
+let authenticated = false;
 
-export function setup() {
-    if (!authEmail || !authPassword) return { authenticated: false };
+function credentialForVu() {
+    if (!authLogins.length || !authPasswords.length) return null;
 
-    const loginPage = http.get(`${baseUrl}/login`);
-    const csrfToken = loginPage.html().find('meta[name="csrf-token"]').attr('content');
-    const response = http.post(`${baseUrl}/login`, {
-        email: authEmail,
-        password: authPassword,
-        _token: csrfToken,
-    }, { redirects: 0 });
-
-    check(response, {
-        'authenticated login redirects': (result) => [302, 303].includes(result.status),
-    });
-
-    const sessionCookie = response.cookies.laravel_session?.[0]?.value;
-    check(sessionCookie, {
-        'authenticated session cookie issued': (value) => Boolean(value),
-    });
-
-    return { authenticated: Boolean(sessionCookie), sessionCookie };
+    const index = (__VU - 1) % authLogins.length;
+    return {
+        login: authLogins[index],
+        password: authPasswords[index] || authPasswords[0],
+    };
 }
 
-export default function (data) {
+function authenticate() {
+    const credential = credentialForVu();
+    if (!credential) return false;
+
+    const jar = http.cookieJar();
+    const loginPage = http.get(`${baseUrl}/login`);
+    const xsrfCookie = jar.cookiesForURL(baseUrl)['XSRF-TOKEN']?.[0];
+
+    if (!check(loginPage, { 'login page returns 200': (response) => response.status === 200 }) || !xsrfCookie) {
+        fail('Login page did not issue an XSRF-TOKEN cookie.');
+    }
+
+    const response = http.post(`${baseUrl}/login`, {
+        login: credential.login,
+        password: credential.password,
+    }, {
+        redirects: 0,
+        headers: {
+            Accept: 'text/html,application/xhtml+xml',
+            'X-XSRF-TOKEN': decodeURIComponent(xsrfCookie),
+        },
+    });
+
+    return check(response, {
+        'authenticated login redirects': (result) => [302, 303].includes(result.status),
+        'session cookie issued': () => Object.keys(jar.cookiesForURL(baseUrl))
+            .some((name) => name !== 'XSRF-TOKEN'),
+    });
+}
+
+export default function () {
     const health = http.get(`${baseUrl}/health`);
     check(health, {
         'health returns 200': (response) => response.status === 200,
         'health reports ok': (response) => response.json('status') === 'ok',
     });
 
-    if (data.authenticated) {
-        const dashboard = http.get(`${baseUrl}/dashboard`, {
-            headers: { Cookie: `laravel_session=${data.sessionCookie}` },
-        });
+    if (!authenticated && credentialForVu()) authenticated = authenticate();
+
+    if (authenticated) {
+        const dashboard = http.get(`${baseUrl}/dashboard`, { redirects: 0 });
         check(dashboard, {
             'authenticated dashboard returns 200': (response) => response.status === 200,
-            'authenticated dashboard is not login page': (response) => !response.url.endsWith('/login'),
+            'authenticated dashboard is not redirected to login': (response) => ![301, 302, 303].includes(response.status),
         });
     }
+
     sleep(1);
+}
+
+export function handleSummary(data) {
+    const path = __ENV.K6_SUMMARY_PATH || 'test-results/k6-summary.json';
+
+    return {
+        [path]: JSON.stringify(data, null, 2),
+        stdout: `k6 summary written to ${path}\n`,
+    };
 }

@@ -4,7 +4,17 @@
 
 STMS is a functional Laravel/Inertia MVP with broad tournament-management coverage and a healthy automated-test baseline. The source contains 104 routes, 16 model files, 36 controller files, 19 policies, 17 services, 35 actions, and 51 migrations. After Sprint 3, the PHP suite passes: **266 tests, 810 assertions**. The frontend production build and bundle budget also pass.
 
-Production-hardening Sprints 1-3 closed the immediate registration, proxy, seeded-credential, Docker exposure, lint, backup tooling, internal health monitoring, worker/scheduler, dependency-audit, frontend warning, bundle-budget, and query-budget gaps. Playwright/axe passes all six local desktop/mobile journeys; PCOV and k6 automation are committed and their connected-environment results still need to be recorded. External alert delivery and a production-scale MySQL/off-site restore drill also remain open. Overall verified repository health after Sprint 3: **87/100**.
+Production-hardening Sprints 1-3 closed the immediate registration, proxy, seeded-credential, Docker exposure, lint, backup tooling, internal health monitoring, worker/scheduler, dependency-audit, frontend warning, bundle-budget, and query-budget gaps. Playwright/axe passes all six local desktop/mobile journeys; PCOV and k6 automation are committed. A 5 August follow-up recorded a connected-CI browser/axe pass and a successful sanitized production-sized MySQL restore. Multi-worker authenticated performance, an actual production/off-site restore, and real external operator alert receipt remain open. Overall verified repository health after Sprint 3: **87/100**.
+
+## Follow-up Evidence — 5 August 2026
+
+- Connected-CI `browser-e2e` passed all six Playwright/axe journeys on commit `ae42a50`.
+- An AES-256 MySQL restore of a sanitized 3.47 MB dataset completed into an isolated MySQL 8 target in 2.977 seconds; all 56 migrations, health checks, and key row counts matched.
+- Corrected in-memory k6 authentication produced 190/190 successful checks with 0% HTTP errors, but p95 4.24 seconds failed the 750 ms target on the single-process development server. The committed script still needs the CSRF/dynamic-cookie fix and a multi-worker staging rerun.
+- Controlled degraded health delivered the expected critical Slack-format webhook to localhost. Real external delivery and operator receipt remain unverified.
+- Production data was not exported. The actual production-backup/off-host restore drill remains open.
+
+Full evidence: `docs/testing/2026-08-05-operational-drill.md`.
 
 | Area | Score | Evidence summary |
 |---|---:|---|
@@ -14,7 +24,7 @@ Production-hardening Sprints 1-3 closed the immediate registration, proxy, seede
 | Maintainability | 8/10 | Clear Laravel conventions, 264 passing PHP tests, and clean Pint; strict TypeScript checking still fails on legacy typing debt. |
 | Scalability | 7/10 | Tenant-column architecture and queues are available; no capacity/load evidence or HA design. |
 | Documentation | 7/10 | Broad coverage, but several implementation claims were stale or speculative. |
-| Testing | 8/10 | 264 PHP tests pass; PCOV and browser/axe suites are configured but await connected-CI evidence. |
+| Testing | 8/10 | The later 334-test baseline and connected-CI Playwright/axe pass are evidenced; connected coverage percentage and staging performance remain open. |
 | DevOps | 6/10 | CI, Docker, and health endpoint exist; images/actions are unpinned and operations are incomplete. |
 
 ## Current System State
@@ -183,7 +193,7 @@ The PHP suite contains 266 tests after Sprint 3; the final validation record bel
 - Seeder production guards and credential lifecycle.
 - Backup/restore and migration rollback drills.
 - Browser E2E for dean, faculty, draw, import, export, and role workflows.
-- Connected-CI execution of the locally passing Playwright desktop/mobile and axe suite.
+- Connected-CI Playwright/axe execution is now evidenced as passed on commit `ae42a50`.
 - Authenticated load tests for dashboards, rankings, exports, and imports; a public health k6 baseline is committed.
 - First PCOV coverage percentage; CI now publishes Clover evidence, but no arbitrary threshold is claimed.
 
@@ -246,6 +256,6 @@ docs/
 | `npx tsc --noEmit` | Failed; legacy JSX/Ziggy/page-model typing debt documented |
 | `composer audit --locked --abandoned=fail` | Passed once with no advisories; registry access was intermittent on repeat |
 | `npm audit --audit-level=high` | Passed once with zero vulnerabilities; registry access was intermittent on repeat |
-| Playwright/axe local | Passed; 6 desktop/mobile Chromium journeys, including axe WCAG checks |
+| Playwright/axe | Passed locally and in connected CI; 6 desktop/mobile Chromium journeys, including axe WCAG checks, on `ae42a50` |
 
 This repository audit does not prove that a deployed environment has the same revision, configuration, data, network controls, backups, or runtime health.

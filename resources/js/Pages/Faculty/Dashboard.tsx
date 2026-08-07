@@ -108,12 +108,12 @@ export default function FacultyDashboard({
     const registeredEventIds = new Set(registrations.map(r => r.event?.id).filter(Boolean));
     const unregisteredEvents = availableEvents.filter(e => !registeredEventIds.has(e.id));
 
-    const officialRoles = ['assistant_manager', 'manager', 'coach', 'physio'] as const;
+    const officialRoles = ['manager', 'assistant_manager', 'coach', 'physio'] as const;
     const activeRegAllowedRoles = (() => {
-        if (!activeReg?.event?.sport_category_id) return ['athlete_male', 'athlete_female', ...officialRoles] as const;
+        if (!activeReg?.event?.sport_category_id) return [...officialRoles, 'athlete_male', 'athlete_female'] as const;
         const sc = sportCategories.find(c => c.id === activeReg.event!.sport_category_id);
         const allowed = sc?.allowed_roles ?? ['athlete_male', 'athlete_female'];
-        return [...allowed, ...officialRoles] as const;
+        return [...officialRoles, ...allowed] as const;
     })();
 
     const getQuota = (reg: typeof registrations[0]) => {

@@ -14,4 +14,4 @@ Beyond Sentry, the following monitoring pillars should be addressed as the platf
 
 Environment thresholds are `HEALTH_MAX_PENDING_JOBS`, `HEALTH_MAX_FAILED_JOBS`, and `HEALTH_MIN_DISK_FREE_MB`.
 
-An external uptime/alerting provider must poll `/health` and notify operators on HTTP 503. Critical logs should also be shipped to an external destination. A hosted dashboard/APM product remains deployment-specific and is not bundled.
+An external uptime/alerting provider must poll `/health` and notify operators on HTTP 503. Critical logs should also be shipped to an external destination. On 5 August 2026, controlled degraded health exited non-zero and delivered the expected critical Slack-format POST to a localhost receiver, validating the application transport path. No real external destination or operator receipt has yet been demonstrated. A hosted dashboard/APM product remains deployment-specific and is not bundled.

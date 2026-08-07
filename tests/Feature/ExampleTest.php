@@ -40,7 +40,7 @@ class ExampleTest extends TestCase
             ->assertOk()
             ->assertSee('<link rel="icon" href="/storage/settings/favicon.png">', false)
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Welcome')
+                ->component('Public/Index')
                 ->where('settings.logo_url', '/storage/settings/logo.svg'));
     }
 }

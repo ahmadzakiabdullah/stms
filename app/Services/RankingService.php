@@ -50,6 +50,24 @@ class RankingService
         return $rankings;
     }
 
+    public function calculateMedalTallyForSession(Session $session): Collection
+    {
+        $tournamentIds = $session->tournaments()
+            ->where('organization_id', $session->organization_id)
+            ->pluck('tournaments.id');
+
+        $results = Result::query()
+            ->where('organization_id', $session->organization_id)
+            ->whereHas('match.event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds))
+            ->with(['match.homeParticipant', 'match.awayParticipant', 'winner'])
+            ->get();
+
+        return $this->rankByMedalTally(
+            $session->tournaments()->where('organization_id', $session->organization_id)->with('events')->get(),
+            $this->aggregateStats($results)
+        );
+    }
+
     public function calculateForTournament(Tournament $tournament): Collection
     {
         $strategy = $tournament->ranking_strategy ?? self::STRATEGY_POINTS;
@@ -124,6 +142,7 @@ class RankingService
                         'participant_name' => $participant?->name ?? 'Unknown',
                         'participant_type' => $participant?->participant_type ?? 'individual',
                         'team_name' => $participant?->team_name,
+                        'logo_url' => $participant?->logo_url,
                         'matches_played' => 0,
                         'wins' => 0,
                         'draws' => 0,

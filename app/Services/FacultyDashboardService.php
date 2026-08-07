@@ -32,7 +32,7 @@ class FacultyDashboardService
                 'event.sport',
                 'event.sportCategory',
                 'event.tournament.session',
-                'squadMembers',
+                'squadMembers' => fn ($q) => $q->ordered(),
             ])
                 ->where('participant_id', $participant->id)
                 ->orderBy('created_at', 'desc')

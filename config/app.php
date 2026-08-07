@@ -54,6 +54,12 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'public_org_slug' => env('PUBLIC_ORG_SLUG'),
+
+    'public_session_slug' => env('PUBLIC_SESSION_SLUG'),
+
+    'csp_report_only' => (bool) env('CSP_REPORT_ONLY', true),
+
     'public_registration' => (bool) env(
         'PUBLIC_REGISTRATION_ENABLED',
         env('APP_ENV', 'production') !== 'production'
@@ -114,7 +120,7 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'ms'),
+    'locale' => env('APP_LOCALE', 'en'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 

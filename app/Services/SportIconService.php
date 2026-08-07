@@ -4,7 +4,6 @@ namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use RuntimeException;
 use Throwable;
 
 final class SportIconService
@@ -13,25 +12,11 @@ final class SportIconService
 
     private const PUBLIC_PREFIX = '/storage/';
 
+    public function __construct(private readonly SafePublicAssetService $assets) {}
+
     public function store(UploadedFile $file): string
     {
-        $stream = fopen($file->getPathname(), 'rb');
-
-        if ($stream === false) {
-            throw new RuntimeException('Unable to open the uploaded sport icon.');
-        }
-
-        try {
-            $path = 'sport-icons/'.$file->hashName();
-
-            if (! Storage::disk(self::DISK)->put($path, $stream)) {
-                throw new RuntimeException('Unable to store the uploaded sport icon.');
-            }
-        } finally {
-            fclose($stream);
-        }
-
-        return Storage::disk(self::DISK)->url($path);
+        return $this->assets->store($file, 'sport-icons', 'icon_file');
     }
 
     /**

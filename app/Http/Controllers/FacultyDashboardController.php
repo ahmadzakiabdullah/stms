@@ -43,6 +43,11 @@ class FacultyDashboardController extends Controller
                 ->with('error', 'Officials must provide a phone number.');
         }
 
+        if (! $isOfficial && ! $ep->squadMembers()->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->exists()) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Add officials before athletes.');
+        }
+
         $quotaError = $quotaService->validateAddition($ep, $validated['role']);
         if ($quotaError) {
             return redirect()->route('dashboard')
@@ -117,9 +122,9 @@ class FacultyDashboardController extends Controller
     {
         $headers = ['name', 'role', 'matrix_no', 'ic_passport', 'phone'];
         $example = [
+            ['Ahmad bin Jamal', 'manager', 'B062310003', '', '019-8765432'],
             ['Ali bin Ahmad', 'athlete_male', 'B062310001', '010203-10-1234', '012-3456789'],
             ['Siti binti Ali', 'athlete_female', 'B062310002', '020304-10-5678', '012-9876543'],
-            ['Ahmad bin Jamal', 'manager', 'B062310003', '', '019-8765432'],
         ];
 
         return response()->streamDownload(function () use ($headers, $example) {

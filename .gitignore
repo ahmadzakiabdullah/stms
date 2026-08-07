@@ -23,6 +23,7 @@
 /public/storage
 /playwright-report
 /test-results
+/tmp/
 /coverage.xml
 /bootstrap/cache/*.php
 /storage/*.key

@@ -18,6 +18,7 @@ class UserTest extends TestCase
 
         $response = $this->actingAs($super)->post(route('users.store'), [
             'name' => 'New User',
+            'username' => 'new_user',
             'email' => 'newuser@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -34,6 +35,7 @@ class UserTest extends TestCase
 
         $response = $this->actingAs($super)->post(route('users.store'), [
             'name' => '',
+            'username' => 'X',
             'email' => 'not-an-email',
             'password' => 'short',
         ]);
@@ -49,6 +51,7 @@ class UserTest extends TestCase
 
         $response = $this->actingAs($admin)->put(route('users.update', $user), [
             'name' => 'Updated Name',
+            'username' => $user->username,
             'email' => $user->email,
         ]);
 
@@ -65,10 +68,35 @@ class UserTest extends TestCase
 
         $response = $this->actingAs($adminA)->put(route('users.update', $userB), [
             'name' => 'Hacked',
+            'username' => $userB->username,
             'email' => $userB->email,
         ]);
 
-        $response->assertForbidden();
+        $response->assertNotFound();
+    }
+
+    public function test_non_super_admin_cannot_reset_password_for_other_org_user(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $adminA = $this->createOrgAdmin($orgA);
+        $userB = $this->createUserInOrganization($orgB);
+
+        $this->actingAs($adminA)->put(route('users.reset-password', $userB), [
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertNotFound();
+    }
+
+    public function test_non_super_admin_cannot_delete_other_org_user(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $adminA = $this->createOrgAdmin($orgA);
+        $userB = $this->createUserInOrganization($orgB);
+
+        $this->actingAs($adminA)->delete(route('users.destroy', $userB))->assertNotFound();
+        $this->assertNotSoftDeleted('users', ['uuid' => $userB->getKey()]);
     }
 
     public function test_super_admin_can_delete_user(): void

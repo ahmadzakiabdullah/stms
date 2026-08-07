@@ -32,6 +32,7 @@ class RegistrationTest extends TestCase
 
         $response = $this->post('/register', [
             'name' => 'Test User',
+            'username' => 'test_user',
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -47,6 +48,7 @@ class RegistrationTest extends TestCase
 
         $this->post('/register', [
             'name' => 'Org User',
+            'username' => 'org_user',
             'email' => 'orguser@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -64,6 +66,7 @@ class RegistrationTest extends TestCase
         $this->get('/register')->assertNotFound();
         $this->post('/register', [
             'name' => 'Blocked User',
+            'username' => 'blocked_user',
             'email' => 'blocked@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -80,6 +83,7 @@ class RegistrationTest extends TestCase
 
         $response = $this->post('/register', [
             'name' => 'Unassigned User',
+            'username' => 'unassigned_user',
             'email' => 'unassigned@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -97,6 +101,7 @@ class RegistrationTest extends TestCase
 
         $response = $this->post('/register', [
             'name' => 'Unconfigured User',
+            'username' => 'unconfigured_user',
             'email' => 'unconfigured@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',

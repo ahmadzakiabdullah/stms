@@ -110,7 +110,7 @@ chown -R www-data:www-data storage bootstrap/cache
 
 ## Step 7: Verify
 
-- [ ] Visit `https://your-domain.com/portal` — should show welcome page
+- [ ] Visit `https://your-domain.com/portal/` — should show the public portal; `/portal/index.php` must redirect permanently to this canonical URL
 - [ ] Visit `https://your-domain.com/portal/health` — should return JSON `{"status":"ok"}`
 - [ ] Provision the initial super-admin with `stms:create-super-admin`; production seeding intentionally creates no default account
 - [ ] Test basic CRUD (Organizations, Sports, Sessions, Tournaments, Events)
@@ -127,6 +127,8 @@ chown -R www-data:www-data storage bootstrap/cache
 - [ ] Run `php artisan stms:backup`, copy the archive off-host, and complete the isolated restore drill in [backup-restore.md](../deployment/backup-restore.md)
 - [ ] Configure an external uptime monitor for `/health` and alert on HTTP 503
 - [ ] Confirm `queue:work` and `schedule:work` are supervised and restart after failure/deploy
+
+Evidence note (5 August 2026): a sanitized production-sized MySQL restore passed and the local critical-webhook transport was verified. The two unchecked backup/monitoring items intentionally remain open until an actual production backup is copied off-host and a real external operator receives an alert.
 
 ---
 

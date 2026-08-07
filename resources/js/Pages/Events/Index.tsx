@@ -30,7 +30,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, Pencil, Plus, Save, Target, Trash2, Trash } from 'lucide-react';
+import { Eye, Pencil, Plus, RefreshCw, RotateCcw, Save, Target, Trash2, Trash } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
 import { matchProgress } from '@/lib/matchProgress';
@@ -75,6 +75,8 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [batchDelete, setBatchDelete] = useState(false);
     const [drawEvent, setDrawEvent] = useState<EventRow | null>(null);
+    const [redrawEvent, setRedrawEvent] = useState<EventRow | null>(null);
+    const [resetDrawEvent, setResetDrawEvent] = useState<EventRow | null>(null);
     const [drawFormat, setDrawFormat] = useState('group_knockout');
 
     const events = Array.isArray(eventsProp) ? eventsProp : (eventsProp?.data ?? []);
@@ -223,12 +225,28 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
         }
     };
 
-    const handleDraw = (event: EventRow) => {
+    const resolveFormat = (event: EventRow) => {
         const existing = ['league', 'group_knockout', 'knockout'].includes((event as any).format)
             ? (event as any).format
             : 'group_knockout';
-        setDrawFormat(existing);
+        return existing;
+    };
+
+    const handleDraw = (event: EventRow) => {
+        setDrawFormat(resolveFormat(event));
         setDrawEvent(event);
+    };
+
+    const submitRedraw = () => {
+        const e = redrawEvent;
+        setRedrawEvent(null);
+        if (e) router.post(route('events.draw', e.slug), { format: resolveFormat(e) }, { preserveScroll: true });
+    };
+
+    const submitResetDraw = () => {
+        const e = resetDrawEvent;
+        setResetDrawEvent(null);
+        if (e) router.post(route('events.reset-draw', e.slug), {}, { preserveScroll: true });
     };
 
     const handleBatchDelete = () => {
@@ -466,6 +484,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                 <TableHead>Dates</TableHead>
                                 <TableHead>Deadline</TableHead>
                                 <TableHead>Format</TableHead>
+                                <TableHead>Penyertaan</TableHead>
                                 <TableHead>Status</TableHead>
                                 {isSuperAdmin && <TableHead className="text-right">Actions</TableHead>}
                             </TableRow>
@@ -473,7 +492,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                         <TableBody>
                             {events.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={isSuperAdmin ? 9 : 8} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={isSuperAdmin ? 10 : 9} className="text-center text-muted-foreground">
                                         No events yet.
                                     </TableCell>
                                 </TableRow>
@@ -509,6 +528,25 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col gap-1">
+                                            <span
+                                                className={`inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
+                                                    (event.registrations_count ?? 0) === 0
+                                                        ? 'bg-red-100 text-red-700'
+                                                        : (event.pending_participants_count ?? 0) > 0
+                                                            ? 'bg-amber-100 text-amber-700'
+                                                            : 'bg-emerald-100 text-emerald-700'
+                                                }`}
+                                                title={`${event.confirmed_participants_count ?? 0} disahkan${(event.pending_participants_count ?? 0) > 0 ? `, ${event.pending_participants_count} menunggu` : ''}`}
+                                            >
+                                                {event.registrations_count ?? 0}/{event.participants_count ?? 0}
+                                            </span>
+                                            {(event.pending_participants_count ?? 0) > 0 && (
+                                                <span className="text-[10px] text-muted-foreground">{event.pending_participants_count} menunggu pengesahan</span>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col gap-1">
                                             <span className={event.is_active ? 'rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700' : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'}>
                                                 {event.is_active ? 'Active' : 'Inactive'}
                                             </span>
@@ -539,9 +577,25 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                                 </Button>
                                             </Link>
                                         )}
-                                        <Button variant="outline" size="sm" onClick={() => handleDraw(event)} title="Draw groups and generate fixtures">
-                                            <Target className="mr-1 size-3" /> Draw
-                                        </Button>
+                                        {(event.pools_count ?? 0) === 0 ? (
+                                            <Button variant="outline" size="sm" onClick={() => handleDraw(event)} title="Randomly assign participants into groups">
+                                                <Target className="mr-1 size-3" /> Draw
+                                            </Button>
+                                        ) : (event.matches_count ?? 0) === 0 ? (
+                                            <Button variant="outline" size="sm" onClick={() => setRedrawEvent(event)} title="Discard the current grouping and draw again">
+                                                <RefreshCw className="mr-1 size-3" /> Re-draw
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-red-600 hover:text-red-700"
+                                                onClick={() => setResetDrawEvent(event)}
+                                                title="Delete all groups and fixtures and restart the draw"
+                                            >
+                                                <RotateCcw className="mr-1 size-3" /> Reset Draw
+                                            </Button>
+                                        )}
                                         <Button variant="outline" size="sm" onClick={() => openEdit(event)}>
                                             <Pencil className="mr-1 size-3" /> Edit
                                         </Button>
@@ -585,10 +639,10 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             <Dialog open={!!drawEvent} onOpenChange={(o) => { if (!o) setDrawEvent(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Draw & Generate Fixtures?</DialogTitle>
+                        <DialogTitle>Draw Groups?</DialogTitle>
                         <DialogDescription>
-                            This will randomly assign confirmed participants into groups and generate round-robin fixtures for <strong>{drawEvent?.name}</strong>.
-                            Any existing fixtures for this event will be replaced.
+                            Randomly assign confirmed participants into groups for <strong>{drawEvent?.name}</strong>.
+                            You can review and adjust the groups before generating fixtures. Any existing grouping will be replaced.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-2 py-2">
@@ -611,6 +665,42 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                             setDrawEvent(null);
                             if (e) router.post(route('events.draw', e.slug), { format: drawFormat }, { preserveScroll: true });
                         }}>Yes, Draw</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            )}
+
+            {isSuperAdmin && (
+            <Dialog open={!!redrawEvent} onOpenChange={(o) => { if (!o) setRedrawEvent(null); }}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Re-draw Groups?</DialogTitle>
+                        <DialogDescription>
+                            This will discard the current grouping for <strong>{redrawEvent?.name}</strong> and randomly
+                            assign participants into new groups. No fixtures exist yet.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setRedrawEvent(null)}>Cancel</Button>
+                        <Button onClick={submitRedraw}>Yes, Re-draw</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            )}
+
+            {isSuperAdmin && (
+            <Dialog open={!!resetDrawEvent} onOpenChange={(o) => { if (!o) setResetDrawEvent(null); }}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Reset Draw?</DialogTitle>
+                        <DialogDescription>
+                            Delete all groups and fixtures for <strong>{resetDrawEvent?.name}</strong> and restart the
+                            draw from scratch. This cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setResetDrawEvent(null)}>Cancel</Button>
+                        <Button variant="destructive" onClick={submitResetDraw}>Yes, Reset Draw</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

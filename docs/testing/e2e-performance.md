@@ -19,9 +19,9 @@ The CI job uses `database/e2e.sqlite`, enables demo seeding only in the testing 
 - Dean login and verification dashboard.
 - Automated axe checks on login and the authenticated dashboard.
 
-Mutation-heavy draw, import, result-entry, and export content assertions should be added after the first connected CI run confirms stable accessible selectors.
+The first connected CI run has confirmed the six current journeys. Mutation-heavy draw, import, result-entry, and export content assertions can now be added with stable accessible selectors and isolated test data.
 
-The six committed desktop/mobile Chromium journeys cover the role-aware dashboard shell, faculty workspace, dean verification and core super-admin pages. The last recorded local browser run passed on 2 August 2026; connected CI remains the authoritative repeatable browser/accessibility environment. The 4 August dashboard/sidebar refactor passed PHPUnit, Pint, TypeScript and production build checks, while direct production browser inspection was unavailable because the local Windows browser sandbox could not initialize.
+The six committed desktop/mobile Chromium journeys cover the role-aware dashboard shell, faculty workspace, dean verification and core super-admin pages. Connected CI passed all six journeys on commit `ae42a50` and remains the authoritative repeatable browser/accessibility environment. A 5 August Windows repeat passed 4/6; the faculty/dean journey requested post-login chunks under `/portal/build/...` and received 404 in the temporary root-hosted environment, so that local base-path mismatch does not supersede the connected-CI result.
 
 ## Coverage Policy
 
@@ -43,7 +43,17 @@ PCOV generates a Clover artifact in CI. Record the first successful percentage i
 The default scenario checks `/health`. Supplying controlled, non-production load-test credentials also signs in and exercises `/dashboard`:
 
 ```bash
-k6 run -e BASE_URL=https://staging.example.test -e AUTH_EMAIL=loadtest@example.test -e AUTH_PASSWORD=secret -e VUS=10 -e DURATION=30s tests/performance/smoke.js
+k6 run -e BASE_URL=https://staging.example.test -e AUTH_LOGINS=loadtest1,loadtest2 -e AUTH_PASSWORDS=secret1,secret2 -e VUS=10 -e DURATION=30s -e K6_SUMMARY_PATH=test-results/k6-summary.json tests/performance/smoke.js
 ```
 
-Use a dedicated least-privilege staging account and inject its password through the CI secret store. Never commit credentials or point mutation/load tests at production without explicit approval.
+Use dedicated least-privilege staging accounts and inject passwords through the CI secret store. Each VU owns its own cookie jar and is mapped to a supplied account; provide at least as many accounts as VUs to avoid shared sessions and login throttling. Never commit credentials or point mutation/load tests at production without explicit approval.
+Publish `test-results/k6-summary.json` as the release artifact after every approved staging run.
+
+## Evidence Recorded on 5 August 2026
+
+- Connected-CI Playwright/axe: all six journeys passed on commit `ae42a50`.
+- Sanitized MySQL restore: 3.47 MB AES-256 archive restored in 2.977 seconds with healthy checks and matching counts.
+- Corrected authenticated k6 behavior: 190/190 checks and 0% HTTP errors; p95 4.24 seconds failed the 750 ms target on the single-process development server.
+- The CSRF/dynamic-cookie correction is committed in the working tree. A multi-worker staging load run is still required before the latency gate can be marked complete.
+
+See `2026-08-05-operational-drill.md` for the complete record.

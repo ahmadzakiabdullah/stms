@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Services\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
  *
  * Applies a global scope that filters by the authenticated user's organization_id,
  * unless the user has the 'super-admin' role.
+ *
+ * Uses TenantContext for consistent tenant resolution across HTTP, jobs, and commands.
  *
  * Usage:
  *   use App\Models\Concerns\BelongsToOrganization;
@@ -33,13 +36,13 @@ trait BelongsToOrganization
                 return;
             }
 
-            $user = Auth::user();
+            $organizationId = TenantContext::getOrganizationId();
 
-            if ($user && ! $user->hasRole('super-admin') && ! empty($user->organization_id)) {
+            if ($organizationId !== null) {
                 $table = $query->getModel()->getTable();
 
                 // Use qualified column name to avoid ambiguity in joins
-                $query->where("{$table}.organization_id", $user->organization_id);
+                $query->where("{$table}.organization_id", $organizationId);
             }
         });
     }

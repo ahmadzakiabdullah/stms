@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\Organization;
 use App\Services\OrganizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class OrganizationServiceTest extends TestCase
@@ -51,5 +52,18 @@ class OrganizationServiceTest extends TestCase
         $service->deleteOrganization($org);
 
         $this->assertSoftDeleted('organizations', ['id' => $org->id]);
+    }
+
+    public function test_it_rejects_parent_cycles(): void
+    {
+        $parent = Organization::factory()->create();
+        $child = Organization::factory()->create(['parent_id' => $parent->id]);
+
+        $this->expectException(ValidationException::class);
+        (new OrganizationService)->updateOrganization($parent, [
+            'name' => $parent->name,
+            'slug' => $parent->slug,
+            'parent_id' => $child->id,
+        ]);
     }
 }

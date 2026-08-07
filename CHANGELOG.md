@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased — Hardening follow-up (7 August 2026)
+
+- Changed `TenantContext` to a container-scoped lifecycle and added fail-closed tenant-aware queue middleware.
+- Made the public portal resolve `PUBLIC_ORG_SLUG` before `PUBLIC_SESSION_SLUG`, with safe empty states and duplicate-slug isolation tests.
+- Scoped `User` route-model binding for non-super-admins so cross-organization management requests return 404.
+- Added report-only CSP hardening and a CI allowlist check for tenant-scope bypasses.
+- Corrected the authenticated k6 scenario to use Laravel's XSRF cookie, dynamic session cookies, per-VU cookie jars, and configurable account lists.
+- Added versioned draw snapshots with deterministic seeds, actor metadata, soft-deleted pool history, guarded rollback, and a history UI.
+- Sanitized SVG uploads consistently for participant, settings and sport assets with UUID-generated filenames.
+- Enabled real verified-email middleware behavior and fixed public registration username persistence.
+- Updated PHP and npm lock files to remove all currently reported dependency advisories.
+- Made Redis the production cache, queue and session backend and enabled the PHP Redis extension in the container image.
+
+## 5 August 2026
+
+### Operational assurance evidence
+
+- Recorded a successful connected-CI Playwright/axe run for all six desktop/mobile journeys on commit `ae42a50`.
+- Completed an isolated AES-256 MySQL restore using a sanitized 3.47 MB dataset, larger than the measured 2.66 MB production schema. Restore completed in 2.977 seconds with all 56 migrations, health checks, and key row counts verified.
+- Exercised the authenticated k6 path: corrected in-memory CSRF and dynamic session-cookie handling produced 190/190 successful checks and 0% HTTP errors, while p95 4.24 seconds failed the 750 ms target on the single-process development server.
+- Verified controlled degraded-health logging delivered a critical Slack-format POST to a localhost receiver. Real external operator receipt remains pending because no Slack/Papertrail destination is configured.
+- Documented that `stms:restore --force` still prompts interactively and that a real production-backup/off-site restore remains outstanding.
+- Removed all temporary validation databases, archives, containers, and application servers after the drills.
+
 All notable changes to the STMS project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
@@ -8,6 +32,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [Unreleased]
+
+- Hardened the multi-tenant context lifecycle (P0): `TenantContext` state now lives on a container-scoped singleton instead of process-global statics, so it can never leak across requests, queue workers, or long-running servers (e.g. Octane). `SetTenantContext` resets the context before every request, records super-admin and guest requests as an explicit auditable bypass (with a reason), and always cleans up in a `finally` block plus a `terminate` hook. Added `TenantContext::setBypass`/`isBypassing`/`bypassReason`/`isInitialized`/`requireOrganization` (fail-closed when a tenant-required operation has no organization), and fixed `isConsole`/`isQueue` to reflect the recorded context only. Added `TenantContextLifecycleTest` covering sequential-request isolation, super-admin/guest non-inheritance, exception cleanup, queue-context isolation, and fail-closed behavior.
+
+- Split an event draw into a two-phase flow: "Draw" now only creates groups (random pool assignment, no fixtures) and opens the Draw Result page for review; a new "Generate Fixtures" button on the Draw Result page creates round-robin fixtures once groups are confirmed. The Events page offers contextual actions per state: "Draw" when no groups exist, "Re-draw" when groups exist but no fixtures, and a destructive "Reset Draw" (blocked once a match has started) that deletes all groups and fixtures. Added `events.generate-fixtures` and `events.reset-draw` routes and split `DrawService` into `drawGroups`, `generateFixtures`, and `resetDraw` (with `drawAndGenerateFixtures` retained for backward compatibility).
+
+- Fixed the production-wide HTTP 500 caused by resolving config('app.trusted_proxies') before Laravel registered its configuration repository. Proxy allowlists now resolve in an application middleware at request time, preserving explicit TRUSTED_PROXIES handling while allowing Laravel to bootstrap.
+
+- Redirected `/portal` (without trailing slash) permanently to the canonical `/portal/` URL via a Laravel route, fixing a 404 when the site root rewrites bypass the IIS canonical rule.
+
+- Made the public portal refresh live: it now polls every 30 seconds (Inertia partial reload of results/upcoming/medals/stats/updated_at, paused when the tab is hidden, refetched on visibility return), exposes a manual "Muat semula" button, and shows an honest last-updated timestamp derived from the actual session/fixture/result data instead of the render time.
+
+- Fixed completed matches with no `scheduled_at` (e.g. results entered before scheduling) being hidden from the public portal: the results section now shows every completed fixture with a result regardless of schedule, while the upcoming schedule and the completion-progress stat still exclude unscheduled matches.
+
+- Canonicalized the public portal at /portal/, redirected legacy /portal/index.php requests, replaced the IIS filename redirect with an internal rewrite, and removed the negative-margin hero/statistics overlap that could look visually clipped.
+
+- Set English as the application default and fallback language, including the username-or-email login label; the Bahasa Malaysia SAF public portal remains event-specific content.
+
+- Added case-insensitive username-or-email authentication with the existing password and rate limiter. Introduced unique usernames, safe backfill for existing accounts, automatic username generation for legacy creation paths, and username management in registration/admin user forms.
+
+- Replaced the generic public welcome page with a Bahasa Malaysia SAF 2026 information hub at / and /index.php, showing tenant-scoped schedules, latest results, competition progress, sports, and a medal tally derived from completed final/bronze fixtures. Added privacy-focused feature coverage and an optional PUBLIC_SESSION_SLUG deployment selector.
 
 - Refactored dashboard and sidebar UX by system role: administrators get an attention-first operational overview, admin-sport gets competition actions, faculty representatives retain the registration/squad workspace, deans enter verification from /dashboard, Notifications moved to Overview, and navigation now uses an explicit policy-aligned role matrix. Updated current-state, design-system, architecture, roadmap, TODO, README, and future API Markdown.
 

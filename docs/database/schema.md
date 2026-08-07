@@ -1,13 +1,13 @@
 # Database Schema
 
-The schema is migration-driven. There are 56 migration files as of 4 August 2026; do not infer the final table count from migration count because several migrations alter or rename existing tables.
+The schema is migration-driven. There are 59 migration files as of 7 August 2026; do not infer the final table count from migration count because several migrations alter or rename existing tables.
 
 ## Tables Overview
 
 ### Core / Tenancy
 
 - **`organizations`** — Root tenant entity. Self-referencing `parent_id` for hierarchy. Types: national, state, university, school, private.
-- **`users`** — System users with UUID PK. Belong to one organization. Link to participant via `participant_id`. Has Spatie roles.
+- **`users`** — System users with UUID PK. Belong to one organization. Link to participant via `participant_id`. Has a globally unique lowercase `username`, email identity, and Spatie roles.
 
 ### Tournament Structure
 
@@ -36,6 +36,7 @@ The schema is migration-driven. There are 56 migration files as of 4 August 2026
 ### Draws, Configuration, Notifications, and Audit
 
 - **`pools`** — Event draw/group allocation, tenant-scoped by `organization_id`.
+- **`draw_versions`** — Immutable tenant-scoped draw allocation/fixture snapshots with version, seed, actor and action metadata for audit and rollback.
 - **`settings`** — Per-organization key/value settings with a unique `[organization_id, key]` constraint.
 - **`notifications`** — Laravel database notifications.
 - **`activity_log`** — Spatie activity records for selected audited actions.

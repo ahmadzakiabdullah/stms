@@ -5,6 +5,8 @@
     "scripts": {
         "build": "vite build",
         "build:budget": "node scripts/check-bundle-budget.mjs",
+        "check:tenant-bypasses": "node scripts/check-tenant-scope-bypasses.mjs",
+        "check:inventory": "node scripts/check-project-inventory.mjs",
         "dev": "vite",
         "typecheck": "tsc --noEmit",
         "test:e2e": "playwright test",

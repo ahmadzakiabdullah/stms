@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use App\Models\DrawVersion;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Fixture;
@@ -48,12 +49,20 @@ class DrawControllerTest extends TestCase
 
         $response = $this->actingAs($manager)->post(route('events.draw', $event));
 
-        $response->assertRedirect(route('events.index'));
+        $response->assertRedirect(route('events.draw-result', $event));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseCount('pools', 2);
         $this->assertDatabaseHas('pools', ['event_id' => $event->id, 'name' => 'Group A']);
         $this->assertDatabaseHas('pools', ['event_id' => $event->id, 'name' => 'Group B']);
+
+        // Grouping only — fixtures are not generated until the second phase.
+        $this->assertDatabaseCount('matches', 0);
+
+        $response = $this->actingAs($manager)->post(route('events.generate-fixtures', $event));
+
+        $response->assertRedirect(route('events.draw-result', $event));
+        $response->assertSessionHas('success');
 
         $this->assertDatabaseCount('matches', 2); // 4 participants in 2 pools of 2 -> 1 match per pool -> 2 matches
     }
@@ -73,8 +82,110 @@ class DrawControllerTest extends TestCase
 
         $response = $this->actingAs($manager)->post(route('events.draw', $event));
 
-        $response->assertRedirect(route('events.index'));
+        $response->assertRedirect(route('events.draw-result', $event));
         $response->assertSessionHas('error', 'Need at least 2 confirmed participants to draw.');
+    }
+
+    public function test_generate_fixtures_fails_when_no_draw_exists(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createOrgAdmin($org);
+
+        $event = Event::factory()->create(['organization_id' => $org->id]);
+
+        EventParticipant::factory()->count(2)->create([
+            'organization_id' => $org->id,
+            'event_id' => $event->id,
+            'status' => 'confirmed',
+        ]);
+
+        $response = $this->actingAs($manager)->post(route('events.generate-fixtures', $event));
+
+        $response->assertRedirect(route('events.draw-result', $event));
+        $response->assertSessionHas('error', 'Cannot generate fixtures: no draw has been performed yet.');
+
+        $this->assertDatabaseCount('matches', 0);
+    }
+
+    public function test_reset_draw_removes_pools_and_fixtures(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createOrgAdmin($org);
+
+        $event = Event::factory()->create(['organization_id' => $org->id]);
+
+        $poolA = Pool::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id]);
+        $poolB = Pool::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id]);
+
+        EventParticipant::factory()->create([
+            'organization_id' => $org->id,
+            'event_id' => $event->id,
+            'pool_id' => $poolA->id,
+        ]);
+
+        Fixture::factory()->scheduled()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'pool_id' => $poolA->id]);
+
+        $response = $this->actingAs($manager)->post(route('events.reset-draw', $event));
+
+        $response->assertRedirect(route('events.draw-result', $event));
+        $response->assertSessionHas('success', 'Draw reset. All groups and fixtures were removed.');
+
+        $this->assertSame(0, Pool::query()->count());
+        $this->assertSame(2, Pool::withTrashed()->whereNotNull('deleted_at')->count());
+        $this->assertDatabaseCount('matches', 0);
+        $this->assertDatabaseHas('event_participants', ['event_id' => $event->id, 'pool_id' => null]);
+    }
+
+    public function test_cannot_reset_draw_when_matches_have_started(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createOrgAdmin($org);
+
+        $event = Event::factory()->create(['organization_id' => $org->id]);
+
+        $poolA = Pool::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id]);
+
+        Fixture::factory()->create([
+            'organization_id' => $org->id,
+            'event_id' => $event->id,
+            'pool_id' => $poolA->id,
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($manager)->post(route('events.reset-draw', $event));
+
+        $response->assertRedirect(route('events.draw-result', $event));
+        $response->assertSessionHas('error', 'Cannot reset the draw after a match has started.');
+
+        $this->assertDatabaseCount('pools', 1);
+        $this->assertDatabaseCount('matches', 1);
+    }
+
+    public function test_draw_history_can_restore_a_previous_version_before_matches_start(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createOrgAdmin($org);
+        $event = Event::factory()->create(['organization_id' => $org->id, 'pool_size' => 2]);
+        EventParticipant::factory()->count(4)->create([
+            'organization_id' => $org->id,
+            'event_id' => $event->id,
+            'status' => 'confirmed',
+        ]);
+
+        $this->actingAs($manager)->post(route('events.draw', $event))->assertSessionHas('success');
+        $version = DrawVersion::where('event_id', $event->id)->where('action', 'drawn')->firstOrFail();
+
+        $this->actingAs($manager)->post(route('events.reset-draw', $event))->assertSessionHas('success');
+        $this->assertDatabaseCount('pools', 2); // soft-deleted history is retained
+        $this->assertSame(0, Pool::query()->count());
+
+        $this->actingAs($manager)
+            ->post(route('events.draw.rollback', [$event, $version]))
+            ->assertSessionHas('success', "Draw restored from version {$version->version}.");
+
+        $this->assertSame(2, Pool::query()->count());
+        $this->assertSame(4, EventParticipant::whereNotNull('pool_id')->count());
+        $this->assertDatabaseHas('draw_versions', ['event_id' => $event->id, 'action' => 'rollback']);
     }
 
     public function test_unauthorized_user_cannot_view_draw_result(): void

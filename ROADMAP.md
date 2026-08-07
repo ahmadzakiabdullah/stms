@@ -31,6 +31,8 @@
 | SAF 2026 Complete Data Seeding | ✅ |
 | Role-aware Dashboard + Policy-aligned Navigation | ✅ |
 | Participation Confirmation + Team Registration Forms | ✅ |
+| Connected-CI Playwright + axe Evidence | ✅ |
+| Sanitized Production-sized MySQL Restore Drill | ✅ |
 
 ## Current Production Data
 
@@ -53,3 +55,5 @@
 | 11    | REST API Layer              | Low      | ⏳ Deferred |
 
 **Fokus semasa:** Production hardening and maintenance — close the security, deployment, observability, and documentation gaps recorded in `docs/audits/2026-07-31-enterprise-audit.md` before describing the system as production-ready.
+
+**Bukti operasi 5 Ogos 2026:** connected-CI Playwright/axe dan restore MySQL AES-256 terasing telah lulus. Baki sebelum tuntutan production-ready ialah k6 berautentikasi pada staging berbilang worker, restore sebenar daripada backup produksi/off-site, dan pengesahan penerimaan amaran oleh operator luar. Rujuk `docs/testing/2026-08-05-operational-drill.md`.

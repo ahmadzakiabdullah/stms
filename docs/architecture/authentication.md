@@ -4,7 +4,7 @@ Authentication is provided by Laravel Breeze with Inertia.js scaffolding, which 
 
 ## Scaffolded Flows
 
-- **Login** — Email/password authentication via `AuthenticatedSessionController`. Rate-limited to 5 attempts per minute. Successful login regenerates the session and redirects to the dashboard.
+- **Login** — Case-insensitive username-or-email/password authentication via `AuthenticatedSessionController`. Rate-limited to 5 attempts per minute. Successful login regenerates the session and redirects to the dashboard.
 - **Registration** — Public registration is controlled by `PUBLIC_REGISTRATION_ENABLED` and defaults to disabled in production. When enabled, it requires a valid `DEFAULT_ORG_SLUG`; missing or invalid tenant configuration fails closed. It does not create an organization or assign an admin role. Invitation-based onboarding remains recommended for multi-tenant production use.
 - **Password Reset** — `PasswordResetLinkController` sends a reset link via email. `NewPasswordController` handles the token verification and password update.
 - **Email Verification** — `EmailVerificationPromptController` and `VerifyEmailController` enforce verified emails before accessing sensitive routes. Verification is optional but recommended; configurable via `fortify.php`.
@@ -31,3 +31,8 @@ Route::middleware('guest')->group(function () {
 ```
 
 Only `/dashboard` currently includes the `verified` middleware; the broader authenticated route group does not require verified email.
+
+
+## Username Identity
+
+Usernames are globally unique, lowercase identifiers containing letters, numbers, underscores, or dashes. Existing accounts are backfilled from the local part of their email with a numeric suffix on collision. The User model also generates a unique username for legacy account-creation paths that omit it. Login failures and lockouts use the submitted identifier plus client IP as the throttle key and return the same generic authentication error for usernames and emails.

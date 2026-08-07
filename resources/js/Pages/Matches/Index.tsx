@@ -132,7 +132,7 @@ function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: 
 
     return (
         <div className="flex items-center gap-2">
-            <TeamMark participant={participant} fallback={fallback} size="size-6" />
+            <TeamMark participant={participant} fallback={fallback} size="size-12" />
             <span title={participantFullName(participant)}>{name}</span>
         </div>
     );
@@ -326,12 +326,12 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
             <TableCell className="w-14 font-medium text-muted-foreground">#{label}</TableCell>
             <TableCell>
                 <div className="flex min-w-[260px] items-center gap-2">
-                    <TeamMark participant={match.home_participant} size="size-6" />
-                    <span className="max-w-[110px] truncate font-medium" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
+                    <span className="max-w-[110px] truncate font-medium text-right" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
+                    <TeamMark participant={match.home_participant} size="size-12" />
                     <span className={`mx-1 shrink-0 rounded-md px-2 py-0.5 text-sm font-bold tabular-nums ${scored ? 'bg-muted' : 'text-muted-foreground'}`}>
                         {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : 'VS'}
                     </span>
-                    <TeamMark participant={match.away_participant} size="size-6" />
+                    <TeamMark participant={match.away_participant} size="size-12" />
                     <span className="max-w-[110px] truncate font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
                 </div>
             </TableCell>

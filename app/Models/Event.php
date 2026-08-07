@@ -72,6 +72,11 @@ class Event extends Model
         return $this->hasMany(Pool::class);
     }
 
+    public function drawVersions(): HasMany
+    {
+        return $this->hasMany(DrawVersion::class)->latest('version');
+    }
+
     public function eventParticipants()
     {
         return $this->hasMany(EventParticipant::class);

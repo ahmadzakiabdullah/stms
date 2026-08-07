@@ -229,12 +229,12 @@ function ResultRowView({ result, onEdit, onDelete, canManage = true }: ResultRow
             <TableCell className="w-14 font-medium text-muted-foreground">#{matchNumberLabel(result.match?.match_number, result.match?.event?.name)}</TableCell>
             <TableCell>
                 <div className="flex min-w-[260px] items-center gap-2">
-                    <TeamMark participant={result.match?.home_participant} size="size-6" />
-                    <span className="max-w-[110px] truncate font-medium" title={participantFullName(result.match?.home_participant)}>{participantName(result.match?.home_participant)}</span>
+                    <span className="max-w-[110px] truncate font-medium text-right" title={participantFullName(result.match?.home_participant)}>{participantName(result.match?.home_participant)}</span>
+                    <TeamMark participant={result.match?.home_participant} size="size-12" />
                     <span className={`mx-1 shrink-0 rounded-md px-2 py-0.5 text-sm font-bold tabular-nums ${scored ? 'bg-muted' : 'text-muted-foreground'}`}>
                         {scored ? `${result.score_home} : ${result.score_away}` : 'VS'}
                     </span>
-                    <TeamMark participant={result.match?.away_participant} size="size-6" />
+                    <TeamMark participant={result.match?.away_participant} size="size-12" />
                     <span className="max-w-[110px] truncate font-medium" title={participantFullName(result.match?.away_participant)}>{participantName(result.match?.away_participant)}</span>
                 </div>
             </TableCell>
@@ -741,10 +741,10 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                         <div key={match.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2">
                                             <div className="flex min-w-0 items-center gap-3">
                                                 <span className="w-14 shrink-0 text-sm font-semibold text-muted-foreground">#{matchNumberLabel(match.match_number, match.event?.name)}</span>
-                                                <TeamMark participant={match.home_participant} size="size-6" />
                                                 <span className="max-w-[110px] truncate text-sm font-medium" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
+                                                <TeamMark participant={match.home_participant} size="size-12" />
                                                 <span className="text-xs font-bold text-muted-foreground">VS</span>
-                                                <TeamMark participant={match.away_participant} size="size-6" />
+                                                <TeamMark participant={match.away_participant} size="size-12" />
                                                 <span className="max-w-[110px] truncate text-sm font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
                                                 <span className="hidden text-xs text-muted-foreground sm:inline">· {matchDetail(match)}</span>
                                             </div>

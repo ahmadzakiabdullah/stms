@@ -6,10 +6,12 @@ use App\Actions\Participants\RegisterParticipantToEvent;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Participant;
+use App\Models\SquadMember;
 use App\Models\User;
 use App\Notifications\EventParticipantConfirmed;
 use App\Notifications\EventParticipantRejected;
 use App\Notifications\NewEventRegistration;
+use App\Services\SquadQuotaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -38,7 +40,7 @@ class EventParticipantController extends Controller
         $participants = $this->safePaginatedQuery(function () use ($hasParticipant, $user, $search, $sportId, $categoryId, $participantId, $status) {
             $query = Participant::query()
                 ->with(['eventParticipants' => function ($q) use ($search, $sportId, $categoryId, $status) {
-                    $q->with(['event.sport', 'event.sportCategory', 'event.tournament', 'squadMembers'])
+                    $q->with(['event.sport', 'event.sportCategory', 'event.tournament', 'squadMembers' => fn ($q) => $q->ordered()])
                         ->when($search, fn ($q, $v) => $q->where(fn ($q) => $q->whereHas('event', fn ($q) => $q->where('name', 'like', "%{$v}%"))
                             ->orWhereHas('event.sport', fn ($q) => $q->where('name', 'like', "%{$v}%"))
                             ->orWhereHas('event.sportCategory', fn ($q) => $q->where('name', 'like', "%{$v}%"))
@@ -300,5 +302,122 @@ class EventParticipantController extends Controller
         ])->filter(fn ($v) => $v !== null && $v !== '')->all())->with('success', $validated['status'] === 'confirmed'
             ? 'Registration approved.'
             : 'Registration rejected.');
+    }
+
+    public function storeSquad(Request $request, EventParticipant $eventParticipant, SquadQuotaService $quotaService): RedirectResponse
+    {
+        $this->authorizeSquadManagement();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'role' => ['required', 'in:athlete_male,athlete_female,assistant_manager,manager,coach,physio'],
+            'matrix_no' => ['required', 'string', 'max:20'],
+            'identification_no' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $ep = $eventParticipant->load('event.sportCategory');
+
+        if ($ep->status !== 'confirmed') {
+            return redirect()->back()
+                ->with('error', 'Only confirmed registrations can add squad members.');
+        }
+
+        $isOfficial = in_array($validated['role'], ['assistant_manager', 'manager', 'coach', 'physio'], true);
+        if ($isOfficial && blank($validated['phone'])) {
+            return redirect()->back()
+                ->with('error', 'Officials must provide a phone number.');
+        }
+
+        if (! $isOfficial && ! $ep->squadMembers()->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->exists()) {
+            return redirect()->back()
+                ->with('error', 'Add officials before athletes.');
+        }
+
+        $quotaError = $quotaService->validateAddition($ep, $validated['role']);
+        if ($quotaError) {
+            return redirect()->back()
+                ->with('error', $quotaError);
+        }
+
+        SquadMember::create([
+            'event_participant_id' => $ep->id,
+            'organization_id' => $ep->event?->organization_id ?? Auth::user()->organization_id,
+            'name' => $validated['name'],
+            'matrix_no' => $validated['matrix_no'],
+            'role' => $validated['role'],
+            'identification_no' => $validated['identification_no'],
+            'phone' => $validated['phone'],
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Squad member added.');
+    }
+
+    public function updateSquad(Request $request, EventParticipant $eventParticipant, SquadMember $squadMember, SquadQuotaService $quotaService): RedirectResponse
+    {
+        $this->authorizeSquadManagement();
+
+        abort_unless($squadMember->event_participant_id === $eventParticipant->id, 404);
+
+        if ($eventParticipant->status !== 'confirmed') {
+            return redirect()->back()
+                ->with('error', 'Only confirmed registrations can manage squad members.');
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'role' => ['required', 'in:athlete_male,athlete_female,assistant_manager,manager,coach,physio'],
+            'matrix_no' => ['required', 'string', 'max:20'],
+            'identification_no' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        if ($squadMember->role !== $validated['role']) {
+            $ep = $eventParticipant->load('event.sportCategory');
+
+            $isOfficial = in_array($validated['role'], ['assistant_manager', 'manager', 'coach', 'physio'], true);
+            if ($isOfficial && blank($validated['phone'])) {
+                return redirect()->back()
+                    ->with('error', 'Officials must provide a phone number.');
+            }
+
+            if (! $isOfficial && ! $ep->squadMembers()
+                ->where('id', '!=', $squadMember->id)
+                ->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])
+                ->exists()) {
+                return redirect()->back()
+                    ->with('error', 'Add officials before athletes.');
+            }
+
+            $quotaError = $quotaService->validateAddition($ep, $validated['role']);
+            if ($quotaError) {
+                return redirect()->back()
+                    ->with('error', $quotaError);
+            }
+        }
+
+        $squadMember->update($validated);
+
+        return redirect()->back()
+            ->with('success', 'Squad member updated.');
+    }
+
+    public function destroySquad(EventParticipant $eventParticipant, SquadMember $squadMember): RedirectResponse
+    {
+        $this->authorizeSquadManagement();
+
+        abort_unless($squadMember->event_participant_id === $eventParticipant->id, 404);
+
+        $squadMember->delete();
+
+        return redirect()->back()
+            ->with('success', 'Squad member removed.');
+    }
+
+    private function authorizeSquadManagement(): void
+    {
+        $user = Auth::user();
+        abort_unless($user->hasRole('super-admin') || $user->hasRole('org-admin'), 403);
     }
 }

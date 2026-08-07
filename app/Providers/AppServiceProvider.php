@@ -28,6 +28,7 @@ use App\Policies\SettingPolicy;
 use App\Policies\SportCategoryPolicy;
 use App\Policies\SportPolicy;
 use App\Policies\TournamentPolicy;
+use App\Services\TenantContext;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
@@ -41,7 +42,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // A fresh instance is created for every request/job lifecycle, including
+        // long-running Octane and queue workers.
+        $this->app->scoped(TenantContext::class);
     }
 
     /**

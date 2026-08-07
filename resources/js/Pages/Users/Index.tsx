@@ -37,6 +37,7 @@ import type { User, Role, Organization, Participant, Paginated, Flash, Sport } f
 
 const createUserSchema = z.object({
     name: z.string().min(1, 'Name is required'),
+    username: z.string().min(3, 'Username must be at least 3 characters').regex(/^[a-z0-9_-]+$/, 'Use lowercase letters, numbers, _ or -'),
     email: z.string().min(1, 'Email is required').email('Invalid email'),
     password: z.string().min(1, 'Password is required'),
     password_confirmation: z.string().min(1, 'Please confirm password'),
@@ -47,6 +48,7 @@ const createUserSchema = z.object({
 
 const editUserSchema = z.object({
     name: z.string().min(1, 'Name is required'),
+    username: z.string().min(3, 'Username must be at least 3 characters').regex(/^[a-z0-9_-]+$/, 'Use lowercase letters, numbers, _ or -'),
     email: z.string().min(1, 'Email is required').email('Invalid email'),
     password: z.string().optional().default(''),
     password_confirmation: z.string().optional().default(''),
@@ -85,6 +87,7 @@ function UserFormDialog({
         defaultValues: editingUser
             ? {
                   name: editingUser.name,
+                  username: editingUser.username,
                   email: editingUser.email,
                   password: '',
                   password_confirmation: '',
@@ -92,7 +95,7 @@ function UserFormDialog({
                   participant_id: editingUser.participant_id ?? '',
                   sports: editingUser.sports?.map(s => s.id) ?? [],
               }
-            : { name: '', email: '', password: '', password_confirmation: '', roles: [], participant_id: '', sports: [] },
+            : { name: '', username: '', email: '', password: '', password_confirmation: '', roles: [], participant_id: '', sports: [] },
         resolver: zodResolver(schema),
     });
 
@@ -155,6 +158,12 @@ function UserFormDialog({
                             <Label htmlFor="name">Name</Label>
                             <Input id="name" {...register('name')} required />
                             {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="username">Username</Label>
+                            <Input id="username" autoComplete="username" {...register('username')} required />
+                            {errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
                         </div>
 
                         <div className="grid gap-2">
@@ -331,6 +340,7 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Name</TableHead>
+                                <TableHead>Username</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Organization</TableHead>
                                 <TableHead>Faculty</TableHead>
@@ -343,7 +353,7 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                         <TableBody>
                             {users.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={9} className="text-center text-muted-foreground">
                                         No users yet.
                                     </TableCell>
                                 </TableRow>
@@ -351,6 +361,7 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                             {users.map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell className="font-medium">{user.name}</TableCell>
+                                    <TableCell className="font-mono text-xs">{user.username}</TableCell>
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell>{user.organization?.name || '-'}</TableCell>
                                     <TableCell>{user.participant?.name || '-'}</TableCell>

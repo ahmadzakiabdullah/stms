@@ -1,6 +1,6 @@
 # System Overview
 
-> **Current status (4 August 2026):** The Laravel/Inertia web MVP is operational with 113 web/auth routes, 56 migrations, 37 controllers, 36 TypeScript pages, role-aware dashboards/navigation, printable registration forms, and no REST API. Deferred modules remain listed in CURRENT_STATE.md.
+> **Current status (7 August 2026):** The unreleased hardening working tree has 121 web/auth routes, 59 migrations, 38 controllers and 37 TypeScript pages, with role-aware dashboards/navigation, printable registration forms, versioned draw history and no REST API. Deferred modules remain listed in CURRENT_STATE.md.
 
 Dokumen ini memberikan gambaran keseluruhan peringkat tinggi mengenai seni bina aplikasi Sistem Pengurusan Kejohanan Sukan (STMS). Ia bertujuan untuk menjadi titik permulaan bagi pembangun baharu untuk memahami komponen utama, corak reka bentuk, dan aliran data dalam sistem.
 
@@ -49,6 +49,9 @@ Aplikasi ini sangat bergantung pada beberapa corak reka bentuk untuk memastikan 
 
 6.  **Multi-Tenancy (Single Database):** Aplikasi ini menggunakan pendekatan multi-tenancy dengan satu pangkalan data. Setiap rekod utama (seperti `tournaments`, `participants`, dll.) mempunyai lajur `organization_id`. Data diasingkan menggunakan *global scopes* atau *query scopes* (`BelongsToOrganization` trait) untuk memastikan satu organisasi tidak dapat melihat data organisasi lain.
 
+## 4.1 Portal Awam SAF 2026
+
+`PublicPortalController` ialah pengawal nipis bagi `/` dan `/index.php`. `PublicPortalService` memilih sesi aktif (atau `PUBLIC_SESSION_SLUG` yang ditetapkan semasa deployment), menapis semua kueri secara eksplisit dengan `organization_id`, dan membentuk payload awam untuk jadual, keputusan, statistik serta kedudukan pingat. Payload peserta hanya mengandungi nama paparan dan URL logo; butiran hubungan dan data skuad tidak didedahkan. `RankingService` mengira pingat emas/perak/gangsa daripada perlawanan akhir dan penentuan tempat ketiga yang lengkap.
 ## 5. Aliran Permintaan (Request Flow)
 
 Aliran permintaan HTTP yang tipikal adalah seperti berikut:

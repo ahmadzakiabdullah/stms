@@ -68,14 +68,14 @@ const navSections: NavSection[] = [
             { label: 'Sports', icon: Award, href: 'sports.index', active: 'sports.index', roles: systemRoles.administrators },
             { label: 'Categories', icon: List, href: 'sport-categories.index', active: 'sport-categories.index', roles: systemRoles.administrators },
             { label: 'Tournaments', icon: Trophy, href: 'tournaments.index', active: 'tournaments.index', roles: systemRoles.administrators },
-            { label: 'Events', icon: Target, href: 'events.index', active: 'events.index', roles: systemRoles.administrators },
+            { label: 'Events', icon: Target, href: 'events.index', active: 'events.index', roles: systemRoles.competition },
         ],
     },
     {
         title: 'Registration',
         items: [
             { label: 'Participants', icon: Users, href: 'participants.index', active: 'participants.index', roles: systemRoles.administrators },
-            { label: 'Event Registrations', icon: ClipboardList, href: 'event-participants.index', active: 'event-participants.index', roles: systemRoles.administrators },
+            { label: 'Registrations & Squads', icon: ClipboardList, href: 'event-participants.index', active: 'event-participants.index', roles: systemRoles.administrators },
             { label: 'Participation Confirmation', icon: FileCheck2, href: 'participation-confirmations.index', active: 'participation-confirmations.index', roles: [...systemRoles.administrators, ...systemRoles.faculty, ...systemRoles.dean] },
         ],
     },

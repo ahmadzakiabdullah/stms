@@ -50,4 +50,4 @@ After restoration, restart workers, run the health check, perform smoke tests, a
 
 ## Automated Evidence
 
-`tests/Feature/BackupServiceTest.php` creates an encrypted backup, changes a temporary SQLite database and upload file, restores the archive, and verifies both return to their original state. MySQL restore drills must also be executed in the deployment environment because they depend on installed client binaries and production-scale data.
+`tests/Feature/BackupServiceTest.php` creates an encrypted backup, changes a temporary SQLite database and upload file, restores the archive, and verifies both return to their original state. On 5 August 2026, a sanitized 3.47 MB dataset was encrypted and restored into a second isolated MySQL 8 database in 2.977 seconds; all migrations, health checks, and key row counts matched. This validates MySQL mechanics and RTO but does not replace an approved restore of an actual production backup or an off-site custody drill. Note that `stms:restore --force` still asks for interactive confirmation.

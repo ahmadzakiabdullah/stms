@@ -2,7 +2,7 @@
 
 ## Current baseline
 
-As of 4 August 2026, the repository contains 78 PHP test files. The local suite covers 334 tests and 1,319 assertions across Feature and Unit layers. The final release gate also includes Pint, `tsc --noEmit`, the Vite production build, dependency audits, bundle budgets, Playwright journeys, axe checks, and performance thresholds.
+As of 7 August 2026, the repository contains 87 PHP test files. The local suite covers 394 tests and 1,555 assertions across Feature and Unit layers. The final release gate also includes Pint, `tsc --noEmit`, the Vite production build, dependency audits, bundle budgets, Playwright journeys, axe checks, and performance thresholds.
 
 ## Test layers
 
@@ -28,4 +28,4 @@ Use a mapped local drive on Windows because PHP subprocesses cannot reliably exe
 
 ## CI and evidence
 
-CI publishes PCOV Clover artifacts and Playwright failure artifacts. The first connected coverage result is still required before setting a ratcheting percentage threshold. Production-sized restore, authenticated load, external alert, and connected-browser drills remain environment-dependent tasks in `TODOS.md`.
+CI publishes PCOV Clover artifacts and Playwright failure artifacts. Connected-CI Playwright/axe passed all six journeys on commit `ae42a50`; the first connected coverage percentage is still required before setting a ratcheting threshold. A sanitized production-sized MySQL restore passed on 5 August 2026. Multi-worker authenticated staging performance, actual production/off-site recovery, and real external alert receipt remain environment-dependent tasks in `TODOS.md`.

@@ -18,6 +18,7 @@ class UserService
     {
         $user = User::create([
             'name' => $data['name'],
+            'username' => $data['username'] ?? null,
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'organization_id' => $data['organization_id'] ?? null,
@@ -49,6 +50,7 @@ class UserService
     {
         $updateData = [
             'name' => $data['name'],
+            'username' => $data['username'] ?? $user->username,
             'email' => $data['email'],
             'is_active' => $data['is_active'] ?? $user->is_active,
         ];

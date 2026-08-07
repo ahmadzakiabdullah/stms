@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DrawVersion;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Fixture;
@@ -38,12 +39,12 @@ class DrawController extends Controller
             ->values();
 
         if ($incompleteSquads->isNotEmpty()) {
-            return redirect()->route('events.index')
+            return redirect()->route('events.draw-result', $event)
                 ->with('error', 'Draw blocked: '.$incompleteSquads->implode(', ').' '.($incompleteSquads->count() === 1 ? 'has' : 'have').' a confirmed registration but no athletes yet. Complete the squads before drawing.');
         }
 
         try {
-            $result = $drawService->drawAndGenerateFixtures($event);
+            $result = $drawService->drawGroups($event);
 
             $event->update(['format' => $format]);
 
@@ -52,18 +53,77 @@ class DrawController extends Controller
                 ->causedBy(Auth::user())
                 ->event('draw')
                 ->withProperties($result)
-                ->log("Draw completed for '{$event->name}': {$result['pools']} pools, {$result['fixtures']} fixtures");
+                ->log("Draw created for '{$event->name}': {$result['pools']} groups, {$result['participants']} participants");
 
-            return redirect()->route('events.index')
-                ->with('success', "Draw completed: {$result['pools']} pools, {$result['participants']} participants, {$result['fixtures']} fixtures generated.");
+            return redirect()->route('events.draw-result', $event)
+                ->with('success', "Draw created: {$result['pools']} ".($result['pools'] === 1 ? 'group' : 'groups')." with {$result['participants']} participants. Review the groups, then generate fixtures.");
         } catch (\InvalidArgumentException $e) {
-            return redirect()->route('events.index')
+            return redirect()->route('events.draw-result', $event)
                 ->with('error', $e->getMessage());
         } catch (\Throwable $e) {
             Log::error('Draw failed', ['event_id' => $event->id, 'error' => $e->getMessage()]);
 
-            return redirect()->route('events.index')
+            return redirect()->route('events.draw-result', $event)
                 ->with('error', 'Draw failed: '.$e->getMessage());
+        }
+    }
+
+    public function generateFixtures(Event $event, DrawService $drawService): RedirectResponse
+    {
+        Gate::authorize('update', $event);
+
+        try {
+            $result = $drawService->generateFixtures($event);
+
+            activity()
+                ->performedOn($event)
+                ->causedBy(Auth::user())
+                ->event('generate_fixtures')
+                ->withProperties($result)
+                ->log("Fixtures generated for '{$event->name}': {$result['fixtures']} fixtures across {$result['pools']} groups");
+
+            return redirect()->route('events.draw-result', $event)
+                ->with('success', "Fixtures generated: {$result['fixtures']} ".($result['fixtures'] === 1 ? 'fixture' : 'fixtures')." across {$result['pools']} ".($result['pools'] === 1 ? 'group' : 'groups').'.');
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->route('events.draw-result', $event)
+                ->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Fixture generation failed', ['event_id' => $event->id, 'error' => $e->getMessage()]);
+
+            return redirect()->route('events.draw-result', $event)
+                ->with('error', 'Fixture generation failed: '.$e->getMessage());
+        }
+    }
+
+    public function resetDraw(Event $event, DrawService $drawService): RedirectResponse
+    {
+        Gate::authorize('update', $event);
+
+        $hasStartedMatches = Fixture::where('event_id', $event->id)
+            ->whereIn('status', ['in_progress', 'completed'])
+            ->exists();
+
+        if ($hasStartedMatches) {
+            return redirect()->route('events.draw-result', $event)
+                ->with('error', 'Cannot reset the draw after a match has started.');
+        }
+
+        try {
+            $drawService->resetDraw($event);
+
+            activity()
+                ->performedOn($event)
+                ->causedBy(Auth::user())
+                ->event('reset_draw')
+                ->log("Draw reset for '{$event->name}'");
+
+            return redirect()->route('events.draw-result', $event)
+                ->with('success', 'Draw reset. All groups and fixtures were removed.');
+        } catch (\Throwable $e) {
+            Log::error('Draw reset failed', ['event_id' => $event->id, 'error' => $e->getMessage()]);
+
+            return redirect()->route('events.draw-result', $event)
+                ->with('error', 'Draw reset failed: '.$e->getMessage());
         }
     }
 
@@ -93,7 +153,30 @@ class DrawController extends Controller
             'event' => $event,
             'pools' => $pools,
             'canEdit' => ! $hasStartedMatches,
+            'drawVersions' => $event->drawVersions()
+                ->with('actor:uuid,name')
+                ->take(20)
+                ->get(['id', 'event_id', 'actor_id', 'version', 'action', 'seed', 'created_at']),
         ]);
+    }
+
+    public function rollback(Event $event, DrawVersion $drawVersion, DrawService $drawService): RedirectResponse
+    {
+        Gate::authorize('update', $event);
+
+        try {
+            $drawService->rollback($event, $drawVersion);
+
+            activity()->performedOn($event)->causedBy(Auth::user())
+                ->event('rollback_draw')
+                ->withProperties(['draw_version_id' => $drawVersion->id, 'version' => $drawVersion->version])
+                ->log("Draw rolled back for '{$event->name}' to version {$drawVersion->version}");
+
+            return redirect()->route('events.draw-result', $event)
+                ->with('success', "Draw restored from version {$drawVersion->version}.");
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->route('events.draw-result', $event)->with('error', $e->getMessage());
+        }
     }
 
     public function moveParticipant(Request $request, Event $event, DrawService $drawService): RedirectResponse

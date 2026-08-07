@@ -64,6 +64,15 @@ jobs:
           DB_DATABASE: stms_test
           DB_USERNAME: root
           DB_PASSWORD: root
+      - run: npm run check:inventory
+        env:
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: stms_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
 
   coverage:
     runs-on: ubuntu-latest
@@ -96,6 +105,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run check:tenant-bypasses
       - run: npm run build
       - run: npm run build:budget
       - uses: actions/upload-artifact@v4

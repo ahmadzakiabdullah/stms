@@ -8,6 +8,7 @@ use App\Actions\Events\UpdateEvent;
 use App\Http\Requests\Event\StoreEventRequest;
 use App\Http\Requests\Event\UpdateEventRequest;
 use App\Models\Event;
+use App\Models\Participant;
 use App\Models\Sport;
 use App\Models\SportCategory;
 use App\Models\Tournament;
@@ -38,6 +39,9 @@ class EventController extends Controller
                 ->withCount([
                     'matches as matches_count',
                     'matches as completed_matches_count' => fn ($q) => $q->where('status', 'completed'),
+                    'eventParticipants as registrations_count',
+                    'eventParticipants as confirmed_participants_count' => fn ($q) => $q->where('status', 'confirmed'),
+                    'eventParticipants as pending_participants_count' => fn ($q) => $q->where('status', 'pending'),
                 ]);
 
             if ($tournamentId = request('tournament_id')) {
@@ -58,6 +62,19 @@ class EventController extends Controller
                 'path' => request()->url(),
             ]);
         });
+
+        $participantCounts = $this->safeCollectionQuery(function () use ($events) {
+            return Participant::query()
+                ->where('is_active', true)
+                ->whereIn('organization_id', collect($events->items())->pluck('organization_id')->unique()->filter())
+                ->selectRaw('organization_id, count(*) as participants_count')
+                ->groupBy('organization_id')
+                ->pluck('participants_count', 'organization_id');
+        }, fn () => collect());
+
+        foreach ($events as $event) {
+            $event->participants_count = $participantCounts[$event->organization_id] ?? 0;
+        }
 
         $tournaments = $this->safeCollectionQuery(function () {
             return Tournament::query()

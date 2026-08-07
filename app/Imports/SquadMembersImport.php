@@ -22,6 +22,10 @@ class SquadMembersImport implements ToCollection, WithHeadingRow
         $errors = [];
         $created = 0;
         $quotaService = app(SquadQuotaService::class);
+        $hasOfficial = $this->eventParticipant
+            ->squadMembers()
+            ->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])
+            ->exists();
 
         foreach ($rows as $index => $row) {
             $name = trim($row['name'] ?? '');
@@ -56,6 +60,12 @@ class SquadMembersImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
+            if (! $isOfficial && ! $hasOfficial) {
+                $errors[] = 'Row '.($index + 2).': add officials before athletes.';
+
+                continue;
+            }
+
             $quotaError = $quotaService->validateAddition($this->eventParticipant, $role);
             if ($quotaError) {
                 $errors[] = 'Row '.($index + 2).": {$quotaError}";
@@ -72,6 +82,9 @@ class SquadMembersImport implements ToCollection, WithHeadingRow
                 'identification_no' => $ic ?: null,
                 'phone' => $phone ?: null,
             ]);
+            if ($isOfficial) {
+                $hasOfficial = true;
+            }
             $created++;
         }
 

@@ -15,6 +15,7 @@ class OrganizationService
      */
     public function createOrganization(array $data): Organization
     {
+        $this->validateParent(null, $data['parent_id'] ?? null);
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
@@ -42,6 +43,7 @@ class OrganizationService
      */
     public function updateOrganization(Organization $organization, array $data): Organization
     {
+        $this->validateParent($organization, $data['parent_id'] ?? null);
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
@@ -71,5 +73,39 @@ class OrganizationService
     {
         $organization->delete();
         Log::info('Organization deleted', ['id' => $organization->id, 'name' => $organization->name]);
+    }
+
+    private function validateParent(?Organization $organization, ?string $parentId): void
+    {
+        if ($parentId === null) {
+            return;
+        }
+
+        $parent = Organization::query()->find($parentId);
+        if (! $parent) {
+            throw ValidationException::withMessages(['parent_id' => ['The selected parent organization is invalid.']]);
+        }
+
+        if ($organization && ($parent->id === $organization->id || $this->isDescendant($parent, $organization->id))) {
+            throw ValidationException::withMessages(['parent_id' => ['An organization cannot be parented to itself or one of its descendants.']]);
+        }
+    }
+
+    private function isDescendant(Organization $candidate, string $organizationId): bool
+    {
+        $visited = [];
+
+        while ($candidate->parent_id !== null && ! isset($visited[$candidate->id])) {
+            $visited[$candidate->id] = true;
+            if ($candidate->parent_id === $organizationId) {
+                return true;
+            }
+            $candidate = Organization::query()->find($candidate->parent_id);
+            if (! $candidate) {
+                return false;
+            }
+        }
+
+        return false;
     }
 }

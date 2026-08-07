@@ -16,6 +16,7 @@ export interface User {
     id: string;
     uuid: string;
     name: string;
+    username: string;
     email: string;
     organization_id: string;
     participant_id: string | null;
@@ -121,6 +122,10 @@ export interface Event {
     pools_count?: number;
     matches_count?: number;
     completed_matches_count?: number;
+    registrations_count?: number;
+    confirmed_participants_count?: number;
+    pending_participants_count?: number;
+    participants_count?: number;
     format?: string | null;
     pool_size?: number | null;
     created_at: string;

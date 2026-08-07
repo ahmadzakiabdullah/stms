@@ -4,7 +4,9 @@
 > This document reflects the reality as of the latest full system review. It should be read together with `CLAUDE.md`, `AGENTS.md`, `TODOS.md`, and `ROADMAP.md`.
 
 **Overall Status:** The SAF 2026 web MVP is operational and in maintenance/production-hardening mode. Core flows cover Organization/User/RBAC → Sport/Category/Session/Tournament/Event → Participant/Registration → Squad Management and printable team forms → Dean Verification → Match/Result → Rankings → Exports/Reporting → Draw/Groups → Notifications → Settings and Activity Logs.
-**Code Maturity:** Operational MVP with production-hardening Sprints 1-3 implemented in the repository. CI covers lint, TypeScript, PHPUnit, dependency audits, PCOV coverage artifacts, build budgets, and Playwright desktop/mobile journeys with axe. Backend query and k6 thresholds are defined; encrypted backup/restore and internal health monitoring are implemented. Connected-CI browser/coverage results, production MySQL/off-site restore, authenticated load tests, and external alert drills still require environment evidence.
+**Code Maturity:** Operational MVP with production-hardening Sprints 1-3 implemented in the repository. CI covers lint, TypeScript, PHPUnit, dependency audits, PCOV coverage artifacts, build budgets, and Playwright desktop/mobile journeys with axe. Backend query and k6 thresholds are defined; encrypted backup/restore and internal health monitoring are implemented. Connected-CI Playwright/axe is now evidenced on commit `ae42a50`. An isolated encrypted MySQL restore drill also passed with a sanitized production-sized dataset. The corrected authenticated load path passed all functional checks but missed its latency target on a single-process development server; multi-worker staging performance, real external alert receipt, and actual production-backup/off-site recovery remain open.
+
+**Unreleased hardening work (7 August 2026):** The working tree contains scoped tenant lifecycle handling, tenant-aware queue middleware, explicit public organization/session selection, tenant-safe `User` route binding, report-only CSP hardening, a CI tenant-bypass allowlist, corrected per-VU k6 authentication, versioned draw rollback, consistent SVG sanitization and Redis-backed production sessions. A local-disk verification copy passes 394 PHPUnit tests / 1,555 assertions, Pint, TypeScript, production build, bundle budget and both dependency audits. These changes are not yet a connected-CI, tagged or deployed release.
 
 ---
 
@@ -15,13 +17,13 @@
 | Backend        | Laravel 13 + inertia-laravel                 | Laravel 13+                                  | Implemented |
 | Frontend       | React 18 + Inertia.js (`.tsx` — TypeScript)  | React + Inertia.js + TypeScript              | Implemented |
 | UI             | Full shadcn/ui + Lucide                      | shadcn/ui only                               | Implemented |
-| Auth           | Laravel Breeze Inertia + Spatie RBAC         | Breeze Inertia + Spatie RBAC + org scoping   | Implemented |
+| Auth           | Laravel Breeze username/email login + Spatie RBAC         | Breeze Inertia + Spatie RBAC + org scoping   | Implemented |
 | Database       | 30+ tables (domain + Spatie + Laravel). UUID PKs on all domain tables. Soft deletes on all models | UUID PKs, soft deletes, org_id on tenant tables | Implemented |
 | Multi-tenancy  | Column-based + BelongsToOrganization Global Scope trait | Column-based (organization_id) + Global Scopes | Implemented |
 | Authorization  | Spatie + 12 Policies + Gate in controllers   | Spatie Laravel Permission + Policies + Gates | Implemented |
 | Domain Models  | 16 model files, including tenant/domain models and Setting | Full hierarchy | Implemented |
 | API            | None (web/Inertia only)                      | RESTful `/api/v1` (future)                   | Future      |
-| Tests          | 78 PHP test files; 334 tests and 1,319 assertions in the current local suite, plus 6 Playwright/axe journeys | PHP + browser + accessibility | PHPUnit, Pint, type-check and production build pass locally; connected-CI/browser evidence remains environment-dependent |
+| Tests          | 87 PHP test files; 394 tests and 1,555 assertions in the current local suite, plus 6 Playwright/axe journeys | PHP + browser + accessibility | PHPUnit, Pint, type-check, dependency audits and production build pass from the local verification copy; connected-CI Playwright/axe passed on `ae42a50` |
 
 ---
 
@@ -31,8 +33,8 @@
 - **Multi-tenancy**: `BelongsToOrganization` trait + global scope on all tenant-aware models; per-org slug uniqueness.
 - **RBAC**: Spatie with roles: super-admin, org-admin, staff, faculty-representative, dean. 30+ granular permissions. 12 Policies.
 - **Actions + Form Requests**: Complete Create/Update/Delete Actions for every domain module.
-- **Controllers**: 37 controller files including authentication controllers.
-- **Frontend**: 36 TypeScript Inertia pages, shadcn/ui components, a global Error page, role-aware dashboards, and an explicit policy-aligned sidebar role matrix.
+- **Controllers**: 38 controller files including authentication controllers.
+- **Frontend**: 37 TypeScript Inertia pages, shadcn/ui components, a global Error page, role-aware dashboards, and an explicit policy-aligned sidebar role matrix.
 - **Exports**: PDF (Dompdf) + Excel (Maatwebsite) for Fixtures, Results, Rankings. Printable match sheet.
 - **Reports**: Dashboard with stats, completion rate, recent results, quick export links.
 - **Faculty Dashboard**: Squad member management with role-based and total-athlete quota validation. Bulk Excel/CSV import uses the same quota rules. Each event registration links to a tenant-safe A4 Team Registration Form populated from the current roster.
@@ -43,16 +45,18 @@
 - **Role-aware dashboard**: administrators receive an attention-first operational overview; admin-sport receives competition actions; faculty representatives receive registration/squad management; deans are routed to verification.
 - **Logo Upload**: Faculty crest/logo upload and display.
 - **Dashboard**: Real data with safe guards, Cache, try/catch (prevents 500s on partial prod DBs).
-- **Routes**: 113 application routes (web + auth); no REST API routes.
-- **Migrations**: 56 migration files covering domain, framework, fixes, and later features.
+- **Public portal**: Bahasa Malaysia SAF 2026 hub at `/` and `/index.php` with schedules, results, progress, sports, and medal standings; only participant display names/logos are exposed.
+- **Routes**: 121 application routes (web + auth); no REST API routes.
+- **Migrations**: 59 migration files covering domain, framework, fixes, and later features.
 - **Seeding**: `DatabaseSeeder` seeds the 24-sport SAF master list, then `SAF2026DataSeeder` seeds SAF 2026 categories/events with quota fields. Reusable and idempotent.
-- **Tests**: 78 PHP test files; the current local suite covers 334 tests / 1,319 assertions. Six Playwright desktop/mobile journeys, including axe checks, are committed for connected CI.
+- **Tests**: 87 PHP test files; the current local suite covers 394 tests / 1,555 assertions. Six Playwright desktop/mobile journeys, including axe checks, passed in connected CI on commit `ae42a50`.
 - **Docker**: `Dockerfile` + `docker-compose.yml` + nginx/supervisor config.
 - **CI/CD**: `.github/workflows/ci.yml` (Pint lint → PHPUnit → npm build).
 - **Assurance**: PCOV/Clover reporting, Playwright critical journeys, axe WCAG checks, dashboard query budget, k6 thresholds, and frontend bundle budgets.
 - **Frontend quality**: Vite production build, bundle budget, and `npm run typecheck` are clean. Legacy JSX components are covered by explicit compatibility declarations while new and migrated application pages remain TypeScript.
 - **Operations**: encrypted backup/restore commands, daily retention schedule, supervised Redis queue worker and scheduler.
 - **Health check**: `GET /health` and `stms:health-check` cover database, cache, queue, and disk without exposing exception details.
+- **Operational evidence (5 August 2026)**: connected-CI browser/axe passed; an AES-256 MySQL restore of a sanitized 3.47 MB dataset completed in 2.977 seconds with matching counts and healthy checks; corrected authenticated k6 produced 190/190 successful checks but p95 4.24 seconds exceeded the 750 ms target on the single-process development server; local critical-webhook transport passed while real operator delivery remains unverified. See `docs/testing/2026-08-05-operational-drill.md`.
 
 ---
 
@@ -78,6 +82,9 @@
 - **Internationalization**: Laravel localization config exists but translations not implemented.
 - **Accreditation, Live Scoring, Mobile App**: All deferred future features.
 - **UNC path limitation**: `\\10.1.2.22\e\others\saf\portal` cannot run CLI directly — use local drive or `u:;` mapping.
+- **Authenticated load evidence**: `tests/performance/smoke.js` still needs its validated CSRF/session-cookie correction committed, followed by a multi-worker staging run.
+- **External monitoring evidence**: the critical webhook transport is verified locally, but no real Slack/Papertrail destination or operator receipt has been demonstrated.
+- **Disaster-recovery evidence**: the isolated sanitized MySQL restore mechanics passed; an actual production backup, off-host copy, and isolated recovery drill are still required.
 
 ---
 
@@ -95,4 +102,4 @@ Production defaults to `SEED_DEMO_DATA=false`; `DatabaseSeeder` then creates onl
 
 ---
 
-**Last Updated:** 4 August 2026 — verified against 113 routes, 56 migrations, 37 controllers, 36 TypeScript Inertia pages, PHPUnit, Pint, TypeScript and the Vite production build. Production browser/connected-CI and operational drills remain tracked in `TODOS.md`.
+**Last Updated:** 7 August 2026 — unreleased hardening changes are recorded separately from deployed evidence. Multi-worker authenticated performance, actual production/off-site recovery, real external alert receipt, and a clean tagged release remain tracked in `TODOS.md`.

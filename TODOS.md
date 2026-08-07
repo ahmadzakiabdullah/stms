@@ -9,6 +9,14 @@
 
 ### Current Focus (MVP): Production Hardening
 
+- [x] Canonicalize the public URL without index.php and remove the clipped-looking overlap between the SAF hero and summary sections.
+
+- [x] Set English as the default/fallback application language while retaining event-specific Malay public content.
+
+- [x] Support login using either a unique username or email, including legacy-account backfill and administrator username management.
+
+- [x] Replace the generic welcome page with a tenant-safe Bahasa Malaysia SAF 2026 public hub for schedules, results, event progress, sports, and medal standings at / and /index.php.
+
 - [x] Add a faculty participation confirmation page with tenant-safe filters, role-based faculty access, squad totals, and an A4 printable form.
 - [x] Add a per-event Team Registration Form with roster auto-fill, tenant/role-safe access, exact quota rows, English A4 printing, faculty-dashboard access, and administrator access from Event Registrations.
 - [x] Refactor `/dashboard` into attention-first role-aware workspaces and replace mixed sidebar flags with an explicit policy-aligned role matrix.
@@ -17,7 +25,7 @@
 - [x] Restrict trusted proxies to explicit environment-provided IPs/CIDRs.
 - [x] Split production bootstrap from SAF/demo account seeding and guard direct demo seeding in production.
 - [x] Add Composer/npm vulnerability audit gates to connected CI.
-- [x] Implement encrypted DB/upload backup, retention, destructive restore guard, SQLite restore drill, health checks, and supervised queue/scheduler lifecycle. Production MySQL/off-site restore drill remains operational follow-up.
+- [x] Implement encrypted DB/upload backup, retention, destructive restore guard, SQLite restore drill, health checks, and supervised queue/scheduler lifecycle. A sanitized production-sized MySQL restore drill passed on 5 August 2026; actual production-backup/off-site recovery remains operational follow-up.
 - [x] Restore a clean Pint quality gate. Measured coverage, browser E2E, accessibility, and load-test baselines remain Sprint 3 work.
 
 Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
@@ -29,15 +37,19 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Add axe WCAG 2.2 AA checks for login and dashboard; Chromium execution is enforced in CI.
 - [x] Add dashboard query budget and k6 health/load scenario with p95/error thresholds.
 - [x] Add frontend JS/CSS bundle budgets and remove Tailwind 3/4 mismatch; production build is warning-free.
-- [ ] Execute the Playwright suite in connected CI and triage any real browser/accessibility findings.
+- [x] Execute the Playwright suite in connected CI and triage browser/accessibility findings. The `browser-e2e` job passed all six journeys on commit `ae42a50`; the workflow's separate failure was npm audit, not Playwright.
 - [x] Establish a clean `tsc --noEmit` gate with legacy JSX compatibility declarations, Ziggy global typing, corrected Inertia v2 options, and aligned page/model payload types; enforce it in CI.
-- [ ] Execute production-sized MySQL restore, authenticated k6 scenarios, and external alert delivery drills.
+- [x] Execute an isolated encrypted MySQL restore using a sanitized 3.47 MB dataset (larger than the measured 2.66 MB production schema); restore completed in 2.977 seconds with all migrations, health checks, and key counts verified.
+- [ ] Commit the k6 CSRF/dynamic-cookie/per-VU account correction now present in the working tree, then rerun the authenticated scenario against an approved multi-worker staging deployment. The earlier localhost development-server run passed 190/190 checks with 0% HTTP errors but failed p95 (4.24 s versus 750 ms).
+- [ ] Configure a real external Slack/Papertrail or uptime destination and confirm operator receipt. Local critical-webhook transport passed, but external delivery is not yet evidenced.
+- [ ] Copy an actual production backup off-host and complete an approved isolated restore; the sanitized drill validates mechanics and RTO but not production-backup custody/recovery.
 
 - [x] Matches page CRUD restored with pool/round fields and Name–Logo–VS–Logo–Name fixture layout.
 - [x] Matches event filter URLs now use existing event slugs instead of UUID query values.
 - [x] Participant logo upload repair: securely accept sanitized SVG logos and display upload validation errors.
 
 - [x] Production `/portal/` 405/500 recovery: cleared environment-specific Laravel caches and restored the IIS front controller.
+- [x] Production-wide bootstrap 500 recovery: defer the explicit trusted-proxy allowlist lookup until request middleware execution and cover it with a regression test.
 - [x] Local `db4stms` schema-drift recovery: encrypted pre-migration backup created, all migrations reconciled without `migrate:fresh`, and HTTP/PHP regression checks passed.
 - [x] Restore the complete SAF 2026 local dataset after schema reconciliation and verify the administrator password remains user-controlled.
 
@@ -167,4 +179,4 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 
 ---
 
-*Fail ini dikemaskini 4 Ogos 2026 — 113 routes, 56 migrations, 37 controllers, 36 TypeScript pages, 78 PHP test files, PHPUnit/Pint/type-check/build gates, role-aware navigation, and printable registration forms have been reconciled. Connected-CI browser and production operational drills still require environment evidence.*
+*Fail ini dikemaskini 5 Ogos 2026 — connected-CI Playwright/axe dan restore MySQL terasing bersaiz produksi telah dibuktikan. Prestasi k6 pada staging berbilang worker, restore backup produksi/off-site, dan penerimaan amaran luaran sebenar masih memerlukan bukti persekitaran.*

@@ -28,6 +28,7 @@ class UserFactory extends Factory
         return [
             'uuid' => (string) Str::uuid(), // for new UUID PK
             'name' => fake()->name(),
+            'username' => Str::lower(fake()->unique()->lexify('????????????')),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
