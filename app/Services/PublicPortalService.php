@@ -28,7 +28,12 @@ class PublicPortalService
             ->orderBy('scheduled_at')->get();
         $matches = $fixtures->map(fn (Fixture $fixture) => $this->matchData($fixture));
         $completed = $matches->where('status', 'completed')->sortByDesc('scheduled_at')->values();
-        $upcoming = $matches->whereIn('status', ['scheduled', 'in_progress'])->where('scheduled_at')->sortBy('scheduled_at')->values();
+        // Draw-generated fixtures may exist before the organizer assigns a date.
+        // Keep them visible publicly as "to be determined" instead of hiding the
+        // entire schedule; dated fixtures remain first.
+        $upcoming = $matches->whereIn('status', ['scheduled', 'in_progress'])
+            ->sortBy(fn (array $match) => $match['scheduled_at'] ?? '9999-12-31T23:59:59Z')
+            ->values();
         $playable = $matches->whereIn('status', ['scheduled', 'in_progress', 'completed']);
         $lastUpdated = collect([$session->updated_at])
             ->concat($fixtures->map(fn (Fixture $fixture) => $fixture->updated_at))

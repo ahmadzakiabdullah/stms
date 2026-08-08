@@ -38,9 +38,13 @@ class PublicPortalTest extends TestCase
         $this->get('/index.php')->assertRedirect('/portal/')->assertStatus(301);
     }
 
-    public function test_portal_without_trailing_slash_redirects_to_the_canonical_public_url(): void
+    public function test_iis_portal_mount_path_renders_without_a_self_redirect(): void
     {
-        $this->get('/portal')->assertRedirect(config('app.url').'/')->assertStatus(301);
+        $this->get('/portal')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Index'));
+
+        $this->get('/portal/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Index'));
     }
 
     public function test_completed_fixtures_without_scheduled_at_still_appear_in_results(): void
@@ -61,6 +65,29 @@ class PublicPortalTest extends TestCase
             ->has('results', 1)
             ->where('results.0.home.name', 'Fakulti A')
             ->has('upcoming', 0));
+    }
+
+    public function test_scheduled_fixtures_without_a_date_still_appear_in_the_public_schedule(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $event = Event::factory()->forTournament($tournament)->create();
+        $home = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'is_active' => true]);
+        $away = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'is_active' => true]);
+        Fixture::factory()->scheduled()->create([
+            'organization_id' => $organization->id,
+            'event_id' => $event->id,
+            'home_participant_id' => $home->id,
+            'away_participant_id' => $away->id,
+            'scheduled_at' => null,
+        ]);
+
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Index')
+            ->has('upcoming', 1)
+            ->where('upcoming.0.scheduled_at', null));
     }
 
     public function test_public_portal_has_a_safe_empty_state(): void

@@ -21,7 +21,6 @@ class ExportController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('auth'),
-            new Middleware('verified'),
             new Middleware('can:export-data'),
         ];
     }

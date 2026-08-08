@@ -128,7 +128,12 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
     const logoUrl = (settings as Record<string, string>)?.logo_url;
 
     return (
-        <aside className={mobile ? 'flex h-full flex-col bg-sidebar' : 'hidden h-screen w-72 shrink-0 border-r bg-sidebar lg:sticky lg:top-0 lg:flex lg:flex-col'}>            <div className="flex h-16 items-center gap-3 border-b px-5">
+        <aside className={mobile ? 'flex h-full flex-col bg-sidebar' : 'hidden h-screen w-72 shrink-0 border-r bg-sidebar lg:sticky lg:top-0 lg:flex lg:flex-col'}>            <Link
+                href={route('dashboard')}
+                onClick={onNavigate}
+                className="flex h-16 items-center gap-3 border-b px-5 transition hover:bg-sidebar-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                aria-label="Go to dashboard"
+            >
                 {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="h-9 w-auto rounded object-contain" />
                 ) : (
@@ -142,7 +147,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                         {user?.organization?.name || 'Multi-Tenant Sports Platform'}
                     </div>
                 </div>
-            </div>
+            </Link>
 
             <nav className="flex-1 space-y-2 px-3 py-4 overflow-y-auto">
                 {navSections.map((section, sectionIdx) => {

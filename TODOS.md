@@ -49,6 +49,11 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Participant logo upload repair: securely accept sanitized SVG logos and display upload validation errors.
 
 - [x] Production `/portal/` 405/500 recovery: cleared environment-specific Laravel caches and restored the IIS front controller.
+- [x] Production `/portal/` redirect-loop recovery: render the public portal at the IIS mount path instead of redirecting the normalized Laravel route back to itself.
+- [x] Temporarily make email verification optional: unverified authenticated users may enter the system and `/verify-email` redirects to the dashboard.
+- [x] Link the authenticated desktop/mobile sidebar logo and brand area to the dashboard.
+- [x] Restore the production public portal data selection with explicit `utem` organization and `saf-2026` session slugs.
+- [x] Show undated scheduled fixtures on the public portal as dates to be determined instead of hiding the schedule.
 - [x] Production-wide bootstrap 500 recovery: defer the explicit trusted-proxy allowlist lookup until request middleware execution and cover it with a regression test.
 - [x] Local `db4stms` schema-drift recovery: encrypted pre-migration backup created, all migrations reconciled without `migrate:fresh`, and HTTP/PHP regression checks passed.
 - [x] Restore the complete SAF 2026 local dataset after schema reconciliation and verify the administrator password remains user-controlled.

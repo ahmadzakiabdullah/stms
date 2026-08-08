@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Fixed the production IIS `/portal/` self-redirect that caused `ERR_TOO_MANY_REDIRECTS`, with regression coverage for both trailing-slash variants.
+- Temporarily removed mandatory email verification from authenticated system routes and redirect the verification prompt to the dashboard.
+- Linked the authenticated sidebar logo and brand area to the dashboard on desktop and mobile navigation.
+- Restored the production public portal dataset by configuring its explicit UTeM organization and SAF 2026 session selectors.
+- Displayed scheduled fixtures without assigned dates on the public portal, using the existing to-be-determined date state.
+
 ## Unreleased — Hardening follow-up (7 August 2026)
 
 - Changed `TenantContext` to a container-scoped lifecycle and added fail-closed tenant-aware queue middleware.

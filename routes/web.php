@@ -34,12 +34,13 @@ Route::get('/health', HealthCheckController::class);
 
 Route::get('/', PublicPortalController::class)->name('public.index');
 Route::redirect('/index.php', '/portal/', 301);
-Route::get('/portal', function () {
-    return redirect()->away(rtrim(config('app.url'), '/').'/')->setStatusCode(301);
-});
+// IIS includes the /portal mount point in REQUEST_URI. Laravel normalizes both
+// /portal and /portal/ to this route, so redirecting it to APP_URL (/portal)
+// creates a self-redirect in production.
+Route::get('/portal', PublicPortalController::class);
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware('auth')
     ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -47,7 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::middleware('verified')->group(function () {
+    Route::group([], function () {
         // Faculty Dashboard is merged into the main dashboard (see DashboardController)
         Route::redirect('/faculty', '/dashboard');
 
