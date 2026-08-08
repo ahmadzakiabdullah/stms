@@ -17,12 +17,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [
+        $webAppend = [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             SecurityHeaders::class,
             SetTenantContext::class,
-        ]);
+        ];
+
+        if (class_exists('App\\Http\\Middleware\\SetLocale')) {
+            array_unshift($webAppend, 'App\\Http\\Middleware\\SetLocale');
+        }
+
+        $middleware->web(append: $webAppend);
 
         $middleware->replace(
             Illuminate\Http\Middleware\TrustProxies::class,

@@ -41,7 +41,7 @@ Dokumen ini menerangkan hubungan antara entiti-entiti data utama dalam aplikasi 
 -   Sebuah **Event** tergolong dalam **satu** **Sport**.
     -   `events.sport_id` → `sports.id` (Many-to-One)
 -   Sebuah **Event** mempunyai banyak **EventParticipants** (pendaftaran untuk acara ini).
--   Sebuah **Event** mempunyai banyak **Fixtures** (perlawanan).
+-   Sebuah **Event** mempunyai banyak **Matches** (perlawanan).
 
 ### 6. Participant (Peserta)
 
@@ -59,11 +59,11 @@ Dokumen ini menerangkan hubungan antara entiti-entiti data utama dalam aplikasi 
 -   Sebuah **EventParticipant** tergolong dalam **satu** **Participant**.
     -   `event_participants.participant_id` → `participants.id` (Many-to-One)
 
-### 8. Fixture (Perlawanan)
+### 8. Match (Perlawanan)
 
--   **Fixture** (jadual `matches`) mewakili satu perlawanan yang dijadualkan.
--   Sebuah **Fixture** tergolong dalam **satu** **Event**.
+-   **Match** (jadual `matches`, model `Fixture`) mewakili satu perlawanan yang dijadualkan.
+-   Sebuah **Match** tergolong dalam **satu** **Event**.
     -   `matches.event_id` → `events.id` (Many-to-One)
--   Sebuah **Fixture** mempunyai **satu** **Result** (boleh jadi `null` jika belum dimainkan).
+-   Sebuah **Match** mempunyai **satu** **Result** (boleh jadi `null` jika belum dimainkan).
     -   `matches.result_id` → `results.id` (One-to-One, Nullable)
--   Sebuah **Fixture** melibatkan dua **Participants** (`participant1_id` dan `participant2_id`).
+-   Sebuah **Match** melibatkan dua **Participants** (`participant1_id` dan `participant2_id`).

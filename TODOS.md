@@ -12,6 +12,7 @@
 - [x] Canonicalize the public URL without index.php and remove the clipped-looking overlap between the SAF hero and summary sections.
 
 - [x] Set English as the default/fallback application language while retaining event-specific Malay public content.
+- [x] Add a multi-language module with English (default) and Bahasa Malaysia locale switching in guest/authenticated layouts, plus localized auth and shared navigation labels.
 
 - [x] Support login using either a unique username or email, including legacy-account backfill and administrator username management.
 

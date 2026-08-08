@@ -32,6 +32,10 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $supportedLocales = config('app.supported_locales', []);
+        if (! is_array($supportedLocales) || $supportedLocales === []) {
+            $supportedLocales = ['en', 'ms'];
+        }
 
         $shared = [
             ...parent::share($request),
@@ -48,6 +52,14 @@ class HandleInertiaRequests extends Middleware
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
             ],
+            'locale' => app()->getLocale(),
+            'locales' => collect(config('app.locale_labels', []))
+                ->only($supportedLocales)
+                ->map(fn (string $label, string $code): array => [
+                    'code' => $code,
+                    'label' => $label,
+                ])
+                ->values(),
             'settings' => function () use ($request) {
                 $orgId = $request->user()?->organization_id
                     ?? Organization::where('is_active', true)->value('id');

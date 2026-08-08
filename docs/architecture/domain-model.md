@@ -1,6 +1,6 @@
 # Domain Model
 
-The STMS domain follows a strict hierarchical structure. Every entity belongs to exactly one parent, forming a single root-to-leaf chain: **Organization → Session → Tournament → Sport → Event → Fixture → Result**.
+The STMS domain follows a strict hierarchical structure. Every entity belongs to exactly one parent, forming a single root-to-leaf chain: **Organization → Session → Tournament → Sport → Event → Match → Result**.
 
 ## Core Entities
 
@@ -10,8 +10,8 @@ The STMS domain follows a strict hierarchical structure. Every entity belongs to
 - **Sport** — a generic sport definition (e.g., "Basketball"). Has many `SportCategory` children.
 - **SportCategory** — sub-classification within a sport (e.g., "Men's Open", "U-18"). Contains quota fields for gender-based and total-based rosters (`quota_mode`, `max_athletes_total`, `max_male_athletes`, `max_female_athletes`, `min_male_athletes`, `min_female_athletes`, `max_officials`).
 - **Event** — a specific competition linking a Tournament + Sport + SportCategory (e.g., "Football - Men's Open - Group Stage"). Belongs to Tournament, Sport, and SportCategory.
-- **Fixture** (table: `matches`, class renamed from `Match` to avoid PHP 8 reserved keyword) — a single contest between participants. Belongs to Event.
-- **Result** — the outcome of a fixture (scores + winner). One-to-one with Fixture.
+- **Match** (table: `matches`, implemented by `Fixture` model class because `Match` is a PHP reserved keyword) — a single contest between participants. Belongs to Event.
+- **Result** — the outcome of a match (scores + winner). One-to-one with Match.
 
 ## Supporting Entities
 

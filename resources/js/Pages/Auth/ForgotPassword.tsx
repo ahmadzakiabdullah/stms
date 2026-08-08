@@ -2,6 +2,7 @@ import InputError from '@/components/InputError';
 import PrimaryButton from '@/components/PrimaryButton';
 import TextInput from '@/components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
+import { useI18n } from '@/lib/i18n';
 import { Head, useForm } from '@inertiajs/react';
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
 }
 
 export default function ForgotPassword({ status }: Props) {
+    const { t } = useI18n();
+
     const { data, setData, post, processing, errors } = useForm({
         email: '',
     });
@@ -21,12 +24,10 @@ export default function ForgotPassword({ status }: Props) {
 
     return (
         <GuestLayout>
-            <Head title="Forgot Password" />
+            <Head title={t('Forgot Password')} />
 
             <div className="mb-4 text-sm text-gray-600">
-                Forgot your password? No problem. Just let us know your email
-                address and we will email you a password reset link that will
-                allow you to choose a new one.
+                {t('Forgot password hint')}
             </div>
 
             {status && (
@@ -50,7 +51,7 @@ export default function ForgotPassword({ status }: Props) {
 
                 <div className="mt-4 flex items-center justify-end">
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Email Password Reset Link
+                        {t('Email Password Reset Link')}
                     </PrimaryButton>
                 </div>
             </form>

@@ -34,6 +34,7 @@ import { Eye, Pencil, Plus, RefreshCw, RotateCcw, Save, Target, Trash2, Trash } 
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
 import { matchProgress } from '@/lib/matchProgress';
+import { useI18n } from '@/lib/i18n';
 import type { Event, Tournament, Sport, SportCategory, Paginated, Flash } from '@/types';
 
 const eventSchema = z.object({
@@ -69,6 +70,7 @@ interface EventsIndexProps {
 
 export default function EventsIndex({ events: eventsProp, tournaments: tournamentsProp = [], sports: sportsProp = [], categories: categoriesProp = [], usedCategoryIds = {} }: EventsIndexProps) {
     const { flash, isSuperAdmin = false } = usePage().props;
+    const { locale, t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
     const [deleteEvent, setDeleteEvent] = useState<EventRow | null>(null);
@@ -105,11 +107,11 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
 
     const formatLabel = (format?: string | null) => {
     const map: Record<string, string> = {
-        group_knockout: 'Group Knockout',
-        league: 'League',
-        knockout: 'Knockout',
+            group_knockout: t('Group Knockout'),
+            league: t('League'),
+            knockout: t('Knockout'),
     };
-    return format ? map[format] || format : '—';
+        return format ? map[format] || format : t('Not set');
 };
 
 const formatForDateInput = (dateStr: string | null | undefined) => {
@@ -262,9 +264,9 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Events')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Specific competitions within tournaments (Sport + Category)
+                            {t('Specific competitions within tournaments (Sport + Category)')}
                         </p>
                     </div>
 
@@ -276,16 +278,16 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                         <DialogTrigger asChild>
                             <Button onClick={openCreate} disabled={tournaments.length === 0}>
                                 <Plus className="mr-2 size-4" />
-                                Add Event
+                                {t('Add Event')}
                             </Button>
                         </DialogTrigger>
                         )}
                         <DialogContent className="max-w-lg">
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <DialogHeader>
-                                    <DialogTitle>{editingEvent ? 'Edit Event' : 'Create New Event'}</DialogTitle>
+                                    <DialogTitle>{editingEvent ? t('Edit Event') : t('Create New Event')}</DialogTitle>
                                     <DialogDescription>
-                                        Events tie a tournament to a specific sport and category.
+                                        {t('Events tie a tournament to a specific sport and category.')}
                                     </DialogDescription>
                                 </DialogHeader>
 
@@ -425,11 +427,11 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
 
                                 <DialogFooter>
                                     <Button type="button" variant="outline" onClick={closeDialog}>
-                                        Cancel
+                                        {t('Cancel')}
                                     </Button>
                                     <Button type="submit" disabled={isSubmitting}>
                                         <Save className="mr-2 size-4" />
-                                        {editingEvent ? 'Update' : 'Save'}
+                                        {editingEvent ? t('Update') : t('Save')}
                                     </Button>
                                 </DialogFooter>
                             </form>
@@ -438,7 +440,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                 </div>
             }
         >
-            <Head title="Events" />
+            <Head title={t('Events')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -453,17 +455,17 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Events List</CardTitle>
+                    <CardTitle>{t('Events List')}</CardTitle>
                     <CardDescription>
-                        Events are the concrete matches/competitions under a tournament, sport and category.
+                        {t('Events are the concrete matches/competitions under a tournament, sport and category.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {isSuperAdmin && selectedIds.size > 0 && (
                         <div className="mb-4 flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
+                            <span className="text-sm text-muted-foreground">{selectedIds.size} {t('selected')}</span>
                             <Button variant="destructive" size="sm" onClick={() => setBatchDelete(true)}>
-                                <Trash className="mr-1 size-3" /> Delete Selected
+                                <Trash className="mr-1 size-3" /> {t('Delete Selected')}
                             </Button>
                         </div>
                     )}
@@ -484,16 +486,16 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                 <TableHead>Dates</TableHead>
                                 <TableHead>Deadline</TableHead>
                                 <TableHead>Format</TableHead>
-                                <TableHead>Penyertaan</TableHead>
-                                <TableHead>Status</TableHead>
-                                {isSuperAdmin && <TableHead className="text-right">Actions</TableHead>}
+                                <TableHead>{t('Participation')}</TableHead>
+                                <TableHead>{t('Status')}</TableHead>
+                                {isSuperAdmin && <TableHead className="text-right">{t('Actions')}</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {events.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={isSuperAdmin ? 10 : 9} className="text-center text-muted-foreground">
-                                        No events yet.
+                                        {t('No events yet.')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -518,10 +520,10 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                         {event.sport?.name} / {event.sportCategory?.name}
                                     </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
-                                        {new Date(event.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })} {event.end_date ? `→ ${new Date(event.end_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+                                        {new Date(event.start_date).toLocaleDateString(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short', year: 'numeric' })} {event.end_date ? `→ ${new Date(event.end_date).toLocaleDateString(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
                                     </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
-                                        {(event as any).registration_deadline ? new Date((event as any).registration_deadline).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                                        {(event as any).registration_deadline ? new Date((event as any).registration_deadline).toLocaleDateString(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                                     </TableCell>
                                     <TableCell>
                                         <span className="text-xs">{formatLabel((event as any).format)}</span>
@@ -548,7 +550,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     <TableCell>
                                         <div className="flex flex-col gap-1">
                                             <span className={event.is_active ? 'rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700' : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'}>
-                                                {event.is_active ? 'Active' : 'Inactive'}
+                                                {event.is_active ? t('Active') : t('Inactive')}
                                             </span>
                                             <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-xs ${ep.badge}`}>
                                                 {ep.label}
@@ -573,17 +575,17 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                         {(event.pools_count ?? 0) > 0 && (
                                             <Link href={route('events.draw-result', event.slug)}>
                                                 <Button variant="secondary" size="sm" title="View draw result">
-                                                    <Eye className="mr-1 size-3" /> View Draw
+                                                    <Eye className="mr-1 size-3" /> {t('View Draw')}
                                                 </Button>
                                             </Link>
                                         )}
                                         {(event.pools_count ?? 0) === 0 ? (
                                             <Button variant="outline" size="sm" onClick={() => handleDraw(event)} title="Randomly assign participants into groups">
-                                                <Target className="mr-1 size-3" /> Draw
+                                                <Target className="mr-1 size-3" /> {t('Draw')}
                                             </Button>
                                         ) : (event.matches_count ?? 0) === 0 ? (
                                             <Button variant="outline" size="sm" onClick={() => setRedrawEvent(event)} title="Discard the current grouping and draw again">
-                                                <RefreshCw className="mr-1 size-3" /> Re-draw
+                                                <RefreshCw className="mr-1 size-3" /> {t('Re-draw')}
                                             </Button>
                                         ) : (
                                             <Button
@@ -593,14 +595,14 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                                 onClick={() => setResetDrawEvent(event)}
                                                 title="Delete all groups and fixtures and restart the draw"
                                             >
-                                                <RotateCcw className="mr-1 size-3" /> Reset Draw
+                                                <RotateCcw className="mr-1 size-3" /> {t('Reset Draw')}
                                             </Button>
                                         )}
                                         <Button variant="outline" size="sm" onClick={() => openEdit(event)}>
-                                            <Pencil className="mr-1 size-3" /> Edit
+                                            <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
                                         <Button variant="destructive" size="sm" onClick={() => setDeleteEvent(event)}>
-                                            <Trash2 className="mr-1 size-3" /> Delete
+                                            <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                         </Button>
                                     </TableCell>
                                     )}
@@ -618,17 +620,17 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                 <Dialog open={batchDelete} onOpenChange={(isOpen) => !isOpen && setBatchDelete(false)}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Delete {selectedIds.size} Events?</DialogTitle>
+                            <DialogTitle>{t('Delete Events')}?</DialogTitle>
                             <DialogDescription>
-                                This action cannot be undone. The events and all associated data will be permanently deleted.
+                                {t('This action cannot be undone. The events and all associated data will be permanently deleted.')}
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setBatchDelete(false)}>
-                                Cancel
+                                {t('Cancel')}
                             </Button>
                             <Button variant="destructive" onClick={handleBatchDelete}>
-                                Yes, Delete All
+                                {t('Yes, Delete All')}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

@@ -1,7 +1,28 @@
 # Internationalization (i18n)
 
-Internationalization is **planned but not yet implemented**. Laravel's built-in localization system is available and configured in `config/app.php` with `locale` set to `en` by default. The `resources/lang/` (or `lang/` in Laravel 11+) directory structure is in place for language files.
+Internationalization is implemented for the SAF portal with **English (`en`) as default** and **Bahasa Malaysia (`ms`) as the selectable alternate locale**.
 
-When i18n is activated, all user-facing strings in Blade templates and Inertia page components should use the `__()` helper or `@lang` directive for server-rendered content. For React frontend components, the `react-i18next` or a similar library should be introduced to load translation JSON files. Translation strings should be organized by domain (navigation, tournaments, matches, participants, validation).
+## Current Implementation
 
-The database schema includes a `locale` column on the `users` table and the `organizations` table, enabling per-user and per-tenant locale preferences. Right-to-left (RTL) language support will require additional CSS work with Tailwind's RTL utilities. Implementation of i18n is deferred to a future milestone.
+- Backend locale defaults and supported locales are configured in `config/app.php`.
+- Locale selection is persisted in session through `POST /locale`.
+- Request-time locale application is handled by `App\Http\Middleware\SetLocale` (loaded conditionally to stay safe during partial deployments).
+- Locale metadata is shared to Inertia via `HandleInertiaRequests` (`locale`, `locales`).
+- Frontend translation lookup is centralized in `resources/js/lib/i18n.ts`.
+- A reusable switcher exists in `resources/js/components/LocaleSwitcher.tsx` and is surfaced in guest/authenticated layouts.
+
+## Coverage
+
+The current EN/BM coverage includes:
+
+- Authentication screens (login, register, password, verification).
+- Shared navigation/layout labels.
+- Dashboard, Settings, Notifications.
+- Events, Matches, Results (key headings/actions/filter text).
+
+Coverage for all remaining pages is incremental and should continue page-by-page.
+
+## Notes
+
+- CSP remains report-only in production by default; translation-related requests are same-origin and covered by current policy.
+- RTL language support is not implemented and would require dedicated Tailwind/CSS updates.

@@ -28,12 +28,27 @@ use App\Http\Controllers\SportController;
 use App\Http\Controllers\TeamRegistrationFormController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthCheckController::class);
 
 Route::get('/', PublicPortalController::class)->name('public.index');
 Route::redirect('/index.php', '/portal/', 301);
+Route::post('/locale', function (Request $request) {
+    $supportedLocales = config('app.supported_locales', []);
+    if (! is_array($supportedLocales) || $supportedLocales === []) {
+        $supportedLocales = ['en'];
+    }
+
+    $validated = $request->validate([
+        'locale' => ['required', 'string', 'in:'.implode(',', $supportedLocales)],
+    ]);
+
+    $request->session()->put('locale', $validated['locale']);
+
+    return back();
+})->name('locale.update');
 // IIS includes the /portal mount point in REQUEST_URI. Laravel normalizes both
 // /portal and /portal/ to this route, so redirecting it to APP_URL (/portal)
 // creates a self-redirect in production.

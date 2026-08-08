@@ -79,7 +79,7 @@
 ## What Is Missing / Known Gaps
 
 - **REST API**: Not yet built — deferred for future phase.
-- **Internationalization**: Laravel localization config exists but translations not implemented.
+- **Internationalization**: Session-based locale module is implemented with English default and Bahasa Malaysia option. Authentication flows and shared navigation/layout labels are localized; full page-by-page translation coverage is still incremental.
 - **Accreditation, Live Scoring, Mobile App**: All deferred future features.
 - **UNC path limitation**: `\\10.1.2.22\e\others\saf\portal` cannot run CLI directly — use local drive or `u:;` mapping.
 - **Authenticated load evidence**: `tests/performance/smoke.js` still needs its validated CSRF/session-cookie correction committed, followed by a multi-worker staging run.

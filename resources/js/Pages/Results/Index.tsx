@@ -34,6 +34,7 @@ import { z } from 'zod';
 import { CalendarDays, CheckCircle2, Pencil, Plus, Save, Search, Swords, Trash2, Trophy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { matchNumberLabel } from '@/lib/matchNumber';
+import { useI18n } from '@/lib/i18n';
 import type { Result, Fixture, Participant, Event } from '@/types';
 
 const resultSchema = z.object({
@@ -274,6 +275,7 @@ function ResultRowView({ result, onEdit, onDelete, canManage = true }: ResultRow
 
 export default function ResultsIndex({ results: resultsProp, matches: matchesProp = [], participants: participantsProp = [], events: eventsProp = [], canManage = true }: ResultsIndexProps) {
     const { flash } = usePage().props;
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingResult, setEditingResult] = useState<ResultRow | null>(null);
     const [deleteResult, setDeleteResult] = useState<ResultRow | null>(null);
@@ -431,9 +433,9 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Results</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Results')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Record and manage match results
+                            {t('Record and manage match results')}
                         </p>
                     </div>
 
@@ -465,15 +467,15 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                         <DialogTrigger asChild>
                             <Button onClick={() => openCreate()} disabled={dialogMatches.length === 0}>
                                 <Plus className="mr-2 size-4" />
-                                Add Result
+                                {t('Add Result')}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <DialogHeader>
-                                    <DialogTitle>{editingResult ? 'Edit Result' : 'Record Result'}</DialogTitle>
+                                    <DialogTitle>{editingResult ? t('Edit Result') : t('Record Result')}</DialogTitle>
                                     <DialogDescription>
-                                        Select the match, then enter the final scores.
+                                        {t('Select the match, then enter the final scores.')}
                                     </DialogDescription>
                                 </DialogHeader>
 
@@ -564,11 +566,11 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
 
                                 <DialogFooter>
                                     <Button type="button" variant="outline" onClick={closeDialog}>
-                                        Cancel
+                                        {t('Cancel')}
                                     </Button>
                                     <Button type="submit" disabled={isSubmitting}>
                                         <Save className="mr-2 size-4" />
-                                        {editingResult ? 'Update' : 'Save'}
+                                        {editingResult ? t('Update') : t('Save')}
                                     </Button>
                                 </DialogFooter>
                             </form>
@@ -579,7 +581,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                 </div>
             }
         >
-            <Head title="Results" />
+            <Head title={t('Results')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -598,7 +600,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                     size="sm"
                     onClick={() => setFilterEventId('')}
                 >
-                    All Events
+                    {t('All Events')}
                     <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">{results.length}</span>
                 </Button>
                 {events.map((event) => {
@@ -622,25 +624,25 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             </div>
 
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                <StatCard label="Total Results" value={results.length} />
-                <StatCard label="Pending Matches" value={pendingMatches.length} tone="destructive" />
-                <StatCard label="Draws" value={drawCount} />
-                <StatCard label="Home Wins" value={homeWinCount} tone="emerald" />
-                <StatCard label="Away Wins" value={awayWinCount} />
+                <StatCard label={t('Total Results')} value={results.length} />
+                <StatCard label={t('Pending Matches')} value={pendingMatches.length} tone="destructive" />
+                <StatCard label={t('Draws')} value={drawCount} />
+                <StatCard label={t('Home Wins')} value={homeWinCount} tone="emerald" />
+                <StatCard label={t('Away Wins')} value={awayWinCount} />
             </div>
 
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <div className="relative">
                     <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                        placeholder="Search team, match #, venue…"
+                        placeholder={t('Search team, match #, venue...')}
                         value={query}
                         onChange={(event) => setQuery(event.target.value)}
                         className="w-72 pl-8"
                     />
                 </div>
                 <span className="text-sm text-muted-foreground">
-                    Showing {filteredResults.length} of {results.length} results
+                    {t('Showing')} {filteredResults.length} {t('of')} {results.length} {t('results')}
                 </span>
             </div>
 
@@ -649,11 +651,11 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                     {filteredResults.length === 0 && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>No Results</CardTitle>
+                                <CardTitle>{t('No Results')}</CardTitle>
                                 <CardDescription>
                                     {query
-                                        ? 'No results match your search.'
-                                        : 'No results recorded yet. Use "Add Result" to record the first match outcome.'}
+                                        ? t('No results match your search.')
+                                        : t('No results recorded yet. Use "Add Result" to record the first match outcome.')}
                                 </CardDescription>
                             </CardHeader>
                         </Card>

@@ -321,6 +321,11 @@ export interface NotificationItem {
 export interface PageProps extends InertiaPageProps {
     auth: Auth;
     flash: Flash;
+    locale?: string;
+    locales?: Array<{
+        code: string;
+        label: string;
+    }>;
     app?: {
         name: string;
     };

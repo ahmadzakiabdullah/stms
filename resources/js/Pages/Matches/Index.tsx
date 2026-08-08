@@ -18,6 +18,7 @@ import { BarChart3, CalendarDays, Eye, Pencil, Plus, RefreshCw, Save, Search, Sw
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { eventCode, matchNumberLabel } from '@/lib/matchNumber';
 import { matchProgress } from '@/lib/matchProgress';
+import { useI18n } from '@/lib/i18n';
 import type { Event, Fixture, Participant, Pool, Result } from '@/types';
 
 interface StandingRow {
@@ -356,6 +357,7 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
 
 export default function MatchesIndex({ events, drawnEventIds, selectedEventId, pools, allFixtures, knockout, participants, canManage = true }: MatchesIndexProps) {
     const { flash } = usePage().props;
+    const { t } = useI18n();
     const [query, setQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -512,18 +514,18 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
             header={
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Matches</h1>
-                        <p className="text-sm text-muted-foreground">Browse and manage all fixtures across every event.</p>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Matches')}</h1>
+                        <p className="text-sm text-muted-foreground">{t('Browse and manage all fixtures across every event.')}</p>
                     </div>
                     {canManage && (
                     <Button onClick={() => openCreate()} disabled={!selectedEventId}>
-                        <Plus className="mr-2 size-4" /> Add Match
+                        <Plus className="mr-2 size-4" /> {t('Add Match')}
                     </Button>
                     )}
                 </div>
             }
         >
-            <Head title="Matches" />
+            <Head title={t('Matches')} />
 
             {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
             {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
@@ -534,7 +536,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                     size="sm"
                     onClick={() => handleFilterChange('')}
                 >
-                    All Matches
+                    {t('All Matches')}
                     <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">{fixtures.length}</span>
                 </Button>
                 {events.map((event) => {
@@ -562,18 +564,18 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
             {!selectedEvent ? (
                 <>
                     <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                        <StatCard label="Total Matches" value={counts.scheduled + counts.in_progress + counts.completed + counts.cancelled} />
-                        <StatCard label="Completed" value={counts.completed} tone="emerald" />
-                        <StatCard label="In Progress" value={counts.in_progress} />
-                        <StatCard label="Scheduled" value={counts.scheduled} />
-                        <StatCard label="Cancelled" value={counts.cancelled} tone="destructive" />
+                        <StatCard label={t('Total Matches')} value={counts.scheduled + counts.in_progress + counts.completed + counts.cancelled} />
+                        <StatCard label={t('Completed')} value={counts.completed} tone="emerald" />
+                        <StatCard label={t('In Progress')} value={counts.in_progress} />
+                        <StatCard label={t('Scheduled')} value={counts.scheduled} />
+                        <StatCard label={t('Cancelled')} value={counts.cancelled} tone="destructive" />
                     </div>
 
                     <div className="mb-4 flex flex-wrap items-center gap-3">
                         <div className="relative">
                             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                                placeholder="Search team, venue, match #…"
+                                placeholder={t('Search team, venue, match #...')}
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
                                 className="w-72 pl-8"
@@ -584,14 +586,14 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                             onChange={(event) => setStatusFilter(event.target.value)}
                             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
                         >
-                            <option value="">All Statuses</option>
-                            <option value="scheduled">Scheduled</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="">{t('All Statuses')}</option>
+                            <option value="scheduled">{t('Scheduled')}</option>
+                            <option value="in_progress">{t('In Progress')}</option>
+                            <option value="completed">{t('Completed')}</option>
+                            <option value="cancelled">{t('Cancelled')}</option>
                         </select>
                         <span className="text-sm text-muted-foreground">
-                            Showing {filteredFixtures.length} of {fixtures.length} matches
+                            {t('Showing')} {filteredFixtures.length} {t('of')} {fixtures.length} {t('matches')}
                         </span>
                     </div>
 
@@ -599,11 +601,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         {groupedByEvent.length === 0 && (
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>No Matches</CardTitle>
+                                    <CardTitle>{t('No Matches')}</CardTitle>
                                     <CardDescription>
                                         {query || statusFilter
-                                            ? 'No matches match your search or filters.'
-                                            : 'No matches scheduled yet. Select an event above and add a match.'}
+                                            ? t('No matches match your search or filters.')
+                                            : t('No matches scheduled yet. Select an event above and add a match.')}
                                     </CardDescription>
                                 </CardHeader>
                             </Card>

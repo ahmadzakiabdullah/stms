@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added repository housekeeping updates: ignored local `.Jules/` artifacts, refreshed i18n architecture docs to match the implemented EN/BM locale module, and documented folder hygiene standards under `docs/`.
+- Standardized core architecture/database terminology to the canonical hierarchy term `Match` while preserving implementation notes that the model class remains `Fixture` due the PHP reserved keyword.
+- Added a non-destructive `tmp/` housekeeping audit report with inventory summary and retention guidance.
+- Added a multilingual module with English as default and Bahasa Malaysia as selectable locale. Implemented locale middleware, session-based locale persistence, a global `/locale` switch endpoint, shared Inertia locale metadata, and UI language switchers for guest/authenticated layouts. Localized shared navigation and authentication screens in both languages.
+- Added `LocaleSwitchTest` feature coverage for valid locale switching, invalid locale validation, and first-render locale application (`<html lang>`).
+- Expanded EN/BM localization coverage on `Dashboard`, `Settings`, and `Notifications` pages, including headings, action labels, filters, and key status copy.
+- Expanded EN/BM localization coverage on `Events`, `Matches`, and `Results` pages for key headings, stat labels, actions, and search/filter copy.
 - Fixed the production IIS `/portal/` self-redirect that caused `ERR_TOO_MANY_REDIRECTS`, with regression coverage for both trailing-slash variants.
 - Temporarily removed mandatory email verification from authenticated system routes and redirect the verification prompt to the dashboard.
 - Linked the authenticated sidebar logo and brand area to the dashboard on desktop and mobile navigation.

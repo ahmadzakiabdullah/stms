@@ -36,7 +36,7 @@ The schema is migration-driven. There are 59 migration files as of 7 August 2026
 ### Draws, Configuration, Notifications, and Audit
 
 - **`pools`** — Event draw/group allocation, tenant-scoped by `organization_id`.
-- **`draw_versions`** — Immutable tenant-scoped draw allocation/fixture snapshots with version, seed, actor and action metadata for audit and rollback.
+- **`draw_versions`** — Immutable tenant-scoped draw allocation/match snapshots with version, seed, actor and action metadata for audit and rollback.
 - **`settings`** — Per-organization key/value settings with a unique `[organization_id, key]` constraint.
 - **`notifications`** — Laravel database notifications.
 - **`activity_log`** — Spatie activity records for selected audited actions.

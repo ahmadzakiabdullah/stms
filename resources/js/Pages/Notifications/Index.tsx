@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Activity, Bell, CheckCheck, CircleAlert, Inbox } from 'lucide-react';
 import { type Paginated } from '@/types';
+import { useI18n } from '@/lib/i18n';
 
 interface NotificationItem {
     id: string;
@@ -54,6 +55,7 @@ export default function NotificationsIndex({
     organizations,
     notificationTypes,
 }: Props) {
+    const { t } = useI18n();
     const { flash } = usePage().props;
 
     const visit = (changes: Partial<Filters>) => {
@@ -78,24 +80,24 @@ export default function NotificationsIndex({
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
-                        <p className="text-sm text-muted-foreground">Actionable updates for your account</p>
+                        <p className="text-sm text-muted-foreground">{t('Actionable updates for your account')}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         {isSuperAdmin && (
                             <Button variant="outline" size="sm" asChild>
                                 <Link href={route('activity-logs.index')}>
-                                    <Activity className="mr-2 size-4" /> System Activity
+                                    <Activity className="mr-2 size-4" /> {t('System Activity')}
                                 </Link>
                             </Button>
                         )}
                         <Button variant="outline" size="sm" onClick={() => router.post(route('notifications.mark-all-read'), {}, { preserveScroll: true })}>
-                            <CheckCheck className="mr-2 size-4" /> Mark All as Read
+                            <CheckCheck className="mr-2 size-4" /> {t('Mark All as Read')}
                         </Button>
                     </div>
                 </div>
             }
         >
-            <Head title="Notifications" />
+            <Head title={t('Notifications')} />
 
             {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
 
@@ -107,7 +109,7 @@ export default function NotificationsIndex({
                         variant={filters.tab === 'action' ? 'default' : 'outline'}
                         onClick={() => selectTab('action')}
                     >
-                        <CircleAlert className="mr-2 size-4" /> Action Required
+                        <CircleAlert className="mr-2 size-4" /> {t('Action Required')}
                         {counts.action_required > 0 && <Badge variant="secondary" className="ml-2">{counts.action_required}</Badge>}
                     </Button>
                 )}
@@ -117,7 +119,7 @@ export default function NotificationsIndex({
                     variant={filters.tab === 'inbox' ? 'default' : 'outline'}
                     onClick={() => selectTab('inbox')}
                 >
-                    <Inbox className="mr-2 size-4" /> My Notifications
+                    <Inbox className="mr-2 size-4" /> {t('My Notifications')}
                     {counts.unread > 0 && <Badge variant="secondary" className="ml-2">{counts.unread}</Badge>}
                 </Button>
             </div>
@@ -126,40 +128,40 @@ export default function NotificationsIndex({
                 <CardContent className="border-b p-4">
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
-                            Read status
+                            {t('Read status')}
                             <select
                                 aria-label="Filter notifications by read status"
                                 className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
                                 value={filters.status}
                                 onChange={(event) => visit({ status: event.target.value as Filters['status'] })}
                             >
-                                <option value="all">All</option>
-                                <option value="unread">Unread</option>
-                                <option value="read">Read</option>
+                                <option value="all">{t('All')}</option>
+                                <option value="unread">{t('Unread')}</option>
+                                <option value="read">{t('Read')}</option>
                             </select>
                         </label>
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
-                            Type
+                            {t('Type')}
                             <select
                                 aria-label="Filter notifications by type"
                                 className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
                                 value={filters.type}
                                 onChange={(event) => visit({ type: event.target.value })}
                             >
-                                <option value="">All types</option>
+                                <option value="">{t('All types')}</option>
                                 {notificationTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                             </select>
                         </label>
                         {isSuperAdmin && (
                             <label className="grid gap-1 text-xs font-medium text-muted-foreground">
-                                Organization
+                                {t('Organization')}
                                 <select
                                     aria-label="Filter notifications by organization"
                                     className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
                                     value={filters.organization_id}
                                     onChange={(event) => visit({ organization_id: event.target.value })}
                                 >
-                                    <option value="">All organizations</option>
+                                    <option value="">{t('All organizations')}</option>
                                     {organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
                                 </select>
                             </label>
@@ -171,9 +173,9 @@ export default function NotificationsIndex({
                     {notifications.data.length === 0 ? (
                         <div className="p-10 text-center">
                             <Bell className="mx-auto mb-3 size-8 text-muted-foreground" />
-                            <p className="font-medium">Nothing to show</p>
+                            <p className="font-medium">{t('Nothing to show')}</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                {filters.tab === 'action' ? 'There are no pending notifications requiring attention.' : 'No notifications match the selected filters.'}
+                                {filters.tab === 'action' ? t('There are no pending notifications requiring attention.') : t('No notifications match the selected filters.')}
                             </p>
                         </div>
                     ) : (
@@ -192,7 +194,7 @@ export default function NotificationsIndex({
                                         </span>
                                         <span className="min-w-0 flex-1">
                                             <span className={`block text-sm ${!notification.read_at ? 'font-medium' : ''}`}>
-                                                {notification.data?.message || 'Notification'}
+                                                {notification.data?.message || t('Notification')}
                                             </span>
                                             <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                                                 <span>{new Date(notification.created_at).toLocaleString()}</span>
@@ -203,10 +205,10 @@ export default function NotificationsIndex({
                                         </span>
                                         {notification.data?.action_url && (
                                             <Button size="sm" variant="outline" asChild onClick={(event: React.MouseEvent) => event.stopPropagation()}>
-                                                <Link href={notification.data.action_url}>Review</Link>
+                                                <Link href={notification.data.action_url}>{t('Review')}</Link>
                                             </Button>
                                         )}
-                                        {!notification.read_at && <span className="mt-2 size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
+                                        {!notification.read_at && <span className="mt-2 size-2 shrink-0 rounded-full bg-primary" aria-label={t('Unread')} />}
                                     </button>
                                 );
                             })}

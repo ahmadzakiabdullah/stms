@@ -20,24 +20,41 @@ class SecurityHeaders
 
         if (app()->environment('production')) {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-            $header = config('app.csp_report_only', true)
+            $isReportOnly = (bool) config('app.csp_report_only', true);
+
+            $header = $isReportOnly
                 ? 'Content-Security-Policy-Report-Only'
                 : 'Content-Security-Policy';
+
+            $scriptSrc = $isReportOnly
+                ? "script-src 'self' 'unsafe-inline'; "
+                : "script-src 'self'; ";
+
+            $styleSrc = $isReportOnly
+                ? "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; "
+                : "style-src 'self' 'unsafe-inline'; ";
+
+            $fontSrc = $isReportOnly
+                ? "font-src 'self' data: https://fonts.bunny.net; "
+                : "font-src 'self' data:; ";
+
+            $tailDirectives = $isReportOnly
+                ? ''
+                : 'upgrade-insecure-requests; block-all-mixed-content';
 
             $response->headers->set(
                 $header,
                 "default-src 'self'; ".
-                "script-src 'self'; ".
-                "style-src 'self' 'unsafe-inline'; ".
+                $scriptSrc.
+                $styleSrc.
                 "img-src 'self' data: blob:; ".
-                "font-src 'self' data:; ".
+                $fontSrc.
                 "connect-src 'self'; ".
                 "object-src 'none'; ".
                 "frame-ancestors 'self'; ".
                 "form-action 'self'; ".
                 "base-uri 'self'; ".
-                'upgrade-insecure-requests; '.
-                'block-all-mixed-content'
+                $tailDirectives
             );
         }
 

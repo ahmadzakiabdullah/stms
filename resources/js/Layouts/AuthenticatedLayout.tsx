@@ -30,6 +30,8 @@ import {
 import { type LucideIcon } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
 import { type PageProps, type User } from '@/types';
+import LocaleSwitcher from '@/components/LocaleSwitcher';
+import { useI18n } from '@/lib/i18n';
 
 interface NavItem {
     label: string;
@@ -125,6 +127,7 @@ interface SidebarProps {
 
 function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = false, isFacultyRep = false, isDean = false, app = null }: SidebarProps) {
     const { settings = {} as Record<string, string> } = usePage<PageProps>().props;
+    const { t } = useI18n();
     const logoUrl = (settings as Record<string, string>)?.logo_url;
 
     return (
@@ -132,7 +135,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                 href={route('dashboard')}
                 onClick={onNavigate}
                 className="flex h-16 items-center gap-3 border-b px-5 transition hover:bg-sidebar-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-                aria-label="Go to dashboard"
+                aria-label={t('Go to dashboard')}
             >
                 {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="h-9 w-auto rounded object-contain" />
@@ -144,7 +147,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                 <div>
                     <div className="text-sm font-semibold leading-none">{app?.name || 'STMS Portal'}</div>
                     <div className="mt-1 text-xs text-muted-foreground">
-                        {user?.organization?.name || 'Multi-Tenant Sports Platform'}
+                        {user?.organization?.name || t('Multi-Tenant Sports Platform')}
                     </div>
                 </div>
             </Link>
@@ -162,7 +165,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                         <div key={sectionIdx}>
                             {section.title && (
                                 <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground/70">
-                                    {section.title}
+                                    {t(section.title)}
                                 </div>
                             )}
                             <div className="space-y-1">
@@ -186,7 +189,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                                                 <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
                                             )}
                                             <Icon className={'size-4 ' + (isActive ? 'text-primary' : 'group-hover:text-sidebar-accent-foreground')} />
-                                            <span>{item.label}</span>
+                                            <span>{t(item.label)}</span>
                                         </Link>
                                     );
                                 })}
@@ -204,12 +207,13 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     >
                         <LogOut className="size-4" />
-                        <span>Logout</span>
+                        <span>{t('Logout')}</span>
                     </Link>
                 </div>
             </nav>
 
             <div className="space-y-2 border-t p-4">
+                <LocaleSwitcher compact />
                 {isSuperAdmin && user?.organization && (
                     <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 ring-1 ring-primary/10">
                         <Building2 className="size-3.5 shrink-0 text-primary" />
@@ -237,6 +241,7 @@ interface AuthenticatedLayoutProps {
 
 export default function AuthenticatedLayout({ header, children }: AuthenticatedLayoutProps) {
     const { auth, app, isSuperAdmin = false, isFacultyRep = false, isDean = false } = usePage<PageProps>().props;
+    const { t } = useI18n();
     const user = auth?.user;
 
     if (!user) {
@@ -314,19 +319,19 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                 size="icon"
                                 className="lg:hidden"
                                 onClick={() => setMobileOpen(true)}
-                                aria-label="Open mobile menu"
+                                aria-label={t('Open mobile menu')}
                             >
                                 <Menu className="size-5" />
                             </Button>
 
                             <div className="hidden min-w-0 flex-1 items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-sm text-muted-foreground md:flex">
                                 <Search className="size-4" />
-                                <span>Quick search</span>
+                                <span>{t('Quick search')}</span>
                             </div>
 
                             <div className="ml-auto flex items-center gap-2">
                                 <div className="relative">
-                                    <Button variant="ghost" size="icon" onClick={toggleNotif} className="relative" aria-label="Toggle notifications">
+                                    <Button variant="ghost" size="icon" onClick={toggleNotif} className="relative" aria-label={t('Toggle notifications')}>
                                         <Bell className="size-5" />
                                         {notifCount > 0 && (
                                             <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
@@ -339,20 +344,20 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                             <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
                                             <div className="absolute right-0 z-50 mt-1 w-80 rounded-lg bg-popover p-2 text-popover-foreground shadow-md ring-1 ring-foreground/10">
                                                 <div className="flex items-center justify-between px-1 py-1">
-                                                    <span className="text-xs font-semibold">Notifications</span>
+                                                    <span className="text-xs font-semibold">{t('Notifications')}</span>
                                                     {notifCount > 0 && (
                                                         <button
                                                             type="button"
                                                             onClick={() => { router.post(route('notifications.mark-all-read'), {}, { preserveScroll: true }); setNotifCount(0); setNotifOpen(false); }}
                                                             className="text-[10px] text-primary hover:underline"
                                                         >
-                                                            Mark all read
+                                                            {t('Mark all read')}
                                                         </button>
                                                     )}
                                                 </div>
                                                 <div className="mt-1 max-h-72 space-y-1 overflow-y-auto">
                                                     {notifItems.length === 0 && (
-                                                        <p className="p-3 text-center text-xs text-muted-foreground">No notifications</p>
+                                                        <p className="p-3 text-center text-xs text-muted-foreground">{t('No notifications')}</p>
                                                     )}
                                                     {notifItems.map((n: any) => (
                                                         <button
@@ -365,14 +370,14 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                                             }}
                                                             className={`w-full rounded-md px-2 py-2 text-left text-xs transition hover:bg-muted ${!n.read_at ? 'bg-muted/50 font-medium' : ''}`}
                                                         >
-                                                            <p>{n.data?.message || 'Notification'}</p>
+                                                            <p>{n.data?.message || t('Notification')}</p>
                                                             <p className="mt-0.5 text-[10px] text-muted-foreground">{n.created_at}</p>
                                                         </button>
                                                     ))}
                                                 </div>
                                                 {notifItems.length > 0 && (
                                                     <Link href={route('notifications.index')} className="block rounded-md px-2 py-1.5 text-center text-xs text-primary hover:bg-muted">
-                                                        View all notifications
+                                                        {t('View all notifications')}
                                                     </Link>
                                                 )}
                                             </div>
@@ -380,8 +385,10 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                     )}
                                 </div>
 
+                                <LocaleSwitcher compact showLabel={false} />
+
                                 <div className="relative">
-                                    <Button variant="outline" className="gap-2" onClick={() => setUserMenuOpen(!userMenuOpen)} aria-label="Toggle user menu">
+                                    <Button variant="outline" className="gap-2" onClick={() => setUserMenuOpen(!userMenuOpen)} aria-label={t('Toggle user menu')}>
                                         <Avatar className="size-6">
                                             <AvatarFallback className="text-xs">
                                                 {initials(user.name)}
@@ -407,7 +414,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                                     onClick={() => setUserMenuOpen(false)}
                                                 >
                                                     <UserCircle className="size-4" />
-                                                    Profile
+                                                    {t('Profile')}
                                                 </Link>
                                                 <Link
                                                     href={route('logout')}
@@ -417,7 +424,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                                     onClick={() => setUserMenuOpen(false)}
                                                 >
                                                     <LogOut className="size-4" />
-                                                    Logout
+                                                    {t('Logout')}
                                                 </Link>
                                             </div>
                                         </>
