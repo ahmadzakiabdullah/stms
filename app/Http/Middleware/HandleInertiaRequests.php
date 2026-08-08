@@ -67,6 +67,18 @@ class HandleInertiaRequests extends Middleware
                     'name' => $appName ?? config('app.name', 'STMS Portal'),
                 ];
             },
+            'locale' => function () use ($request) {
+                return $request->session()->get('locale', config('app.locale', 'en'));
+            },
+            'availableLocales' => fn () => config('locales.available_locales', ['en' => 'English']),
+            'translations' => function () use ($request) {
+                $locale = $request->session()->get('locale', config('app.locale', 'en'));
+                $path = lang_path($locale.'.json');
+
+                return is_file($path)
+                    ? (json_decode((string) file_get_contents($path), true) ?: [])
+                    : [];
+            },
         ];
 
         if ($user) {

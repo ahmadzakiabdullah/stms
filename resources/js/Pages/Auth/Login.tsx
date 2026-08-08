@@ -5,6 +5,7 @@ import PrimaryButton from '@/components/PrimaryButton';
 import TextInput from '@/components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useT } from '@/lib/i18n';
 
 interface Props {
     status?: string;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function Login({ status, canResetPassword }: Props) {
+    const t = useT();
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -28,7 +30,7 @@ export default function Login({ status, canResetPassword }: Props) {
 
     return (
         <GuestLayout>
-            <Head title="Log in" />
+            <Head title={t('Log in')} />
 
             {status && (
                 <div className="mb-4 text-sm font-medium text-green-600">
@@ -38,7 +40,7 @@ export default function Login({ status, canResetPassword }: Props) {
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="email" value={t('Email')} />
 
                     <TextInput
                         id="email"
@@ -55,7 +57,7 @@ export default function Login({ status, canResetPassword }: Props) {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                    <InputLabel htmlFor="password" value={t('Password')} />
 
                     <TextInput
                         id="password"
@@ -80,7 +82,7 @@ export default function Login({ status, canResetPassword }: Props) {
                             }
                         />
                         <span className="ms-2 text-sm text-gray-600">
-                            Remember me
+                            {t('Remember me')}
                         </span>
                     </label>
                 </div>
@@ -91,12 +93,12 @@ export default function Login({ status, canResetPassword }: Props) {
                             href={route('password.request')}
                             className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >
-                            Forgot your password?
+                            {t('Forgot your password?')}
                         </Link>
                     )}
 
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
+                        {t('Log in')}
                     </PrimaryButton>
                 </div>
             </form>

@@ -324,4 +324,7 @@ export interface PageProps extends InertiaPageProps {
     isDean?: boolean;
     notification_count?: number;
     notifications?: NotificationItem[];
+    locale?: string;
+    availableLocales?: Record<string, string>;
+    translations?: Record<string, string>;
 }

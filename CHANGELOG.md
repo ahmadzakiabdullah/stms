@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Live Scores: added a public `/live` page (no login required) showing completed match results with scores and winners plus per-pool league standings, filterable by sport and event, with automatic 20-second refresh. New `LiveScoreController`, `Live/Index` page, sidebar "Live Scores" link, and 7 feature tests. Data is scoped to the first active organization.
+
 - CI: aligned all runners and the container runtime with the PHP 8.4 dependency baseline, enabled CI on the default `master` branch, and retained Laravel bootstrap/runtime directories in clean checkouts so Composer, tests, coverage, and browser E2E can start reliably.
 - Authentication: defaulted the session cookie path to `/` so root deployments retain login sessions; subfolder deployments continue to override `SESSION_PATH` explicitly.
 - Notifications: added a super-admin `Action Required` default view, personal inbox tab, read/type/organization filters, organization and severity badges, and a direct link to filtered system activity. New pending registrations now notify same-organization super/org admins plus the participant dean without cross-tenant delivery.

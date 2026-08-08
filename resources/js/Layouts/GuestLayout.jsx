@@ -1,4 +1,5 @@
 import ApplicationLogo from '@/components/ApplicationLogo';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Link, usePage } from '@inertiajs/react';
 
 export default function GuestLayout({ children }) {
@@ -7,6 +8,9 @@ export default function GuestLayout({ children }) {
 
     return (
         <div className="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0">
+            <div className="self-end pr-6">
+                <LanguageSwitcher />
+            </div>
             <div>
                 <Link href="/" aria-label="STMS home">
                     {logoUrl ? (

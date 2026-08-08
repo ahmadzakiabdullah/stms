@@ -4,6 +4,7 @@ import PrimaryButton from '@/components/PrimaryButton';
 import TextInput from '@/components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { useT } from '@/lib/i18n';
 
 interface Props {
     token: string;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ResetPassword({ token, email }: Props) {
+    const t = useT();
     const { data, setData, post, processing, errors, reset } = useForm({
         token: token,
         email: email,
@@ -28,11 +30,11 @@ export default function ResetPassword({ token, email }: Props) {
 
     return (
         <GuestLayout>
-            <Head title="Reset Password" />
+            <Head title={t('Reset Password')} />
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="email" value={t('Email')} />
 
                     <TextInput
                         id="email"
@@ -48,7 +50,7 @@ export default function ResetPassword({ token, email }: Props) {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                    <InputLabel htmlFor="password" value={t('Password')} />
 
                     <TextInput
                         id="password"
@@ -67,7 +69,7 @@ export default function ResetPassword({ token, email }: Props) {
                 <div className="mt-4">
                     <InputLabel
                         htmlFor="password_confirmation"
-                        value="Confirm Password"
+                        value={t('Confirm Password')}
                     />
 
                     <TextInput
@@ -90,7 +92,7 @@ export default function ResetPassword({ token, email }: Props) {
 
                 <div className="mt-4 flex items-center justify-end">
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Reset Password
+                        {t('Reset Password')}
                     </PrimaryButton>
                 </div>
             </form>

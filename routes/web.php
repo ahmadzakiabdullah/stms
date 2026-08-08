@@ -9,6 +9,8 @@ use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FacultyDashboardController;
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\LiveScoreController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationController;
@@ -30,6 +32,12 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/health', HealthCheckController::class);
+
+// Locale switching (guests and authenticated users)
+Route::post('/language/{locale}', [LanguageController::class, 'update'])->name('language.update');
+
+// Public live scores / results board (no authentication required)
+Route::get('/live', [LiveScoreController::class, 'index'])->name('live.index');
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [

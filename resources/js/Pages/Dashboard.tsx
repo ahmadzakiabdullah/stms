@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useT } from '@/lib/i18n';
 import FacultyDashboard from '@/Pages/Dashboard/FacultyDashboard';
 import Pagination from '@/components/Pagination';
 import { type Event, type PageProps, type Paginated, type Session, type Tournament } from '@/types';
@@ -222,6 +223,7 @@ export default function Dashboard({
     squadStats: squadStatsProp = {},
 }: DashboardProps) {
     const { auth, app } = usePage<PageProps>().props;
+    const t = useT();
     const user = auth?.user;
 
     const facultyStats = Array.isArray(facultyStatsProp) ? facultyStatsProp : [];
@@ -283,7 +285,7 @@ export default function Dashboard({
         return (
             <div className="flex min-h-screen items-center justify-center bg-background">
                 <div className="text-center">
-                    <p className="text-muted-foreground">Please log in to access the dashboard.</p>
+                    <p className="text-muted-foreground">{t('Please log in to access the dashboard.')}</p>
                 </div>
             </div>
         );
@@ -295,23 +297,22 @@ export default function Dashboard({
                 header={
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <div className="text-sm text-muted-foreground">Welcome, {user.name}</div>
-                            <h1 className="mt-1 text-2xl font-semibold tracking-tight">{app?.name || 'Dashboard'}</h1>
+                            <div className="text-sm text-muted-foreground">{t('Welcome, {{name}}', { name: user.name })}</div>
+                            <h1 className="mt-1 text-2xl font-semibold tracking-tight">{app?.name || t('Dashboard')}</h1>
                         </div>
                     </div>
                 }
             >
-                <Head title="Dashboard" />
+                <Head title={t('Dashboard')} />
 
                 <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
                     <CardContent className="py-10 text-center">
                         <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary/10">
                             <Trophy className="size-8 text-primary" />
                         </div>
-                        <h2 className="mb-2 text-xl font-semibold">Welcome to SAF Portal</h2>
+                        <h2 className="mb-2 text-xl font-semibold">{t('Welcome to the Portal')}</h2>
                         <p className="mx-auto mb-6 max-w-lg text-sm text-muted-foreground">
-                            Your system is ready. Set up your sports event management platform by following the steps below.
-                            Start with creating a Session, then add Sports, Tournaments, Events, and Participants.
+                            {t('Your system is ready. Set up your sports event management platform by following the steps below. Start with creating a Session, then add Sports, Tournaments, Events, and Participants.')}
                         </p>
                     </CardContent>
                 </Card>
@@ -330,13 +331,13 @@ export default function Dashboard({
                                             {s.step}
                                         </span>
                                     </div>
-                                    <CardTitle className="mt-3 text-base">{s.title}</CardTitle>
-                                    <CardDescription>{s.desc}</CardDescription>
+                                    <CardTitle className="mt-3 text-base">{t(s.title)}</CardTitle>
+                                    <CardDescription>{t(s.desc)}</CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <Button asChild className="w-full" size="sm">
                                         <Link href={route(s.route)}>
-                                            {s.cta} <ArrowRight className="ml-2 size-3.5" />
+                                            {t(s.cta)} <ArrowRight className="ml-2 size-3.5" />
                                         </Link>
                                     </Button>
                                 </CardContent>
@@ -348,22 +349,22 @@ export default function Dashboard({
                 <div className="mt-8">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-base">System Hierarchy</CardTitle>
-                            <CardDescription>How data flows in SAF Portal</CardDescription>
+                            <CardTitle className="text-base">{t('System Hierarchy')}</CardTitle>
+                            <CardDescription>{t('How data flows in SAF Portal')}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="flex flex-wrap items-center gap-2 text-sm">
-                                <Badge variant="outline" className="py-1.5">Organization</Badge>
+                                <Badge variant="outline" className="py-1.5">{t('Organization')}</Badge>
                                 <ArrowRight className="size-4 text-muted-foreground" />
-                                <Badge variant="outline" className="py-1.5">Session</Badge>
+                                <Badge variant="outline" className="py-1.5">{t('Session')}</Badge>
                                 <ArrowRight className="size-4 text-muted-foreground" />
-                                <Badge variant="outline" className="py-1.5">Tournament</Badge>
+                                <Badge variant="outline" className="py-1.5">{t('Tournament')}</Badge>
                                 <ArrowRight className="size-4 text-muted-foreground" />
-                                <Badge variant="outline" className="py-1.5">Event</Badge>
+                                <Badge variant="outline" className="py-1.5">{t('Event')}</Badge>
                                 <ArrowRight className="size-4 text-muted-foreground" />
-                                <Badge variant="outline" className="py-1.5">Participant</Badge>
+                                <Badge variant="outline" className="py-1.5">{t('Participant')}</Badge>
                                 <ArrowRight className="size-4 text-muted-foreground" />
-                                <Badge className="bg-primary/10 text-primary py-1.5">Registration</Badge>
+                                <Badge className="bg-primary/10 text-primary py-1.5">{t('Registration')}</Badge>
                             </div>
                         </CardContent>
                     </Card>
@@ -378,7 +379,7 @@ export default function Dashboard({
                 <div className="flex items-center justify-between">
                     <div>
                         <div className="text-sm text-muted-foreground">{user.name}</div>
-                        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{app?.name || 'Dashboard'}</h1>
+                        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{app?.name || t('Dashboard')}</h1>
                     </div>
                 </div>
             }>
@@ -402,26 +403,26 @@ export default function Dashboard({
     const pipelineTotal = pipeline.pending + pipeline.confirmed + pipeline.rejected;
 
     const primaryStats: StatItem[] = [
-        { label: 'Active Sessions', value: String(v.activeSessions ?? 0), note: `${v.tournaments ?? 0} tournaments across all sessions`, icon: CalendarClock },
-        { label: 'Events', value: String(v.events ?? 0), note: `Competing across ${v.sports ?? 0} sports`, icon: Target },
-        { label: 'Event Registrations', value: String(totalEventRegistrations), note: `${participantsWithRegistrations} participants registered`, icon: ListChecks },
-        { label: 'Matches', value: String(v.matches ?? 0), note: `${v.results ?? 0} results recorded`, icon: Scale },
+        { label: t('Active Sessions'), value: String(v.activeSessions ?? 0), note: t('{{count}} tournaments across all sessions', { count: v.tournaments ?? 0 }), icon: CalendarClock },
+        { label: t('Events'), value: String(v.events ?? 0), note: t('Competing across {{count}} sports', { count: v.sports ?? 0 }), icon: Target },
+        { label: t('Event Registrations'), value: String(totalEventRegistrations), note: t('{{count}} participants registered', { count: participantsWithRegistrations }), icon: ListChecks },
+        { label: t('Matches'), value: String(v.matches ?? 0), note: t('{{count}} results recorded', { count: v.results ?? 0 }), icon: Scale },
     ];
 
     const secondaryStats: StatItem[] = [
-        { label: 'Organizations', value: String(v.organizations ?? 0), note: 'Tenants', icon: Users },
-        { label: 'Sports', value: String(v.sports ?? 0), note: 'Configured', icon: Award },
-        { label: 'Participants', value: String(v.participants ?? 0), note: 'Faculties & teams', icon: Users },
-        { label: 'Results', value: String(v.results ?? 0), note: 'Recorded', icon: Trophy },
+        { label: t('Organizations'), value: String(v.organizations ?? 0), note: t('Tenants'), icon: Users },
+        { label: t('Sports'), value: String(v.sports ?? 0), note: t('Configured'), icon: Award },
+        { label: t('Participants'), value: String(v.participants ?? 0), note: t('Faculties & teams'), icon: Users },
+        { label: t('Results'), value: String(v.results ?? 0), note: t('Recorded'), icon: Trophy },
     ];
 
     const maxSportRegistrations = Math.max(1, ...registrationsBySportSafe.map((s) => s.total));
 
     const quickActions = [
-        { label: 'New Session', href: 'sessions.index', icon: CalendarClock, tone: 'bg-blue-50 text-blue-600', desc: 'Start an event cycle' },
-        { label: 'New Event', href: 'events.index', icon: Target, tone: 'bg-purple-50 text-purple-600', desc: 'Define a competition' },
-        { label: 'Add Participant', href: 'participants.index', icon: Users, tone: 'bg-rose-50 text-rose-600', desc: 'Register a faculty' },
-        { label: 'Registrations', href: 'event-participants.index', icon: ListChecks, tone: 'bg-cyan-50 text-cyan-600', desc: 'Approve & manage' },
+        { label: t('New Session'), href: 'sessions.index', icon: CalendarClock, tone: 'bg-blue-50 text-blue-600', desc: t('Start an event cycle') },
+        { label: t('New Event'), href: 'events.index', icon: Target, tone: 'bg-purple-50 text-purple-600', desc: t('Define a competition') },
+        { label: t('Add Participant'), href: 'participants.index', icon: Users, tone: 'bg-rose-50 text-rose-600', desc: t('Register a faculty') },
+        { label: t('Registrations'), href: 'event-participants.index', icon: ListChecks, tone: 'bg-cyan-50 text-cyan-600', desc: t('Approve & manage') },
     ];
 
     return (
@@ -429,28 +430,28 @@ export default function Dashboard({
             header={
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <div className="text-sm text-muted-foreground">Welcome back, {user.name}</div>
-                        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{app?.name || 'Dashboard'}</h1>
-                        <p className="mt-1 text-sm text-muted-foreground">Overview of your sports competition operations</p>
+                        <div className="text-sm text-muted-foreground">{t('Welcome back, {{name}}', { name: user.name })}</div>
+                        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{app?.name || t('Dashboard')}</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('Overview of your sports competition operations')}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <Button asChild variant="outline">
                             <Link href={route('sessions.index')}>
                                 <CalendarClock className="mr-2 size-4" />
-                                Sessions
+                                {t('Sessions')}
                             </Link>
                         </Button>
                         <Button asChild>
                             <Link href={route('tournaments.index')}>
                                 <Trophy className="mr-2 size-4" />
-                                Tournaments
+                                {t('Tournaments')}
                             </Link>
                         </Button>
                     </div>
                 </div>
             }
         >
-            <Head title="Dashboard" />
+            <Head title={t('Dashboard')} />
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {primaryStats.map((item) => {
@@ -497,11 +498,11 @@ export default function Dashboard({
                 <Card className="xl:col-span-2">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle>Registration Pipeline</CardTitle>
-                            <CardDescription>Event registration approvals across all events</CardDescription>
+                            <CardTitle>{t('Registration Pipeline')}</CardTitle>
+                            <CardDescription>{t('Event registration approvals across all events')}</CardDescription>
                         </div>
                         <Button asChild variant="ghost" size="sm">
-                            <Link href={route('event-participants.index')}>Review</Link>
+                            <Link href={route('event-participants.index')}>{t('Review')}</Link>
                         </Button>
                     </CardHeader>
                     <CardContent>
@@ -521,15 +522,15 @@ export default function Dashboard({
                         </div>
                         <div className="mt-4 grid grid-cols-3 gap-3">
                             <div className="rounded-lg border bg-amber-50/50 p-3">
-                                <div className="text-xs text-muted-foreground">Pending</div>
+                                <div className="text-xs text-muted-foreground">{t('Pending')}</div>
                                 <div className="mt-1 text-2xl font-semibold tabular-nums text-amber-700">{pipeline.pending}</div>
                             </div>
                             <div className="rounded-lg border bg-emerald-50/50 p-3">
-                                <div className="text-xs text-muted-foreground">Confirmed</div>
+                                <div className="text-xs text-muted-foreground">{t('Confirmed')}</div>
                                 <div className="mt-1 text-2xl font-semibold tabular-nums text-emerald-700">{pipeline.confirmed}</div>
                             </div>
                             <div className="rounded-lg border bg-rose-50/50 p-3">
-                                <div className="text-xs text-muted-foreground">Rejected</div>
+                                <div className="text-xs text-muted-foreground">{t('Rejected')}</div>
                                 <div className="mt-1 text-2xl font-semibold tabular-nums text-rose-700">{pipeline.rejected}</div>
                             </div>
                         </div>
@@ -538,7 +539,7 @@ export default function Dashboard({
                                 <Button asChild size="sm" variant="outline" className="text-amber-700 hover:text-amber-800">
                                     <Link href={route('event-participants.index')}>
                                         <ArrowRight className="mr-1 size-3.5" />
-                                        Review {pipeline.pending} pending registration{pipeline.pending > 1 ? 's' : ''}
+                                        {t('Review {{count}} pending registration', { count: pipeline.pending })}
                                     </Link>
                                 </Button>
                             </div>
@@ -548,8 +549,8 @@ export default function Dashboard({
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Registrations by Sport</CardTitle>
-                        <CardDescription>Top sports by registration count</CardDescription>
+                        <CardTitle>{t('Registrations by Sport')}</CardTitle>
+                        <CardDescription>{t('Top sports by registration count')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {registrationsBySportSafe.length > 0 ? (
@@ -573,7 +574,7 @@ export default function Dashboard({
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">No registrations yet.</p>
+                            <p className="text-sm text-muted-foreground">{t('No registrations yet.')}</p>
                         )}
                     </CardContent>
                 </Card>
@@ -582,68 +583,68 @@ export default function Dashboard({
             <div className="mt-8">
                 <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
                     <div>
-                        <h2 className="text-lg font-semibold tracking-tight">Registration Overview</h2>
-                        <p className="text-sm text-muted-foreground">Registrations across faculties and events</p>
+                        <h2 className="text-lg font-semibold tracking-tight">{t('Registration Overview')}</h2>
+                        <p className="text-sm text-muted-foreground">{t('Registrations across faculties and events')}</p>
                     </div>
                     {(regSportFilter || regFacultyFilter || regStatusFilter) && (
                         <button onClick={clearRegFilters} className="text-xs text-muted-foreground underline-offset-4 hover:underline">
-                            Clear filters
+                            {t('Clear filters')}
                         </button>
                     )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{registrationStats.totalRegistrations ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Total Registrations</p></CardHeader></Card>
-                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-amber-600">{registrationStats.pending ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Pending</p></CardHeader></Card>
-                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-emerald-600">{registrationStats.confirmed ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Confirmed</p></CardHeader></Card>
-                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{registrationStats.totalFaculties ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Faculties</p></CardHeader></Card>
-                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{registrationStats.totalEvents ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">Events</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{registrationStats.totalRegistrations ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">{t('Total Registrations')}</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-amber-600">{registrationStats.pending ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">{t('Pending')}</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-emerald-600">{registrationStats.confirmed ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">{t('Confirmed')}</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{registrationStats.totalFaculties ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">{t('Faculties')}</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{registrationStats.totalEvents ?? 0}</CardTitle><p className="text-xs text-center text-muted-foreground">{t('Events')}</p></CardHeader></Card>
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <select aria-label="Filter registrations by sport" value={regSportFilter} onChange={(e) => handleRegFilterChange(setRegSportFilter)(e.target.value)}
+                    <select aria-label={t('Filter registrations by sport')} value={regSportFilter} onChange={(e) => handleRegFilterChange(setRegSportFilter)(e.target.value)}
                         className="h-9 rounded-md border border-input bg-background px-3 text-sm">
-                        <option value="">All Sports</option>
+                        <option value="">{t('All Sports')}</option>
                         {sports.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
-                    <select aria-label="Filter registrations by faculty" value={regFacultyFilter} onChange={(e) => handleRegFilterChange(setRegFacultyFilter)(e.target.value)}
+                    <select aria-label={t('Filter registrations by faculty')} value={regFacultyFilter} onChange={(e) => handleRegFilterChange(setRegFacultyFilter)(e.target.value)}
                         className="h-9 rounded-md border border-input bg-background px-3 text-sm">
-                        <option value="">All Faculties</option>
+                        <option value="">{t('All Faculties')}</option>
                         {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
                     </select>
-                    <select aria-label="Filter registrations by status" value={regStatusFilter} onChange={(e) => handleRegFilterChange(setRegStatusFilter)(e.target.value)}
+                    <select aria-label={t('Filter registrations by status')} value={regStatusFilter} onChange={(e) => handleRegFilterChange(setRegStatusFilter)(e.target.value)}
                         className="h-9 rounded-md border border-input bg-background px-3 text-sm">
-                        <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="rejected">Rejected</option>
+                        <option value="">{t('All Status')}</option>
+                        <option value="pending">{t('Pending')}</option>
+                        <option value="confirmed">{t('Confirmed')}</option>
+                        <option value="rejected">{t('Rejected')}</option>
                     </select>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{squadTotal}</CardTitle><p className="text-xs text-center text-muted-foreground">Squad Members</p></CardHeader></Card>
-                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-blue-600">{squadMale}</CardTitle><p className="text-xs text-center text-muted-foreground">Male Athletes</p></CardHeader></Card>
-                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-pink-600">{squadFemale}</CardTitle><p className="text-xs text-center text-muted-foreground">Female Athletes</p></CardHeader></Card>
-                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-purple-600">{squadOfficials}</CardTitle><p className="text-xs text-center text-muted-foreground">Officials</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums">{squadTotal}</CardTitle><p className="text-xs text-center text-muted-foreground">{t('Squad Members')}</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-blue-600">{squadMale}</CardTitle><p className="text-xs text-center text-muted-foreground">{t('Male Athletes')}</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-pink-600">{squadFemale}</CardTitle><p className="text-xs text-center text-muted-foreground">{t('Female Athletes')}</p></CardHeader></Card>
+                    <Card><CardHeader className="py-3"><CardTitle className="text-2xl text-center tabular-nums text-purple-600">{squadOfficials}</CardTitle><p className="text-xs text-center text-muted-foreground">{t('Officials')}</p></CardHeader></Card>
                 </div>
 
                 <div className="mt-4 grid gap-4 xl:grid-cols-2">
                     <Card>
-                        <CardHeader><CardTitle className="text-sm">Per-Faculty Breakdown</CardTitle></CardHeader>
+                        <CardHeader><CardTitle className="text-sm">{t('Per-Faculty Breakdown')}</CardTitle></CardHeader>
                         <CardContent className="p-0">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b text-left text-xs text-muted-foreground">
-                                        <th className="px-4 py-2 font-medium">Faculty</th>
-                                        <th className="px-4 py-2 font-medium text-center">Total</th>
-                                        <th className="px-4 py-2 font-medium text-center">Pending</th>
-                                        <th className="px-4 py-2 font-medium text-center">Confirmed</th>
-                                        <th className="px-4 py-2 font-medium text-center">Rejected</th>
+                                        <th className="px-4 py-2 font-medium">{t('Faculty')}</th>
+                                        <th className="px-4 py-2 font-medium text-center">{t('Total')}</th>
+                                        <th className="px-4 py-2 font-medium text-center">{t('Pending')}</th>
+                                        <th className="px-4 py-2 font-medium text-center">{t('Confirmed')}</th>
+                                        <th className="px-4 py-2 font-medium text-center">{t('Rejected')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {facultyStats.length === 0 && (
-                                        <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">No data.</td></tr>
+                                        <tr><td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">{t('No data.')}</td></tr>
                                     )}
                                     {facultyStats.map((f) => (
                                         <tr key={f.id} className="border-b last:border-0 hover:bg-muted/50">
@@ -660,19 +661,19 @@ export default function Dashboard({
                     </Card>
 
                     <Card>
-                        <CardHeader><CardTitle className="text-sm">Per-Event Breakdown</CardTitle></CardHeader>
+                        <CardHeader><CardTitle className="text-sm">{t('Per-Event Breakdown')}</CardTitle></CardHeader>
                         <CardContent className="p-0">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b text-left text-xs text-muted-foreground">
-                                        <th className="px-4 py-2 font-medium">Event</th>
-                                        <th className="px-4 py-2 font-medium">Sport / Category</th>
-                                        <th className="px-4 py-2 font-medium text-center">Registrations</th>
+                                        <th className="px-4 py-2 font-medium">{t('Event')}</th>
+                                        <th className="px-4 py-2 font-medium">{t('Sport / Category')}</th>
+                                        <th className="px-4 py-2 font-medium text-center">{t('Registrations')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {eventStats.length === 0 && (
-                                        <tr><td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">No data.</td></tr>
+                                        <tr><td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">{t('No data.')}</td></tr>
                                     )}
                                     {eventStats.map((e) => (
                                         <tr key={e.id} className="border-b last:border-0 hover:bg-muted/50">
@@ -693,11 +694,11 @@ export default function Dashboard({
                 <Card className="xl:col-span-2">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle>Upcoming Events</CardTitle>
-                            <CardDescription>Next events on the calendar</CardDescription>
+                            <CardTitle>{t('Upcoming Events')}</CardTitle>
+                            <CardDescription>{t('Next events on the calendar')}</CardDescription>
                         </div>
                         <Button asChild variant="ghost" size="sm">
-                            <Link href={route('events.index')}>View all</Link>
+                            <Link href={route('events.index')}>{t('View all')}</Link>
                         </Button>
                     </CardHeader>
                     <CardContent>
@@ -716,22 +717,22 @@ export default function Dashboard({
                                         <div className="shrink-0 text-right">
                                             <div className="text-xs text-muted-foreground">{new Date(e.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                                             <Badge variant="secondary" className="mt-0.5 text-xs">
-                                                {e.registration_count} registered
+                                                {t('{{count}} registered', { count: e.registration_count })}
                                             </Badge>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">No upcoming events.</p>
+                            <p className="text-sm text-muted-foreground">{t('No upcoming events.')}</p>
                         )}
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Quick Actions</CardTitle>
-                        <CardDescription>Common setup tasks</CardDescription>
+                        <CardTitle>{t('Quick Actions')}</CardTitle>
+                        <CardDescription>{t('Common setup tasks')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2">
                         {quickActions.map((a) => {
@@ -761,11 +762,11 @@ export default function Dashboard({
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle>Recent Sessions</CardTitle>
-                            <CardDescription>Latest event cycles</CardDescription>
+                            <CardTitle>{t('Recent Sessions')}</CardTitle>
+                            <CardDescription>{t('Latest event cycles')}</CardDescription>
                         </div>
                         <Button asChild variant="ghost" size="sm">
-                            <Link href={route('sessions.index')}>View all</Link>
+                            <Link href={route('sessions.index')}>{t('View all')}</Link>
                         </Button>
                     </CardHeader>
                     <CardContent>
@@ -778,17 +779,17 @@ export default function Dashboard({
                                             <div className="text-xs text-muted-foreground">
                                                 {new Date(s.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                 {' — '}
-                                                {s.end_date ? new Date(s.end_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : 'ongoing'}
+                                                {s.end_date ? new Date(s.end_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : t('ongoing')}
                                             </div>
                                         </div>
                                         <span className={s.is_active ? 'text-emerald-700' : 'text-muted-foreground'}>
-                                            {s.is_active ? 'Active' : 'Inactive'}
+                                            {s.is_active ? t('Active') : t('Inactive')}
                                         </span>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">No recent sessions.</p>
+                            <p className="text-sm text-muted-foreground">{t('No recent sessions.')}</p>
                         )}
                     </CardContent>
                 </Card>
@@ -796,32 +797,32 @@ export default function Dashboard({
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle>Recent Tournaments</CardTitle>
-                            <CardDescription>Latest competitions</CardDescription>
+                            <CardTitle>{t('Recent Tournaments')}</CardTitle>
+                            <CardDescription>{t('Latest competitions')}</CardDescription>
                         </div>
                         <Button asChild variant="ghost" size="sm">
-                            <Link href={route('tournaments.index')}>View all</Link>
+                            <Link href={route('tournaments.index')}>{t('View all')}</Link>
                         </Button>
                     </CardHeader>
                     <CardContent>
                         {recentTournamentsSafe.length > 0 ? (
                             <div className="space-y-2 text-sm">
-                                {recentTournamentsSafe.map((t) => (
-                                    <div key={t.id} className="flex items-center justify-between rounded border p-2">
+                                {recentTournamentsSafe.map((tItem) => (
+                                    <div key={tItem.id} className="flex items-center justify-between rounded border p-2">
                                         <div>
-                                            <div className="font-medium">{t.name}</div>
+                                            <div className="font-medium">{tItem.name}</div>
                                             <div className="text-xs text-muted-foreground">
-                                                {t.session?.name || '—'} • {new Date(t.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                {tItem.session?.name || '—'} • {new Date(tItem.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </div>
                                         </div>
-                                        <span className={t.is_active ? 'text-emerald-700' : 'text-muted-foreground'}>
-                                            {t.is_active ? 'Active' : 'Inactive'}
+                                        <span className={tItem.is_active ? 'text-emerald-700' : 'text-muted-foreground'}>
+                                            {tItem.is_active ? t('Active') : t('Inactive')}
                                         </span>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">No recent tournaments.</p>
+                            <p className="text-sm text-muted-foreground">{t('No recent tournaments.')}</p>
                         )}
                     </CardContent>
                 </Card>

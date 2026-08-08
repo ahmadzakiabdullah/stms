@@ -117,6 +117,16 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Event Registrations filtering fixed: sport/category/search now filter registration rows and All Events tab, not just the participant list
 - [x] Super-admin notification triage: Action Required default tab, personal inbox, organization/type/read filters, severity metadata, same-organization admin recipients, and separately filtered System Activity
 
+### 12. Live Scores Page (8 Ogos 2026)
+- [x] Public `GET /live` route (`live.index`) — no login required
+- [x] `LiveScoreController` scoped to the first active organization (tenant-safe for spectators)
+- [x] Latest results cards: teams with logos, score, winner/draw badge, event, pool/stage, venue & time
+- [x] Per-pool league standings (LeagueTableService) for every event with pools
+- [x] Sport + event filters via URL query params (`sport`, `event`)
+- [x] Auto-refresh every 20s with last-updated timestamp
+- [x] "Live Scores" entry in sidebar Competition section for logged-in users
+- [x] 7 feature tests in `tests/Feature/LiveScoreTest.php`
+
 ---
 
 ## ⏳ Deferred (Ciri Lanjutan)

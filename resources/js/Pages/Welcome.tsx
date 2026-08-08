@@ -15,6 +15,8 @@ import {
     X,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useT } from '@/lib/i18n';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import type { PageProps } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -79,14 +81,15 @@ const steps = [
 
 export default function Welcome() {
     const { auth, app, settings = {} } = usePage<PageProps>().props;
+    const t = useT();
     const user = auth?.user;
     const logoUrl = (settings as Record<string, string>)?.logo_url;
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const navLinks = [
-        { href: '#features', label: 'Features' },
-        { href: '#how-it-works', label: 'How it works' },
-        { href: '#about', label: 'About' },
+        { href: '#features', label: t('Features') },
+        { href: '#how-it-works', label: t('How it works') },
+        { href: '#about', label: t('About') },
     ];
 
     return (
@@ -114,7 +117,7 @@ export default function Welcome() {
                                     {app?.name || 'SAF'}
                                 </span>
                                 <span className="block text-[11px] text-muted-foreground">
-                                    Tournament Portal
+                                    {t('Tournament Portal')}
                                 </span>
                             </div>
                         </Link>
@@ -132,22 +135,23 @@ export default function Welcome() {
                         </nav>
 
                         <div className="hidden items-center gap-2 md:flex">
+                            <LanguageSwitcher />
                             {user ? (
                                 <Button asChild>
                                     <Link href={route('dashboard')}>
-                                        Dashboard
+                                        {t('Dashboard')}
                                         <LayoutDashboard data-icon="inline-end" />
                                     </Link>
                                 </Button>
                             ) : (
                                 <>
                                     <Button variant="ghost" asChild>
-                                        <Link href={route('register')}>Register</Link>
+                                        <Link href={route('register')}>{t('Register')}</Link>
                                     </Button>
                                     <Button asChild>
                                         <Link href={route('login')}>
                                             <LogIn data-icon="inline-start" />
-                                            Log in
+                                            {t('Log in')}
                                         </Link>
                                     </Button>
                                 </>
@@ -158,7 +162,7 @@ export default function Welcome() {
                             type="button"
                             onClick={() => setMobileOpen(!mobileOpen)}
                             className="inline-flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-foreground md:hidden"
-                            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                            aria-label={mobileOpen ? t('Close menu') : t('Open menu')}
                         >
                             {mobileOpen ? <X className="size-4" /> : <Menu className="size-4" />}
                         </button>
@@ -181,17 +185,17 @@ export default function Welcome() {
                                     {user ? (
                                         <Button asChild>
                                             <Link href={route('dashboard')}>
-                                                Dashboard
+                                                {t('Dashboard')}
                                                 <ArrowRight data-icon="inline-end" />
                                             </Link>
                                         </Button>
                                     ) : (
                                         <>
                                             <Button variant="outline" asChild>
-                                                <Link href={route('register')}>Register</Link>
+                                                <Link href={route('register')}>{t('Register')}</Link>
                                             </Button>
                                             <Button asChild>
-                                                <Link href={route('login')}>Log in</Link>
+                                                <Link href={route('login')}>{t('Log in')}</Link>
                                             </Button>
                                         </>
                                     )}
@@ -210,26 +214,25 @@ export default function Welcome() {
                     <div className="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pb-20 pt-16 text-center sm:px-6 sm:pt-24">
                         <Badge className="mb-6 gap-1.5 py-1 pl-1.5 pr-3">
                             <Sparkles className="size-3 text-primary-foreground" />
-                            Faculty Sports Tournament Management
+                            {t('Faculty Sports Tournament Management')}
                         </Badge>
 
                         <h1 className="max-w-3xl text-balance text-4xl font-bold tracking-tight sm:text-6xl">
-                            One platform for{' '}
+                            {t('One platform for')}{' '}
                             <span className="bg-gradient-to-r from-primary via-primary to-muted-foreground bg-clip-text text-transparent">
-                                every tournament
+                                {t('every tournament')}
                             </span>
                         </h1>
 
                         <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-                            Manage multi-sport tournaments, track faculty registrations, schedule
-                            matches, and generate rankings — all in one platform.
+                            {t('Manage multi-sport tournaments, track faculty registrations, schedule matches, and generate rankings — all in one platform.')}
                         </p>
 
                         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row">
                             {user ? (
                                 <Button size="lg" asChild>
                                     <Link href={route('dashboard')}>
-                                        Go to dashboard
+                                        {t('Go to dashboard')}
                                         <ArrowRight data-icon="inline-end" />
                                     </Link>
                                 </Button>
@@ -237,12 +240,12 @@ export default function Welcome() {
                                 <>
                                     <Button size="lg" asChild>
                                         <Link href={route('login')}>
-                                            Log in to get started
+                                            {t('Log in to get started')}
                                             <ArrowRight data-icon="inline-end" />
                                         </Link>
                                     </Button>
                                     <Button size="lg" variant="outline" asChild>
-                                        <Link href="#features">Explore features</Link>
+                                        <Link href="#features">{t('Explore features')}</Link>
                                     </Button>
                                 </>
                             )}
@@ -250,9 +253,9 @@ export default function Welcome() {
 
                         <div className="mt-14 grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
                             {[
-                                { icon: Trophy, value: 'Multi-sport', label: 'Any sport, any scale' },
-                                { icon: ShieldCheck, value: 'Secure', label: 'Tenant-isolated data' },
-                                { icon: Award, value: 'Automatic', label: 'Rankings & standings' },
+                                { icon: Trophy, value: t('Multi-sport'), label: t('Any sport, any scale') },
+                                { icon: ShieldCheck, value: t('Secure'), label: t('Tenant-isolated data') },
+                                { icon: Award, value: t('Automatic'), label: t('Rankings & standings') },
                             ].map((stat) => {
                                 const Icon = stat.icon;
                                 return (
@@ -273,13 +276,12 @@ export default function Welcome() {
                 <section id="features" className="border-t border-border/60 bg-muted/30 py-20">
                     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
                         <div className="mx-auto max-w-2xl text-center">
-                            <Badge variant="outline" className="mb-4">Features</Badge>
+                            <Badge variant="outline" className="mb-4">{t('Features')}</Badge>
                             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                                Everything you need to run a tournament
+                                {t('Everything you need to run a tournament')}
                             </h2>
                             <p className="mt-4 text-pretty text-muted-foreground">
-                                From registration to final rankings, the portal covers the complete
-                                tournament lifecycle for faculties and organisers.
+                                {t('From registration to final rankings, the portal covers the complete tournament lifecycle for faculties and organisers.')}
                             </p>
                         </div>
 
@@ -295,11 +297,11 @@ export default function Welcome() {
                                             <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                                                 <Icon className="size-5 text-primary transition-colors group-hover:text-primary-foreground" />
                                             </div>
-                                            <CardTitle className="text-sm font-semibold">{feature.title}</CardTitle>
+                                            <CardTitle className="text-sm font-semibold">{t(feature.title)}</CardTitle>
                                         </CardHeader>
                                         <CardContent className="px-5 pt-0">
                                             <CardDescription className="text-[13px] leading-relaxed">
-                                                {feature.desc}
+                                                {t(feature.desc)}
                                             </CardDescription>
                                         </CardContent>
                                     </Card>
@@ -313,9 +315,9 @@ export default function Welcome() {
                 <section id="how-it-works" className="py-20">
                     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
                         <div className="mx-auto max-w-2xl text-center">
-                            <Badge variant="outline" className="mb-4">How it works</Badge>
+                            <Badge variant="outline" className="mb-4">{t('How it works')}</Badge>
                             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                                From registration to podium in three steps
+                                {t('From registration to podium in three steps')}
                             </h2>
                         </div>
 
@@ -331,8 +333,8 @@ export default function Welcome() {
                                     <div className="relative flex size-12 items-center justify-center rounded-xl bg-primary font-mono text-sm font-semibold text-primary-foreground shadow-sm">
                                         {step.step}
                                     </div>
-                                    <h3 className="mt-1 text-base font-semibold">{step.title}</h3>
-                                    <p className="text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
+                                    <h3 className="mt-1 text-base font-semibold">{t(step.title)}</h3>
+                                    <p className="text-sm leading-relaxed text-muted-foreground">{t(step.desc)}</p>
                                 </div>
                             ))}
                         </div>
@@ -344,11 +346,10 @@ export default function Welcome() {
                     <section id="cta" className="px-4 pb-20 sm:px-6">
                         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 rounded-2xl bg-primary px-6 py-14 text-center text-primary-foreground sm:px-12">
                             <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
-                                Ready to manage your next tournament?
+                                {t('Ready to manage your next tournament?')}
                             </h2>
                             <p className="max-w-xl text-pretty text-sm leading-relaxed text-primary-foreground/70 sm:text-base">
-                                Join the platform and get your faculty ready for the next sporting
-                                season — registration takes less than a minute.
+                                {t('Join the platform and get your faculty ready for the next sporting season — registration takes less than a minute.')}
                             </p>
                             <Button
                                 size="lg"
@@ -357,7 +358,7 @@ export default function Welcome() {
                                 asChild
                             >
                                 <Link href={route('register')}>
-                                    Create an account
+                                    {t('Create an account')}
                                     <ArrowRight data-icon="inline-end" />
                                 </Link>
                             </Button>
@@ -375,9 +376,9 @@ export default function Welcome() {
                             <span className="text-sm font-semibold">{app?.name || 'SAF'}</span>
                         </div>
                         <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                            <a href="#features" className="transition hover:text-foreground">Features</a>
-                            <a href="#how-it-works" className="transition hover:text-foreground">How it works</a>
-                            <span>&copy; {new Date().getFullYear()} Universiti Teknikal Malaysia Melaka (UTeM). All rights reserved.</span>
+                            <a href="#features" className="transition hover:text-foreground">{t('Features')}</a>
+                            <a href="#how-it-works" className="transition hover:text-foreground">{t('How it works')}</a>
+                            <span>{t('All rights reserved.', { year: new Date().getFullYear() })}</span>
                         </div>
                     </div>
                 </footer>

@@ -2,6 +2,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Link, router, usePage } from '@inertiajs/react';
+import { useT } from '@/lib/i18n';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import {
     Activity,
     Award,
@@ -16,6 +18,7 @@ import {
     List,
     LogOut,
     Menu,
+    Radio,
     Scale,
     Search,
     Settings,
@@ -31,7 +34,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { type PageProps, type User } from '@/types';
 
 interface NavItem {
-    label: string;
+    labelKey: string;
     icon: LucideIcon;
     href: string;
     active: string;
@@ -42,59 +45,60 @@ interface NavItem {
 }
 
 interface NavSection {
-    title: string | null;
+    titleKey: string | null;
     items: NavItem[];
 }
 
 const navSections: NavSection[] = [
     {
-        title: 'Overview',
+        titleKey: 'Overview',
         items: [
-            { label: 'Dashboard', icon: LayoutDashboard, href: 'dashboard', active: 'dashboard' },
-            { label: 'Faculty Dashboard', icon: Users, href: 'faculty.dashboard', active: 'faculty.dashboard', requireFacultyRep: true },
-            { label: 'Dean Dashboard', icon: ShieldCheck, href: 'dean.dashboard', active: 'dean.dashboard', requireDean: true },
+            { labelKey: 'Dashboard', icon: LayoutDashboard, href: 'dashboard', active: 'dashboard' },
+            { labelKey: 'Faculty Dashboard', icon: Users, href: 'faculty.dashboard', active: 'faculty.dashboard', requireFacultyRep: true },
+            { labelKey: 'Dean Dashboard', icon: ShieldCheck, href: 'dean.dashboard', active: 'dean.dashboard', requireDean: true },
         ],
     },
     {
-        title: 'Competition Setup',
+        titleKey: 'Competition Setup',
         items: [
-            { label: 'Sessions', icon: Calendar, href: 'sessions.index', active: 'sessions.index', requireSuper: true },
-            { label: 'Sports', icon: Award, href: 'sports.index', active: 'sports.index', adminOnly: true },
-            { label: 'Categories', icon: List, href: 'sport-categories.index', active: 'sport-categories.index', adminOnly: true },
-            { label: 'Tournaments', icon: Trophy, href: 'tournaments.index', active: 'tournaments.index', requireSuper: true },
-            { label: 'Events', icon: Target, href: 'events.index', active: 'events.index' },
+            { labelKey: 'Sessions', icon: Calendar, href: 'sessions.index', active: 'sessions.index', requireSuper: true },
+            { labelKey: 'Sports', icon: Award, href: 'sports.index', active: 'sports.index', adminOnly: true },
+            { labelKey: 'Categories', icon: List, href: 'sport-categories.index', active: 'sport-categories.index', adminOnly: true },
+            { labelKey: 'Tournaments', icon: Trophy, href: 'tournaments.index', active: 'tournaments.index', requireSuper: true },
+            { labelKey: 'Events', icon: Target, href: 'events.index', active: 'events.index' },
         ],
     },
     {
-        title: 'Registration',
+        titleKey: 'Registration',
         items: [
-            { label: 'Participants', icon: Users, href: 'participants.index', active: 'participants.index', requireSuper: true },
-            { label: 'Event Registrations', icon: ClipboardList, href: 'event-participants.index', active: 'event-participants.index', adminOnly: true },
+            { labelKey: 'Participants', icon: Users, href: 'participants.index', active: 'participants.index', requireSuper: true },
+            { labelKey: 'Event Registrations', icon: ClipboardList, href: 'event-participants.index', active: 'event-participants.index', adminOnly: true },
         ],
     },
     {
-        title: 'Competition',
+        titleKey: 'Competition',
         items: [
-            { label: 'Matches', icon: Swords, href: 'matches.index', active: 'matches.index' },
-            { label: 'Results', icon: Trophy, href: 'results.index', active: 'results.index' },
-            { label: 'Rankings', icon: Award, href: 'rankings.index', active: 'rankings.index' },
+            { labelKey: 'Live Scores', icon: Radio, href: 'live.index', active: 'live.index' },
+            { labelKey: 'Matches', icon: Swords, href: 'matches.index', active: 'matches.index' },
+            { labelKey: 'Results', icon: Trophy, href: 'results.index', active: 'results.index' },
+            { labelKey: 'Rankings', icon: Award, href: 'rankings.index', active: 'rankings.index' },
         ],
     },
     {
-        title: 'Administration',
+        titleKey: 'Administration',
         items: [
-            { label: 'Users', icon: UserCircle, href: 'users.index', active: 'users.index', requireSuper: true },
-            { label: 'Roles', icon: KeySquare, href: 'roles.index', active: 'roles.index', requireSuper: true },
-            { label: 'Organizations', icon: Building2, href: 'organizations.index', active: 'organizations.index', requireSuper: true },
-            { label: 'Settings', icon: Settings, href: 'settings.index', active: 'settings.index', requireSuper: true },
-            { label: 'Activity Logs', icon: Activity, href: 'activity-logs.index', active: 'activity-logs.index', requireSuper: true },
+            { labelKey: 'Users', icon: UserCircle, href: 'users.index', active: 'users.index', requireSuper: true },
+            { labelKey: 'Roles', icon: KeySquare, href: 'roles.index', active: 'roles.index', requireSuper: true },
+            { labelKey: 'Organizations', icon: Building2, href: 'organizations.index', active: 'organizations.index', requireSuper: true },
+            { labelKey: 'Settings', icon: Settings, href: 'settings.index', active: 'settings.index', requireSuper: true },
+            { labelKey: 'Activity Logs', icon: Activity, href: 'activity-logs.index', active: 'activity-logs.index', requireSuper: true },
         ],
     },
     {
-        title: 'Reports',
+        titleKey: 'Reports',
         items: [
-            { label: 'Analytics', icon: BarChart3, href: 'reports.index', active: 'reports.index', requireSuper: true },
-            { label: 'Notifications', icon: Bell, href: 'notifications.index', active: 'notifications.index' },
+            { labelKey: 'Analytics', icon: BarChart3, href: 'reports.index', active: 'reports.index', requireSuper: true },
+            { labelKey: 'Notifications', icon: Bell, href: 'notifications.index', active: 'notifications.index' },
         ],
     },
 ];
@@ -120,12 +124,13 @@ interface SidebarProps {
 
 function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = false, isFacultyRep = false, isDean = false, app = null }: SidebarProps) {
     const { settings = {} as Record<string, string> } = usePage<PageProps>().props;
+    const t = useT();
     const logoUrl = (settings as Record<string, string>)?.logo_url;
 
     return (
         <aside className={mobile ? 'flex h-full flex-col bg-sidebar' : 'hidden h-screen w-72 shrink-0 border-r bg-sidebar lg:sticky lg:top-0 lg:flex lg:flex-col'}>            <div className="flex h-16 items-center gap-3 border-b px-5">
                 {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="h-9 w-auto rounded object-contain" />
+                    <img src={logoUrl} alt={t('Logo')} className="h-9 w-auto rounded object-contain" />
                 ) : (
                     <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                         <ShieldCheck className="size-5" />
@@ -134,7 +139,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                 <div>
                     <div className="text-sm font-semibold leading-none">{app?.name || 'STMS Portal'}</div>
                     <div className="mt-1 text-xs text-muted-foreground">
-                        {user?.organization?.name || 'Multi-Tenant Sports Platform'}
+                        {user?.organization?.name || t('Multi-Tenant Sports Platform')}
                     </div>
                 </div>
             </div>
@@ -153,9 +158,9 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
 
                     return (
                         <div key={sectionIdx}>
-                            {section.title && (
+                            {section.titleKey && (
                                 <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground/70">
-                                    {section.title}
+                                    {t(section.titleKey)}
                                 </div>
                             )}
                             <div className="space-y-1">
@@ -165,7 +170,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
 
                                     return (
                                         <Link
-                                            key={item.label}
+                                            key={item.labelKey}
                                             href={route(item.href)}
                                             onClick={onNavigate}
                                             className={
@@ -179,7 +184,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                                                 <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
                                             )}
                                             <Icon className={'size-4 ' + (isActive ? 'text-primary' : 'group-hover:text-sidebar-accent-foreground')} />
-                                            <span>{item.label}</span>
+                                            <span>{t(item.labelKey)}</span>
                                         </Link>
                                     );
                                 })}
@@ -197,7 +202,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     >
                         <LogOut className="size-4" />
-                        <span>Logout</span>
+                        <span>{t('Logout')}</span>
                     </Link>
                 </div>
             </nav>
@@ -230,6 +235,7 @@ interface AuthenticatedLayoutProps {
 
 export default function AuthenticatedLayout({ header, children }: AuthenticatedLayoutProps) {
     const { auth, app, isSuperAdmin = false, isFacultyRep = false, isDean = false } = usePage<PageProps>().props;
+    const t = useT();
     const user = auth?.user;
 
     if (!user) {
@@ -288,7 +294,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                     <div className="fixed inset-0 z-40 lg:hidden">
                         <button
                             type="button"
-                            aria-label="Close navigation"
+                            aria-label={t('Close navigation')}
                             className="absolute inset-0 bg-black/20"
                             onClick={() => setMobileOpen(false)}
                         />
@@ -307,19 +313,20 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                 size="icon"
                                 className="lg:hidden"
                                 onClick={() => setMobileOpen(true)}
-                                aria-label="Open mobile menu"
+                                aria-label={t('Open mobile menu')}
                             >
                                 <Menu className="size-5" />
                             </Button>
 
                             <div className="hidden min-w-0 flex-1 items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-sm text-muted-foreground md:flex">
                                 <Search className="size-4" />
-                                <span>Quick search</span>
+                                <span>{t('Quick search')}</span>
                             </div>
 
                             <div className="ml-auto flex items-center gap-2">
+                                <LanguageSwitcher />
                                 <div className="relative">
-                                    <Button variant="ghost" size="icon" onClick={toggleNotif} className="relative" aria-label="Toggle notifications">
+                                    <Button variant="ghost" size="icon" onClick={toggleNotif} className="relative" aria-label={t('Toggle notifications')}>
                                         <Bell className="size-5" />
                                         {notifCount > 0 && (
                                             <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
@@ -332,20 +339,20 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                             <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
                                             <div className="absolute right-0 z-50 mt-1 w-80 rounded-lg bg-popover p-2 text-popover-foreground shadow-md ring-1 ring-foreground/10">
                                                 <div className="flex items-center justify-between px-1 py-1">
-                                                    <span className="text-xs font-semibold">Notifications</span>
+                                                    <span className="text-xs font-semibold">{t('Notifications')}</span>
                                                     {notifCount > 0 && (
                                                         <button
                                                             type="button"
                                                             onClick={() => { router.post(route('notifications.mark-all-read'), {}, { preserveScroll: true }); setNotifCount(0); setNotifOpen(false); }}
                                                             className="text-[10px] text-primary hover:underline"
                                                         >
-                                                            Mark all read
+                                                            {t('Mark all read')}
                                                         </button>
                                                     )}
                                                 </div>
                                                 <div className="mt-1 max-h-72 space-y-1 overflow-y-auto">
                                                     {notifItems.length === 0 && (
-                                                        <p className="p-3 text-center text-xs text-muted-foreground">No notifications</p>
+                                                        <p className="p-3 text-center text-xs text-muted-foreground">{t('No notifications')}</p>
                                                     )}
                                                     {notifItems.map((n: any) => (
                                                         <button
@@ -365,7 +372,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                                 </div>
                                                 {notifItems.length > 0 && (
                                                     <Link href={route('notifications.index')} className="block rounded-md px-2 py-1.5 text-center text-xs text-primary hover:bg-muted">
-                                                        View all notifications
+                                                        {t('View all notifications')}
                                                     </Link>
                                                 )}
                                             </div>
@@ -374,7 +381,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                 </div>
 
                                 <div className="relative">
-                                    <Button variant="outline" className="gap-2" onClick={() => setUserMenuOpen(!userMenuOpen)} aria-label="Toggle user menu">
+                                    <Button variant="outline" className="gap-2" onClick={() => setUserMenuOpen(!userMenuOpen)} aria-label={t('Toggle user menu')}>
                                         <Avatar className="size-6">
                                             <AvatarFallback className="text-xs">
                                                 {initials(user.name)}
@@ -400,7 +407,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                                     onClick={() => setUserMenuOpen(false)}
                                                 >
                                                     <UserCircle className="size-4" />
-                                                    Profile
+                                                    {t('Profile')}
                                                 </Link>
                                                 <Link
                                                     href={route('logout')}
@@ -410,7 +417,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                                     onClick={() => setUserMenuOpen(false)}
                                                 >
                                                     <LogOut className="size-4" />
-                                                    Logout
+                                                    {t('Logout')}
                                                 </Link>
                                             </div>
                                         </>
