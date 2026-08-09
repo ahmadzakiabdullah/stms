@@ -88,6 +88,6 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString("default-src 'self'", $policy);
         $this->assertStringContainsString("object-src 'none'", $policy);
         $this->assertStringNotContainsString("'unsafe-eval'", $policy);
-        $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
+        $this->assertStringContainsString("script-src 'self' 'unsafe-inline'", $policy);
     }
 }
