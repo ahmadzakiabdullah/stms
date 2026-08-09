@@ -13,3 +13,6 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+## 2026-08-09 - Ensure Cleanup of Profiling Artifacts
+**Learning:** Temporary scratchpad scripts (like `test_countby.php`) used for validating performance hypotheses must be removed before requesting a code review or submitting a PR.
+**Action:** Always run a `git status` or `ls` check to find and delete any temporary files created during the optimization process.
