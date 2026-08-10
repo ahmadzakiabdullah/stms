@@ -9,6 +9,7 @@ use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FacultyDashboardController;
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Middleware\HealthEndpointToken;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrganizationController;
@@ -32,16 +33,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthCheckController::class)
-    ->middleware(function (Request $request, \Closure $next) {
-        if (app()->environment('production')) {
-            $token = (string) config('app.health.token');
-            if ($token === '' || ! hash_equals($token, (string) $request->header('X-Health-Token'))) {
-                abort(404);
-            }
-        }
-
-        return $next($request);
-    });
+    ->middleware(HealthEndpointToken::class);
 
 Route::get('/', PublicPortalController::class)->name('public.index');
 Route::redirect('/index.php', '/portal/', 301);
