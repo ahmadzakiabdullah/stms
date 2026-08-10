@@ -91,7 +91,7 @@ class SecurityHeadersTest extends TestCase
         // During report-only mode (the default), 'unsafe-inline' is included to catch violations without breaking the app.
         // It's only stripped when CSP_REPORT_ONLY is false. The SecurityHeaders middleware implements this logic.
         if (config('app.csp_report_only') === false) {
-             $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
+            $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
         }
     }
 }
