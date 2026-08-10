@@ -32,6 +32,7 @@ import { List, Loader, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
 import type { Tournament, Session, Sport, Paginated, Flash } from '@/types';
+import { formatDate, useI18n } from '@/lib/i18n';
 
 const tournamentSchema = z.object({
     session_id: z.string().min(1, 'Session is required'),
@@ -58,6 +59,7 @@ interface TournamentsIndexProps {
 }
 
 export default function TournamentsIndex({ tournaments: tournamentsProp, sessions, sports }: TournamentsIndexProps) {
+    const { locale, t } = useI18n();
     const { flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const [editingTournament, setEditingTournament] = useState<TournamentRow | null>(null);
@@ -92,9 +94,9 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Tournaments</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Tournaments')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Manage tournaments within sessions
+                            {t('Manage tournaments within sessions')}
                         </p>
                     </div>
 
@@ -105,11 +107,11 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                         <DialogTrigger asChild>
                             <Button onClick={() => { setEditingTournament(null); setOpen(true); }} disabled={sessions.length === 0}>
                                 <Plus className="mr-2 size-4" />
-                                Add Tournament
+                                {t('Add Tournament')}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                            <TournamentFormDialog
+                            <TournamentFormDialog t={t}
                                 key={editingTournament?.id ?? 'create'}
                                 tournament={editingTournament}
                                 sessions={sessions}
@@ -121,7 +123,7 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                 </div>
             }
         >
-            <Head title="Tournaments" />
+            <Head title={t('Tournaments')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -136,28 +138,28 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Tournaments List</CardTitle>
+                    <CardTitle>{t('Tournaments List')}</CardTitle>
                     <CardDescription>
-                        Tournaments are held within sessions under an organization.
+                        {t('Tournaments are held within sessions under an organization.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Session</TableHead>
-                                <TableHead>Sports</TableHead>
-                                <TableHead>Period</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Session')}</TableHead>
+                                <TableHead>{t('Sports')}</TableHead>
+                                <TableHead>{t('Period')}</TableHead>
+                                <TableHead>{t('Status')}</TableHead>
+                                <TableHead className="text-right">{t('Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {tournaments.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        No tournaments yet. Create the first one.
+                                        {t('No tournaments yet. Create the first one.')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -176,7 +178,7 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                                             : '-'}
                                     </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
-                                        {new Date(tournament.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })} — {new Date(tournament.end_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        {formatDate(tournament.start_date, locale)} — {formatDate(tournament.end_date, locale)}
                                     </TableCell>
                                     <TableCell>
                                         <span
@@ -186,7 +188,7 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                                                     : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'
                                             }
                                         >
-                                            {tournament.is_active ? 'Active' : 'Inactive'}
+                                            {t(tournament.is_active ? 'Active' : 'Inactive')}
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
@@ -206,14 +208,14 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                                             size="sm"
                                             onClick={() => { setEditingTournament(tournament); setOpen(true); }}
                                         >
-                                            <Pencil className="mr-1 size-3" /> Edit
+                                            <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
                                         <Button
                                             variant="destructive"
                                             size="sm"
                                             onClick={() => setDeleteTournament(tournament)}
                                         >
-                                            <Trash2 className="mr-1 size-3" /> Delete
+                                            <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -228,17 +230,17 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
             <Dialog open={!!deleteTournament} onOpenChange={(isOpen) => !isOpen && setDeleteTournament(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Tournament?</DialogTitle>
+                        <DialogTitle>{t('Delete Tournament?')}</DialogTitle>
                         <DialogDescription>
                             Are you sure you want to delete <strong>{deleteTournament?.name}</strong>? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteTournament(null)}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button variant="destructive" onClick={handleDelete} disabled={false}>
-                            Yes, Delete
+                            {t('Yes, Delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -247,7 +249,7 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
     );
 }
 
-function TournamentFormDialog({ tournament, sessions, allSports, onClose }: { tournament: TournamentRow | null; sessions: Session[]; allSports: Sport[]; onClose: () => void }) {
+function TournamentFormDialog({ tournament, sessions, allSports, onClose, t }: { tournament: TournamentRow | null; sessions: Session[]; allSports: Sport[]; onClose: () => void; t: (key: string) => string }) {
     const [formData, setFormData] = useState(() => ({
         session_id: tournament?.session_id || (sessions.length > 0 ? sessions[0].id : ''),
         name: tournament?.name || '',
@@ -311,9 +313,9 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose }: { to
     return (
         <form onSubmit={onSubmit}>
             <DialogHeader>
-                <DialogTitle>{tournament ? 'Edit Tournament' : 'Create New Tournament'}</DialogTitle>
+                <DialogTitle>{t(tournament ? 'Edit Tournament' : 'Create New Tournament')}</DialogTitle>
                 <DialogDescription>
-                    Tournaments are competitions held within a session.
+                    {t('Tournaments are competitions held within a session.')}
                 </DialogDescription>
             </DialogHeader>
 
@@ -325,7 +327,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose }: { to
 
             <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="session_id">Session</Label>
+                    <Label htmlFor="session_id">{t('Session')}</Label>
                     <select
                         id="session_id"
                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
@@ -334,7 +336,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose }: { to
                         disabled={!!tournament}
                         required
                     >
-                        <option value="">-- Select Session --</option>
+                        <option value="">{t('-- Select Session --')}</option>
                         {sessions.map((session) => (
                             <option key={session.id} value={session.id}>
                                 {session.name}
@@ -347,7 +349,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose }: { to
                 <div className="grid gap-2">
                     <Label>Sports</Label>
                     <div className="grid grid-cols-2 gap-1 max-h-40 overflow-y-auto rounded-md border border-input p-2">
-                        {allSports.length === 0 && <p className="text-xs text-muted-foreground col-span-2">No sports available</p>}
+                        {allSports.length === 0 && <p className="text-xs text-muted-foreground col-span-2">{t('No sports available')}</p>}
                         {allSports.map((sport) => (
                             <label key={sport.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted rounded px-1 py-0.5">
                                 <input
@@ -364,12 +366,12 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose }: { to
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="name">Tournament Name</Label>
+                    <Label htmlFor="name">{t('Tournament Name')}</Label>
                     <Input
                         id="name"
                         value={formData.name}
                         onChange={e => set('name', e.target.value)}
-                        placeholder="e.g. Inter-Faculty Sports 2026"
+                        placeholder={t('e.g. Inter-Faculty Sports 2026')}
                         required
                     />
                     {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
@@ -393,7 +395,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose }: { to
                         className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         value={formData.description}
                         onChange={e => set('description', e.target.value)}
-                        placeholder="Brief description of the tournament"
+                        placeholder={t('Brief description of the tournament')}
                     />
                 </div>
 
@@ -423,7 +425,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose }: { to
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="is_active">Status</Label>
+                    <Label htmlFor="is_active">{t('Status')}</Label>
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
                         <input
                             type="checkbox"
@@ -442,7 +444,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose }: { to
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                     <Save className="mr-2 size-4" />
-                    {tournament ? 'Update' : 'Save'}
+                    {t(tournament ? 'Update' : 'Save')}
                 </Button>
             </DialogFooter>
         </form>

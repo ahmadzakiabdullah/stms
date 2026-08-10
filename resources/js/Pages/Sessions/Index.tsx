@@ -34,6 +34,7 @@ import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
 import type { Session, Organization, Paginated, Flash } from '@/types';
+import { formatDate, useI18n } from '@/lib/i18n';
 
 const sessionSchema = z.object({
     organization_id: z.string().min(1, 'Organization is required'),
@@ -57,6 +58,7 @@ interface SessionsIndexProps {
 }
 
 export default function SessionsIndex({ sessions: sessionsProp, organizations = [] }: SessionsIndexProps) {
+    const { locale, t } = useI18n();
     const { flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const [editingSession, setEditingSession] = useState<SessionRow | null>(null);
@@ -142,9 +144,9 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Sessions</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Sessions')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Manage event sessions (e.g. SUKMA XXI, Paris 2024)
+                            {t('Manage event sessions (e.g. SUKMA XXI, Paris 2024)')}
                         </p>
                     </div>
 
@@ -155,22 +157,22 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                         <DialogTrigger asChild>
                             <Button onClick={openCreate}>
                                 <Plus className="mr-2 size-4" />
-                                Add Session
+                                {t('Add Session')}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-lg">
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <DialogHeader>
-                                    <DialogTitle>{editingSession ? 'Edit Session' : 'Create New Session'}</DialogTitle>
+                                    <DialogTitle>{t(editingSession ? 'Edit Session' : 'Create New Session')}</DialogTitle>
                                     <DialogDescription>
-                                        A session groups tournaments and events over a period of time.
+                                        {t('A session groups tournaments and events over a period of time.')}
                                     </DialogDescription>
                                 </DialogHeader>
 
                                 <div className="grid gap-4 py-4">
                                     {organizations && organizations.length > 0 && (
                                         <div className="grid gap-2">
-                                            <Label htmlFor="organization_id">Organization</Label>
+                                            <Label htmlFor="organization_id">{t('Organization')}</Label>
                                             <select
                                                 id="organization_id"
                                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
@@ -178,7 +180,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                                 disabled={!!editingSession}
                                                 required
                                             >
-                                                <option value="">-- Select Organization --</option>
+                                                <option value="">{t('-- Select Organization --')}</option>
                                                 {organizations.map((org) => (
                                                     <option key={org.id} value={org.id}>
                                                         {org.name}
@@ -190,39 +192,39 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                     )}
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="name">Session Name</Label>
+                                        <Label htmlFor="name">{t('Session Name')}</Label>
                                         <Input
                                             id="name"
                                             {...register('name')}
-                                            placeholder="e.g. SUKMA XXI or Paris 2024"
+                                            placeholder={t('e.g. SUKMA XXI or Paris 2024')}
                                             required
                                         />
                                         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="slug">Slug (unique)</Label>
+                                        <Label htmlFor="slug">{t('Slug (unique)')}</Label>
                                         <Input
                                             id="slug"
                                             {...register('slug')}
-                                            placeholder="sukma-xxi"
+                                            placeholder={t('sukma-xxi')}
                                         />
                                         {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="description">Description (optional)</Label>
+                                        <Label htmlFor="description">{t('Description (optional)')}</Label>
                                         <textarea
                                             id="description"
                                             className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                             {...register('description')}
-                                            placeholder="Brief description of the session"
+                                            placeholder={t('Brief description of the session')}
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="start_date">Start Date</Label>
+                                            <Label htmlFor="start_date">{t('Start Date')}</Label>
                                             <Input
                                                 id="start_date"
                                                 type="date"
@@ -233,7 +235,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="end_date">End Date</Label>
+                                            <Label htmlFor="end_date">{t('End Date')}</Label>
                                             <Input
                                                 id="end_date"
                                                 type="date"
@@ -245,24 +247,24 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="is_active">Status</Label>
+                                        <Label htmlFor="is_active">{t('Status')}</Label>
                                         <label className="flex items-center gap-2 text-sm">
                                             <input
                                                 type="checkbox"
                                                 {...register('is_active')}
                                             />
-                                            Active
+                                            {t('Active')}
                                         </label>
                                     </div>
                                 </div>
 
                                 <DialogFooter>
                                     <Button type="button" variant="outline" onClick={closeDialog}>
-                                        Cancel
+                                        {t('Cancel')}
                                     </Button>
                                     <Button type="submit" disabled={isSubmitting}>
                                         <Save className="mr-2 size-4" />
-                                        {editingSession ? 'Update' : 'Save'}
+                                        {t(editingSession ? 'Update' : 'Save')}
                                     </Button>
                                 </DialogFooter>
                             </form>
@@ -271,7 +273,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                 </div>
             }
         >
-            <Head title="Sessions" />
+            <Head title={t('Sessions')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -281,28 +283,28 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Sessions List</CardTitle>
+                    <CardTitle>{t('Sessions List')}</CardTitle>
                     <CardDescription>
-                        Sessions are the top-level containers for tournaments and events.
+                        {t('Sessions are the top-level containers for tournaments and events.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Organization</TableHead>
-                                <TableHead>Slug</TableHead>
-                                <TableHead>Period</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Organization')}</TableHead>
+                                <TableHead>{t('Slug')}</TableHead>
+                                <TableHead>{t('Period')}</TableHead>
+                                <TableHead>{t('Status')}</TableHead>
+                                <TableHead className="text-right">{t('Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {sessions.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        No sessions yet. Create the first one.
+                                        {t('No sessions yet. Create the first one.')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -316,7 +318,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                         <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{session.slug}</code>
                                     </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
-                                        {new Date(session.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })} — {new Date(session.end_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        {formatDate(session.start_date, locale)} — {formatDate(session.end_date, locale)}
                                     </TableCell>
                                     <TableCell>
                                         <span
@@ -326,7 +328,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                                     : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'
                                             }
                                         >
-                                            {session.is_active ? 'Active' : 'Inactive'}
+                                            {t(session.is_active ? 'Active' : 'Inactive')}
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
@@ -335,14 +337,14 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                             size="sm"
                                             onClick={() => openEdit(session)}
                                         >
-                                            <Pencil className="mr-1 size-3" /> Edit
+                                            <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
                                         <Button
                                             variant="destructive"
                                             size="sm"
                                             onClick={() => setDeleteSession(session)}
                                         >
-                                            <Trash2 className="mr-1 size-3" /> Delete
+                                            <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -357,7 +359,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
             <Dialog open={!!deleteSession} onOpenChange={(isOpen) => !isOpen && setDeleteSession(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Session?</DialogTitle>
+                        <DialogTitle>{t('Delete Session?')}</DialogTitle>
                         <DialogDescription>
                             Are you sure you want to delete <strong>{deleteSession?.name}</strong>? This action cannot be undone.
                         </DialogDescription>
@@ -367,7 +369,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                             Cancel
                         </Button>
                         <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            Yes, Delete
+                            {t('Yes, Delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

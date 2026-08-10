@@ -30,6 +30,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Download, FileText, Plus, Search, Trash2, Upload, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { Event, EventParticipant, Participant, SportCategory, SquadMember } from '@/types';
+import { useI18n } from '@/lib/i18n';
 
 interface FacultyDashboardProps {
     participant: Participant | null;
@@ -91,6 +92,7 @@ export default function FacultyDashboard({
     sportCategories,
 }: FacultyDashboardProps) {
     const { flash } = usePage().props;
+    const { t } = useI18n();
     const [activeRegId, setActiveRegId] = useState<string | null>(null);
     const [addSquadOpen, setAddSquadOpen] = useState(false);
     const [newRegOpen, setNewRegOpen] = useState(false);
@@ -242,19 +244,19 @@ export default function FacultyDashboard({
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Faculty Dashboard</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Faculty Dashboard')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            {participant ? participant.name : 'No faculty profile linked'}
+                            {participant ? participant.name : t('No faculty profile linked')}
                         </p>
                     </div>
                     <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
                         <Plus className="mr-2 size-4" />
-                        Register for Events
+                        {t('Register for Events')}
                     </Button>
                 </div>
             }
         >
-            <Head title="Faculty Dashboard" />
+            <Head title={t('Faculty Dashboard')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>
@@ -267,8 +269,8 @@ export default function FacultyDashboard({
                 <Card>
                     <CardContent className="py-10 text-center">
                         <Users className="mx-auto mb-4 size-10 text-muted-foreground" />
-                        <p className="text-muted-foreground">Your account is not linked to any faculty profile.</p>
-                        <p className="text-xs text-muted-foreground mt-1">Contact admin to link your account to a faculty.</p>
+                        <p className="text-muted-foreground">{t('Your account is not linked to any faculty profile.')}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t('Contact admin to link your account to a faculty.')}</p>
                     </CardContent>
                 </Card>
             ) : (
@@ -276,25 +278,25 @@ export default function FacultyDashboard({
                     <div className="grid gap-4 md:grid-cols-4">
                         <Card>
                             <CardHeader className="pb-2">
-                                <CardDescription>Events Registered</CardDescription>
+                                <CardDescription>{t('Events Registered')}</CardDescription>
                                 <CardTitle className="text-3xl">{registrations.length}</CardTitle>
                             </CardHeader>
                         </Card>
                         <Card>
                             <CardHeader className="pb-2">
-                                <CardDescription>Male Athletes</CardDescription>
+                                <CardDescription>{t('Male Athletes')}</CardDescription>
                                 <CardTitle className="text-3xl">{totals.male}</CardTitle>
                             </CardHeader>
                         </Card>
                         <Card>
                             <CardHeader className="pb-2">
-                                <CardDescription>Female Athletes</CardDescription>
+                                <CardDescription>{t('Female Athletes')}</CardDescription>
                                 <CardTitle className="text-3xl">{totals.female}</CardTitle>
                             </CardHeader>
                         </Card>
                         <Card>
                             <CardHeader className="pb-2">
-                                <CardDescription>Officials</CardDescription>
+                                <CardDescription>{t('Officials')}</CardDescription>
                                 <CardTitle className="text-3xl">{totals.officials}</CardTitle>
                             </CardHeader>
                         </Card>
@@ -303,12 +305,12 @@ export default function FacultyDashboard({
                     <div className="mt-6 grid gap-6 xl:grid-cols-2">
                         <Card className="xl:col-span-2">
                             <CardHeader>
-                                <CardTitle>My Registrations</CardTitle>
-                                <CardDescription>Click to manage squad members for each event</CardDescription>
+                                <CardTitle>{t('My Registrations')}</CardTitle>
+                                <CardDescription>{t('Click to manage squad members for each event')}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {registrations.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">Not registered for any events yet.</p>
+                                    <p className="text-sm text-muted-foreground">{t('Not registered for any events yet.')}</p>
                                 ) : (
                                     <div className="space-y-2">
                                         {registrations.map((reg) => {
@@ -332,16 +334,16 @@ export default function FacultyDashboard({
                                                                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium leading-none ${scfg.class}`}>
                                                                     {scfg.label}
                                                                 </span>
-                                                                {squadIncomplete && (
-                                                                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium leading-none text-amber-700">
-                                                                        Squad incomplete — add athletes
-                                                                    </span>
-                                                                )}
-                                                                {squadComplete && (
-                                                                    <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium leading-none text-emerald-700">
-                                                                        Squad complete ✓
-                                                                    </span>
-                                                                )}
+                                                                 {squadIncomplete && (
+                                                                     <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium leading-none text-amber-700">
+                                                                         {t('Squad incomplete — add athletes')}
+                                                                     </span>
+                                                                 )}
+                                                                 {squadComplete && (
+                                                                     <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium leading-none text-emerald-700">
+                                                                         {t('Squad complete ✓')}
+                                                                     </span>
+                                                                 )}
                                                             </div>
                                                             <div className="text-xs text-muted-foreground">
                                                                 {reg.event?.sport?.name} · {reg.event?.sport_category?.name}
@@ -349,9 +351,9 @@ export default function FacultyDashboard({
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-3 shrink-0 ml-3">
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {(reg.squad_members?.length ?? 0)} members
-                                                            </span>
+                                                             <span className="text-xs text-muted-foreground">
+                                                                 {(reg.squad_members?.length ?? 0)} {t('members')}
+                                                             </span>
                                                             <Badge variant="secondary">
                                                                 {q.currentAthletes + q.currentOfficials}/{(q.isTotalBased ? q.totalAthletes : q.male + q.female) + q.officials}
                                                             </Badge>
@@ -368,46 +370,46 @@ export default function FacultyDashboard({
                                                                 <>
                                                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                                                         <div className="flex flex-col gap-1.5">
-                                                                            {q.isTotalBased ? (
-                                                                                <QuotaBar label="Athletes" current={q.currentAthletes} max={q.totalAthletes} color="bg-blue-500" />
-                                                                            ) : (
-                                                                                <>
-                                                                                    {q.male > 0 && <QuotaBar label="Male" current={q.currentMale} max={q.male} color="bg-blue-500" />}
-                                                                                    {q.female > 0 && <QuotaBar label="Female" current={q.currentFemale} max={q.female} color="bg-pink-500" />}
-                                                                                </>
-                                                                            )}
-                                                                            <QuotaBar label="Officials" current={q.currentOfficials} max={q.officials} color="bg-purple-500" />
+                                                                             {q.isTotalBased ? (
+                                                                                 <QuotaBar label={t('Athletes')} current={q.currentAthletes} max={q.totalAthletes} color="bg-blue-500" />
+                                                                             ) : (
+                                                                                 <>
+                                                                                     {q.male > 0 && <QuotaBar label={t('Male')} current={q.currentMale} max={q.male} color="bg-blue-500" />}
+                                                                                     {q.female > 0 && <QuotaBar label={t('Female')} current={q.currentFemale} max={q.female} color="bg-pink-500" />}
+                                                                                 </>
+                                                                             )}
+                                                                             <QuotaBar label={t('Officials')} current={q.currentOfficials} max={q.officials} color="bg-purple-500" />
                                                                         </div>
                                                                         <div className="flex flex-wrap gap-2">
-                                                                            <Button asChild variant="outline" size="sm">
-                                                                                <Link href={route('event-participants.team-form', reg.id)}>
-                                                                                    <FileText className="mr-1 size-3" /> Team Form
-                                                                                </Link>
-                                                                            </Button>
-                                                                            <Button size="sm" onClick={() => { setAddSquadOpen(true); setSquadForm({ name: '', role: activeRegAllowedRoles[0], matrix_no: '', identification_no: '', phone: '' }); }}>
-                                                                                <Plus className="mr-1 size-3" /> Add Member
-                                                                            </Button>
-                                                                            <Button variant="outline" size="sm" onClick={() => { setImportRegId(reg.id); setImportOpen(true); }}>
-                                                                                <Upload className="mr-1 size-3" /> Import Excel
-                                                                            </Button>
+                                                                             <Button asChild variant="outline" size="sm">
+                                                                                 <Link href={route('event-participants.team-form', reg.id)}>
+                                                                                     <FileText className="mr-1 size-3" /> {t('Team Form')}
+                                                                                 </Link>
+                                                                             </Button>
+                                                                             <Button size="sm" onClick={() => { setAddSquadOpen(true); setSquadForm({ name: '', role: activeRegAllowedRoles[0], matrix_no: '', identification_no: '', phone: '' }); }}>
+                                                                                 <Plus className="mr-1 size-3" /> {t('Add Member')}
+                                                                             </Button>
+                                                                             <Button variant="outline" size="sm" onClick={() => { setImportRegId(reg.id); setImportOpen(true); }}>
+                                                                                 <Upload className="mr-1 size-3" /> {t('Import Excel')}
+                                                                             </Button>
                                                                         </div>
                                                                     </div>
 
                                                                     <Table>
                                                                         <TableHeader>
                                                                             <TableRow>
-                                                                                <TableHead>Name</TableHead>
-                                                                                <TableHead>Role</TableHead>
-                                                                                <TableHead>Matrix No.</TableHead>
-                                                                                <TableHead>IC / Passport</TableHead>
-                                                                                <TableHead>Phone</TableHead>
+                                                                                <TableHead>{t('Name')}</TableHead>
+                                                                                <TableHead>{t('Role')}</TableHead>
+                                                                                <TableHead>{t('Matrix No.')}</TableHead>
+                                                                                <TableHead>{t('IC / Passport')}</TableHead>
+                                                                                <TableHead>{t('Phone')}</TableHead>
                                                                                 <TableHead className="w-12" />
                                                                             </TableRow>
                                                                         </TableHeader>
                                                                         <TableBody>
-                                                                            {(reg.squad_members?.length ?? 0) === 0 ? (
-                                                                                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground text-sm">No squad members yet.</TableCell></TableRow>
-                                                                            ) : (
+                                                                             {(reg.squad_members?.length ?? 0) === 0 ? (
+                                                                                 <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground text-sm">{t('No squad members yet.')}</TableCell></TableRow>
+                                                                             ) : (
                                                                                 reg.squad_members?.map((m) => (
                                                                                     <TableRow key={m.id}>
                                                                                         <TableCell className="font-medium">{m.name}</TableCell>

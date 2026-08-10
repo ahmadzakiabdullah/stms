@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 
 interface RoleData {
     id: number;
@@ -25,6 +26,7 @@ interface RolesIndexProps {
 
 export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
     const { flash } = usePage().props;
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingRole, setEditingRole] = useState<RoleData | null>(null);
     const [deleteRole, setDeleteRole] = useState<RoleData | null>(null);
@@ -99,41 +101,41 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Role Management</h1>
-                        <p className="text-sm text-muted-foreground">Manage roles and their permissions</p>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Role Management')}</h1>
+                        <p className="text-sm text-muted-foreground">{t('Manage roles and their permissions')}</p>
                     </div>
                     <Dialog open={open} onOpenChange={(o) => { if (!o) closeDialog(); else setOpen(true); }}>
                         <DialogTrigger asChild>
                             <Button onClick={openCreate}>
-                                <Plus className="mr-2 size-4" /> Add Role
+                                <Plus className="mr-2 size-4" /> {t('Add Role')}
                             </Button>
                         </DialogTrigger>
                     </Dialog>
                 </div>
             }
         >
-            <Head title="Role Management" />
+            <Head title={t('Role Management')} />
 
             {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
             {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Roles</CardTitle>
+                    <CardTitle>{t('Roles List')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Permissions</TableHead>
-                                <TableHead>Created</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Permissions')}</TableHead>
+                                <TableHead>{t('Created')}</TableHead>
+                                <TableHead className="text-right">{t('Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {roles.length === 0 && (
-                                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No roles yet.</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">{t('No roles yet.')}</TableCell></TableRow>
                             )}
                             {roles.map((role) => (
                                 <TableRow key={role.id}>
@@ -153,11 +155,11 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
                                         <Button variant="outline" size="sm" onClick={() => openEdit(role)}>
-                                            <Pencil className="mr-1 size-3" /> Edit
+                                            <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
                                         {role.name !== 'super-admin' && (
                                             <Button variant="destructive" size="sm" onClick={() => setDeleteRole(role)}>
-                                                <Trash2 className="mr-1 size-3" /> Delete
+                                                <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                             </Button>
                                         )}
                                     </TableCell>
@@ -171,21 +173,21 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
             <Dialog open={open} onOpenChange={(o) => { if (!o) closeDialog(); }}>
                 <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>{editingRole ? 'Edit Role' : 'Create Role'}</DialogTitle>
-                        <DialogDescription>Define the role name and assign permissions.</DialogDescription>
+                        <DialogTitle>{editingRole ? t('Edit Role') : t('Create Role')}</DialogTitle>
+                        <DialogDescription>{t('Define the role name and assign permissions.')}</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="role-name">Role Name</Label>
+                            <Label htmlFor="role-name">{t('Role Name')}</Label>
                             <Input
                                 id="role-name"
                                 value={formName}
                                 onChange={(e) => setFormName(e.target.value)}
-                                placeholder="e.g. sport-coordinator"
+                                placeholder={t('e.g. sport-coordinator')}
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Permissions</Label>
+                            <Label>{t('Permissions')}</Label>
                             <div className="max-h-80 overflow-y-auto rounded-md border divide-y">
                                 {Object.entries(permissions).map(([group, perms]) => (
                                     <div key={group} className="px-3 py-2">
@@ -196,7 +198,7 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                                                 onClick={() => selectAllInGroup(perms, !perms.every(p => selectedPerms.has(p)))}
                                                 className="text-[10px] text-primary hover:underline"
                                             >
-                                                {perms.every(p => selectedPerms.has(p)) ? 'Deselect all' : 'Select all'}
+                                                {perms.every(p => selectedPerms.has(p)) ? t('Deselect all') : t('Select all')}
                                             </button>
                                         </div>
                                         <div className="flex flex-wrap gap-1.5">
@@ -224,24 +226,24 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                             </div>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={closeDialog}>Cancel</Button>
-                        <Button onClick={handleSubmit} disabled={!formName.trim()}>
-                            <Save className="mr-2 size-4" /> {editingRole ? 'Update' : 'Save'}
-                        </Button>
-                    </DialogFooter>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={closeDialog}>{t('Cancel')}</Button>
+                            <Button onClick={handleSubmit} disabled={!formName.trim()}>
+                                <Save className="mr-2 size-4" /> {editingRole ? t('Update') : t('Save')}
+                            </Button>
+                        </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             <Dialog open={!!deleteRole} onOpenChange={(o) => { if (!o) setDeleteRole(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Role?</DialogTitle>
-                        <DialogDescription>Are you sure you want to delete <strong>{deleteRole?.name}</strong>? Users with this role may lose access.</DialogDescription>
+                        <DialogTitle>{t('Delete Role?')}</DialogTitle>
+                        <DialogDescription>{t('Are you sure you want to delete')} <strong>{deleteRole?.name}</strong>? {t('Users with this role may lose access.')}</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteRole(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+                        <Button variant="outline" onClick={() => setDeleteRole(null)}>{t('Cancel')}</Button>
+                        <Button variant="destructive" onClick={handleDelete}>{t('Delete')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

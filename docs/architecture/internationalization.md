@@ -9,6 +9,9 @@ Internationalization is implemented for the SAF portal with **English (`en`) as 
 - Request-time locale application is handled by `App\Http\Middleware\SetLocale` (loaded conditionally to stay safe during partial deployments).
 - Locale metadata is shared to Inertia via `HandleInertiaRequests` (`locale`, `locales`).
 - Frontend translation lookup is centralized in `resources/js/lib/i18n.ts`.
+- Locale switching remounts the active Inertia page so all mounted components consume the new shared locale immediately.
+- Shared ormatDate, ormatDateTime, ormatNumber, and localeTag helpers keep display formatting aligned with n-MY and ms-MY.
+- Static 	('...') references are audited against both dictionaries; user-authored names and event-specific content are not machine-translated.
 - A reusable switcher exists in `resources/js/components/LocaleSwitcher.tsx` and is surfaced in guest/authenticated layouts.
 
 ## Coverage

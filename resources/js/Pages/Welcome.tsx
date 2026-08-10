@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { PageProps } from '@/types';
+import LocaleSwitcher from '@/components/LocaleSwitcher';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -78,20 +80,21 @@ const steps = [
 ];
 
 export default function Welcome() {
+    const { t } = useI18n();
     const { auth, app, settings = {} } = usePage<PageProps>().props;
     const user = auth?.user;
     const logoUrl = (settings as Record<string, string>)?.logo_url;
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const navLinks = [
-        { href: '#features', label: 'Features' },
-        { href: '#how-it-works', label: 'How it works' },
-        { href: '#about', label: 'About' },
+        { href: '#features', label: t('Features') },
+        { href: '#how-it-works', label: t('How it works') },
+        { href: '#about', label: t('About') },
     ];
 
     return (
         <>
-            <Head title="Welcome" />
+            <Head title={t('Welcome')} />
 
             <div className="flex min-h-screen flex-col bg-background text-foreground">
                 {/* Header */}
@@ -114,7 +117,7 @@ export default function Welcome() {
                                     {app?.name || 'SAF'}
                                 </span>
                                 <span className="block text-[11px] text-muted-foreground">
-                                    Tournament Portal
+                                    {t('Tournament Portal')}
                                 </span>
                             </div>
                         </Link>
@@ -135,24 +138,26 @@ export default function Welcome() {
                             {user ? (
                                 <Button asChild>
                                     <Link href={route('dashboard')}>
-                                        Dashboard
+                                        {t('Dashboard')}
                                         <LayoutDashboard data-icon="inline-end" />
                                     </Link>
                                 </Button>
                             ) : (
                                 <>
                                     <Button variant="ghost" asChild>
-                                        <Link href={route('register')}>Register</Link>
+                                        <Link href={route('register')}>{t('Register')}</Link>
                                     </Button>
                                     <Button asChild>
                                         <Link href={route('login')}>
                                             <LogIn data-icon="inline-start" />
-                                            Log in
+                                            {t('Log in')}
                                         </Link>
                                     </Button>
                                 </>
                             )}
                         </div>
+
+                        <div className="hidden md:block"><LocaleSwitcher compact showLabel={false} /></div>
 
                         <button
                             type="button"

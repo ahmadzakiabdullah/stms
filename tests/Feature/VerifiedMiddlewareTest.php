@@ -11,7 +11,7 @@ class VerifiedMiddlewareTest extends TestCase
 {
     use CreatesTenantUsers, RefreshDatabase;
 
-    public function test_unverified_user_can_access_dashboard(): void
+    public function test_unverified_user_is_redirected_from_dashboard(): void
     {
         $org = Organization::factory()->create();
         $user = $this->createStaffUser($org);
@@ -20,10 +20,10 @@ class VerifiedMiddlewareTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
-        $response->assertOk();
+        $response->assertRedirect(route('verification.notice'));
     }
 
-    public function test_unverified_user_can_access_authorized_system_routes(): void
+    public function test_unverified_user_is_redirected_from_authorized_system_routes(): void
     {
         $org = Organization::factory()->create();
         $user = $this->createStaffUser($org);
@@ -32,10 +32,10 @@ class VerifiedMiddlewareTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('events.index'));
 
-        $response->assertOk();
+        $response->assertRedirect(route('verification.notice'));
     }
 
-    public function test_unverified_user_can_access_matches(): void
+    public function test_unverified_user_is_redirected_from_matches(): void
     {
         $org = Organization::factory()->create();
         $user = $this->createStaffUser($org);
@@ -44,10 +44,10 @@ class VerifiedMiddlewareTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('matches.index'));
 
-        $response->assertOk();
+        $response->assertRedirect(route('verification.notice'));
     }
 
-    public function test_unverified_user_can_access_results(): void
+    public function test_unverified_user_is_redirected_from_results(): void
     {
         $org = Organization::factory()->create();
         $user = $this->createStaffUser($org);
@@ -56,10 +56,10 @@ class VerifiedMiddlewareTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('results.index'));
 
-        $response->assertOk();
+        $response->assertRedirect(route('verification.notice'));
     }
 
-    public function test_unverified_user_can_access_rankings(): void
+    public function test_unverified_user_is_redirected_from_rankings(): void
     {
         $org = Organization::factory()->create();
         $user = $this->createStaffUser($org);
@@ -68,7 +68,7 @@ class VerifiedMiddlewareTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('rankings.index'));
 
-        $response->assertOk();
+        $response->assertRedirect(route('verification.notice'));
     }
 
     public function test_unverified_user_can_access_profile(): void

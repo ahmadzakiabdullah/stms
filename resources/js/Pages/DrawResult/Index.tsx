@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { Event, Pool, Fixture, Participant, EventParticipant, Flash } from '@/types';
+import { useI18n } from '@/lib/i18n';
 
 interface PoolWithRelations extends Pool {
     event_participants: (EventParticipant & { participant: Participant })[];
@@ -61,9 +62,9 @@ const statusStyles: Record<string, { label: string; className: string }> = {
     cancelled: { label: 'Cancelled', className: 'border-red-200 bg-red-50 text-red-700' },
 };
 
-const statusBadge = (status: string) => {
+const statusBadge = (status: string, t: (key: string) => string) => {
     const s = statusStyles[status] || { label: status, className: 'border-slate-200 bg-slate-50 text-slate-600' };
-    return <Badge variant="outline" className={`border ${s.className}`}>{s.label}</Badge>;
+    return <Badge variant="outline" className={`border ${s.className}`}>{t(s.label)}</Badge>;
 };
 
 const participantName = (participant?: Participant, fallback = 'TBD') => {
@@ -117,6 +118,7 @@ const StatTile = ({ icon: Icon, label, value, accent }: StatTileProps) => (
 
 export default function DrawResult({ event, pools: initialPools, canEdit, drawVersions }: DrawResultProps) {
     const { flash } = usePage<{ flash: Flash }>().props;
+    const { t } = useI18n();
     const [editing, setEditing] = useState(false);
     const [pools, setPools] = useState(initialPools);
     const [pendingMoves, setPendingMoves] = useState<Record<string, string>>({});
@@ -186,30 +188,30 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                     <Link href={route('events.index')}>
                         <Button variant="ghost" size="sm">
                             <ArrowLeft className="mr-1 size-4" />
-                            Back
+                            {t('Back')}
                         </Button>
                     </Link>
-                    <h2 className="text-xl font-semibold leading-tight">Draw Result</h2>
+                    <h2 className="text-xl font-semibold leading-tight">{t('Draw Result')}</h2>
                     <div className="ml-auto flex items-center gap-2">
                         {editing ? (
                             <>
                                 <Button variant="outline" size="sm" onClick={handleCancel}>
-                                    <X className="mr-1 size-4" /> Cancel
+                                    <X className="mr-1 size-4" /> {t('Cancel')}
                                 </Button>
                                 <Button size="sm" onClick={handleSave} disabled={Object.keys(pendingMoves).length === 0}>
-                                    <Check className="mr-1 size-4" /> Save Changes
+                                    <Check className="mr-1 size-4" /> {t('Save Changes')}
                                 </Button>
                             </>
                         ) : (
                             <>
                                 {canEdit && (
                                     <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                                        <Pencil className="mr-1 size-4" /> Edit Pools
+                                        <Pencil className="mr-1 size-4" /> {t('Edit Pools')}
                                     </Button>
                                 )}
                                 {showGenerateFixtures && (
                                     <Button size="sm" onClick={handleGenerateFixtures}>
-                                        <Swords className="mr-1 size-4" /> Generate Fixtures
+                                        <Swords className="mr-1 size-4" /> {t('Generate Fixtures')}
                                     </Button>
                                 )}
                             </>
@@ -218,7 +220,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                 </div>
             }
         >
-            <Head title={`Draw Result · ${event.name}`} />
+            <Head title={`${t('Draw Result')} · ${event.name}`} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>
@@ -234,19 +236,19 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                         <div className="flex flex-wrap items-start justify-between gap-4">
                             <div>
                                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                                    <Badge variant="secondary">{event.sport?.name ?? 'Sport'}</Badge>
+                                    <Badge variant="secondary">{event.sport?.name ?? t('Sport')}</Badge>
                                     {event.sport_category && <Badge variant="outline">{event.sport_category.name}</Badge>}
                                     {event.tournament && <Badge variant="outline">{event.tournament.name}</Badge>}
                                     {event.format && <Badge variant="outline">{event.format.replace(/_/g, ' ')}</Badge>}
                                 </div>
                                 <CardTitle className="text-2xl">{event.name}</CardTitle>
                                 <CardDescription className="mt-1">
-                                    {pools.length} pool{pools.length !== 1 ? 's' : ''} · {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''} · {totalFixtures} fixture{totalFixtures !== 1 ? 's' : ''}
+                                    {pools.length} {t('Pools')} · {totalParticipants} {t('Participants')} · {totalFixtures} {t('Fixtures')}
                                 </CardDescription>
                             </div>
                             <div className="w-full max-w-xs">
                                 <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1"><CheckCircle2 className="size-3.5 text-emerald-500" /> Completion</span>
+                                    <span className="flex items-center gap-1"><CheckCircle2 className="size-3.5 text-emerald-500" /> {t('Completion')}</span>
                                     <span className="font-semibold text-slate-700">{completion}%</span>
                                 </div>
                                 <div className="h-2 overflow-hidden rounded-full bg-slate-100">
@@ -256,10 +258,10 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                             </div>
                         </div>
                         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                            <StatTile icon={LayoutGrid} label="Pools" value={pools.length} accent="bg-violet-50 text-violet-600" />
-                            <StatTile icon={Users} label="Participants" value={totalParticipants} accent="bg-sky-50 text-sky-600" />
-                            <StatTile icon={Swords} label="Fixtures" value={totalFixtures} accent="bg-emerald-50 text-emerald-600" />
-                            <StatTile icon={CheckCircle2} label="Completed" value={completedFixtures} accent="bg-amber-50 text-amber-600" />
+                            <StatTile icon={LayoutGrid} label={t('Pools')} value={pools.length} accent="bg-violet-50 text-violet-600" />
+                            <StatTile icon={Users} label={t('Participants')} value={totalParticipants} accent="bg-sky-50 text-sky-600" />
+                            <StatTile icon={Swords} label={t('Fixtures')} value={totalFixtures} accent="bg-emerald-50 text-emerald-600" />
+                            <StatTile icon={CheckCircle2} label={t('Completed')} value={completedFixtures} accent="bg-amber-50 text-amber-600" />
                         </div>
                     </CardHeader>
                 </Card>
@@ -267,17 +269,17 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                 {editing && (
                     <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
                         <Info className="size-4 shrink-0" />
-                        Edit mode: choose a new pool for each participant you want to move, then save.{' '}
+                        {t('Edit mode: choose a new pool for each participant you want to move, then save.')}{' '}
                         {totalFixtures === 0
-                            ? 'Fixtures will be generated after you click Generate Fixtures.'
-                            : 'Fixtures will be regenerated automatically after saving.'}
+                            ? t('Fixtures will be generated after you click Generate Fixtures.')
+                            : t('Fixtures will be regenerated automatically after saving.')}
                     </div>
                 )}
 
                 {showGenerateFixtures && (
                     <div className="flex items-center gap-2 rounded-md border border-sky-200 bg-sky-50 p-3 text-sm text-sky-800">
                         <Info className="size-4 shrink-0" />
-                        Groups are ready but fixtures have not been generated yet. Review and adjust the assignment below (Edit Pools), then click Generate Fixtures.
+                        {t('Groups are ready but fixtures have not been generated yet...')}
                     </div>
                 )}
 
@@ -287,9 +289,9 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                             <ClipboardList className="size-6" />
                         </span>
                         <div>
-                            <p className="font-semibold text-slate-700">No draw has been performed yet</p>
+                            <p className="font-semibold text-slate-700">{t('No draw has been performed yet')}</p>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Run a draw from the Events page to create groups, then generate fixtures from here.
+                                {t('Run a draw from the Events page to create groups...')}
                             </p>
                         </div>
                     </div>
@@ -313,8 +315,8 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                                     <Users className="size-4 text-muted-foreground" />
                                                     {pool.name}
                                                 </CardTitle>
-                                                <CardDescription>
-                                                    {pool.event_participants.length} participant{pool.event_participants.length !== 1 ? 's' : ''} · {pool.fixtures.length} fixture{pool.fixtures.length !== 1 ? 's' : ''}
+                                                 <CardDescription>
+                                                    {pool.event_participants.length} {t('Participants')} · {pool.fixtures.length} {t('Fixtures')}
                                                 </CardDescription>
                                             </div>
                                         </div>
@@ -331,7 +333,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                         <div>
                                             <h4 className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                                 <Users className="size-3" />
-                                                Participants
+                                                {t('Participants')}
                                             </h4>
                                             <div className="space-y-1.5">
                                                 {pool.event_participants.map((ep) => {
@@ -357,9 +359,9 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                                                         </span>
                                                                     )}
                                                                 </p>
-                                                                {ep.seed_number && (
-                                                                    <p className="mt-0.5 text-xs text-muted-foreground">Seed #{ep.seed_number}</p>
-                                                                )}
+                                                                 {ep.seed_number && (
+                                                                     <p className="mt-0.5 text-xs text-muted-foreground">{t('Seed #')}{ep.seed_number}</p>
+                                                                 )}
                                                             </div>
                                                             {editing && (
                                                                 <select
@@ -368,15 +370,15 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                                                     onChange={(e) => handlePoolChange(ep.id, e.target.value)}
                                                                 >
                                                                     {pools.map((p) => (
-                                                                        <option key={p.id} value={p.id}>
-                                                                            {p.name}{p.id === pool.id ? ' (current)' : ''}
-                                                                        </option>
+                                                                         <option key={p.id} value={p.id}>
+                                                                             {p.name}{p.id === pool.id ? ` (${t('(current)')})` : ''}
+                                                                         </option>
                                                                     ))}
                                                                 </select>
                                                             )}
-                                                            {!editing && ep.seed_number && (
-                                                                <Badge variant="secondary" className="text-xs">Seed #{ep.seed_number}</Badge>
-                                                            )}
+                                                             {!editing && ep.seed_number && (
+                                                                 <Badge variant="secondary" className="text-xs">{t('Seed #')}{ep.seed_number}</Badge>
+                                                             )}
                                                         </div>
                                                     );
                                                 })}
@@ -388,19 +390,19 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                         <div>
                                             <h4 className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                                                 <Swords className="size-3" />
-                                                Fixtures
+                                                {t('Fixtures')}
                                             </h4>
                                             <div className="overflow-hidden rounded-lg border border-slate-200">
                                                 <Table>
                                                     <TableHeader>
-                                                        <TableRow className="bg-slate-50">
-                                                            <TableHead className="w-10 text-center">#</TableHead>
-                                                            <TableHead>Round</TableHead>
-                                                            <TableHead>Home</TableHead>
-                                                            <TableHead className="w-8 text-center">vs</TableHead>
-                                                            <TableHead>Away</TableHead>
-                                                            <TableHead>Status</TableHead>
-                                                        </TableRow>
+                                                         <TableRow className="bg-slate-50">
+                                                             <TableHead className="w-10 text-center">{t('#')}</TableHead>
+                                                             <TableHead>{t('Round')}</TableHead>
+                                                             <TableHead>{t('Home')}</TableHead>
+                                                             <TableHead className="w-8 text-center">{t('vs')}</TableHead>
+                                                             <TableHead>{t('Away')}</TableHead>
+                                                             <TableHead>{t('Status')}</TableHead>
+                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
                                                         {pool.fixtures.map((f) => (
@@ -421,7 +423,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                                                         </span>
                                                                     </div>
                                                                 </TableCell>
-                                                                <TableCell className="text-center text-xs text-muted-foreground">vs</TableCell>
+                                                                 <TableCell className="text-center text-xs text-muted-foreground">{t('vs')}</TableCell>
                                                                 <TableCell>
                                                                     <div className="flex items-center gap-2">
                                                                         <ParticipantAvatar participant={f.away_participant} size="sm" />
@@ -430,7 +432,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                                                         </span>
                                                                     </div>
                                                                 </TableCell>
-                                                                <TableCell>{statusBadge(f.status)}</TableCell>
+                                                                <TableCell>{statusBadge(f.status, t)}</TableCell>
                                                             </TableRow>
                                                         ))}
                                                     </TableBody>
@@ -440,7 +442,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                     )}
 
                                     {pool.event_participants.length === 0 && pool.fixtures.length === 0 && (
-                                        <p className="py-6 text-center text-sm text-muted-foreground">Empty pool</p>
+                                        <p className="py-6 text-center text-sm text-muted-foreground">{t('Empty pool')}</p>
                                     )}
                                 </CardContent>
                             </Card>
@@ -451,22 +453,22 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <History className="size-4" /> Draw history
+                            <History className="size-4" /> {t('Draw history')}
                         </CardTitle>
-                        <CardDescription>Versioned allocation and fixture snapshots for audit and rollback.</CardDescription>
+                        <CardDescription>{t('Versioned allocation and fixture snapshots for audit and rollback.')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {drawVersions.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No draw versions recorded yet.</p>
+                            <p className="text-sm text-muted-foreground">{t('No draw versions recorded yet.')}</p>
                         ) : (
                             <div className="space-y-2">
                                 {drawVersions.map((version) => (
                                     <div key={version.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
                                         <div>
-                                            <p className="text-sm font-medium">Version {version.version} · {version.action.replace(/_/g, ' ')}</p>
+                                            <p className="text-sm font-medium">{t('Version')} {version.version} · {version.action.replace(/_/g, ' ')}</p>
                                             <p className="text-xs text-muted-foreground">
-                                                {new Date(version.created_at).toLocaleString()} · {version.actor?.name ?? 'System'}
-                                                {version.seed ? ` · Seed ${version.seed}` : ''}
+                                                {new Date(version.created_at).toLocaleString()} · {version.actor?.name ?? t('System')}
+                                                {version.seed ? ` · ${t('Seed')} ${version.seed}` : ''}
                                             </p>
                                         </div>
                                         <Button
@@ -476,7 +478,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                             disabled={!canEdit}
                                             onClick={() => setRestoreVersion(version)}
                                         >
-                                            Restore
+                                            {t('Restore')}
                                         </Button>
                                     </div>
                                 ))}
@@ -485,28 +487,28 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                     </CardContent>
                 </Card>
 
-                <Dialog open={restoreVersion !== null} onOpenChange={(open) => !open && setRestoreVersion(null)}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Restore draw version {restoreVersion?.version}?</DialogTitle>
-                            <DialogDescription>
-                                The current draw will be preserved as a new snapshot before this version is restored.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                            <Button
-                                onClick={() => restoreVersion && router.post(
-                                    route('events.draw.rollback', [event.slug, restoreVersion.id]),
-                                    {},
-                                    { onSuccess: () => setRestoreVersion(null) },
-                                )}
-                            >
-                                Restore version
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                    <Dialog open={restoreVersion !== null} onOpenChange={(open) => !open && setRestoreVersion(null)}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>{t('Restore version')} {restoreVersion?.version}?</DialogTitle>
+                                <DialogDescription>
+                                    The current draw will be preserved as a new snapshot before this version is restored.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <DialogClose asChild><Button variant="outline">{t('Cancel')}</Button></DialogClose>
+                                <Button
+                                    onClick={() => restoreVersion && router.post(
+                                        route('events.draw.rollback', [event.slug, restoreVersion.id]),
+                                        {},
+                                        { onSuccess: () => setRestoreVersion(null) },
+                                    )}
+                                >
+                                    {t('Restore version')}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
             </div>
         </AuthenticatedLayout>
     );

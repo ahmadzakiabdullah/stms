@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Head, router } from '@inertiajs/react';
 import { Check, FileCheck2, Printer } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 
 type Option = { id: string; name: string; period?: string };
 type ConfirmationRow = {
@@ -37,6 +38,7 @@ function ConfirmationMark({ checked }: { checked: boolean }) {
 }
 
 export default function Index(props: Props) {
+    const { t } = useI18n();
     const selectedSession = props.sessions.find((item) => item.id === props.filters.session_id);
 
     const filter = (key: keyof Props['filters'], value: string) => {
@@ -49,7 +51,7 @@ export default function Index(props: Props) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Participation Confirmation" />
+            <Head title={t('Participation Confirmation')} />
 
             <style>{`
                 @media print {
@@ -82,26 +84,26 @@ export default function Index(props: Props) {
                     <div>
                         <div className="flex items-center gap-2">
                             <FileCheck2 className="h-7 w-7 text-primary" />
-                            <h1 className="text-2xl font-bold tracking-tight">Participation Confirmation</h1>
+                            <h1 className="text-2xl font-bold tracking-tight">{t('Participation Confirmation')}</h1>
                         </div>
-                        <p className="mt-1 text-sm text-muted-foreground">Official faculty participation confirmation form.</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('Official faculty participation confirmation form.')}</p>
                     </div>
                     <Button onClick={() => window.print()} disabled={!props.participant}>
-                        <Printer className="mr-2 h-4 w-4" /> Print form
+                        <Printer className="mr-2 h-4 w-4" /> {t('Print form')}
                     </Button>
                 </div>
 
                 <Card className="print-hidden">
-                    <CardHeader className="pb-3"><CardTitle className="text-base">Display options</CardTitle></CardHeader>
+                    <CardHeader className="pb-3"><CardTitle className="text-base">{t('Display options')}</CardTitle></CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-2">
                         {props.canSelectParticipant && (
-                            <label className="space-y-1.5 text-sm font-medium">Faculty / participant
+                            <label className="space-y-1.5 text-sm font-medium">{t('Faculty / participant')}
                                 <select className="mt-1 block h-10 w-full rounded-md border bg-background px-3 text-sm" value={props.filters.participant_id} onChange={(e) => filter('participant_id', e.target.value)}>
                                     {props.participants.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                                 </select>
                             </label>
                         )}
-                        <label className="space-y-1.5 text-sm font-medium">Session
+                        <label className="space-y-1.5 text-sm font-medium">{t('Session')}
                             <select className="mt-1 block h-10 w-full rounded-md border bg-background px-3 text-sm" value={props.filters.session_id} onChange={(e) => filter('session_id', e.target.value)}>
                                 {props.sessions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                             </select>
@@ -122,7 +124,7 @@ export default function Index(props: Props) {
                                 />
                             </div>
                             <div className="text-[8px] font-medium">https://www.utem.edu.my</div>
-                            <div className="mt-1.5 w-full border border-black px-1 py-1 text-[9px] font-bold uppercase">DITERIMA PADA</div>
+                            <div className="mt-1.5 w-full border border-black px-1 py-1 text-[9px] font-bold uppercase">{t('Received on')}</div>
                         </div>
                         <div className="whitespace-pre-line text-center text-[11px] leading-relaxed">
                             <p className="font-bold uppercase">{props.branding.secretariat_address}</p>
@@ -139,13 +141,13 @@ export default function Index(props: Props) {
                     </header>
 
                     <div className="form-title mt-2 border-y-2 border-black py-3 text-center">
-                        <h2 className="text-[15px] font-bold uppercase">Participation Confirmation Form</h2>
+                        <h2 className="text-[15px] font-bold uppercase">{t('Participation Confirmation Form')}</h2>
                         <p className="mt-1 font-bold uppercase">{selectedSession?.name ?? 'No session selected'}</p>
                     </div>
 
                     <div className="form-meta mt-4 grid grid-cols-[150px_1fr] gap-y-1 text-[12px]">
-                        <span className="font-bold">Faculty / Participant</span><span>: {props.participant?.name ?? '-'}</span>
-                        <span className="font-bold">Session Period</span><span>: {selectedSession?.period ?? '-'}</span>
+                        <span className="font-bold">{t('Faculty / Participant')}</span><span>: {props.participant?.name ?? '-'}</span>
+                        <span className="font-bold">{t('Session Period')}</span><span>: {selectedSession?.period ?? '-'}</span>
                     </div>
 
                     <p className="form-instruction mt-4 text-justify">Please confirm the faculty participation for each sport and category listed below by referring to the Yes or No column.</p>
@@ -160,12 +162,12 @@ export default function Index(props: Props) {
                                 <table className="phase-table w-full border-collapse text-[11px]">
                                     <thead>
                                         <tr>
-                                            <th rowSpan={2} className="w-11 border border-black px-2 py-1.5 text-center">No.</th>
-                                            <th rowSpan={2} className="border border-black px-2 py-1.5 text-left">Sport</th>
-                                            <th rowSpan={2} className="border border-black px-2 py-1.5 text-left">Category</th>
-                                            <th colSpan={2} className="w-28 border border-black px-2 py-1 text-center">Confirmation</th>
+                                            <th rowSpan={2} className="w-11 border border-black px-2 py-1.5 text-center">{t('No.')}</th>
+                                            <th rowSpan={2} className="border border-black px-2 py-1.5 text-left">{t('Sport')}</th>
+                                            <th rowSpan={2} className="border border-black px-2 py-1.5 text-left">{t('Category')}</th>
+                                            <th colSpan={2} className="w-28 border border-black px-2 py-1 text-center">{t('Confirmation')}</th>
                                         </tr>
-                                        <tr><th className="w-14 border border-black py-1 text-center">Yes</th><th className="w-14 border border-black py-1 text-center">No</th></tr>
+                                        <tr><th className="w-14 border border-black py-1 text-center">{t('Yes')}</th><th className="w-14 border border-black py-1 text-center">{t('No')}</th></tr>
                                     </thead>
                                     <tbody>
                                         {phase.rows.map((row, index) => (
@@ -177,12 +179,12 @@ export default function Index(props: Props) {
                                                 <td className="border border-black py-1 text-center"><ConfirmationMark checked={row.no} /></td>
                                             </tr>
                                         ))}
-                                        {phase.rows.length === 0 && <tr><td colSpan={5} className="border border-black p-4 text-center">No participation records.</td></tr>}
+                                        {phase.rows.length === 0 && <tr><td colSpan={5} className="border border-black p-4 text-center">{t('No participation records.')}</td></tr>}
                                     </tbody>
                                 </table>
                             </div>
                         ))}
-                        {props.phases.length === 0 && <div className="border border-black p-6 text-center">No tournament phases are configured for this session.</div>}
+                        {props.phases.length === 0 && <div className="border border-black p-6 text-center">{t('No tournament phases are configured for this session.')}</div>}
                     </div>
 
                     <div className="confirmation-footer print-avoid-break mt-8">

@@ -293,7 +293,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
 
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="tournament_id">Tournament</Label>
+                                        <Label htmlFor="tournament_id">{t('Tournament')}</Label>
                                         <select
                                             id="tournament_id"
                                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
@@ -302,7 +302,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             disabled={!!editingEvent}
                                             required
                                         >
-                                            <option value="">-- Select Tournament --</option>
+                                            <option value="">{t('Select Tournament')}</option>
                                             {tournaments.map((t) => (
                                                 <option key={t.id} value={t.id}>{t.name}</option>
                                             ))}
@@ -311,7 +311,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="sport_id">Sport</Label>
+                                        <Label htmlFor="sport_id">{t('Sport')}</Label>
                                         <select
                                             id="sport_id"
                                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
@@ -319,38 +319,38 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             onChange={(e) => { setValue('sport_id', e.target.value); setValue('sport_category_id', ''); }}
                                             required
                                         >
-                                            <option value="">-- Select Sport --</option>
+                                            <option value="">{t('Select Sport')}</option>
                                             {filteredSports.map((s) => (
                                                 <option key={s.id} value={s.id}>{s.name}</option>
                                             ))}
                                         </select>
                                         {filteredSports.length === 0 && selectedTournamentId && (
-                                            <p className="text-xs text-amber-600">This tournament has no sports assigned yet.</p>
+                                            <p className="text-xs text-amber-600">{t('No sports assigned')}</p>
                                         )}
                                         {errors.sport_id && <p className="text-sm text-destructive">{errors.sport_id.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="sport_category_id">Category</Label>
+                                        <Label htmlFor="sport_category_id">{t('Category')}</Label>
                                         <select
                                             id="sport_category_id"
                                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                             {...register('sport_category_id')}
                                             required
                                         >
-                                            <option value="">-- Select Category --</option>
+                                            <option value="">{t('Select Category')}</option>
                                             {filteredCategories.map((c) => (
                                                 <option key={c.id} value={c.id}>{c.name}</option>
                                             ))}
                                         </select>
                                         {filteredCategories.length === 0 && selectedSportId && !editingEvent && (
-                                            <p className="text-xs text-amber-600">All categories for this sport have already been used in this tournament.</p>
+                                            <p className="text-xs text-amber-600">{t('Categories already used')}</p>
                                         )}
                                         {errors.sport_category_id && <p className="text-sm text-destructive">{errors.sport_category_id.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="name">Event Name</Label>
+                                        <Label htmlFor="name">{t('Event Name')}</Label>
                                         <Input
                                             id="name"
                                             {...register('name')}
@@ -361,7 +361,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="slug">Slug</Label>
+                                        <Label htmlFor="slug">{t('Slug')}</Label>
                                         <Input
                                             id="slug"
                                             {...register('slug')}
@@ -371,7 +371,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="description">Description</Label>
+                                        <Label htmlFor="description">{t('Description')}</Label>
                                         <textarea
                                             id="description"
                                             className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -381,7 +381,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="start_date">Start Date</Label>
+                                            <Label htmlFor="start_date">{t('Start Date')}</Label>
                                             <Input
                                                 id="start_date"
                                                 type="date"
@@ -391,7 +391,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             {errors.start_date && <p className="text-sm text-destructive">{errors.start_date.message}</p>}
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="end_date">End Date</Label>
+                                            <Label htmlFor="end_date">{t('End Date')}</Label>
                                             <Input
                                                 id="end_date"
                                                 type="date"
@@ -400,7 +400,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             {errors.end_date && <p className="text-sm text-destructive">{errors.end_date.message}</p>}
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="registration_deadline">Registration Deadline</Label>
+                                            <Label htmlFor="registration_deadline">{t('Registration Deadline')}</Label>
                                             <Input
                                                 id="registration_deadline"
                                                 type="date"
@@ -410,16 +410,16 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="format">Format</Label>
+                                            <Label htmlFor="format">{t('Format')}</Label>
                                             <select id="format" {...register('format')} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm">
-                                                <option value="">No format</option>
-                                                <option value="league">League (Round Robin)</option>
-                                                <option value="group_knockout">Group + Knockout</option>
-                                                <option value="knockout">Knockout</option>
+                                                <option value="">{t('No format')}</option>
+                                                <option value="league">{t('League (Round Robin)')}</option>
+                                                <option value="group_knockout">{t('Group + Knockout')}</option>
+                                                <option value="knockout">{t('Knockout')}</option>
                                             </select>
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="pool_size">Pool Size</Label>
+                                            <Label htmlFor="pool_size">{t('Pool Size')}</Label>
                                             <Input id="pool_size" type="number" min={2} max={32} {...register('pool_size', { valueAsNumber: true })} />
                                         </div>
                                     </div>
@@ -480,12 +480,12 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                         onChange={toggleSelectAll}
                                     />
                                 </TableHead>}
-                                <TableHead>Name</TableHead>
-                                <TableHead>Tournament</TableHead>
-                                <TableHead>Sport / Category</TableHead>
-                                <TableHead>Dates</TableHead>
-                                <TableHead>Deadline</TableHead>
-                                <TableHead>Format</TableHead>
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Tournament')}</TableHead>
+                                <TableHead>{t('Sport / Category')}</TableHead>
+                                <TableHead>{t('Dates')}</TableHead>
+                                <TableHead>{t('Deadline')}</TableHead>
+                                <TableHead>{t('Format')}</TableHead>
                                 <TableHead>{t('Participation')}</TableHead>
                                 <TableHead>{t('Status')}</TableHead>
                                 {isSuperAdmin && <TableHead className="text-right">{t('Actions')}</TableHead>}

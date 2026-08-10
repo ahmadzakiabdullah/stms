@@ -33,4 +33,13 @@ class HealthCheckTest extends TestCase
 
         $response->assertOk();
     }
+
+    public function test_production_health_endpoint_requires_token(): void
+    {
+        $this->app['env'] = 'production';
+        config(['app.health.token' => 'test-health-token']);
+
+        $this->get('/health')->assertNotFound();
+        $this->withHeader('X-Health-Token', 'test-health-token')->get('/health')->assertOk();
+    }
 }

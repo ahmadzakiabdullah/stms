@@ -267,8 +267,13 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
         let active = true;
         const tick = async () => {
             try {
-                const res = await fetch(route('notifications.unread-count'));
-                if (!active) return;
+                const res = await fetch(route('notifications.unread-count'), {
+                    credentials: 'same-origin',
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    // An expired session may redirect to login. Do not let a polling request follow a redirect chain.
+                    redirect: 'manual',
+                });
+                if (!active || !res.ok || res.type === 'opaqueredirect') return;
                 const json = await res.json();
                 if (typeof json?.count === 'number') setNotifCount(json.count);
             } catch {

@@ -34,6 +34,7 @@ import { Mars, Pencil, Plus, Save, Trash2, Venus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Pagination from '@/components/Pagination';
 import type { Sport, SportCategory, Paginated, Flash } from '@/types';
+import { useI18n } from '@/lib/i18n';
 
 const categorySchema = z.object({
     sport_id: z.string().uuid('Sport is required'),
@@ -57,6 +58,7 @@ interface SportCategoriesIndexProps {
 
 export default function SportCategoriesIndex({ categories: categoriesProp, sports }: SportCategoriesIndexProps) {
     const { flash, isSuperAdmin = false } = usePage().props;
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<SportCategory | null>(null);
     const [deleteCategory, setDeleteCategory] = useState<SportCategory | null>(null);
@@ -110,13 +112,13 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
             <div className="flex items-center gap-2">
                 <span className="inline-flex items-center gap-1 text-blue-700">
                     <Mars className="size-3.5" aria-hidden="true" />
-                    <span className="sr-only">Male</span>
+                    <span className="sr-only">{t('Male')}</span>
                     {category.max_male_athletes ?? '-'}
                 </span>
                 <span className="text-muted-foreground">/</span>
                 <span className="inline-flex items-center gap-1 text-pink-700">
                     <Venus className="size-3.5" aria-hidden="true" />
-                    <span className="sr-only">Female</span>
+                    <span className="sr-only">{t('Female')}</span>
                     {category.max_female_athletes ?? '-'}
                 </span>
             </div>
@@ -201,9 +203,9 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Sport Categories</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Sport Categories')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Manage categories for each sport (e.g. Men's Singles, Team Event)
+                            {t('Manage categories for each sport')}
                         </p>
                     </div>
 
@@ -215,15 +217,15 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                         <DialogTrigger asChild>
                             <Button onClick={openCreate} disabled={sports.length === 0}>
                                 <Plus className="mr-2 size-4" />
-                                Add Category
+                                {t('Add Category')}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-h-[90vh] overflow-y-auto">
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <DialogHeader>
-                                    <DialogTitle>{editingCategory ? 'Edit Category' : 'Create New Category'}</DialogTitle>
+                                    <DialogTitle>{editingCategory ? t('Edit Category') : t('Create New Category')}</DialogTitle>
                                     <DialogDescription>
-                                        Categories are specific divisions or events within a sport.
+                                        {t('Categories are specific divisions or events within a sport.')}
                                     </DialogDescription>
                                 </DialogHeader>
 
@@ -235,7 +237,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
 
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="sport_id">Sport</Label>
+                                        <Label htmlFor="sport_id">{t('Sport')}</Label>
                                         <select
                                             id="sport_id"
                                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
@@ -243,7 +245,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                             disabled={!!editingCategory}
                                             required
                                         >
-                                            <option value="">-- Select Sport --</option>
+                                            <option value="">{t('-- Select Sport --')}</option>
                                             {sports.map((sport) => (
                                                 <option key={sport.id} value={sport.id}>
                                                     {sport.name}
@@ -254,22 +256,22 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="name">Category Name</Label>
+                                        <Label htmlFor="name">{t('Category Name')}</Label>
                                         <Input
                                             id="name"
                                             {...register('name')}
-                                            placeholder="e.g. Men's Singles"
+                                            placeholder={t("e.g. Men's Singles")}
                                             required
                                         />
                                         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="slug">Slug (unique per sport)</Label>
+                                        <Label htmlFor="slug">{t('Slug (unique per sport)')}</Label>
                                         <Input
                                             id="slug"
                                             {...register('slug')}
-                                            placeholder="mens-singles"
+                                            placeholder={t('mens-singles')}
                                             onChange={(e) => {
                                                 autoSlugRef.current = false;
                                                 register('slug').onChange(e);
@@ -279,23 +281,23 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                     </div>
 
                                     <div className="border-t pt-4">
-                                        <h4 className="mb-3 text-sm font-medium">Quota / Participant Limits</h4>
+                                        <h4 className="mb-3 text-sm font-medium">{t('Quota / Participant Limits')}</h4>
                                         <div className="mb-3 grid gap-2">
-                                            <Label htmlFor="quota_mode">Quota Mode</Label>
+                                            <Label htmlFor="quota_mode">{t('Quota Mode')}</Label>
                                             <select
                                                 id="quota_mode"
                                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                                 {...register('quota_mode')}
                                             >
-                                                <option value="gender_based">Gender based</option>
-                                                <option value="open_total">Open total</option>
-                                                <option value="mixed_total">Mixed total with minimums</option>
+                                                <option value="gender_based">{t('Gender based')}</option>
+                                                <option value="open_total">{t('Open total')}</option>
+                                                <option value="mixed_total">{t('Mixed total with minimums')}</option>
                                             </select>
                                         </div>
                                         <div className="grid grid-cols-3 gap-3">
                                             {quotaMode !== 'gender_based' && (
                                             <div className="grid gap-2">
-                                                <Label htmlFor="max_athletes_total">Max Total Athletes</Label>
+                                                <Label htmlFor="max_athletes_total">{t('Max Total Athletes')}</Label>
                                                 <Input
                                                     id="max_athletes_total"
                                                     type="number"
@@ -307,7 +309,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                             </div>
                                             )}
                                             <div className="grid gap-2">
-                                                <Label htmlFor="max_male_athletes">Max Male Athletes</Label>
+                                                <Label htmlFor="max_male_athletes">{t('Max Male Athletes')}</Label>
                                                 <Input
                                                     id="max_male_athletes"
                                                     type="number"
@@ -318,7 +320,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                                 {errors.max_male_athletes && <p className="text-sm text-destructive">{String(errors.max_male_athletes.message ?? '')}</p>}
                                             </div>
                                             <div className="grid gap-2">
-                                                <Label htmlFor="max_female_athletes">Max Female Athletes</Label>
+                                                <Label htmlFor="max_female_athletes">{t('Max Female Athletes')}</Label>
                                                 <Input
                                                     id="max_female_athletes"
                                                     type="number"
@@ -331,7 +333,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                             {quotaMode === 'mixed_total' && (
                                             <>
                                                 <div className="grid gap-2">
-                                                    <Label htmlFor="min_male_athletes">Min Male Athletes</Label>
+                                                    <Label htmlFor="min_male_athletes">{t('Min Male Athletes')}</Label>
                                                     <Input
                                                         id="min_male_athletes"
                                                         type="number"
@@ -342,7 +344,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                                     {errors.min_male_athletes && <p className="text-sm text-destructive">{String(errors.min_male_athletes.message ?? '')}</p>}
                                                 </div>
                                                 <div className="grid gap-2">
-                                                    <Label htmlFor="min_female_athletes">Min Female Athletes</Label>
+                                                    <Label htmlFor="min_female_athletes">{t('Min Female Athletes')}</Label>
                                                     <Input
                                                         id="min_female_athletes"
                                                         type="number"
@@ -355,7 +357,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                             </>
                                             )}
                                             <div className="grid gap-2">
-                                                <Label htmlFor="max_officials">Max Officials</Label>
+                                                <Label htmlFor="max_officials">{t('Max Officials')}</Label>
                                                 <Input
                                                     id="max_officials"
                                                     type="number"
@@ -371,11 +373,11 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
 
                                 <DialogFooter>
                                     <Button type="button" variant="outline" onClick={closeDialog}>
-                                        Cancel
+                                        {t('Cancel')}
                                     </Button>
                                     <Button type="submit" disabled={isSubmitting}>
                                         <Save className="mr-2 size-4" />
-                                        {editingCategory ? 'Update' : 'Save'}
+                                        {editingCategory ? t('Update') : t('Save')}
                                     </Button>
                                 </DialogFooter>
                             </form>
@@ -385,7 +387,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                 </div>
             }
         >
-            <Head title="Sport Categories" />
+            <Head title={t('Sport Categories')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -400,27 +402,27 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Categories List</CardTitle>
+                    <CardTitle>{t('Categories List')}</CardTitle>
                     <CardDescription>
-                        Categories define the specific competitions or divisions under each sport.
+                        {t('Categories define the specific competitions or divisions under each sport.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Sport</TableHead>
-                                <TableHead>Athlete Quota</TableHead>
-                                <TableHead>Officials</TableHead>
-                                {isSuperAdmin && <TableHead className="text-right">Actions</TableHead>}
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Sport')}</TableHead>
+                                <TableHead>{t('Athlete Quota')}</TableHead>
+                                <TableHead>{t('Officials')}</TableHead>
+                                {isSuperAdmin && <TableHead className="text-right">{t('Actions')}</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {categories.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={isSuperAdmin ? 5 : 4} className="text-center text-muted-foreground">
-                                        No categories yet.
+                                        {t('No categories yet.')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -439,14 +441,14 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                             size="sm"
                                             onClick={() => openEdit(category)}
                                         >
-                                            <Pencil className="mr-1 size-3" /> Edit
+                                            <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
                                         <Button
                                             variant="destructive"
                                             size="sm"
                                             onClick={() => setDeleteCategory(category)}
                                         >
-                                            <Trash2 className="mr-1 size-3" /> Delete
+                                            <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                         </Button>
                                     </TableCell>
                                     )}
@@ -463,17 +465,17 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
             <Dialog open={!!deleteCategory} onOpenChange={(isOpen) => !isOpen && setDeleteCategory(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Category?</DialogTitle>
+                        <DialogTitle>{t('Delete Category?')}</DialogTitle>
                         <DialogDescription>
                             Are you sure you want to delete <strong>{deleteCategory?.name}</strong>? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteCategory(null)}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            Yes, Delete
+                            {t('Yes, Delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -18,6 +18,7 @@ import {
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Medal, Save, Trophy } from 'lucide-react';
 import { type PageProps, type RankingEntry, type Session, type Tournament } from '@/types';
+import { useI18n } from '@/lib/i18n';
 
 interface RankingsIndexProps {
     sessions: Session[];
@@ -42,6 +43,7 @@ const rankColors: Record<number, string> = {
 };
 
 export default function RankingsIndex({ sessions, selectedSession, tournaments, selectedTournament, rankings, events, strategies }: RankingsIndexProps) {
+    const { t } = useI18n();
     const { flash } = usePage<PageProps>().props;
 
     const selectedSessionData = sessions.find(s => s.slug === selectedSession);
@@ -83,7 +85,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Rankings</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Rankings')}</h1>
                         <p className="text-sm text-muted-foreground">
                             View calculated rankings from match results
                         </p>
@@ -91,7 +93,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                 </div>
             }
         >
-            <Head title="Rankings" />
+            <Head title={t('Rankings')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -101,7 +103,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
 
             <Card className="mb-6">
                 <CardHeader>
-                    <CardTitle>Select Session</CardTitle>
+                    <CardTitle>{t('Select Session')}</CardTitle>
                     <CardDescription>
                         A session is one competition (e.g. SAF 2026); its tournaments (e.g. Fasa 1, Fasa 2) can be viewed separately.
                     </CardDescription>
@@ -109,13 +111,13 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                 <CardContent>
                     <div className="flex flex-wrap items-end gap-4">
                         <div className="flex-1">
-                            <label className="text-sm font-medium mb-1 block">Session</label>
+                            <label className="text-sm font-medium mb-1 block">{t('Session')}</label>
                             <select
                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                 value={selectedSession || ''}
                                 onChange={(e) => handleSessionChange(e.target.value)}
                             >
-                                <option value="">-- Select Session --</option>
+                                <option value="">{t('-- Select Session --')}</option>
                                 {sessions.map((s) => (
                                     <option key={s.id} value={s.slug}>
                                         {s.name}
@@ -126,13 +128,13 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
 
                         {tournaments.length > 0 && (
                             <div className="flex-1">
-                                <label className="text-sm font-medium mb-1 block">Tournament (optional)</label>
+                                <label className="text-sm font-medium mb-1 block">{t('Tournament (optional)')}</label>
                                 <select
                                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                     value={selectedTournament || ''}
                                     onChange={(e) => handleTournamentChange(e.target.value)}
                                 >
-                                    <option value="">All Phases (Session Total)</option>
+                                    <option value="">{t('All Phases (Session Total)')}</option>
                                     {tournaments.map((t) => (
                                         <option key={t.id} value={t.slug}>
                                             {t.name}
@@ -157,7 +159,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                     </select>
                                 </div>
                                 <Button type="submit" size="sm" disabled={processing}>
-                                    <Save className="mr-1 size-3" /> Apply
+                                    <Save className="mr-1 size-3" /> {t('Apply')}
                                 </Button>
                             </form>
                         )}
@@ -223,7 +225,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                     {rankings.length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                                No rankings available. Record match results first.
+                                                {t('No rankings available. Record match results first.')}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -269,7 +271,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                     {rankings.length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={10} className="text-center text-muted-foreground">
-                                                No rankings available. Record match results first.
+                                                {t('No rankings available. Record match results first.')}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -318,7 +320,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
             )}
 
             <div className="mt-6 text-xs text-muted-foreground">
-                M5: Basic Ranking Engine. Rankings are computed from match results using the selected strategy.
+                {t('Rankings are computed from match results using the selected strategy.')}
             </div>
         </AuthenticatedLayout>
     );

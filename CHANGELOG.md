@@ -1,4 +1,8 @@
 # Changelog
+- Fixed the unverified-user redirect loop by clearing the protected intended URL before the verification prompt returns to the dashboard; verified-route protection remains enforced.
+- Fixed subfolder session-cookie handling by deriving the cookie path from `APP_URL` (for example `/portal`) when `SESSION_PATH` is not explicitly set.
+
+- Completed a broad EN/BM localization pass across administration and competition pages, forced page remounts after locale switching, added locale-aware date/number helpers, removed duplicate dictionary keys, and verified that all statically referenced translation keys exist in both dictionaries.
 
 ## Unreleased
 

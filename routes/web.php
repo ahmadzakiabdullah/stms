@@ -31,7 +31,17 @@ use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', HealthCheckController::class);
+Route::get('/health', HealthCheckController::class)
+    ->middleware(function (Request $request, \Closure $next) {
+        if (app()->environment('production')) {
+            $token = (string) config('app.health.token');
+            if ($token === '' || ! hash_equals($token, (string) $request->header('X-Health-Token'))) {
+                abort(404);
+            }
+        }
+
+        return $next($request);
+    });
 
 Route::get('/', PublicPortalController::class)->name('public.index');
 Route::redirect('/index.php', '/portal/', 301);
@@ -55,15 +65,19 @@ Route::post('/locale', function (Request $request) {
 Route::get('/portal', PublicPortalController::class);
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Profile remains available for unverified users so they can correct their email.
+Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::group([], function () {
+});
+
+// All operational and administrative functions require a verified email.
+Route::middleware(['auth', 'verified'])->group(function () {
         // Faculty Dashboard is merged into the main dashboard (see DashboardController)
         Route::redirect('/faculty', '/dashboard');
 
@@ -208,12 +222,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Activity Log
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
-        // Notifications
-        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
-        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-        Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-    });
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 });
 
 require __DIR__.'/auth.php';

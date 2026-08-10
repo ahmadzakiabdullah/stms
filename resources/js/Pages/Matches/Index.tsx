@@ -819,12 +819,12 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                 <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
                     <form onSubmit={submitMatch}>
                         <DialogHeader>
-                            <DialogTitle>{editingMatch ? 'Edit Match' : 'Add Match'}</DialogTitle>
-                            <DialogDescription>Set teams, pool, round, venue, schedule and status.</DialogDescription>
+                            <DialogTitle>{editingMatch ? t('Edit Match') : t('Add Match')}</DialogTitle>
+                            <DialogDescription>{t('Set teams, pool, round, venue, schedule and status.')}</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-5 sm:grid-cols-2">
                             <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="event_id">Event</Label>
+                                <Label htmlFor="event_id">{t('Event')}</Label>
                                 <select id="event_id" value={data.event_id} onChange={(event) => setData('event_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm" required>
                                     <option value="">-- Select Event --</option>
                                     {events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}
@@ -832,7 +832,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 {errors.event_id && <p className="text-sm text-destructive">{errors.event_id}</p>}
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="pool_id">Pool</Label>
+                                <Label htmlFor="pool_id">{t('Pool')}</Label>
                                 <select id="pool_id" value={data.pool_id} onChange={(event) => setData('pool_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm">
                                     <option value="">-- No Pool --</option>
                                     {eventPools.map((pool) => <option key={pool.id} value={pool.id}>{pool.name}</option>)}
@@ -840,24 +840,24 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 {errors.pool_id && <p className="text-sm text-destructive">{errors.pool_id}</p>}
                             </div>
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="grid gap-2"><Label htmlFor="round">Round</Label><Input id="round" type="number" min="1" value={data.round} onChange={(event) => setData('round', Number(event.target.value))} /></div>
+                                <div className="grid gap-2"><Label htmlFor="round">{t('Round')}</Label><Input id="round" type="number" min="1" value={data.round} onChange={(event) => setData('round', Number(event.target.value))} /></div>
                                 <div className="grid gap-2"><Label htmlFor="match_number">Match #</Label><Input id="match_number" type="number" min="1" value={data.match_number} onChange={(event) => setData('match_number', Number(event.target.value))} required /></div>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="home_participant_id">Home</Label>
+                                <Label htmlFor="home_participant_id">{t('Home')}</Label>
                                 <select id="home_participant_id" value={data.home_participant_id} onChange={(event) => setData('home_participant_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="away_participant_id">Away</Label>
+                                <Label htmlFor="away_participant_id">{t('Away')}</Label>
                                 <select id="away_participant_id" value={data.away_participant_id} onChange={(event) => setData('away_participant_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
                                 {errors.away_participant_id && <p className="text-sm text-destructive">{errors.away_participant_id}</p>}
                             </div>
                             <div className="grid gap-2"><Label htmlFor="venue">Venue</Label><Input id="venue" value={data.venue} onChange={(event) => setData('venue', event.target.value)} /></div>
                             <div className="grid gap-2"><Label htmlFor="scheduled_at">Scheduled At</Label><Input id="scheduled_at" type="datetime-local" value={data.scheduled_at} onChange={(event) => setData('scheduled_at', event.target.value)} /></div>
-                            <div className="grid gap-2"><Label htmlFor="status">Status</Label><select id="status" value={data.status} onChange={(event) => setData('status', event.target.value as Fixture['status'])} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="scheduled">Scheduled</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+                            <div className="grid gap-2"><Label htmlFor="status">{t('Status')}</Label><select id="status" value={data.status} onChange={(event) => setData('status', event.target.value as Fixture['status'])} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="scheduled">{t('Scheduled')}</option><option value="in_progress">{t('In Progress')}</option><option value="completed">{t('Completed')}</option><option value="cancelled">{t('Cancelled')}</option></select></div>
                             <div className="grid gap-2"><Label htmlFor="notes">Notes</Label><Input id="notes" value={data.notes} onChange={(event) => setData('notes', event.target.value)} /></div>
                         </div>
-                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={processing}><Save className="mr-2 size-4" />{editingMatch ? 'Update Match' : 'Save Match'}</Button></DialogFooter>
+                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>{t('Cancel')}</Button><Button type="submit" disabled={processing}><Save className="mr-2 size-4" />{editingMatch ? t('Update Match') : t('Save')}</Button></DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>

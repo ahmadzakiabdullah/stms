@@ -33,6 +33,7 @@ import { z } from 'zod';
 import { KeyRound, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
+import { useI18n } from '@/lib/i18n';
 import type { User, Role, Organization, Participant, Paginated, Flash, Sport } from '@/types';
 
 const createUserSchema = z.object({
@@ -82,6 +83,7 @@ function UserFormDialog({
     participants: Participant[];
     sports: Sport[];
 }) {
+    const { t } = useI18n();
     const schema = editingUser ? editUserSchema : createUserSchema;
     const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<CreateUserForm>({
         defaultValues: editingUser
@@ -147,44 +149,44 @@ function UserFormDialog({
             <DialogContent className="max-w-lg">
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogHeader>
-                        <DialogTitle>{editingUser ? 'Edit User' : 'Create New User'}</DialogTitle>
+                        <DialogTitle>{editingUser ? t('Edit User') : t('Create New User')}</DialogTitle>
                         <DialogDescription>
-                            {editingUser ? 'Update user information and roles.' : 'Create a new user in the organization.'}
+                            {editingUser ? t('Update user information and roles.') : t('Create a new user in the organization.')}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="name">Name</Label>
+                            <Label htmlFor="name">{t('Name')}</Label>
                             <Input id="name" {...register('name')} required />
                             {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="username">Username</Label>
+                            <Label htmlFor="username">{t('Username')}</Label>
                             <Input id="username" autoComplete="username" {...register('username')} required />
                             {errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">{t('Email')}</Label>
                             <Input id="email" type="email" {...register('email')} required />
                             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password {editingUser && '(leave blank if not changing)'}</Label>
+                            <Label htmlFor="password">{t('Password')} {editingUser && t('Password leave blank')}</Label>
                             <Input id="password" type="password" {...register('password', { required: !editingUser })} />
                             {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">Confirm Password</Label>
+                            <Label htmlFor="password_confirmation">{t('Confirm Password')}</Label>
                             <Input id="password_confirmation" type="password" {...register('password_confirmation', { required: !editingUser })} />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label>Roles</Label>
+                            <Label>{t('Roles')}</Label>
                             <div className="grid gap-2">
                                 {roles.map((role) => (
                                     <label key={role.id} className="flex items-center gap-2 text-sm">
@@ -202,14 +204,14 @@ function UserFormDialog({
 
                         {(isFacultyRepSelected || isDeanSelected) && (
                             <div className="grid gap-2">
-                                <Label htmlFor="participant_id">Faculty (Participant) *</Label>
+                                <Label htmlFor="participant_id">{t('Faculty (Participant) *')}</Label>
                                 <select
                                     id="participant_id"
                                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                     {...register('participant_id')}
                                     required
                                 >
-                                    <option value="">-- Select Faculty --</option>
+                                    <option value="">{t('-- Select Faculty --')}</option>
                                     {participants.map((p) => (
                                         <option key={p.id} value={p.id}>{p.name}</option>
                                     ))}
@@ -220,7 +222,7 @@ function UserFormDialog({
 
                         {isAdminSportSelected && (
                             <div className="grid gap-2">
-                                <Label>Sports (admin-sport scope) *</Label>
+                                <Label>{t('Sports (admin-sport scope) *')}</Label>
                                 <div className="max-h-48 overflow-y-auto rounded-md border p-2">
                                     <div className="grid gap-1">
                                         {sports.map((sport) => (
@@ -236,17 +238,17 @@ function UserFormDialog({
                                     </div>
                                 </div>
                                 {selectedSports?.length === 0 && (
-                                    <p className="text-sm text-destructive">Select at least one sport.</p>
+                                    <p className="text-sm text-destructive">{t('Select at least one sport.')}</p>
                                 )}
                             </div>
                         )}
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                        <Button type="button" variant="outline" onClick={onClose}>{t('Cancel')}</Button>
                         <Button type="submit" disabled={isSubmitting}>
                             <Save className="mr-2 size-4" />
-                            {editingUser ? 'Update' : 'Save'}
+                            {editingUser ? t('Update') : t('Save')}
                         </Button>
                     </DialogFooter>
                 </form>
@@ -257,6 +259,7 @@ function UserFormDialog({
 
 export default function UsersIndex({ users: usersProp, roles, organizations, participants: participantsProp = [], sports: sportsProp = [] }: UsersIndexProps) {
     const { flash } = usePage().props;
+    const { t } = useI18n();
     const [dialogMode, setDialogMode] = useState<null | 'create' | User>(null);
     const [deleteUser, setDeleteUser] = useState<User | null>(null);
     const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
@@ -296,15 +299,15 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Users')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Manage users and roles (M1 - RBAC)
+                            {t('Manage users and roles (M1 - RBAC)')}
                         </p>
                     </div>
 
                     <Button onClick={() => setDialogMode('create')}>
                         <Plus className="mr-2 size-4" />
-                        Add User
+                        {t('Add User')}
                     </Button>
 
                     {dialogMode && (
@@ -320,7 +323,7 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                 </div>
             }
         >
-            <Head title="Users" />
+            <Head title={t('Users')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -330,31 +333,31 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Users List</CardTitle>
+                    <CardTitle>{t('Users List')}</CardTitle>
                     <CardDescription>
-                        Manage users and assign roles.
+                        {t('Manage users and assign roles.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Username</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Organization</TableHead>
-                                <TableHead>Faculty</TableHead>
-                                <TableHead>Roles</TableHead>
-                                <TableHead>Sports</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Username')}</TableHead>
+                                <TableHead>{t('Email')}</TableHead>
+                                <TableHead>{t('Organization')}</TableHead>
+                                <TableHead>{t('Faculty')}</TableHead>
+                                <TableHead>{t('Roles')}</TableHead>
+                                <TableHead>{t('Sports')}</TableHead>
+                                <TableHead>{t('Status')}</TableHead>
+                                <TableHead className="text-right">{t('Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {users.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={9} className="text-center text-muted-foreground">
-                                        No users yet.
+                                        {t('No users yet.')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -383,14 +386,14 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                                                     : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'
                                             }
                                         >
-                                            {user.is_active ? 'Active' : 'Inactive'}
+                                            {user.is_active ? t('Active') : t('Inactive')}
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            title="Reset password"
+                                            title={t('Reset Password')}
                                             onClick={() => { setResetPasswordUser(user); setNewPassword(''); setConfirmPassword(''); }}
                                         >
                                             <KeyRound className="size-3" />
@@ -400,14 +403,14 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
                                             size="sm"
                                             onClick={() => setDialogMode(user)}
                                         >
-                                            <Pencil className="mr-1 size-3" /> Edit
+                                            <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
                                         <Button
                                             variant="destructive"
                                             size="sm"
                                             onClick={() => setDeleteUser(user)}
                                         >
-                                            <Trash2 className="mr-1 size-3" /> Delete
+                                            <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -422,17 +425,17 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
             <Dialog open={!!deleteUser} onOpenChange={(isOpen) => !isOpen && setDeleteUser(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete User?</DialogTitle>
+                        <DialogTitle>{t('Delete User?')}</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteUser?.name}</strong>? This action cannot be undone.
+                            {t('Are you sure you want to delete...This action cannot be undone.')} <strong>{deleteUser?.name}</strong>
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteUser(null)}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button variant="destructive" onClick={handleDelete}>
-                            Yes, Delete
+                            {t('Yes, Delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -441,48 +444,48 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
             <Dialog open={!!resetPasswordUser} onOpenChange={(isOpen) => !isOpen && setResetPasswordUser(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Reset Password</DialogTitle>
+                        <DialogTitle>{t('Reset Password')}</DialogTitle>
                         <DialogDescription>
-                            Set a new password for <strong>{resetPasswordUser?.name}</strong> ({resetPasswordUser?.email})
+                            {t('Set a new password for...')} <strong>{resetPasswordUser?.name ?? t('No user')}</strong> ({resetPasswordUser?.email})
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="reset-password">New Password *</Label>
+                            <Label htmlFor="reset-password">{t('New Password *')}</Label>
                             <Input
                                 id="reset-password"
                                 type="password"
                                 value={newPassword}
                                 onChange={e => setNewPassword(e.target.value)}
-                                placeholder="Min. 8 characters"
+                                placeholder={t('Min. 8 characters')}
                                 required
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="reset-password-confirm">Confirm Password *</Label>
+                            <Label htmlFor="reset-password-confirm">{t('Confirm Password *')}</Label>
                             <Input
                                 id="reset-password-confirm"
                                 type="password"
                                 value={confirmPassword}
                                 onChange={e => setConfirmPassword(e.target.value)}
-                                placeholder="Repeat the new password"
+                                placeholder={t('Repeat the new password')}
                                 required
                             />
                             {confirmPassword && newPassword !== confirmPassword && (
-                                <p className="text-sm text-destructive">Passwords do not match.</p>
+                                <p className="text-sm text-destructive">{t('Passwords do not match.')}</p>
                             )}
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setResetPasswordUser(null)}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button
                             onClick={handleResetPassword}
                             disabled={resetSubmitting || !newPassword || newPassword.length < 8 || newPassword !== confirmPassword}
                         >
                             <KeyRound className="mr-2 size-4" />
-                            Reset Password
+                            {t('Reset Password')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

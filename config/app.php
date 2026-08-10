@@ -90,6 +90,7 @@ return [
     ],
 
     'health' => [
+        'token' => env('HEALTH_ENDPOINT_TOKEN'),
         'monitor_enabled' => (bool) env('HEALTH_MONITOR_ENABLED', false),
         'max_pending_jobs' => (int) env('HEALTH_MAX_PENDING_JOBS', 100),
         'max_failed_jobs' => (int) env('HEALTH_MAX_FAILED_JOBS', 0),

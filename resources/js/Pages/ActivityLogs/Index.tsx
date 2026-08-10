@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Head, router } from '@inertiajs/react';
 import Pagination from '@/components/Pagination';
 import type { Paginated } from '@/types';
+import { formatDateTime, useI18n } from '@/lib/i18n';
 
 interface ActivityLogItem {
     id: number;
@@ -30,6 +31,7 @@ function subjectLabel(type: string): string {
 }
 
 export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, organizations }: Props) {
+    const { locale, t } = useI18n();
     const visit = (changes: Partial<Props['filters']>) => router.get(
         route('activity-logs.index'),
         { ...filters, ...changes },
@@ -39,56 +41,56 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
     return (
         <AuthenticatedLayout
             header={
-                <h1 className="text-2xl font-semibold tracking-tight">Activity Logs</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">{t('Activity Logs')}</h1>
             }
         >
-            <Head title="Activity Logs" />
+            <Head title={t('Activity Logs')} />
 
             <Card>
                 <CardHeader>
-                    <CardTitle>System Activity Log</CardTitle>
+                    <CardTitle>{t('System Activity Log')}</CardTitle>
                 </CardHeader>
                 <CardContent className="border-b pt-0">
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         {isSuperAdmin && (
                             <label className="grid gap-1 text-xs font-medium text-muted-foreground">
-                                Organization
+                                {t('Organization')}
                                 <select aria-label="Filter activity by organization" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.organization_id} onChange={(event) => visit({ organization_id: event.target.value })}>
-                                    <option value="">All organizations</option>
+                                    <option value="">{t('All organizations')}</option>
                                     {organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
                                 </select>
                             </label>
                         )}
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
-                            Event
+                            {t('Event')}
                             <select aria-label="Filter activity by event" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.event} onChange={(event) => visit({ event: event.target.value })}>
-                                <option value="">All events</option>
-                                <option value="created">Created</option>
-                                <option value="updated">Updated</option>
-                                <option value="deleted">Deleted</option>
+                                <option value="">{t('All events')}</option>
+                                <option value="created">{t('Created')}</option>
+                                <option value="updated">{t('Updated')}</option>
+                                <option value="deleted">{t('Deleted')}</option>
                             </select>
                         </label>
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
-                            From
+                            {t('From')}
                             <input aria-label="Activity start date" type="date" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.from} onChange={(event) => visit({ from: event.target.value })} />
                         </label>
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
-                            To
+                            {t('To')}
                             <input aria-label="Activity end date" type="date" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.to} onChange={(event) => visit({ to: event.target.value })} />
                         </label>
                     </div>
                 </CardContent>
                 <CardContent className="p-0">
                     {activities.data.length === 0 ? (
-                        <p className="p-6 text-center text-sm text-muted-foreground">No activity logs yet.</p>
+                        <p className="p-6 text-center text-sm text-muted-foreground">{t('No activity logs yet.')}</p>
                     ) : (
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Description</TableHead>
-                                    <TableHead>Model</TableHead>
-                                    <TableHead>User</TableHead>
-                                    <TableHead>Date</TableHead>
+                                    <TableHead>{t('Description')}</TableHead>
+                                    <TableHead>{t('Model')}</TableHead>
+                                    <TableHead>{t('User')}</TableHead>
+                                    <TableHead>{t('Date')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -104,7 +106,7 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                                             {log.causer ? log.causer.name : '—'}
                                         </TableCell>
                                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                            {log.created_at}
+                                            {formatDateTime(log.created_at, locale)}
                                         </TableCell>
                                     </TableRow>
                                 ))}

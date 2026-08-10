@@ -13,13 +13,13 @@ class EmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_email_verification_screen_is_skipped(): void
+    public function test_email_verification_screen_is_rendered(): void
     {
         $user = User::factory()->unverified()->create();
 
         $response = $this->actingAs($user)->get('/verify-email');
 
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertInertia(fn ($page) => $page->component('Auth/VerifyEmail'));
     }
 
     public function test_email_can_be_verified(): void
@@ -54,5 +54,16 @@ class EmailVerificationTest extends TestCase
         $this->actingAs($user)->get($verificationUrl);
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
+    }
+    public function test_verification_prompt_does_not_redirect_back_to_a_protected_intended_url(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['url.intended' => route('notifications.index')])
+            ->get(route('verification.notice'));
+
+        $response->assertInertia(fn ($page) => $page->component('Auth/VerifyEmail'));
+        $response->assertSessionMissing('url.intended');
     }
 }

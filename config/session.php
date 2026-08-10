@@ -151,7 +151,7 @@ return [
      * Without this, auth cookies are set for "/" and may not be sent
      * for /portal/* requests → users appear logged out or can bypass auth.
      */
-    'path' => env('SESSION_PATH', '/'),
+    // Derive the cookie path from APP_URL for subfolder deployments such as /portal.\r\n    // SESSION_PATH remains an explicit override when the app is behind a proxy.\r\n    'path' => env('SESSION_PATH', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_PATH) ?: '/'),
 
     /*
     |--------------------------------------------------------------------------

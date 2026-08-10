@@ -21,6 +21,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Check, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import type { Paginated, Flash, EventParticipant, Event as EventType } from '@/types';
+import { useI18n } from '@/lib/i18n';
 
 interface RegEventParticipant extends Omit<EventParticipant, 'event' | 'participant'> {
     event?: EventType & {
@@ -46,6 +47,7 @@ const statusBadge: Record<string, { class: string; label: string }> = {
 
 export default function DeanDashboard({ registrations: regsProp, counts = {} }: DeanDashboardProps) {
     const { flash } = usePage<{ flash: Flash }>().props;
+    const { t } = useI18n();
     const [processing, setProcessing] = useState<string | null>(null);
 
     const registrations = Array.isArray(regsProp) ? regsProp : (regsProp?.data ?? []);
@@ -68,15 +70,15 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Dean Dashboard</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Dean Dashboard')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Verify and manage your faculty's event registrations
+                            {t('Verify and manage your faculty\'s event registrations')}
                         </p>
                     </div>
                 </div>
             }
         >
-            <Head title="Dean Dashboard" />
+            <Head title={t('Dean Dashboard')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -88,7 +90,7 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardDescription>Pending</CardDescription>
+                            <CardDescription>{t('Pending')}</CardDescription>
                             <CardTitle className="mt-1 text-3xl text-yellow-600">{pendingCount}</CardTitle>
                         </div>
                         <div className="flex size-11 items-center justify-center rounded-lg bg-yellow-100">
@@ -96,14 +98,14 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                         </div>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
-                        Awaiting verification
+                        {t('Awaiting verification')}
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardDescription>Approved</CardDescription>
+                            <CardDescription>{t('Approved')}</CardDescription>
                             <CardTitle className="mt-1 text-3xl text-emerald-600">{approvedCount}</CardTitle>
                         </div>
                         <div className="flex size-11 items-center justify-center rounded-lg bg-emerald-100">
@@ -111,14 +113,14 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                         </div>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
-                        Verified registrations
+                        {t('Verified registrations')}
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardDescription>Rejected</CardDescription>
+                            <CardDescription>{t('Rejected')}</CardDescription>
                             <CardTitle className="mt-1 text-3xl text-red-600">{rejectedCount}</CardTitle>
                         </div>
                         <div className="flex size-11 items-center justify-center rounded-lg bg-red-100">
@@ -126,7 +128,7 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                         </div>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
-                        Rejected registrations
+                        {t('Rejected registrations')}
                     </CardContent>
                 </Card>
             </div>
@@ -138,21 +140,21 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                         <CardHeader className="pb-3">
                             <CardTitle className="flex items-center gap-2 text-base">
                                 <span className="inline-block size-2 rounded-full bg-yellow-400" />
-                                Pending Verification
+                                {t('Pending Verification')}
                                 <span className="text-sm font-normal text-muted-foreground">({pendingCount})</span>
                             </CardTitle>
-                            <CardDescription>Faculty representatives waiting for your approval</CardDescription>
+                            <CardDescription>{t('Faculty representatives waiting for your approval')}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Event</TableHead>
-                                        <TableHead>Sport</TableHead>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Tournament</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                                        <TableHead>{t('Event')}</TableHead>
+                                        <TableHead>{t('Sport')}</TableHead>
+                                        <TableHead>{t('Category')}</TableHead>
+                                        <TableHead>{t('Tournament')}</TableHead>
+                                        <TableHead>{t('Date')}</TableHead>
+                                        <TableHead className="text-right">{t('Actions')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -175,7 +177,7 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                                                     disabled={processing === reg.id}
                                                     onClick={() => handleAction(reg.id, 'approve')}
                                                 >
-                                                    <Check className="mr-1 size-3" /> Approve
+                                                     <Check className="mr-1 size-3" /> {t('Approve')}
                                                 </Button>
                                                 <Button
                                                     variant="outline"
@@ -184,7 +186,7 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                                                     disabled={processing === reg.id}
                                                     onClick={() => handleAction(reg.id, 'reject')}
                                                 >
-                                                    <X className="mr-1 size-3" /> Reject
+                                                    <X className="mr-1 size-3" /> {t('Reject')}
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
@@ -199,31 +201,31 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                 {(approvedCount > 0 || rejectedCount > 0) && (
                     <Card>
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-base">Verification History</CardTitle>
+                            <CardTitle className="text-base">{t('Verification History')}</CardTitle>
                             <CardDescription>
-                                {approvedCount > 0 && <span className="text-emerald-600">{approvedCount} approved</span>}
+                                {approvedCount > 0 && <span className="text-emerald-600">{approvedCount} {t('approved')}</span>}
                                 {approvedCount > 0 && rejectedCount > 0 && <span> · </span>}
-                                {rejectedCount > 0 && <span className="text-red-600">{rejectedCount} rejected</span>}
-                                {approvedCount === 0 && rejectedCount === 0 && 'No history'}
+                                {rejectedCount > 0 && <span className="text-red-600">{rejectedCount} {t('rejected')}</span>}
+                                {approvedCount === 0 && rejectedCount === 0 && t('No history')}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Event</TableHead>
-                                        <TableHead>Sport</TableHead>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Tournament</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Status</TableHead>
+                                        <TableHead>{t('Event')}</TableHead>
+                                        <TableHead>{t('Sport')}</TableHead>
+                                        <TableHead>{t('Category')}</TableHead>
+                                        <TableHead>{t('Tournament')}</TableHead>
+                                        <TableHead>{t('Date')}</TableHead>
+                                        <TableHead>{t('Status')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {registrations.filter(r => r.status !== 'pending').length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                                No history yet.
+                                             <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                                {t('No history yet.')}
                                             </TableCell>
                                         </TableRow>
                                     ) : (
@@ -238,11 +240,11 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                                                         ? new Date(reg.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' })
                                                         : '—'}
                                                 </TableCell>
-                                                <TableCell>
+                                                 <TableCell>
                                                     <span className={`rounded-full px-2 py-0.5 text-xs capitalize ${statusBadge[reg.status]?.class || 'bg-gray-100 text-gray-600'}`}>
-                                                        {statusBadge[reg.status]?.label || reg.status}
+                                                        {t(statusBadge[reg.status]?.label) || reg.status}
                                                     </span>
-                                                </TableCell>
+                                                 </TableCell>
                                             </TableRow>
                                         ))
                                     )}
@@ -256,7 +258,7 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                     <Card>
                         <CardContent className="py-12 text-center text-muted-foreground">
                             <ShieldCheck className="mx-auto mb-3 size-8 opacity-50" />
-                            No registrations yet for your faculty.
+                            {t('No registrations yet for your faculty.')}
                         </CardContent>
                     </Card>
                 )}

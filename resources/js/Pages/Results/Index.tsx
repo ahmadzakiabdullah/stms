@@ -142,7 +142,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone?:
     );
 }
 
-function MatchupPreview({ match }: { match?: MatchOption }) {
+function MatchupPreview({ match, t }: { match?: MatchOption; t: (key: string) => string }) {
     if (!match) return null;
 
     return (
@@ -166,7 +166,7 @@ function MatchupPreview({ match }: { match?: MatchOption }) {
                             {participantFullName(match.home_participant)}
                         </span>
                     )}
-                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Home</span>
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('Home')}</span>
                 </div>
                 <span className="shrink-0 text-sm font-bold text-muted-foreground">VS</span>
                 <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
@@ -177,7 +177,7 @@ function MatchupPreview({ match }: { match?: MatchOption }) {
                             {participantFullName(match.away_participant)}
                         </span>
                     )}
-                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Away</span>
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('Away')}</span>
                 </div>
             </div>
         </div>
@@ -188,10 +188,12 @@ function WinnerHint({
     match,
     scoreHome,
     scoreAway,
+    t,
 }: {
     match?: MatchOption;
     scoreHome: number | null | undefined;
     scoreAway: number | null | undefined;
+    t: (key: string) => string;
 }) {
     if (!match || scoreHome == null || scoreAway == null) {
         return null;
@@ -200,7 +202,7 @@ function WinnerHint({
     if (scoreHome === scoreAway) {
         return (
             <p className="text-sm text-muted-foreground">
-                Result: <span className="font-semibold">Draw</span>
+                {t('Result')}: <span className="font-semibold">{t('Draw')}</span>
             </p>
         );
     }
@@ -209,7 +211,7 @@ function WinnerHint({
 
     return (
         <p className="text-sm text-muted-foreground">
-            Winner: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{participantName(winner)}</span>
+            {t('Winner')}: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{participantName(winner)}</span>
         </p>
     );
 }
@@ -502,7 +504,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                         )}
                                     </div>
 
-                                    <MatchupPreview match={selectedMatch} />
+                                    <MatchupPreview match={selectedMatch} t={t} />
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
@@ -527,7 +529,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                         </div>
                                     </div>
 
-                                    <WinnerHint match={selectedMatch} scoreHome={scoreHome} scoreAway={scoreAway} />
+                                    <WinnerHint match={selectedMatch} scoreHome={scoreHome} scoreAway={scoreAway} t={t} />
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="winner_participant_id">Winner</Label>

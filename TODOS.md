@@ -13,6 +13,8 @@
 
 - [x] Set English as the default/fallback application language while retaining event-specific Malay public content.
 - [x] Add a multi-language module with English (default) and Bahasa Malaysia locale switching in guest/authenticated layouts, plus localized auth and shared navigation labels.
+- [x] Harden subfolder session-cookie handling for `/portal` deployments to prevent auth redirect loops when `SESSION_PATH` is omitted.
+- [x] Complete the EN/BM localization hardening pass for core MVP administration and competition pages, including fresh-page locale application, locale-aware date formatting, dictionary cleanup, and static key coverage verification.
 
 - [x] Support login using either a unique username or email, including legacy-account backfill and administrator username management.
 

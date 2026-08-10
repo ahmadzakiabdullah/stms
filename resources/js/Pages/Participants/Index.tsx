@@ -32,6 +32,7 @@ import { Upload } from 'lucide-react';
 import { z } from 'zod';
 import { Eye, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 import type { Participant, Session, Paginated, Flash } from '@/types';
 
 const participantSchema = z.object({
@@ -92,6 +93,7 @@ const statusColors: Record<string, string> = {
 
 export default function ParticipantsIndex({ participants: participantsProp, sessions: sessionsProp = [] }: ParticipantsIndexProps) {
     const { flash } = usePage().props;
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingParticipant, setEditingParticipant] = useState<ParticipantRow | null>(null);
     const [deleteParticipant, setDeleteParticipant] = useState<ParticipantRow | null>(null);
@@ -118,9 +120,9 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Participants</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Participants')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Manage athletes and teams participating in tournaments
+                            {t('Manage athletes and teams participating in tournaments')}
                         </p>
                     </div>
 
@@ -131,7 +133,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                         <DialogTrigger asChild>
                             <Button onClick={() => { setEditingParticipant(null); setOpen(true); }}>
                                 <Plus className="mr-2 size-4" />
-                                Add Participant
+                                {t('Add Participant')}
                             </Button>
                         </DialogTrigger>
                             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -146,7 +148,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                 </div>
             }
         >
-            <Head title="Participants" />
+            <Head title={t('Participants')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -161,28 +163,28 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Participants List</CardTitle>
+                    <CardTitle>{t('Participants List')}</CardTitle>
                     <CardDescription>
-                        Athletes and teams registered in the system. Each participant can be registered for multiple tournaments.
+                        {t('Athletes and teams registered in the system...')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Contact</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>User</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Contact')}</TableHead>
+                                <TableHead>{t('Type')}</TableHead>
+                                <TableHead>{t('Status')}</TableHead>
+                                <TableHead>{t('User')}</TableHead>
+                                <TableHead className="text-right">{t('Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {participants.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        No participants yet.
+                                        {t('No participants yet.')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -223,7 +225,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                             ? participant.users.map(u => (
                                                 <div key={u.uuid} className="truncate max-w-[180px]" title={u.email}>{u.name}</div>
                                               ))
-                                            : <span className="text-muted-foreground text-xs italic">No user</span>
+                                            :                                          <span className="text-muted-foreground text-xs italic">{t('No user')}</span>
                                         }
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
@@ -231,10 +233,10 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                             <Eye className="size-3" />
                                         </Button>
                                         <Button variant="outline" size="sm" onClick={() => { setEditingParticipant(participant); setOpen(true); }}>
-                                            <Pencil className="mr-1 size-3" /> Edit
+                                            <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
                                         <Button variant="destructive" size="sm" onClick={() => setDeleteParticipant(participant)}>
-                                            <Trash2 className="mr-1 size-3" /> Delete
+                                            <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -253,17 +255,17 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
             <Dialog open={!!deleteParticipant} onOpenChange={(isOpen) => !isOpen && setDeleteParticipant(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Participant?</DialogTitle>
+                        <DialogTitle>{t('Delete Participant?')}</DialogTitle>
                         <DialogDescription>
                             Are you sure you want to delete <strong>{deleteParticipant?.name}</strong>? This will also remove all their tournament registrations. This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteParticipant(null)}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button variant="destructive" onClick={handleDelete} disabled={false}>
-                            Yes, Delete
+                            {t('Yes, Delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -285,7 +287,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                             )}
                             <div>
                                 <DialogTitle>{viewParticipant?.name}</DialogTitle>
-                                <DialogDescription>Full participant details</DialogDescription>
+                                <DialogDescription>{t('Full participant details')}</DialogDescription>
                             </div>
                         </div>
                     </DialogHeader>
@@ -293,30 +295,30 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                     {viewParticipant && (
                         <div className="grid gap-6 py-4 text-sm">
                             <div>
-                                <h4 className="mb-2 font-semibold text-foreground">Participant Information</h4>
+                                <h4 className="mb-2 font-semibold text-foreground">{t('Participant Information')}</h4>
                                 <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/30 p-3">
-                                    <div><span className="text-muted-foreground">Name</span><p className="font-medium">{viewParticipant.name}</p></div>
-                                    <div><span className="text-muted-foreground">Slug</span><p className="font-medium">{viewParticipant.slug}</p></div>
-                                    <div><span className="text-muted-foreground">Email</span><p className="font-medium">{viewParticipant.email || '—'}</p></div>
-                                    <div><span className="text-muted-foreground">Phone</span><p className="font-medium">{viewParticipant.phone || '—'}</p></div>
-                                    <div><span className="text-muted-foreground">Type</span><p className="font-medium capitalize">{viewParticipant.participant_type}</p></div>
-                                    <div><span className="text-muted-foreground">Team Name</span><p className="font-medium">{viewParticipant.team_name || '—'}</p></div>
-                                    <div><span className="text-muted-foreground">Status</span><p className="font-medium capitalize">{viewParticipant.status}</p></div>
-                                    <div><span className="text-muted-foreground">Active</span><p className="font-medium">{viewParticipant.is_active ? 'Yes' : 'No'}</p></div>
-                                    <div className="col-span-2"><span className="text-muted-foreground">Notes</span><p className="font-medium">{viewParticipant.notes || '—'}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Name')}</span><p className="font-medium">{viewParticipant.name}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Slug')}</span><p className="font-medium">{viewParticipant.slug}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Email')}</span><p className="font-medium">{viewParticipant.email || '—'}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Phone')}</span><p className="font-medium">{viewParticipant.phone || '—'}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Type')}</span><p className="font-medium capitalize">{viewParticipant.participant_type}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Team Name')}</span><p className="font-medium">{viewParticipant.team_name || '—'}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Status')}</span><p className="font-medium capitalize">{viewParticipant.status}</p></div>
+                                    <div><span className="text-muted-foreground">Active</span><p className="font-medium">{viewParticipant.is_active ? t('Yes') : t('No')}</p></div>
+                                    <div className="col-span-2"><span className="text-muted-foreground">{t('Notes')}</span><p className="font-medium">{viewParticipant.notes || '—'}</p></div>
                                     <div><span className="text-muted-foreground">Created</span><p className="font-medium">{new Date(viewParticipant.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</p></div>
                                     <div><span className="text-muted-foreground">Updated</span><p className="font-medium">{new Date(viewParticipant.updated_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</p></div>
                                 </div>
                             </div>
 
                             <div>
-                                <h4 className="mb-2 font-semibold text-foreground">Linked User Accounts</h4>
+                                <h4 className="mb-2 font-semibold text-foreground">{t('Linked User Accounts')}</h4>
                                 {viewParticipant.users && viewParticipant.users.length > 0 ? (
                                     <div className="space-y-2">
                                         {viewParticipant.users.map(u => (
                                             <div key={u.uuid} className="grid grid-cols-2 gap-3 rounded-md border bg-muted/30 p-3">
-                                                <div><span className="text-muted-foreground">Name</span><p className="font-medium">{u.name}</p></div>
-                                                <div><span className="text-muted-foreground">Email</span><p className="font-medium">{u.email}</p></div>
+                                                <div><span className="text-muted-foreground">{t('Name')}</span><p className="font-medium">{u.name}</p></div>
+                                                <div><span className="text-muted-foreground">{t('Email')}</span><p className="font-medium">{u.email}</p></div>
                                                 <div className="col-span-2">
                                                     <span className="text-muted-foreground">Roles</span>
                                                     <p className="font-medium">
@@ -330,7 +332,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                     </div>
                                 ) : (
                                     <div className="rounded-md border bg-muted/30 p-3 text-center text-muted-foreground">
-                                        No user accounts linked to this participant.
+                                        {t('No user accounts linked to this participant.')}
                                     </div>
                                 )}
                             </div>
@@ -339,7 +341,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
 
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setViewParticipant(null)}>
-                            Close
+                            {t('Close')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -366,6 +368,7 @@ interface FormData {
 }
 
 function ParticipantFormDialog({ participant, sessions, onClose }: { participant: ParticipantRow | null; sessions: Session[]; onClose: () => void }) {
+    const { t } = useI18n();
     const [formData, setFormData] = useState<FormData>(() => participant ? {
         session_id: participant.session_id || '',
         name: participant.name,
@@ -444,20 +447,20 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
     return (
         <form onSubmit={onSubmit}>
             <DialogHeader>
-                <DialogTitle>{participant ? 'Edit Participant' : 'Create New Participant'}</DialogTitle>
+                <DialogTitle>{participant ? t('Edit Participant') : t('Create New Participant')}</DialogTitle>
                 <DialogDescription>
-                    Register a new athlete or team in the system.
+                    {t('Register a new athlete or team in the system.')}
                 </DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="name">Name *</Label>
+                    <Label htmlFor="name">{t('Name *')}</Label>
                     <Input
                         id="name"
                         value={formData.name}
                         onChange={e => set('name', e.target.value)}
-                        placeholder="e.g. Ahmad bin Abdullah"
+                        placeholder={t('e.g. Ahmad bin Abdullah')}
                         required
                     />
                     {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
@@ -469,20 +472,20 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
                         id="slug"
                         value={formData.slug}
                         onChange={e => set('slug', e.target.value)}
-                        placeholder="ahmad-bin-abdullah"
+                        placeholder={t('ahmad-bin-abdullah')}
                     />
                     {errors.slug && <p className="text-sm text-destructive">{errors.slug}</p>}
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="session_id">Session</Label>
+                    <Label htmlFor="session_id">{t('Session')}</Label>
                     <select
                         id="session_id"
                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                         value={formData.session_id}
                         onChange={e => set('session_id', e.target.value)}
                     >
-                        <option value="">-- Select Session --</option>
+                        <option value="">{t('-- Select Session --')}</option>
                         {sessions.map((s) => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                         ))}
@@ -491,56 +494,56 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email">{t('Email')}</Label>
                         <Input
                             id="email"
                             type="email"
                             value={formData.email}
                             onChange={e => set('email', e.target.value)}
-                            placeholder="ahmad@example.com"
+                            placeholder={t('ahmad@example.com')}
                         />
                         {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="phone">Phone</Label>
+                        <Label htmlFor="phone">{t('Phone')}</Label>
                         <Input
                             id="phone"
                             value={formData.phone}
                             onChange={e => set('phone', e.target.value)}
-                            placeholder="0123456789"
+                            placeholder={t('0123456789')}
                         />
                     </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="participant_type">Type</Label>
+                        <Label htmlFor="participant_type">{t('Type')}</Label>
                         <select
                             id="participant_type"
                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                             value={formData.participant_type}
                             onChange={e => set('participant_type', e.target.value)}
                         >
-                            <option value="individual">Individual</option>
-                            <option value="team">Team</option>
+                            <option value="individual">{t('Individual')}</option>
+                            <option value="team">{t('Team')}</option>
                         </select>
                     </div>
                 </div>
 
                 {formData.participant_type === 'team' && (
                     <div className="grid gap-2">
-                        <Label htmlFor="team_name">Team Name</Label>
+                        <Label htmlFor="team_name">{t('Team Name')}</Label>
                         <Input
                             id="team_name"
                             value={formData.team_name}
                             onChange={e => set('team_name', e.target.value)}
-                            placeholder="e.g. UFTE Team"
+                            placeholder={t('e.g. UFTE Team')}
                         />
                     </div>
                 )}
 
                 <div className="grid gap-2">
-                    <Label htmlFor="notes">Notes</Label>
+                    <Label htmlFor="notes">{t('Notes')}</Label>
                     <textarea
                         id="notes"
                         className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -550,20 +553,20 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
                 </div>
 
                 <div className="grid gap-2">
-                    <Label>Logo / Crest</Label>
+                    <Label>{t('Logo / Crest')}</Label>
                     <div className="flex items-center gap-3">
                         {logoPreview ? (
                             <img src={logoPreview} alt="Logo preview" className="size-12 rounded-full object-cover border" />
                         ) : (
-                            <div className="flex size-12 items-center justify-center rounded-full border bg-muted text-xs text-muted-foreground">No logo</div>
+                            <div className="flex size-12 items-center justify-center rounded-full border bg-muted text-xs text-muted-foreground">{t('No logo')}</div>
                         )}
                         <div className="flex-1">
                             <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                                <Upload className="mr-1 size-3" /> {logoPreview ? 'Change' : 'Upload'}
+                                <Upload className="mr-1 size-3" /> {logoPreview ? t('Change') : t('Upload')}
                             </Button>
                             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={handleLogoChange} />
                             {logoFile && <p className="mt-1 text-[10px] text-muted-foreground">{logoFile.name}</p>}
-                            <p className="mt-1 text-[10px] text-muted-foreground">JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.</p>
+                            <p className="mt-1 text-[10px] text-muted-foreground">{t('JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.')}</p>
                             {errors.logo && <p className="mt-1 text-sm text-destructive">{errors.logo}</p>}
                         </div>
                     </div>
@@ -572,11 +575,11 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
 
             <DialogFooter>
                 <Button type="button" variant="outline" onClick={onClose}>
-                    Cancel
+                    {t('Cancel')}
                 </Button>
                 <Button type="submit">
                     <Save className="mr-2 size-4" />
-                    {isSubmitting ? 'Processing...' : (participant ? 'Update' : 'Save')}
+                    {isSubmitting ? t('Processing...') : (participant ? t('Update') : t('Save'))}
                 </Button>
             </DialogFooter>
         </form>

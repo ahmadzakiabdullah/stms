@@ -34,14 +34,7 @@ import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
 import type { Organization, Paginated, Flash } from '@/types';
-
-const organizationTypes = [
-    { value: 'national', label: 'National' },
-    { value: 'state', label: 'State' },
-    { value: 'university', label: 'University' },
-    { value: 'school', label: 'School' },
-    { value: 'private', label: 'Private' },
-] as const;
+import { useI18n } from '@/lib/i18n';
 
 const organizationSchema = z.object({
     name: z.string().min(1, 'Name is required').max(255),
@@ -132,14 +125,24 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
         });
     };
 
+    const { t } = useI18n();
+
+    const organizationTypes = [
+        { value: 'national', label: t('National') },
+        { value: 'state', label: t('State') },
+        { value: 'university', label: t('University') },
+        { value: 'school', label: t('School') },
+        { value: 'private', label: t('Private') },
+    ] as const;
+
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Organizations</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Organizations')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Manage organizations in the system (M1 - Foundation)
+                            {t('Manage organizations in the system (M1 - Foundation)')}
                         </p>
                     </div>
 
@@ -150,21 +153,21 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
                         <DialogTrigger asChild>
                             <Button onClick={openCreate}>
                                 <Plus className="mr-2 size-4" />
-                                Add Organization
+                                {t('Add Organization')}
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <DialogHeader>
-                                    <DialogTitle>{editingOrg ? 'Edit Organization' : 'Create New Organization'}</DialogTitle>
+                                    <DialogTitle>{editingOrg ? t('Edit Organization') : t('Create New Organization')}</DialogTitle>
                                     <DialogDescription>
-                                        {editingOrg ? 'Update organization information.' : 'Organizations are the root of the multi-tenancy hierarchy.'}
+                                        {editingOrg ? t('Update organization information.') : t('Organizations are the root of the multi-tenancy hierarchy.')}
                                     </DialogDescription>
                                 </DialogHeader>
 
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="name">Name</Label>
+                                        <Label htmlFor="name">{t('Name')}</Label>
                                         <Input
                                             id="name"
                                             {...register('name')}
@@ -174,50 +177,50 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="slug">Slug (unique)</Label>
+                                        <Label htmlFor="slug">{t('Slug (unique)')}</Label>
                                         <Input
                                             id="slug"
                                             {...register('slug')}
-                                            placeholder="e.g. utm or sukma-2026"
+                                            placeholder={t('e.g. utm or sukma-2026')}
                                             required
                                         />
                                         {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="organization_type">Organization Type</Label>
+                                        <Label htmlFor="organization_type">{t('Organization Type')}</Label>
                                         <select
                                             id="organization_type"
                                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                             {...register('organization_type')}
                                         >
-                                            {organizationTypes.map((t) => (
-                                                <option key={t.value} value={t.value}>
-                                                    {t.label}
+                                            {organizationTypes.map((type) => (
+                                                <option key={type.value} value={type.value}>
+                                                    {type.label}
                                                 </option>
                                             ))}
                                         </select>
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="is_active">Status</Label>
+                                        <Label htmlFor="is_active">{t('Status')}</Label>
                                         <label className="flex items-center gap-2 text-sm">
                                             <input
                                                 type="checkbox"
                                                 {...register('is_active')}
                                             />
-                                            Active
+                                            {t('Active')}
                                         </label>
                                     </div>
                                 </div>
 
                                 <DialogFooter>
                                     <Button type="button" variant="outline" onClick={closeDialog}>
-                                        Cancel
+                                        {t('Cancel')}
                                     </Button>
                                     <Button type="submit" disabled={isSubmitting}>
                                         <Save className="mr-2 size-4" />
-                                        {editingOrg ? 'Update' : 'Save'}
+                                        {editingOrg ? t('Update') : t('Save')}
                                     </Button>
                                 </DialogFooter>
                             </form>
@@ -236,30 +239,30 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Organizations List</CardTitle>
+                    <CardTitle>{t('Organizations List')}</CardTitle>
                     <CardDescription>
-                        Organizations are the root of the hierarchy and multi-tenancy.
+                        {t('Organizations are the root of the hierarchy and multi-tenancy.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Slug</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Parent</TableHead>
-                                <TableHead>Sessions</TableHead>
-                                <TableHead>Latest Session</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Slug')}</TableHead>
+                                <TableHead>{t('Type')}</TableHead>
+                                <TableHead>{t('Status')}</TableHead>
+                                <TableHead>{t('Parent')}</TableHead>
+                                <TableHead>{t('Sessions')}</TableHead>
+                                <TableHead>{t('Latest Session')}</TableHead>
+                                <TableHead className="text-right">{t('Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {organizations.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={8} className="text-center text-muted-foreground">
-                                        No organizations yet. Create the first one.
+                                        {t('No organizations yet. Create the first one.')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -278,7 +281,7 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
                                                     : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'
                                             }
                                         >
-                                            {org.is_active ? 'Active' : 'Inactive'}
+                                            {org.is_active ? t('Active') : t('Inactive')}
                                         </span>
                                     </TableCell>
                                     <TableCell>{org.parent?.name || '-'}</TableCell>
@@ -290,14 +293,14 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
                                             size="sm"
                                             onClick={() => openEdit(org)}
                                         >
-                                            <Pencil className="mr-1 size-3" /> Edit
+                                            <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
                                         <Button
                                             variant="destructive"
                                             size="sm"
                                             onClick={() => setDeleteOrg(org)}
                                         >
-                                            <Trash2 className="mr-1 size-3" /> Delete
+                                            <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -312,17 +315,17 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
             <Dialog open={!!deleteOrg} onOpenChange={(isOpen) => !isOpen && setDeleteOrg(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Organization?</DialogTitle>
+                        <DialogTitle>{t('Delete Organization?')}</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteOrg?.name}</strong>? This action cannot be undone.
+                            {t('Are you sure you want to delete...This action cannot be undone.')} <strong>{deleteOrg?.name}</strong>
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteOrg(null)}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            Yes, Delete
+                            {t('Yes, Delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

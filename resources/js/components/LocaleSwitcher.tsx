@@ -18,7 +18,9 @@ export default function LocaleSwitcher({ compact = false, showLabel = true }: Lo
 
         router.post(route('locale.update'), { locale: value }, {
             preserveScroll: true,
-            preserveState: true,
+            // Locale is page-wide. Remount so every component reads the fresh
+            // locale prop instead of retaining state from the old language.
+            preserveState: false,
             replace: true,
         });
     };

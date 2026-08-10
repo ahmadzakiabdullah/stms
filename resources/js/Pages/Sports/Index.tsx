@@ -34,6 +34,7 @@ import { ChevronDown, ChevronRight, Pencil, Plus, Save, Trash2 } from 'lucide-re
 import { Fragment, useEffect, useRef, useState } from 'react';
 import Pagination from '@/components/Pagination';
 import type { Paginated, Flash, Sport, SportCategory } from '@/types';
+import { useI18n } from '@/lib/i18n';
 
 const sportSchema = z.object({
     name: z.string().min(1, 'Name is required').max(255),
@@ -64,6 +65,7 @@ interface SportsIndexProps {
 
 export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     const { flash, isSuperAdmin = false } = usePage().props;
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingSport, setEditingSport] = useState<Sport | null>(null);
     const [deleteSport, setDeleteSport] = useState<Sport | null>(null);
@@ -270,22 +272,22 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Sports</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Sports')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Manage sports and their categories
+                            {t('Manage sports and their categories')}
                         </p>
                     </div>
 
                     {isSuperAdmin && (
                         <Button onClick={openCreate}>
                             <Plus className="mr-2 size-4" />
-                            Add Sport
+                            {t('Add Sport')}
                         </Button>
                     )}
                 </div>
             }
         >
-            <Head title="Sports" />
+            <Head title={t('Sports')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -300,10 +302,9 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Sports List</CardTitle>
+                    <CardTitle>{t('Sports List')}</CardTitle>
                     <CardDescription>
-                        Click a sport to view and manage its categories. Categories define the competition divisions
-                        (e.g. Men's Singles, Women's Team).
+                        {t('Click a sport to view...')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -311,18 +312,18 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-8" />
-                                <TableHead>Name</TableHead>
-                                <TableHead>Slug</TableHead>
-                                <TableHead>Categories</TableHead>
-                                <TableHead>Status</TableHead>
-                                {isSuperAdmin && <TableHead className="text-right">Actions</TableHead>}
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Slug')}</TableHead>
+                                <TableHead>{t('Categories')}</TableHead>
+                                <TableHead>{t('Status')}</TableHead>
+                                {isSuperAdmin && <TableHead className="text-right">{t('Actions')}</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {sports.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={isSuperAdmin ? 6 : 5} className="text-center text-muted-foreground">
-                                        No sports yet.
+                                        {t('No sports yet.')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -352,7 +353,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="secondary" className="text-xs">
-                                                {(sport.categories?.length ?? 0)} categories
+                                                {(sport.categories?.length ?? 0)} {t('categories')}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
@@ -363,16 +364,16 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                                         : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'
                                                 }
                                             >
-                                                {sport.is_active ? 'Active' : 'Inactive'}
+                                                {sport.is_active ? t('Active') : t('Inactive')}
                                             </span>
                                         </TableCell>
                                         {isSuperAdmin && (
                                         <TableCell className="text-right space-x-2">
                                             <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openEdit(sport); }}>
-                                                <Pencil className="mr-1 size-3" /> Edit
+                                                <Pencil className="mr-1 size-3" /> {t('Edit')}
                                             </Button>
                                             <Button variant="destructive" size="sm" onClick={(e) => { e.stopPropagation(); setDeleteSport(sport); }}>
-                                                <Trash2 className="mr-1 size-3" /> Delete
+                                                <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                             </Button>
                                         </TableCell>
                                         )}
@@ -382,15 +383,15 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                             <TableCell colSpan={isSuperAdmin ? 6 : 5} className="bg-muted/30 p-0">
                                                 <div className="px-6 py-4">
                                                     <div className="flex items-center justify-between mb-3">
-                                                        <h4 className="text-sm font-medium">Categories</h4>
+                                                         <h4 className="text-sm font-medium">{t('Categories')}</h4>
                                                         {isSuperAdmin && (
-                                                        <Button size="sm" variant="outline" onClick={() => openCatCreate(sport.id)}>
-                                                            <Plus className="mr-1 size-3" /> Add Category
-                                                        </Button>
+                                                         <Button size="sm" variant="outline" onClick={() => openCatCreate(sport.id)}>
+                                                             <Plus className="mr-1 size-3" /> {t('Add Category')}
+                                                         </Button>
                                                         )}
                                                     </div>
                                                     {(sport.categories?.length ?? 0) === 0 ? (
-                                                        <p className="text-sm text-muted-foreground">No categories yet for this sport.</p>
+                                                        <p className="text-sm text-muted-foreground">{t('No categories yet for this sport.')}</p>
                                                     ) : (
                                                         <div className="space-y-1">
                                                             {sport.categories?.map((cat) => (
@@ -436,9 +437,9 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                 <DialogContent>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <DialogHeader>
-                            <DialogTitle>{editingSport ? 'Edit Sport' : 'Create New Sport'}</DialogTitle>
+                            <DialogTitle>{editingSport ? t('Edit Sport') : t('Create New Sport')}</DialogTitle>
                             <DialogDescription>
-                                {editingSport ? 'Update sport information.' : 'Sports are the foundation for categories and events.'}
+                                {editingSport ? t('Update sport information.') : t('Sports are the foundation for categories and events.')}
                             </DialogDescription>
                         </DialogHeader>
 
@@ -450,27 +451,27 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
 
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Sport Name</Label>
-                                <Input id="name" {...register('name')} placeholder="e.g. Badminton" required />
+                                <Label htmlFor="name">{t('Sport Name')}</Label>
+                                <Input id="name" {...register('name')} placeholder={t('e.g. Badminton')} required />
                                 {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="slug">Slug (unique)</Label>
+                                <Label htmlFor="slug">{t('Slug (unique)')}</Label>
                                 <Input
-                                    id="slug" {...register('slug')} placeholder="badminton" required
+                                    id="slug" {...register('slug')} placeholder={t('badminton')} required
                                     onChange={(e) => { autoSlugRef.current = false; register('slug').onChange(e); }}
                                 />
                                 {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="icon">Icon URL (optional)</Label>
+                                <Label htmlFor="icon">{t('Icon URL (optional)')}</Label>
                                 <Input id="icon" {...register('icon')} placeholder="https://cdn.simpleicons.org/badminton or any image URL" />
                                 <p className="text-xs text-muted-foreground">
                                     Paste an image link from any icon provider (Simple Icons, Font Awesome CDN, emoji CDN, etc.).
                                 </p>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="icon-file">Or upload an icon image</Label>
+                                <Label htmlFor="icon-file">{t('Or upload an icon image')}</Label>
                                 <Input
                                     id="icon-file"
                                     type="file"
@@ -480,22 +481,22 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                 {iconPreview && (
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                         <img src={iconPreview} alt="Icon preview" className="size-6 rounded border object-contain" />
-                                        Preview
+                                        {t('Preview')}
                                     </div>
                                 )}
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="is_active">Status</Label>
+                                <Label htmlFor="is_active">{t('Status')}</Label>
                                 <label className="flex items-center gap-2 text-sm">
-                                    <input type="checkbox" {...register('is_active')} /> Active
+                                    <input type="checkbox" {...register('is_active')} /> {t('Active')}
                                 </label>
                             </div>
                         </div>
 
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
+                            <Button type="button" variant="outline" onClick={closeDialog}>{t('Cancel')}</Button>
                             <Button type="submit" disabled={isSubmitting}>
-                                <Save className="mr-2 size-4" /> {editingSport ? 'Update' : 'Save'}
+                                <Save className="mr-2 size-4" /> {editingSport ? t('Update') : t('Save')}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -505,14 +506,14 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
             <Dialog open={!!deleteSport} onOpenChange={(isOpen) => !isOpen && setDeleteSport(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Sport?</DialogTitle>
+                        <DialogTitle>{t('Delete Sport?')}</DialogTitle>
                         <DialogDescription>
                             Are you sure you want to delete <strong>{deleteSport?.name}</strong>? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteSport(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>Yes, Delete</Button>
+                        <Button variant="outline" onClick={() => setDeleteSport(null)}>{t('Cancel')}</Button>
+                        <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>{t('Yes, Delete')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -522,11 +523,11 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                 <DialogContent className="max-h-[90vh] overflow-y-auto">
                     <form onSubmit={catSubmit(onCatSubmit)}>
                         <DialogHeader>
-                            <DialogTitle>{editingCat ? 'Edit Category' : 'Add Category'}</DialogTitle>
+                            <DialogTitle>{editingCat ? t('Edit Category') : t('Add Category')}</DialogTitle>
                             <DialogDescription>
                                 {sports.find(s => s.id === catSportId)?.name
-                                    ? `Category for ${sports.find(s => s.id === catSportId)!.name}`
-                                    : 'Create a new category under this sport'}
+                                    ? `${t('Category for')} ${sports.find(s => s.id === catSportId)!.name}`
+                                    : t('Create a new category under this sport')}
                             </DialogDescription>
                         </DialogHeader>
 
@@ -538,34 +539,34 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
 
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="cat-name">Category Name</Label>
-                                <Input id="cat-name" {...catReg('name')} placeholder="e.g. Men's Singles" required />
+                                <Label htmlFor="cat-name">{t('Category Name')}</Label>
+                                <Input id="cat-name" {...catReg('name')} placeholder={t("e.g. Men's Singles")} required />
                                 {catErrors.name && <p className="text-sm text-destructive">{catErrors.name.message}</p>}
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="cat-slug">Slug (unique per sport)</Label>
-                                <Input id="cat-slug" {...catReg('slug')} placeholder="mens-singles" />
+                                <Label htmlFor="cat-slug">{t('Slug (unique per sport)')}</Label>
+                                <Input id="cat-slug" {...catReg('slug')} placeholder={t('mens-singles')} />
                                 {catErrors.slug && <p className="text-sm text-destructive">{catErrors.slug.message}</p>}
                             </div>
 
                             <div className="border-t pt-4">
-                                <h4 className="mb-3 text-sm font-medium">Quota / Participant Limits</h4>
+                                <h4 className="mb-3 text-sm font-medium">{t('Quota / Participant Limits')}</h4>
                                 <div className="mb-3 grid gap-2">
-                                    <Label htmlFor="cat-quota-mode">Quota Mode</Label>
+                                    <Label htmlFor="cat-quota-mode">{t('Quota Mode')}</Label>
                                     <select
                                         id="cat-quota-mode"
                                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                         {...catReg('quota_mode')}
                                     >
-                                        <option value="gender_based">Gender based</option>
-                                        <option value="open_total">Open total</option>
-                                        <option value="mixed_total">Mixed total with minimums</option>
+                                        <option value="gender_based">{t('Gender based')}</option>
+                                        <option value="open_total">{t('Open total')}</option>
+                                        <option value="mixed_total">{t('Mixed total with minimums')}</option>
                                     </select>
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
                                     {catQuotaMode !== 'gender_based' && (
                                     <div className="grid gap-2">
-                                        <Label htmlFor="cat-max-total">Max Total Athletes</Label>
+                                        <Label htmlFor="cat-max-total">{t('Max Total Athletes')}</Label>
                                         <Input
                                             id="cat-max-total"
                                             type="number"
@@ -577,19 +578,19 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                     </div>
                                     )}
                                     <div className="grid gap-2">
-                                        <Label htmlFor="cat-max-male">Max Male Athletes</Label>
+                                        <Label htmlFor="cat-max-male">{t('Max Male Athletes')}</Label>
                                         <Input id="cat-max-male" type="number" min="0" {...catReg('max_male_athletes')} placeholder="e.g. 12" />
                                         {catErrors.max_male_athletes && <p className="text-sm text-destructive">{String(catErrors.max_male_athletes.message ?? '')}</p>}
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="cat-max-female">Max Female Athletes</Label>
+                                        <Label htmlFor="cat-max-female">{t('Max Female Athletes')}</Label>
                                         <Input id="cat-max-female" type="number" min="0" {...catReg('max_female_athletes')} placeholder="e.g. 12" />
                                         {catErrors.max_female_athletes && <p className="text-sm text-destructive">{String(catErrors.max_female_athletes.message ?? '')}</p>}
                                     </div>
                                     {catQuotaMode === 'mixed_total' && (
                                     <>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="cat-min-male">Min Male Athletes</Label>
+                                            <Label htmlFor="cat-min-male">{t('Min Male Athletes')}</Label>
                                             <Input
                                                 id="cat-min-male"
                                                 type="number"
@@ -600,7 +601,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                             {catErrors.min_male_athletes && <p className="text-sm text-destructive">{String(catErrors.min_male_athletes.message ?? '')}</p>}
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="cat-min-female">Min Female Athletes</Label>
+                                            <Label htmlFor="cat-min-female">{t('Min Female Athletes')}</Label>
                                             <Input
                                                 id="cat-min-female"
                                                 type="number"
@@ -613,7 +614,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                     </>
                                     )}
                                     <div className="grid gap-2">
-                                        <Label htmlFor="cat-max-officials">Max Officials</Label>
+                                        <Label htmlFor="cat-max-officials">{t('Max Officials')}</Label>
                                         <Input id="cat-max-officials" type="number" min="0" {...catReg('max_officials')} placeholder="e.g. 5" />
                                         {catErrors.max_officials && <p className="text-sm text-destructive">{String(catErrors.max_officials.message ?? '')}</p>}
                                     </div>
@@ -622,9 +623,9 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                         </div>
 
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={closeCatDialog}>Cancel</Button>
+                            <Button type="button" variant="outline" onClick={closeCatDialog}>{t('Cancel')}</Button>
                             <Button type="submit" disabled={catSubmitting}>
-                                <Save className="mr-2 size-4" /> {editingCat ? 'Update' : 'Save'}
+                                <Save className="mr-2 size-4" /> {editingCat ? t('Update') : t('Save')}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -634,14 +635,14 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
             <Dialog open={!!deleteCat} onOpenChange={(isOpen) => !isOpen && setDeleteCat(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Category?</DialogTitle>
+                        <DialogTitle>{t('Delete Category?')}</DialogTitle>
                         <DialogDescription>
                             Are you sure you want to delete <strong>{deleteCat?.name}</strong>? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteCat(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={handleCatDelete} disabled={catSubmitting}>Yes, Delete</Button>
+                        <Button variant="outline" onClick={() => setDeleteCat(null)}>{t('Cancel')}</Button>
+                        <Button variant="destructive" onClick={handleCatDelete} disabled={catSubmitting}>{t('Yes, Delete Category')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
