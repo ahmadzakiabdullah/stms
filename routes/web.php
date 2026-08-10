@@ -35,7 +35,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', HealthCheckController::class)
     ->middleware(HealthEndpointToken::class);
 
-Route::get('/', PublicPortalController::class)->name('public.index');
+// Some IIS deployments send a non-GET method when resolving the application
+// directory default document. Keep the clean root URL available while the
+// controller remains read-only and only renders the public portal.
+Route::any('/', PublicPortalController::class)->name('public.index');
 Route::redirect('/index.php', '/portal/', 301);
 Route::post('/locale', function (Request $request) {
     $supportedLocales = config('app.supported_locales', []);
