@@ -39,7 +39,7 @@ Route::get('/health', HealthCheckController::class)
 // directory default document. Keep the clean root URL available while the
 // controller remains read-only and only renders the public portal.
 Route::any('/', PublicPortalController::class)->name('public.index');
-Route::redirect('/index.php', '/portal/', 301);
+Route::any('/index.php', static fn () => redirect('/portal/', 301));
 Route::post('/locale', function (Request $request) {
     $supportedLocales = config('app.supported_locales', []);
     if (! is_array($supportedLocales) || $supportedLocales === []) {
@@ -52,12 +52,13 @@ Route::post('/locale', function (Request $request) {
 
     $request->session()->put('locale', $validated['locale']);
 
-    return back();
+    // Use 303 for POST locale changes so Inertia always follows with a GET.
+    return redirect()->back(303);
 })->name('locale.update');
 // IIS includes the /portal mount point in REQUEST_URI. Laravel normalizes both
 // /portal and /portal/ to this route, so redirecting it to APP_URL (/portal)
 // creates a self-redirect in production.
-Route::get('/portal', PublicPortalController::class);
+Route::any('/portal', PublicPortalController::class);
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(config('app.email_verification_required') ? ['auth', 'verified'] : ['auth'])
@@ -166,6 +167,9 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
             Route::post('/event-participants', [EventParticipantController::class, 'store'])->name('event-participants.store');
             Route::post('/dashboard/registrations', [EventParticipantController::class, 'storeBatch'])->name('event-participants.store-batch');
             Route::patch('/event-participants/{eventParticipant}/status', [EventParticipantController::class, 'updateStatus'])->name('event-participants.status');
+            // IIS deployments may reject PATCH before Laravel receives the request.
+            // Keep a POST equivalent for method-constrained subfolder hosting.
+            Route::post('/event-participants/{eventParticipant}/status', [EventParticipantController::class, 'updateStatus'])->name('event-participants.status-post');
             Route::delete('/event-participants/{eventParticipant}', [EventParticipantController::class, 'destroy'])->name('event-participants.destroy');
             Route::post('/event-participants/{eventParticipant}/squad', [EventParticipantController::class, 'storeSquad'])->name('event-participants.squad.store');
             Route::put('/event-participants/{eventParticipant}/squad/{squadMember}', [EventParticipantController::class, 'updateSquad'])->name('event-participants.squad.update');

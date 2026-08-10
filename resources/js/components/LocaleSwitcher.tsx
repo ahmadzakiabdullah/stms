@@ -22,6 +22,10 @@ export default function LocaleSwitcher({ compact = false, showLabel = true }: Lo
             // locale prop instead of retaining state from the old language.
             preserveState: false,
             replace: true,
+            onSuccess: () => {
+                // Ensure the HTML lang attribute and all page props are refreshed.
+                window.location.reload();
+            },
         });
     };
 

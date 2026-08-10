@@ -213,7 +213,6 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
             </nav>
 
             <div className="space-y-2 border-t p-4">
-                <LocaleSwitcher compact />
                 {isSuperAdmin && user?.organization && (
                     <div className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 ring-1 ring-primary/10">
                         <Building2 className="size-3.5 shrink-0 text-primary" />

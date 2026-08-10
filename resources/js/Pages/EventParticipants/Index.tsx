@@ -544,14 +544,14 @@ export default function EventParticipantsIndex({
     };
 
     const approveRegistration = (epId: string) => {
-        router.patch(route('event-participants.status', epId), { status: 'confirmed' }, {
+        router.post(route('event-participants.status-post', epId), { status: 'confirmed' }, {
             preserveScroll: true,
         });
     };
 
     const rejectRegistration = () => {
         if (!rejectTarget) return;
-        router.patch(route('event-participants.status', rejectTarget.epId), { status: 'rejected' }, {
+        router.post(route('event-participants.status-post', rejectTarget.epId), { status: 'rejected' }, {
             preserveScroll: true, onSuccess: () => setRejectTarget(null),
         });
     };

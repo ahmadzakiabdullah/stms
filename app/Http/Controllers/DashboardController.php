@@ -18,6 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,6 +51,10 @@ class DashboardController extends Controller
             try {
                 return $query();
             } catch (\Throwable $e) {
+                Log::warning('Dashboard query failed; using fallback payload.', [
+                    'message' => $e->getMessage(),
+                    'path' => request()->path(),
+                ]);
                 return $default ?? collect();
             }
         };
@@ -72,7 +77,9 @@ class DashboardController extends Controller
             return redirect()->route('dean.dashboard');
         }
 
-        $cacheKey = 'dashboard-v2-'.($user?->getKey() ?? 'guest').'-'.md5(implode('|', [$sportId, $facultyId, $status]));
+        // Bump the namespace when dashboard payload/query definitions change so
+        // an older empty/fallback payload is never reused after deployment.
+        $cacheKey = 'dashboard-v3-'.($user?->getKey() ?? 'guest').'-'.md5(implode('|', [$sportId, $facultyId, $status]));
         $data = Cache::remember($cacheKey, 60, function () use ($safeCount, $safeQuery, $isSuper, $user, $sportId, $facultyId, $status) {
             $stats = [
                 'organizations' => $isSuper
@@ -89,7 +96,9 @@ class DashboardController extends Controller
             ];
 
             $totalEventRegistrations = $safeCount(EventParticipant::class);
-            $participantsWithRegistrations = $safeCount(Participant::class, fn ($q) => $q->whereHas('eventParticipants'));
+            $participantsWithRegistrations = $safeCount(Participant::class, fn ($q) => $q
+                ->where('is_active', true)
+                ->whereHas('eventParticipants'));
 
             $registrationPipeline = $safeQuery(fn () => EventParticipant::query()
                 ->selectRaw('status, count(*) as total')
@@ -143,9 +152,15 @@ class DashboardController extends Controller
                         $q->where('status', $status);
                     }
                 }])
-                ->withCount(['eventParticipants as pending' => fn ($q) => $q->where('status', 'pending')])
-                ->withCount(['eventParticipants as confirmed' => fn ($q) => $q->where('status', 'confirmed')])
-                ->withCount(['eventParticipants as rejected' => fn ($q) => $q->where('status', 'rejected')])
+                ->withCount(['eventParticipants as pending' => function ($q) use ($sportId) {
+                    $q->where('status', 'pending')->when($sportId, fn ($q) => $q->whereHas('event', fn ($q) => $q->where('sport_id', $sportId)));
+                }])
+                ->withCount(['eventParticipants as confirmed' => function ($q) use ($sportId) {
+                    $q->where('status', 'confirmed')->when($sportId, fn ($q) => $q->whereHas('event', fn ($q) => $q->where('sport_id', $sportId)));
+                }])
+                ->withCount(['eventParticipants as rejected' => function ($q) use ($sportId) {
+                    $q->where('status', 'rejected')->when($sportId, fn ($q) => $q->whereHas('event', fn ($q) => $q->where('sport_id', $sportId)));
+                }])
                 ->orderBy('name')
                 ->get(['id', 'name']), collect());
 
