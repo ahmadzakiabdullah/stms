@@ -66,6 +66,7 @@ class DashboardController extends Controller
                     'message' => $e->getMessage(),
                     'path' => request()->path(),
                 ]);
+
                 return $default ?? collect();
             }
         };

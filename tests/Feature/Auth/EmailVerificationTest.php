@@ -61,6 +61,7 @@ class EmailVerificationTest extends TestCase
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
     }
+
     public function test_verification_prompt_does_not_redirect_back_to_a_protected_intended_url(): void
     {
         $user = User::factory()->unverified()->create();
