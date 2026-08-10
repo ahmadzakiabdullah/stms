@@ -34,7 +34,9 @@ class DashboardController extends Controller
         $facultyId = $request->input('faculty_id');
         $status = $request->input('status');
 
-        $safeCount = function (string $modelClass, $query = null) {
+        $queryFailed = false;
+
+        $safeCount = function (string $modelClass, $query = null) use (&$queryFailed) {
             try {
                 $builder = $modelClass::query();
                 if ($query) {
@@ -43,14 +45,23 @@ class DashboardController extends Controller
 
                 return $builder->count();
             } catch (\Throwable $e) {
+                $queryFailed = true;
+
+                Log::warning('Dashboard count query failed; using fallback value.', [
+                    'model' => $modelClass,
+                    'message' => $e->getMessage(),
+                    'path' => request()->path(),
+                ]);
+
                 return 0;
             }
         };
 
-        $safeQuery = function (\Closure $query, $default = null) {
+        $safeQuery = function (\Closure $query, $default = null) use (&$queryFailed) {
             try {
                 return $query();
             } catch (\Throwable $e) {
+                $queryFailed = true;
                 Log::warning('Dashboard query failed; using fallback payload.', [
                     'message' => $e->getMessage(),
                     'path' => request()->path(),
@@ -79,7 +90,7 @@ class DashboardController extends Controller
 
         // Bump the namespace when dashboard payload/query definitions change so
         // an older empty/fallback payload is never reused after deployment.
-        $cacheKey = 'dashboard-v3-'.($user?->getKey() ?? 'guest').'-'.md5(implode('|', [$sportId, $facultyId, $status]));
+        $cacheKey = 'dashboard-v4-'.($user?->organization_id ?? 'all').'-'.($user?->getKey() ?? 'guest').'-'.md5(implode('|', [$sportId, $facultyId, $status]));
         $data = Cache::remember($cacheKey, 60, function () use ($safeCount, $safeQuery, $isSuper, $user, $sportId, $facultyId, $status) {
             $stats = [
                 'organizations' => $isSuper
@@ -216,6 +227,12 @@ class DashboardController extends Controller
                 'registrationPipeline', 'registrationStats', 'facultyStats', 'eventStats', 'sports', 'faculties', 'squadStats'
             );
         });
+
+        // A transient query failure should affect only this response. Never
+        // let a partial fallback payload poison subsequent page refreshes.
+        if ($queryFailed) {
+            Cache::forget($cacheKey);
+        }
 
         return Inertia::render('Dashboard', $data);
     }

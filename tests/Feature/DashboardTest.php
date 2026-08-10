@@ -45,6 +45,31 @@ class DashboardTest extends TestCase
         $this->assertEquals('SUKMA 2026', $recent[0]['name'] ?? null);
     }
 
+    public function test_dashboard_refresh_keeps_the_same_system_overview_payload(): void
+    {
+        $organization = Organization::factory()->create();
+        Session::factory()->create([
+            'organization_id' => $organization->id,
+            'name' => 'SAF 2026',
+            'is_active' => true,
+        ]);
+        $staff = $this->createStaffUser($organization);
+
+        $first = $this->actingAs($staff)->get(route('dashboard'));
+        $refresh = $this->actingAs($staff)->get(route('dashboard'));
+
+        $first->assertOk();
+        $refresh->assertOk();
+
+        $firstProps = $first->viewData('page')['props'] ?? [];
+        $refreshProps = $refresh->viewData('page')['props'] ?? [];
+
+        $this->assertSame($firstProps['stats'], $refreshProps['stats']);
+        $this->assertSame($firstProps['recentSessions'], $refreshProps['recentSessions']);
+        $this->assertSame($firstProps['upcomingEvents'], $refreshProps['upcomingEvents']);
+        $this->assertSame($firstProps['registrationsBySport'], $refreshProps['registrationsBySport']);
+    }
+
     public function test_super_admin_sees_all_in_dashboard(): void
     {
         $orgA = Organization::factory()->create();

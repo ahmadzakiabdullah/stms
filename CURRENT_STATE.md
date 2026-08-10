@@ -8,6 +8,8 @@
 
 **Unreleased hardening work (10 August 2026):** The working tree contains scoped tenant lifecycle handling, tenant-aware queue middleware, explicit public organization/session selection, tenant-safe `User` route binding, report-only CSP hardening (enforcing-ready via `CSP_REPORT_ONLY=false`), a CI tenant-bypass allowlist, corrected per-VU k6 authentication, versioned draw rollback, consistent SVG sanitization, Redis-backed production sessions, consistent `verified` email middleware across all authenticated routes, and a release runbook. A local-disk verification copy passes 394 PHPUnit tests / 1,555 assertions, Pint, TypeScript, production build, bundle budget and both dependency audits. These changes are not yet a connected-CI, tagged or deployed release.
 
+**Administrator dashboard refresh (10 August 2026):** The administrator workspace now presents a whole-system operational overview with prioritized KPIs, readiness indicators, registration pipeline, competition progress and role-aware actions. Partial query fallback payloads are not cached and tenant context is included in cache keys so repeated refreshes retain consistent data.
+
 ---
 
 ## Actual Tech Stack Today

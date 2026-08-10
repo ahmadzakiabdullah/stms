@@ -9,6 +9,9 @@
 
 ### Current Focus (MVP): Production Hardening
 
+- [x] Refactor the administrator dashboard into a responsive whole-system overview and prevent partial fallback payloads from persisting across refreshes.
+- [x] Canonicalize the IIS application-directory request from `/saf/portal` to `/saf/portal/` before Laravel route matching.
+
 - [x] Canonicalize the public URL without index.php and remove the clipped-looking overlap between the SAF hero and summary sections.
 
 - [x] Set English as the default/fallback application language while retaining event-specific Malay public content.

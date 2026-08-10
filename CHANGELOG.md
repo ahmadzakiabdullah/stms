@@ -6,6 +6,9 @@
 
 ## Unreleased
 
+- Refactored the administrator dashboard into a role-aware system command centre with prioritized KPIs, operational readiness, registration pipeline, participation coverage, match completion, upcoming events, sport participation ranking, recent sessions/tournaments, and responsive quick actions.
+- Hardened dashboard refresh behavior: partial query fallbacks are no longer cached, cache keys include tenant context, and regression coverage verifies consistent repeated loads.
+- Canonicalized the IIS application-directory request so `/saf/portal` redirects to `/saf/portal/` before Laravel route matching instead of returning 404.
 - Added a release runbook at `docs/deployment/release-runbook.md` covering versioned release procedure, deployment steps, rollback, expand/contract migration patterns, and post-release monitoring.
 - Applied `verified` email middleware consistently across all authenticated routes (previously only `/dashboard` enforced it).
 - Documented CSP enforcing mode readiness: set `CSP_REPORT_ONLY=false` to enforce after report-only observation period.
