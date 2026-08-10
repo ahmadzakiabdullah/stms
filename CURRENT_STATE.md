@@ -25,7 +25,7 @@
 | Authorization  | Spatie + 12 Policies + Gate in controllers   | Spatie Laravel Permission + Policies + Gates | Implemented |
 | Domain Models  | 16 model files, including tenant/domain models and Setting | Full hierarchy | Implemented |
 | API            | None (web/Inertia only)                      | RESTful `/api/v1` (future)                   | Future      |
-| Tests          | 87 PHP test files; 394 tests and 1,555 assertions in the current local suite, plus 6 Playwright/axe journeys | PHP + browser + accessibility | PHPUnit, Pint, type-check, dependency audits and production build pass from the local verification copy; connected-CI Playwright/axe passed on `ae42a50` |
+| Tests          | 88 PHP test files; 394 tests and 1,555 assertions in the current local suite, plus 6 Playwright/axe journeys | PHP + browser + accessibility | PHPUnit, Pint, type-check, dependency audits and production build pass from the local verification copy; connected-CI Playwright/axe passed on `ae42a50` |
 
 ---
 
@@ -48,10 +48,10 @@
 - **Logo Upload**: Faculty crest/logo upload and display.
 - **Dashboard**: Real data with safe guards, Cache, try/catch (prevents 500s on partial prod DBs).
 - **Public portal**: Bahasa Malaysia SAF 2026 hub at `/` and `/index.php` with schedules, results, progress, sports, and medal standings; only participant display names/logos are exposed.
-- **Routes**: 121 application routes (web + auth); no REST API routes.
+- **Routes**: 123 application routes (web + auth); no REST API routes.
 - **Migrations**: 59 migration files covering domain, framework, fixes, and later features.
 - **Seeding**: `DatabaseSeeder` seeds the 24-sport SAF master list, then `SAF2026DataSeeder` seeds SAF 2026 categories/events with quota fields. Reusable and idempotent.
-- **Tests**: 87 PHP test files; the current local suite covers 394 tests / 1,555 assertions. Six Playwright desktop/mobile journeys, including axe checks, passed in connected CI on commit `ae42a50`.
+- **Tests**: 88 PHP test files; the current local suite covers 394 tests / 1,555 assertions. Six Playwright desktop/mobile journeys, including axe checks, passed in connected CI on commit `ae42a50`.
 - **Docker**: `Dockerfile` + `docker-compose.yml` + nginx/supervisor config.
 - **CI/CD**: `.github/workflows/ci.yml` (Pint lint → PHPUnit → npm build).
 - **Assurance**: PCOV/Clover reporting, Playwright critical journeys, axe WCAG checks, dashboard query budget, k6 thresholds, and frontend bundle budgets.
