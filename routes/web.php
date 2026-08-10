@@ -57,7 +57,7 @@ Route::post('/locale', function (Request $request) {
 Route::get('/portal', PublicPortalController::class);
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(config('app.email_verification_required') ? ['auth', 'verified'] : ['auth'])
     ->name('dashboard');
 
 // Profile remains available for unverified users so they can correct their email.
@@ -69,7 +69,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // All operational and administrative functions require a verified email.
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(config('app.email_verification_required') ? ['auth', 'verified'] : ['auth'])->group(function () {
         // Faculty Dashboard is merged into the main dashboard (see DashboardController)
         Route::redirect('/faculty', '/dashboard');
 
@@ -216,7 +216,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(config('app.email_verification_required') ? ['auth', 'verified'] : ['auth'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');

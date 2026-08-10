@@ -16,6 +16,10 @@ class EmailVerificationPromptController extends Controller
     {
         $request->session()->forget('url.intended');
 
+        if (! config('app.email_verification_required')) {
+            return redirect()->route('dashboard');
+        }
+
         return Inertia::render('Auth/VerifyEmail');
     }
 }

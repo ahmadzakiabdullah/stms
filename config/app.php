@@ -65,6 +65,9 @@ return [
         env('APP_ENV', 'production') !== 'production'
     ),
 
+    // Temporary operational switch. Keep enabled for normal production use.
+    'email_verification_required' => (bool) env('EMAIL_VERIFICATION_REQUIRED', true),
+
     'default_org_slug' => env('DEFAULT_ORG_SLUG'),
 
     'trusted_proxies' => array_values(array_filter(array_map(

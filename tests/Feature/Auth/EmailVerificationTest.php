@@ -13,6 +13,12 @@ class EmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['app.email_verification_required' => true]);
+    }
+
     public function test_email_verification_screen_is_rendered(): void
     {
         $user = User::factory()->unverified()->create();
