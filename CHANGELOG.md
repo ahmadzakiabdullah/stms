@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a release runbook at `docs/deployment/release-runbook.md` covering versioned release procedure, deployment steps, rollback, expand/contract migration patterns, and post-release monitoring.
+- Applied `verified` email middleware consistently across all authenticated routes (previously only `/dashboard` enforced it).
+- Documented CSP enforcing mode readiness: set `CSP_REPORT_ONLY=false` to enforce after report-only observation period.
 - Added repository housekeeping updates: ignored local `.Jules/` artifacts, refreshed i18n architecture docs to match the implemented EN/BM locale module, and documented folder hygiene standards under `docs/`.
 - Standardized core architecture/database terminology to the canonical hierarchy term `Match` while preserving implementation notes that the model class remains `Fixture` due the PHP reserved keyword.
 - Added a non-destructive `tmp/` housekeeping audit report with inventory summary and retention guidance.

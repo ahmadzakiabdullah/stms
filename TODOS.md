@@ -45,6 +45,15 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [ ] Configure a real external Slack/Papertrail or uptime destination and confirm operator receipt. Local critical-webhook transport passed, but external delivery is not yet evidenced.
 - [ ] Copy an actual production backup off-host and complete an approved isolated restore; the sanitized drill validates mechanics and RTO but not production-backup custody/recovery.
 
+### Sprint 4: Release Readiness (10 August 2026)
+
+- [x] Apply `verified` email middleware consistently across all authenticated routes.
+- [x] Document CSP enforcing mode readiness (`CSP_REPORT_ONLY=false`).
+- [x] Add release runbook at `docs/deployment/release-runbook.md`.
+- [ ] Create first versioned release tag (`v0.1.0`) after CI passes on clean tree.
+- [ ] Configure production email provider (SMTP/Ses/Postmark) — replace `MAIL_MAILER=log`.
+- [ ] Enable CSP enforcing mode in production after report-only observation.
+
 - [x] Matches page CRUD restored with pool/round fields and Name–Logo–VS–Logo–Name fixture layout.
 - [x] Matches event filter URLs now use existing event slugs instead of UUID query values.
 - [x] Participant logo upload repair: securely accept sanitized SVG logos and display upload validation errors.

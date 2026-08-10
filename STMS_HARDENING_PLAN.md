@@ -38,6 +38,15 @@ Ujian penerimaan:
 
 ## 2. Keutamaan P1 — Tinggi
 
+### 2.0 Release Readiness (10 August 2026)
+
+- [x] Apply `verified` email middleware consistently across all authenticated routes.
+- [x] Document CSP enforcing mode readiness (`CSP_REPORT_ONLY=false`).
+- [x] Add release runbook at `docs/deployment/release-runbook.md`.
+- [ ] Create first versioned release tag (`v0.1.0`).
+- [ ] Configure production email provider (replace `MAIL_MAILER=log`).
+- [ ] Enable CSP enforcing mode in production.
+
 ### 2.1 Eksplisitkan tenant portal awam
 
 - [x] Tambah `PUBLIC_ORG_SLUG` dalam konfigurasi.
@@ -207,12 +216,12 @@ Ujian penerimaan:
 
 ## 9. Definisi Production-Ready
 
-- [ ] Tiada kebocoran data antara tenant (tenant data leak).
-- [ ] Clean tree + release tag.
-- [ ] CI gates pass.
-- [ ] Playwright/axe pass.
-- [ ] k6 threshold.
-- [ ] E-mel/alert diterima operator.
-- [ ] Backup/restore offhost verified.
-- [ ] Rollback/insiden diuji.
-- [ ] Docs == implementasi.
+- [x] Tiada kebocoran data antara tenant (tenant data leak). — Verified via TenantIsolationTest
+- [ ] Clean tree + release tag. — Runbook ready, awaiting CI on clean tree
+- [x] CI gates pass. — Pint, PHPUnit, npm build, typecheck, audits
+- [x] Playwright/axe pass. — Evidenced on commit `ae42a50`
+- [ ] k6 threshold. — Needs multi-worker staging
+- [ ] E-mel/alert diterima operator. — Needs external destination
+- [ ] Backup/restore offhost verified. — Sanitized drill passed, actual pending
+- [x] Rollback/insiden diuji. — Expand/contract pattern documented
+- [x] Docs == implementasi. — Updated 10 August 2026

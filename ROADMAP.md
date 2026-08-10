@@ -54,6 +54,12 @@
 | 10    | AI Features                 | Low      | ⏳ Deferred |
 | 11    | REST API Layer              | Low      | ⏳ Deferred |
 
-**Fokus semasa:** Production hardening and maintenance — close the security, deployment, observability, and documentation gaps recorded in `docs/audits/2026-07-31-enterprise-audit.md` before describing the system as production-ready.
+**Fokus semasa:** Release readiness — complete operational evidence (k6 multi-worker, external alerting, actual DR drill) and create first versioned release tag.
 
-**Bukti operasi 5 Ogos 2026:** connected-CI Playwright/axe dan restore MySQL AES-256 terasing telah lulus. Baki sebelum tuntutan production-ready ialah k6 berautentikasi pada staging berbilang worker, restore sebenar daripada backup produksi/off-site, dan pengesahan penerimaan amaran oleh operator luar. Rujuk `docs/testing/2026-08-05-operational-drill.md`.
+**Bukti operasi 5 Ogos 2026:** connected-CI Playwright/axe dan restore MySQL AES-256 terasing telah lulus. Baki sebelum tuntutan production-ready:
+1. k6 berautentikasi pada staging berbilang worker (p95 < 750ms)
+2. restore sebenar daripada backup produksi/off-site
+3. pengesahan penerimaan amaran oleh operator luar
+4. release tag `v0.1.0`
+
+Rujuk `docs/testing/2026-08-05-operational-drill.md` dan `docs/deployment/release-runbook.md`.
