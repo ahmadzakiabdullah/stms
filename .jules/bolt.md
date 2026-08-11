@@ -13,3 +13,6 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+## 2024-05-24 - Collection Aggregation Optimization
+**Learning:** Using `->where(...)->count()` multiple times on the same collection inside a loop (especially for nested relations) creates unnecessary O(N) iterations per count. In `FacultyDashboardService`, this was done three times per registration to count athlete and official roles.
+**Action:** Replace multiple `where(...)->count()` calls with a single `->countBy(...)` pass. For nested relations across multiple parents, use `->flatMap->relationName->countBy(...)` to aggregate everything in a single pass over the data.
