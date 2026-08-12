@@ -15,8 +15,8 @@ use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ParticipationConfirmationController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\PublicInformationController;
+use App\Http\Controllers\PublicPortalController;
 use App\Http\Controllers\PublicStorageController;
 use App\Http\Controllers\RankingController;
 use App\Http\Controllers\RegistrationController;
@@ -31,6 +31,7 @@ use App\Http\Controllers\TeamRegistrationFormController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\HealthEndpointToken;
+use App\Services\PublicPortalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -72,11 +73,11 @@ Route::post('/locale', function (Request $request) {
 // creates a self-redirect in production.
 Route::any('/portal', PublicPortalController::class);
 
-Route::get('/medal-tally', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('medal-tally', $service))->name('public.medal-tally');
-Route::get('/sports-programme', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('sports', $service))->name('public.sports');
-Route::get('/schedules', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('schedules', $service))->name('public.schedules');
-Route::get('/results', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('results', $service))->name('public.results');
-Route::get('/contact-us', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('contact-us', $service))->name('public.contact');
+Route::get('/medal-tally', fn (PublicInformationController $controller, PublicPortalService $service) => $controller('medal-tally', $service))->name('public.medal-tally');
+Route::get('/sports-programme', fn (PublicInformationController $controller, PublicPortalService $service) => $controller('sports', $service))->name('public.sports');
+Route::get('/schedules', fn (PublicInformationController $controller, PublicPortalService $service) => $controller('schedules', $service))->name('public.schedules');
+Route::get('/results', fn (PublicInformationController $controller, PublicPortalService $service) => $controller('results', $service))->name('public.results');
+Route::get('/contact-us', fn (PublicInformationController $controller, PublicPortalService $service) => $controller('contact-us', $service))->name('public.contact');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(config('app.email_verification_required') ? ['auth', 'verified'] : ['auth'])
