@@ -116,7 +116,7 @@ export default function Index(props: Props) {
                         <div className="flex flex-col items-center text-center">
                             <div className="form-header-logo flex h-20 items-start justify-center">
                                 <img
-                                    src="/portal/images/utem-logo.svg?v=20260804"
+                                    src={props.organization.logo_url ?? '/images/utem-logo.svg'}
                                     alt="UTeM logo"
                                     width={100}
                                     height={64}

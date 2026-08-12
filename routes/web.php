@@ -16,6 +16,8 @@ use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ParticipationConfirmationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicPortalController;
+use App\Http\Controllers\PublicInformationController;
+use App\Http\Controllers\PublicStorageController;
 use App\Http\Controllers\RankingController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\ReportingController;
@@ -35,6 +37,16 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', HealthCheckController::class)
     ->middleware(HealthEndpointToken::class);
 
+// IIS cannot create Laravel's public/storage junction in this deployment.
+// Serve only files from the configured public disk, while keeping legacy
+// /portal/storage URLs functional for records saved before the root move.
+Route::get('/storage/{path}', PublicStorageController::class)
+    ->where('path', '.*')
+    ->name('public-storage.show');
+Route::get('/portal/storage/{path}', PublicStorageController::class)
+    ->where('path', '.*')
+    ->name('legacy-public-storage.show');
+
 // Some IIS deployments send a non-GET method when resolving the application
 // directory default document. Keep the clean root URL available while the
 // controller remains read-only and only renders the public portal.
@@ -53,12 +65,18 @@ Route::post('/locale', function (Request $request) {
     $request->session()->put('locale', $validated['locale']);
 
     // Use 303 for POST locale changes so Inertia always follows with a GET.
-    return redirect()->back(303);
+    return redirect()->back(303)->withCookie(cookie('app_locale', $validated['locale'], 60 * 24 * 365, '/'));
 })->name('locale.update');
 // IIS includes the /portal mount point in REQUEST_URI. Laravel normalizes both
 // /portal and /portal/ to this route, so redirecting it to APP_URL (/portal)
 // creates a self-redirect in production.
 Route::any('/portal', PublicPortalController::class);
+
+Route::get('/medal-tally', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('medal-tally', $service))->name('public.medal-tally');
+Route::get('/sports-programme', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('sports', $service))->name('public.sports');
+Route::get('/schedules', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('schedules', $service))->name('public.schedules');
+Route::get('/results', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('results', $service))->name('public.results');
+Route::get('/contact-us', fn (PublicInformationController $controller, \App\Services\PublicPortalService $service) => $controller('contact-us', $service))->name('public.contact');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(config('app.email_verification_required') ? ['auth', 'verified'] : ['auth'])
@@ -186,7 +204,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     });
 
     // M4: Result Entry (rate limited for mutations)
-    Route::get('/results', [ResultController::class, 'index'])->name('results.index');
+    Route::get('/results/manage', [ResultController::class, 'index'])->name('results.index');
     Route::middleware('throttle:30,1')->group(function () {
         Route::post('/results', [ResultController::class, 'store'])->name('results.store');
         Route::put('/results/{result}', [ResultController::class, 'update'])->name('results.update');

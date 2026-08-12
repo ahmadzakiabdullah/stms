@@ -13,15 +13,19 @@ import {
     Building2,
     CalendarClock,
     CheckCircle2,
+    CircleAlert,
     ClipboardCheck,
     ClipboardList,
+    Database,
     LayoutGrid,
     ListChecks,
+    Radio,
     ShieldCheck,
     Swords,
     Target,
     Trophy,
     UserCog,
+    Users,
 } from 'lucide-react';
 
 interface BackendStats {
@@ -56,6 +60,17 @@ interface RegistrationStats {
     totalEvents?: number;
 }
 
+interface SystemOverview {
+    users?: number;
+    activeOrganizations?: number;
+    inactiveOrganizations?: number;
+    activeEvents?: number;
+    inactiveEvents?: number;
+    eventsWithoutFixtures?: number;
+    unscheduledFixtures?: number;
+    fixturesByStatus?: Record<string, number>;
+}
+
 interface DashboardProps {
     stats?: BackendStats;
     recentSessions?: Session[];
@@ -67,6 +82,7 @@ interface DashboardProps {
     registrationPipeline?: Record<string, number>;
     registrationStats?: RegistrationStats;
     squadStats?: Record<string, number>;
+    systemOverview?: SystemOverview;
 }
 
 interface ActionItem {
@@ -106,6 +122,7 @@ export default function Dashboard({
     registrationPipeline = {},
     registrationStats = {},
     squadStats = {},
+    systemOverview = {},
 }: DashboardProps) {
     const { auth } = usePage<PageProps>().props;
     const { locale, t } = useI18n();
@@ -120,6 +137,7 @@ export default function Dashboard({
     const roles = new Set((Array.isArray(user?.roles) ? user.roles : []).map((role) => role.name));
     const primaryRole = ['super-admin', 'org-admin', 'admin-sport', 'staff'].find((role) => roles.has(role)) ?? 'system-user';
     const isAdministrator = roles.has('super-admin') || roles.has('org-admin');
+    const isSuperAdmin = roles.has('super-admin');
 
     const pending = Number(pipeline.pending ?? 0);
     const confirmed = Number(pipeline.confirmed ?? 0);
@@ -131,6 +149,15 @@ export default function Dashboard({
     const resultTotal = Math.max(0, Number(safeStats.results ?? 0));
     const squadTotal = Object.values(squads).reduce((sum, value) => sum + Number(value || 0), 0);
     const maxSportRegistrations = Math.max(1, ...safeSports.map((item) => Number(item.total)));
+    const system = systemOverview && typeof systemOverview === 'object' ? systemOverview : {};
+    const fixtureStatus = system.fixturesByStatus && typeof system.fixturesByStatus === 'object' ? system.fixturesByStatus : {};
+    const scheduledFixtures = Number(fixtureStatus.scheduled ?? 0);
+    const liveFixtures = Number(fixtureStatus.in_progress ?? 0);
+    const completedFixtures = Number(fixtureStatus.completed ?? 0);
+    const cancelledFixtures = Number(fixtureStatus.cancelled ?? 0);
+    const unscheduledFixtures = Number(system.unscheduledFixtures ?? 0);
+    const eventsWithoutFixtures = Number(system.eventsWithoutFixtures ?? 0);
+    const operationalIssues = pending + unscheduledFixtures + eventsWithoutFixtures;
 
     const administratorActions: ActionItem[] = [
         { label: 'Review Registrations', description: 'Approve teams and inspect rosters', route: 'event-participants.index', icon: ClipboardCheck },
@@ -161,6 +188,14 @@ export default function Dashboard({
         { label: 'Registration approval', value: confirmed, total: registrationTotal, tone: 'bg-emerald-500' },
         { label: 'Faculty participation', value: participantsWithRegistrations, total: facultyTotal, tone: 'bg-cyan-500' },
         { label: 'Match completion', value: resultTotal, total: matchTotal, tone: 'bg-violet-500' },
+    ];
+
+    const lifecycle = [
+        { label: 'Platform', value: Number(system.activeOrganizations ?? 0), total: Number(safeStats.organizations ?? 0), icon: Building2 },
+        { label: 'Competition setup', value: Number(system.activeEvents ?? 0), total: Number(safeStats.events ?? 0), icon: Target },
+        { label: 'Registration approval', value: confirmed, total: registrationTotal, icon: ClipboardCheck },
+        { label: 'Fixture scheduling', value: Math.max(0, matchTotal - unscheduledFixtures), total: matchTotal, icon: CalendarClock },
+        { label: 'Results completion', value: resultTotal, total: matchTotal, icon: Trophy },
     ];
 
     if (!user) return null;
@@ -194,6 +229,36 @@ export default function Dashboard({
                         <section className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-start gap-3"><div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-100"><ShieldCheck className="size-5 text-amber-700" /></div><div><p className="font-semibold">{pending} {pending === 1 ? t('registration need attention') : t('registrations need attention')}</p><p className="text-sm text-amber-800">{t('Review pending teams before competition preparation continues.')}</p></div></div>
                             <Button asChild size="sm" variant="outline" className="border-amber-300 bg-white text-amber-900 hover:bg-amber-100"><Link href={route('event-participants.index', { status: 'pending' })}>{t('Review now')}</Link></Button>
+                        </section>
+                    )}
+
+                    {isSuperAdmin && (
+                        <section className="space-y-4" aria-labelledby="control-centre-title">
+                            <div className="flex flex-col gap-2 px-1 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-700">{t('Super Admin Control Centre')}</p><h2 id="control-centre-title" className="mt-1 text-xl font-bold tracking-tight text-slate-950">{t('Platform health and competition flow')}</h2></div><div className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${operationalIssues > 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}><span className={`size-2 rounded-full ${operationalIssues > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`}/>{operationalIssues > 0 ? `${operationalIssues} ${t('items need attention')}` : t('Operations on track')}</div></div>
+
+                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                <ControlMetric icon={Building2} label={t('Organizations')} value={Number(system.activeOrganizations ?? 0)} detail={`${system.inactiveOrganizations ?? 0} ${t('inactive')}`} href="organizations.index" tone="bg-blue-50 text-blue-700"/>
+                                <ControlMetric icon={Users} label={t('System users')} value={Number(system.users ?? 0)} detail={t('Accounts across all organizations')} href="users.index" tone="bg-cyan-50 text-cyan-700"/>
+                                <ControlMetric icon={Radio} label={t('Live matches')} value={liveFixtures} detail={`${scheduledFixtures} ${t('scheduled')}`} href="matches.index" tone="bg-rose-50 text-rose-700"/>
+                                <ControlMetric icon={Database} label={t('Recorded results')} value={completedFixtures} detail={`${cancelledFixtures} ${t('cancelled matches')}`} href="results.index" tone="bg-violet-50 text-violet-700"/>
+                            </div>
+
+                            <div className="grid gap-4 xl:grid-cols-[1.5fr_.75fr]">
+                                <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-sm">
+                                    <CardHeader className="border-b border-slate-100"><CardTitle>{t('Competition lifecycle')}</CardTitle><CardDescription>{t('End-to-end progress from platform setup to official results')}</CardDescription></CardHeader>
+                                    <CardContent className="p-0"><div className="grid md:grid-cols-5">{lifecycle.map((step, index) => { const Icon = step.icon; const progress = percentage(step.value, step.total); return <div key={step.label} className="relative border-b border-slate-100 p-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"><div className="mb-5 flex items-center justify-between"><div className={`flex size-10 items-center justify-center rounded-xl ${progress === 100 && step.total > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}><Icon className="size-5"/></div><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">0{index + 1}</span></div><p className="text-sm font-bold text-slate-900">{t(step.label)}</p><p className="mt-1 text-xs tabular-nums text-slate-500">{step.value}/{step.total} · {progress}%</p><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${progress === 100 && step.total > 0 ? 'bg-emerald-500' : 'bg-slate-700'}`} style={{ width: `${progress}%` }}/></div></div>; })}</div></CardContent>
+                                </Card>
+
+                                <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm">
+                                    <CardHeader><div className="flex items-start justify-between"><div><CardTitle>{t('Attention queue')}</CardTitle><CardDescription>{t('Operational blockers requiring action')}</CardDescription></div><CircleAlert className={`size-5 ${operationalIssues > 0 ? 'text-amber-600' : 'text-emerald-600'}`}/></div></CardHeader>
+                                    <CardContent className="space-y-2">
+                                        <AttentionItem label={t('Pending registrations')} value={pending} href={route('event-participants.index', { status: 'pending' })}/>
+                                        <AttentionItem label={t('Events without fixtures')} value={eventsWithoutFixtures} href={route('events.index')}/>
+                                        <AttentionItem label={t('Fixtures without schedule')} value={unscheduledFixtures} href={route('matches.index')}/>
+                                        {operationalIssues === 0 && <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-4 text-sm font-medium text-emerald-800"><CheckCircle2 className="size-5"/>{t('No operational blockers detected.')}</div>}
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </section>
                     )}
 
@@ -283,4 +348,13 @@ function StatusStat({ label, value, tone }: { label: string; value: number; tone
 
 function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
     return <div className="flex min-h-36 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 text-center"><Icon className="mb-2 size-5 text-slate-400" /><p className="text-sm text-muted-foreground">{text}</p></div>;
+}
+
+function ControlMetric({ icon: Icon, label, value, detail, href, tone }: { icon: LucideIcon; label: string; value: number; detail: string; href: string; tone: string }) {
+    return <Link href={route(href)} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"><div className="flex items-start justify-between"><div className={`flex size-11 items-center justify-center rounded-xl ${tone}`}><Icon className="size-5"/></div><ArrowRight className="size-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-600"/></div><p className="mt-5 text-3xl font-black tabular-nums text-slate-950">{value}</p><p className="mt-1 text-sm font-bold text-slate-800">{label}</p><p className="mt-1 text-xs text-slate-500">{detail}</p></Link>;
+}
+
+function AttentionItem({ label, value, href }: { label: string; value: number; href: string }) {
+    if (value <= 0) return null;
+    return <Link href={href} className="group flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 transition hover:bg-amber-100"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-black tabular-nums text-amber-800 shadow-sm">{value}</span><span className="min-w-0 flex-1 text-sm font-semibold text-amber-950">{label}</span><ArrowRight className="size-4 text-amber-500 transition group-hover:translate-x-0.5"/></Link>;
 }

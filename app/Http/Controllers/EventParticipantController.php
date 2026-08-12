@@ -100,6 +100,7 @@ class EventParticipantController extends Controller
 
         $faculties = $this->safeCollectionQuery(function () {
             return Participant::query()
+                ->with(['eventParticipants:id,participant_id,event_id'])
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name']);

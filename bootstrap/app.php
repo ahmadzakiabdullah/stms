@@ -34,6 +34,11 @@ return Application::configure(basePath: dirname(__DIR__))
             Illuminate\Http\Middleware\TrustProxies::class,
             TrustProxies::class,
         );
+
+        // Locale is a non-sensitive preference endpoint. Exclude it from
+        // CSRF validation so subfolder deployments with stale cookie paths
+        // can still switch language and persist the locale cookie.
+        $middleware->validateCsrfTokens(except: ['locale']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -32,7 +32,7 @@ import {
     Users,
     X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Event, Pool, Fixture, Participant, EventParticipant, Flash } from '@/types';
 import { useI18n } from '@/lib/i18n';
 
@@ -124,6 +124,10 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
     const [pendingMoves, setPendingMoves] = useState<Record<string, string>>({});
     const [restoreVersion, setRestoreVersion] = useState<DrawResultProps['drawVersions'][number] | null>(null);
 
+    useEffect(() => {
+        setPools(initialPools);
+    }, [initialPools]);
+
     const allParticipants = pools.flatMap(p =>
         p.event_participants.map(ep => ({ ...ep, currentPoolId: p.id }))
     );
@@ -179,7 +183,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
         router.post(route('events.generate-fixtures', event.slug), {}, { preserveScroll: true });
     };
 
-    const showGenerateFixtures = canEdit && pools.length > 0 && totalFixtures === 0;
+    const showGenerateFixtures = pools.length > 0 && totalFixtures === 0;
 
     return (
         <AuthenticatedLayout
@@ -210,8 +214,9 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                     </Button>
                                 )}
                                 {showGenerateFixtures && (
-                                    <Button size="sm" onClick={handleGenerateFixtures}>
-                                        <Swords className="mr-1 size-4" /> {t('Generate Fixtures')}
+                                    <Button size="sm" onClick={handleGenerateFixtures} disabled={!canEdit}
+                                        title={!canEdit ? t('Fixtures cannot be changed after a match has started.') : t('Create fixtures for all pools')}>
+                                        <Swords className="mr-1 size-4" /> {t('Create Fixtures')}
                                     </Button>
                                 )}
                             </>

@@ -633,6 +633,27 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                 <StatCard label={t('Away Wins')} value={awayWinCount} />
             </div>
 
+            <Card className="mb-5 overflow-hidden border-primary/20 bg-gradient-to-r from-primary/[0.06] via-background to-amber-50/60">
+                <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                    <div className="flex items-start gap-3">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <Swords className="size-5" />
+                        </span>
+                        <div>
+                            <p className="text-sm font-semibold">{t('Result entry workspace')}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{pendingMatches.length > 0
+                                ? `${pendingMatches.length} ${t('matches are waiting for scores. Select an event or record the next result.')}`
+                                : t('All available matches have recorded results.')}</p>
+                        </div>
+                    </div>
+                    {canManage && pendingMatches.length > 0 && (
+                        <Button onClick={() => openCreate(pendingMatches[0])} className="shrink-0">
+                            <Plus className="mr-1.5 size-4" /> {t('Record Next Result')}
+                        </Button>
+                    )}
+                </CardContent>
+            </Card>
+
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <div className="relative">
                     <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -667,10 +688,10 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                         .map((event) => ({
                             event,
                             eventResults: filteredResults.filter((result) => result.match?.event_id === event.id),
+                            pending: countsByEvent.get(event.id)?.pending ?? 0,
                         }))
-                        .filter((group) => group.eventResults.length > 0)
-                        .map(({ event, eventResults }) => {
-                            const pending = countsByEvent.get(event.id)?.pending ?? 0;
+                        .filter((group) => group.eventResults.length > 0 || group.pending > 0)
+                        .map(({ event, eventResults, pending }) => {
 
                             return (
                                 <Card key={event.id}>
@@ -691,7 +712,14 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                         </div>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="overflow-x-auto">
+                                        {eventResults.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 px-6 py-8 text-center">
+                                                <CheckCircle2 className="size-8 text-amber-500" />
+                                                <p className="mt-2 text-sm font-semibold">{t('No results recorded yet')}</p>
+                                                <p className="mt-1 text-xs text-muted-foreground">{pending} {t('matches are waiting for scores.')}</p>
+                                                {canManage && <Button size="sm" className="mt-4" onClick={() => setFilterEventId(event.id)}><Plus className="mr-1 size-3.5" /> {t('Record Results')}</Button>}
+                                            </div>
+                                        ) : <div className="overflow-x-auto">
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
@@ -715,7 +743,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                     ))}
                                                 </TableBody>
                                             </Table>
-                                        </div>
+                                        </div>}
                                     </CardContent>
                                 </Card>
                             );

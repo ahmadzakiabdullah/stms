@@ -17,6 +17,7 @@ use App\Services\FacultyDashboardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -91,7 +92,7 @@ class DashboardController extends Controller
 
         // Bump the namespace when dashboard payload/query definitions change so
         // an older empty/fallback payload is never reused after deployment.
-        $cacheKey = 'dashboard-v4-'.($user?->organization_id ?? 'all').'-'.($user?->getKey() ?? 'guest').'-'.md5(implode('|', [$sportId, $facultyId, $status]));
+        $cacheKey = 'dashboard-v5-'.($user?->organization_id ?? 'all').'-'.($user?->getKey() ?? 'guest').'-'.md5(implode('|', [$sportId, $facultyId, $status]));
         $data = Cache::remember($cacheKey, 60, function () use ($safeCount, $safeQuery, $isSuper, $user, $sportId, $facultyId, $status) {
             $stats = [
                 'organizations' => $isSuper
@@ -153,6 +154,36 @@ class DashboardController extends Controller
                 'totalFaculties' => $safeCount(Participant::class, fn ($q) => $q->where('is_active', true)),
                 'totalEvents' => $safeCount(Event::class, fn ($q) => $q->where('is_active', true)),
             ];
+
+            $systemOverview = $isSuper ? $safeQuery(function () {
+                $row = (array) DB::query()->selectRaw("(SELECT COUNT(*) FROM users) AS users,
+                    (SELECT COUNT(*) FROM organizations WHERE is_active = 1) AS active_organizations,
+                    (SELECT COUNT(*) FROM organizations WHERE is_active = 0) AS inactive_organizations,
+                    (SELECT COUNT(*) FROM events WHERE is_active = 1) AS active_events,
+                    (SELECT COUNT(*) FROM events WHERE is_active = 0) AS inactive_events,
+                    (SELECT COUNT(*) FROM events e WHERE e.is_active = 1 AND NOT EXISTS (SELECT 1 FROM matches m WHERE m.event_id = e.id)) AS events_without_fixtures,
+                    (SELECT COUNT(*) FROM matches WHERE scheduled_at IS NULL AND status IN ('scheduled', 'in_progress')) AS unscheduled_fixtures,
+                    (SELECT COUNT(*) FROM matches WHERE status = 'scheduled') AS fixtures_scheduled,
+                    (SELECT COUNT(*) FROM matches WHERE status = 'in_progress') AS fixtures_in_progress,
+                    (SELECT COUNT(*) FROM matches WHERE status = 'completed') AS fixtures_completed,
+                    (SELECT COUNT(*) FROM matches WHERE status = 'cancelled') AS fixtures_cancelled")->first();
+
+                return [
+                    'users' => (int) ($row['users'] ?? 0),
+                    'activeOrganizations' => (int) ($row['active_organizations'] ?? 0),
+                    'inactiveOrganizations' => (int) ($row['inactive_organizations'] ?? 0),
+                    'activeEvents' => (int) ($row['active_events'] ?? 0),
+                    'inactiveEvents' => (int) ($row['inactive_events'] ?? 0),
+                    'eventsWithoutFixtures' => (int) ($row['events_without_fixtures'] ?? 0),
+                    'unscheduledFixtures' => (int) ($row['unscheduled_fixtures'] ?? 0),
+                    'fixturesByStatus' => [
+                        'scheduled' => (int) ($row['fixtures_scheduled'] ?? 0),
+                        'in_progress' => (int) ($row['fixtures_in_progress'] ?? 0),
+                        'completed' => (int) ($row['fixtures_completed'] ?? 0),
+                        'cancelled' => (int) ($row['fixtures_cancelled'] ?? 0),
+                    ],
+                ];
+            }, []) : [];
 
             $facultyStats = $safeQuery(fn () => Participant::query()
                 ->where('is_active', true)
@@ -225,7 +256,7 @@ class DashboardController extends Controller
                 'stats', 'recentSessions', 'recentTournaments',
                 'totalEventRegistrations', 'participantsWithRegistrations',
                 'upcomingEvents', 'registrationsBySport',
-                'registrationPipeline', 'registrationStats', 'facultyStats', 'eventStats', 'sports', 'faculties', 'squadStats'
+                'registrationPipeline', 'registrationStats', 'systemOverview', 'facultyStats', 'eventStats', 'sports', 'faculties', 'squadStats'
             );
         });
 

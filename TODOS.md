@@ -9,6 +9,9 @@
 
 ### Current Focus (MVP): Production Hardening
 
+- [x] Refactor event registration workspace dialog to support multi-event batch registration for administrators, with selection summary and participant reset safety.
+- [x] Refresh event registration workspace UX with accurate totals and a guided administrator quick-registration action.
+
 - [x] Refactor the administrator dashboard into a responsive whole-system overview and prevent partial fallback payloads from persisting across refreshes.
 - [x] Canonicalize the IIS application-directory request from `/saf/portal` to `/saf/portal/` before Laravel route matching.
 
@@ -67,6 +70,12 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Production `/portal/` redirect-loop recovery: render the public portal at the IIS mount path instead of redirecting the normalized Laravel route back to itself.
 - [x] Temporarily make email verification optional: unverified authenticated users may enter the system and `/verify-email` redirects to the dashboard.
 - [x] Link the authenticated desktop/mobile sidebar logo and brand area to the dashboard.
+- [x] Link header logo and application name to the public home URL, including the `/saf/portal/` subfolder.
+- [x] Remove remaining hardcoded `/portal/` public-header and canonical links so the deployed subfolder is preserved.
+- [x] Use the organization logo from Settings in the public portal header.
+- [x] Preserve locale selection with a root-path fallback cookie for deployments with legacy session cookie paths.
+- [x] Allow the locale preference endpoint to work behind the legacy IIS subfolder CSRF-cookie mismatch.
+- [x] Register the locale CSRF exemption through Laravel's global middleware configuration.
 - [x] Restore the production public portal data selection with explicit `utem` organization and `saf-2026` session slugs.
 - [x] Show undated scheduled fixtures on the public portal as dates to be determined instead of hiding the schedule.
 - [x] Production-wide bootstrap 500 recovery: defer the explicit trusted-proxy allowlist lookup until request middleware execution and cover it with a regression test.

@@ -695,6 +695,8 @@ const en: Translations = {
     'Save Changes': 'Save Changes',
     'Edit Pools': 'Edit Pools',
     'Generate Fixtures': 'Generate Fixtures',
+    'Create Fixtures': 'Create Fixtures',
+    'Create fixtures for all pools': 'Create fixtures for all pools',
     'Completion': 'Completion',
     'Edit mode: choose a new pool for each participant you want to move, then save.': 'Edit mode: choose a new pool for each participant you want to move, then save.',
     'Fixtures will be generated after you click Generate Fixtures.': 'Fixtures will be generated after you click Generate Fixtures.',
@@ -1488,6 +1490,9 @@ const ms: Translations = {
     'Save Changes': 'Simpan Perubahan',
     'Edit Pools': 'Sunting Kolam',
     'Generate Fixtures': 'Jana Perlawanan',
+    'Create Fixtures': 'Cipta Perlawanan',
+    'Create fixtures for all pools': 'Cipta perlawanan untuk semua kumpulan',
+    'Fixtures cannot be changed after a match has started.': 'Perlawanan tidak boleh diubah selepas perlawanan bermula.',
     'Completion': 'Kesempurnaan',
     'Edit mode: choose a new pool for each participant you want to move, then save.': 'Mod sunting: pilih kolam baharu untuk setiap peserta yang ingin dipindahkan, kemudian simpan.',
     'Fixtures will be generated after you click Generate Fixtures.': 'Perlawanan akan dijana selepas klik Jana Perlawanan.',
@@ -1625,6 +1630,58 @@ Object.assign(ms, {
 });
 
 Object.assign(en, {
+    'View schedule': 'View schedule', 'Live competition': 'Live competition',
+    'Follow upcoming fixtures and plan your support.': 'Follow upcoming fixtures and plan your support.',
+    'All sports': 'All sports', 'View full schedule': 'View full schedule', 'View all': 'View all',
+    'Standings': 'Standings', 'View full standings': 'View full standings',
+});
+Object.assign(ms, {
+    'View schedule': 'Lihat jadual', 'Live competition': 'Pertandingan langsung',
+    'Follow upcoming fixtures and plan your support.': 'Ikuti perlawanan akan datang dan rancang sokongan anda.',
+    'All sports': 'Semua sukan', 'View full schedule': 'Lihat jadual penuh', 'View all': 'Lihat semua',
+    'Standings': 'Kedudukan', 'View full standings': 'Lihat kedudukan penuh',
+});
+
+Object.assign(en, {
+    'Medal Tally': 'Medal Tally', 'Contingent performance': 'Contingent performance',
+    'Official standings based on verified gold, silver and bronze medals.': 'Official standings based on verified gold, silver and bronze medals.',
+    'Competition Schedules': 'Competition Schedules', 'Upcoming matches': 'Upcoming matches',
+    'Dates, times and venues for the Inter-Faculty Sports competition.': 'Dates, times and venues for the Inter-Faculty Sports competition.',
+    'Official Results': 'Official Results', 'Latest results': 'Latest results',
+    'Completed match scores verified by the secretariat.': 'Completed match scores verified by the secretariat.',
+    'Contact Us': 'Contact Us', 'SAF UTeM Secretariat': 'SAF UTeM Secretariat',
+    'Official channels for competition, schedule and contingent management enquiries.': 'Official channels for competition, schedule and contingent management enquiries.',
+    'Portal Home': 'Portal Home', 'Official Portal': 'Official Portal', 'Medals': 'Medals', 'Contact': 'Contact',
+    'Log in': 'Log in', 'Sport': 'Sport', 'Match': 'Match', 'Finished': 'Finished',
+    'Venue to be announced': 'Venue to be announced', 'Last updated': 'Last updated',
+    'Medal standings are not available yet.': 'Medal standings are not available yet.',
+    'The competition schedule has not been published yet.': 'The competition schedule has not been published yet.',
+    'No official results have been recorded yet.': 'No official results have been recorded yet.',
+    'For competition, schedule and participation enquiries, please contact the secretariat through UTeM Sports Centre.': 'For competition, schedule and participation enquiries, please contact the secretariat through UTeM Sports Centre.',
+    'Correspondence address': 'Correspondence address', 'The secretariat address will be updated.': 'The secretariat address will be updated.',
+    'Universiti Teknikal Malaysia Melaka': 'Universiti Teknikal Malaysia Melaka', 'Contact the secretariat': 'Contact the secretariat',
+});
+Object.assign(ms, {
+    'Medal Tally': 'Kedudukan Pingat', 'Contingent performance': 'Prestasi Kontinjen',
+    'Official standings based on verified gold, silver and bronze medals.': 'Kedudukan rasmi berdasarkan emas, perak dan gangsa yang telah disahkan.',
+    'Competition Schedules': 'Jadual Pertandingan', 'Upcoming matches': 'Perlawanan Akan Datang',
+    'Dates, times and venues for the Inter-Faculty Sports competition.': 'Tarikh, masa dan lokasi pertandingan Sukan Antara Fakulti.',
+    'Official Results': 'Keputusan Rasmi', 'Latest results': 'Keputusan Terkini',
+    'Completed match scores verified by the secretariat.': 'Skor perlawanan yang telah selesai dan disahkan oleh urus setia.',
+    'Contact Us': 'Hubungi Kami', 'SAF UTeM Secretariat': 'Sekretariat SAF UTeM',
+    'Official channels for competition, schedule and contingent management enquiries.': 'Saluran rasmi untuk pertanyaan berkaitan pertandingan dan pengurusan kontinjen.',
+    'Portal Home': 'Laman Utama', 'Official Portal': 'Portal Rasmi', 'Medals': 'Pingat', 'Contact': 'Hubungi',
+    'Log in': 'Log masuk', 'Sport': 'Sukan', 'Match': 'Perlawanan', 'Finished': 'Selesai',
+    'Venue to be announced': 'Lokasi akan diumumkan', 'Last updated': 'Dikemas kini',
+    'Medal standings are not available yet.': 'Kedudukan pingat belum tersedia.',
+    'The competition schedule has not been published yet.': 'Jadual pertandingan belum diterbitkan.',
+    'No official results have been recorded yet.': 'Belum ada keputusan rasmi direkodkan.',
+    'For competition, schedule and participation enquiries, please contact the secretariat through UTeM Sports Centre.': 'Untuk pertanyaan pertandingan, jadual dan penyertaan, sila hubungi sekretariat melalui Pusat Sukan UTeM.',
+    'Correspondence address': 'Alamat Urusan', 'The secretariat address will be updated.': 'Alamat sekretariat akan dikemas kini.',
+    'Universiti Teknikal Malaysia Melaka': 'Universiti Teknikal Malaysia Melaka', 'Contact the secretariat': 'Hubungi sekretariat',
+});
+
+Object.assign(en, {
     'Official sports information portal': 'Official sports information portal',
     'Follow schedules, latest results and medal standings in one official view.': 'Follow schedules, latest results and medal standings in one official view.',
     'Competition standings': 'Competition standings', 'Fixtures completed': 'Fixtures completed',
@@ -1642,6 +1699,64 @@ Object.assign(en, { Features: 'Features', 'How it works': 'How it works', About:
 Object.assign(ms, { Features: 'Ciri-ciri', 'How it works': 'Cara ia berfungsi', About: 'Tentang', Welcome: 'Selamat Datang', 'Tournament Portal': 'Portal Kejohanan' });
 Object.assign(en, { Scheduled: 'Scheduled', 'In Progress': 'In Progress', Cancelled: 'Cancelled', Drawn: 'Drawn', 'View Draw': 'View Draw', Matchup: 'Matchup', Actions: 'Actions', 'Pending Matches': 'Pending Matches', 'Recorded Results': 'Recorded Results', 'No Pools': 'No Pools' });
 Object.assign(ms, { Scheduled: 'Dijadualkan', 'In Progress': 'Sedang Berlangsung', Cancelled: 'Dibatalkan', Drawn: 'Telah Diundi', 'View Draw': 'Lihat Undian', Matchup: 'Pertemuan', Actions: 'Tindakan', 'Pending Matches': 'Perlawanan Menunggu', 'Recorded Results': 'Keputusan Direkod', 'No Pools': 'Tiada Kumpulan' });
+Object.assign(en, {
+    'Official portal': 'Official Portal',
+    'Official information hub': 'Official information hub',
+    'Follow schedules, latest results and medal standings in one official view.': 'Follow schedules, latest results and medal standings in one official view.',
+    'Competition progress': 'Competition progress',
+    of: 'of',
+    'matches completed': 'matches completed',
+    'Location to be announced': 'Location to be announced',
+    'To be determined': 'To be determined',
+});
+Object.assign(ms, {
+    'Official portal': 'Portal Rasmi',
+    'Official information hub': 'Hab informasi rasmi',
+    'Follow schedules, latest results and medal standings in one official view.': 'Ikuti jadual pertandingan, keputusan terkini dan kedudukan pingat dalam satu paparan rasmi.',
+    'Competition progress': 'Kemajuan pertandingan',
+    of: 'daripada',
+    'matches completed': 'perlawanan selesai',
+    'Location to be announced': 'Lokasi akan diumumkan',
+    'To be determined': 'Akan ditentukan',
+});
+Object.assign(en, {
+    'Filter fixtures': 'Filter fixtures', 'Find your match': 'Find your match', 'All venues': 'All venues',
+    'All groups': 'All groups', Reset: 'Reset', 'All sports': 'All sports', 'Filters applied': 'Filters applied',
+    'Date to be announced': 'Date to be announced', 'No matches match the selected filters.': 'No matches match the selected filters.',
+    'Semi Final': 'Semi Final', 'Bronze Match': 'Bronze Match', Final: 'Final', 'Group Stage': 'Group Stage',
+    Round: 'Round', TBD: 'TBD', 'Kick-off': 'Kick-off',
+});
+Object.assign(ms, {
+    'Filter fixtures': 'Tapis jadual', 'Find your match': 'Cari perlawanan anda', 'All venues': 'Semua venue',
+    'All groups': 'Semua kumpulan', Reset: 'Tetapkan semula', 'All sports': 'Semua sukan', 'Filters applied': 'Penapis digunakan',
+    'Date to be announced': 'Tarikh akan diumumkan', 'No matches match the selected filters.': 'Tiada perlawanan sepadan dengan penapis dipilih.',
+    'Semi Final': 'Separuh Akhir', 'Bronze Match': 'Penentuan Gangsa', Final: 'Akhir', 'Group Stage': 'Peringkat Kumpulan',
+    Round: 'Pusingan', TBD: 'Belum ditetapkan', 'Kick-off': 'Mula',
+});
+Object.assign(en, {
+    'Super Admin Control Centre': 'Super Admin Control Centre', 'Platform health and competition flow': 'Platform health and competition flow',
+    'items need attention': 'items need attention', 'Operations on track': 'Operations on track', 'System users': 'System users',
+    'Accounts across all organizations': 'Accounts across all organizations', 'Live matches': 'Live matches', scheduled: 'scheduled',
+    'Recorded results': 'Recorded results', 'cancelled matches': 'cancelled matches', 'Competition lifecycle': 'Competition lifecycle',
+    'End-to-end progress from platform setup to official results': 'End-to-end progress from platform setup to official results',
+    Platform: 'Platform', 'Competition setup': 'Competition setup', 'Fixture scheduling': 'Fixture scheduling',
+    'Results completion': 'Results completion', 'Attention queue': 'Attention queue',
+    'Operational blockers requiring action': 'Operational blockers requiring action', 'Pending registrations': 'Pending registrations',
+    'Events without fixtures': 'Events without fixtures', 'Fixtures without schedule': 'Fixtures without schedule',
+    'No operational blockers detected.': 'No operational blockers detected.', inactive: 'inactive',
+});
+Object.assign(ms, {
+    'Super Admin Control Centre': 'Pusat Kawalan Super Admin', 'Platform health and competition flow': 'Kesihatan platform dan aliran pertandingan',
+    'items need attention': 'perkara perlu perhatian', 'Operations on track': 'Operasi berjalan lancar', 'System users': 'Pengguna sistem',
+    'Accounts across all organizations': 'Akaun merentas semua organisasi', 'Live matches': 'Perlawanan langsung', scheduled: 'dijadualkan',
+    'Recorded results': 'Keputusan direkod', 'cancelled matches': 'perlawanan dibatalkan', 'Competition lifecycle': 'Kitar hayat pertandingan',
+    'End-to-end progress from platform setup to official results': 'Kemajuan menyeluruh daripada persediaan platform hingga keputusan rasmi',
+    Platform: 'Platform', 'Competition setup': 'Persediaan pertandingan', 'Fixture scheduling': 'Penjadualan perlawanan',
+    'Results completion': 'Penyelesaian keputusan', 'Attention queue': 'Senarai perhatian',
+    'Operational blockers requiring action': 'Halangan operasi yang memerlukan tindakan', 'Pending registrations': 'Pendaftaran belum diproses',
+    'Events without fixtures': 'Acara tanpa perlawanan', 'Fixtures without schedule': 'Perlawanan tanpa jadual',
+    'No operational blockers detected.': 'Tiada halangan operasi dikesan.', inactive: 'tidak aktif',
+});
 
 const dictionaries: Record<string, Translations> = { en, ms };
 

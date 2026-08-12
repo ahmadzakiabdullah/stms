@@ -132,10 +132,10 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
 
     return (
         <aside className={mobile ? 'flex h-full flex-col bg-sidebar' : 'hidden h-screen w-72 shrink-0 border-r bg-sidebar lg:sticky lg:top-0 lg:flex lg:flex-col'}>            <Link
-                href={route('dashboard')}
+                href={route('public.index')}
                 onClick={onNavigate}
                 className="flex h-16 items-center gap-3 border-b px-5 transition hover:bg-sidebar-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-                aria-label={t('Go to dashboard')}
+                aria-label={t('Go to public home')}
             >
                 {logoUrl ? (
                     <img src={logoUrl} alt="Logo" className="h-9 w-auto rounded object-contain" />

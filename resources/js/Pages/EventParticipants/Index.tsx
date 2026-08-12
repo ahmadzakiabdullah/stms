@@ -51,7 +51,7 @@ interface ParticipantWithEvents extends Participant {
 interface EventParticipantsIndexProps {
     participants: Paginated<ParticipantWithEvents> | ParticipantWithEvents[];
     events: (EventType & { sport?: { name: string }; sport_category?: { name: string }; tournament?: { name: string } })[];
-    faculties?: { id: string; name: string }[];
+    faculties?: ParticipantWithEvents[];
     isFacultyRepresentative?: boolean;
     statusCounts?: Record<string, number>;
 }
@@ -135,10 +135,20 @@ function AddEventDialog({
     participants?: ParticipantWithEvents[];
 }) {
     const { t } = useI18n();
-    const [selectedEventId, setSelectedEventId] = useState('');
+    const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
     const [selectedParticipantId, setSelectedParticipantId] = useState(participantId);
     const [search, setSearch] = useState('');
     const [groupBy, setGroupBy] = useState<'tournament' | 'sport'>('sport');
+    const [showRegistered, setShowRegistered] = useState(false);
+
+    useEffect(() => {
+        if (open) {
+            setSelectedParticipantId(participantId);
+            setSelectedEventIds([]);
+            setSearch('');
+            setShowRegistered(false);
+        }
+    }, [open, participantId]);
 
     const registeredIds = useMemo(() => {
         const pid = selectedParticipantId || participantId;
@@ -150,11 +160,11 @@ function AddEventDialog({
     const filtered = useMemo(() => {
         const q = search.toLowerCase();
         return events.filter(
-            (e) => !registeredIds.includes(e.id) &&
+            (e) => (showRegistered || !registeredIds.includes(e.id)) &&
                 (e.name.toLowerCase().includes(q) || e.sport?.name?.toLowerCase().includes(q) ||
                  e.sport_category?.name?.toLowerCase().includes(q) || e.tournament?.name?.toLowerCase().includes(q))
         );
-    }, [search, events, registeredIds]);
+    }, [search, events, registeredIds, showRegistered]);
 
     const grouped = useMemo(() => {
         const g: Record<string, typeof filtered> = {};
@@ -166,16 +176,26 @@ function AddEventDialog({
         return g;
     }, [filtered, groupBy]);
 
+    const reset = () => {
+        setSelectedEventIds([]); setSelectedParticipantId(''); setSearch(''); setShowRegistered(false); onClose();
+    };
+
+    const toggleEvent = (eventId: string) => {
+        setSelectedEventIds((current) => current.includes(eventId)
+            ? current.filter((id) => id !== eventId)
+            : [...current, eventId]);
+    };
+
     const handleRegister = () => {
         const pid = selectedParticipantId || participantId;
-        if (!selectedEventId || !pid) return;
-        router.post(route('event-participants.store'), { event_id: selectedEventId, participant_id: pid }, {
-            onSuccess: () => { setSelectedEventId(''); setSelectedParticipantId(''); setSearch(''); onClose(); },
+        if (selectedEventIds.length === 0 || !pid) return;
+        router.post(route('event-participants.store-batch'), { event_ids: selectedEventIds, participant_id: pid }, {
+            onSuccess: reset,
         });
     };
 
     return (
-        <Dialog open={open} onOpenChange={(o) => { if (!o) { setSelectedEventId(''); setSelectedParticipantId(''); setSearch(''); onClose(); } }}>
+        <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); }}>
             <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle>{t('Register to Event')}</DialogTitle>
@@ -206,6 +226,10 @@ function AddEventDialog({
                             className={`px-2 py-1 rounded ${groupBy === 'sport' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted'}`}>{t('Sport')}</button>
                         <button type="button" onClick={() => setGroupBy('tournament')}
                             className={`px-2 py-1 rounded ${groupBy === 'tournament' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted'}`}>{t('Tournament')}</button>
+                        <button type="button" onClick={() => setShowRegistered((value) => !value)}
+                            className={`ml-auto rounded px-2 py-1 ${showRegistered ? 'bg-amber-100 text-amber-700 font-medium' : 'hover:bg-muted'}`}>
+                            {showRegistered ? t('Hide registered') : t('Show registered')}
+                        </button>
                     </div>
                     <div className="grid gap-2">
                         <Label>{t('Available Events')}</Label>
@@ -221,10 +245,10 @@ function AddEventDialog({
                                     </div>
                                     {evts.map((evt) => (
                                         <label key={evt.id}
-                                            className={`flex items-center gap-3 px-3 py-2 text-sm cursor-pointer transition ${selectedEventId === evt.id ? 'bg-primary/10 font-medium' : 'hover:bg-muted/50'}`}>
-                                            <input type="radio" name="event" value={evt.id}
-                                                checked={selectedEventId === evt.id}
-                                                onChange={(e) => setSelectedEventId(e.target.value)} className="size-4" />
+                                            className={`flex items-center gap-3 px-3 py-2 text-sm cursor-pointer transition ${selectedEventIds.includes(evt.id) ? 'bg-primary/10 font-medium' : 'hover:bg-muted/50'}`}>
+                                            <input type="checkbox" value={evt.id}
+                                                checked={selectedEventIds.includes(evt.id)}
+                                                onChange={() => toggleEvent(evt.id)} className="size-4 rounded" />
                                             <span className="text-lg">{getSportIcon(evt.sport?.name)}</span>
                                             <div className="min-w-0 flex-1">
                                                 <div className="truncate">{evt.name}</div>
@@ -236,10 +260,15 @@ function AddEventDialog({
                             ))}
                         </div>
                     </div>
+                    <div className="rounded-md bg-primary/5 px-3 py-2 text-sm">
+                        <span className="font-semibold">{selectedEventIds.length}</span>{' '}
+                        {t('event(s) selected')}.
+                        {selectedEventIds.length > 0 && <button type="button" className="ml-2 text-primary underline" onClick={() => setSelectedEventIds([])}>{t('Clear selection')}</button>}
+                    </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => { setSelectedEventId(''); setSelectedParticipantId(''); setSearch(''); onClose(); }}>{t('Cancel')}</Button>
-                    <Button onClick={handleRegister} disabled={!selectedEventId}><Plus className="mr-2 size-4" />{t('Register')}</Button>
+                    <Button variant="outline" onClick={reset}>{t('Cancel')}</Button>
+                    <Button onClick={handleRegister} disabled={selectedEventIds.length === 0 || (!selectedParticipantId && !participantId)}><Plus className="mr-2 size-4" />{t('Register selected')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -514,11 +543,11 @@ export default function EventParticipantsIndex({
         return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
     }, [events, filterSportId]);
 
-    const totalRegistrations = useMemo(() => participantsList.reduce((sum, p) => sum + (p.event_participants?.length ?? 0), 0), [participantsList]);
+    const registrationTotal = useMemo(() => Object.values(statusCounts).reduce((sum, count) => sum + Number(count || 0), 0), [statusCounts]);
 
             const statusCards = useMemo(() => {
         const cards: Array<{ key: string; label: string; count: number }> = [
-            { key: '', label: t('All'), count: totalRegistrations },
+            { key: '', label: t('All'), count: registrationTotal },
             { key: 'pending', label: t('Pending'), count: statusCounts.pending ?? 0 },
             { key: 'confirmed', label: t('Confirmed'), count: statusCounts.confirmed ?? 0 },
             { key: 'rejected', label: t('Rejected'), count: statusCounts.rejected ?? 0 },
@@ -527,7 +556,7 @@ export default function EventParticipantsIndex({
             if ((statusCounts[k] ?? 0) > 0) cards.push({ key: k, label: statusConfig[k]?.label ?? k, count: statusCounts[k] ?? 0 });
         }
         return cards;
-    }, [statusCounts, totalRegistrations]);
+    }, [statusCounts, registrationTotal]);
 
     const [addTarget, setAddTarget] = useState<{ id: string; name: string } | null>(null);
     const [unregTarget, setUnregTarget] = useState<{ id: string; participantName: string; eventName: string } | null>(null);
@@ -674,6 +703,23 @@ export default function EventParticipantsIndex({
                     </span>
                 </div>
             </div>
+
+            {!isFacultyRepresentative && (
+                <div className="mb-4 flex flex-col gap-3 rounded-xl border border-primary/15 bg-primary/[0.04] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3">
+                        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <UserPlus className="size-4" />
+                        </span>
+                        <div>
+                            <p className="text-sm font-semibold">{t('Quick registration')}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{t('Select a faculty, choose one or more available events, then submit once.')}</p>
+                        </div>
+                    </div>
+                    <Button size="sm" onClick={() => setAddTarget({ id: '', name: '' })} className="shrink-0">
+                        <Plus className="mr-1.5 size-3.5" /> {t('Start registration')}
+                    </Button>
+                </div>
+            )}
 
             {/* Tabs + View toggle */}
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -1082,7 +1128,7 @@ export default function EventParticipantsIndex({
             <AddEventDialog open={!!addTarget} onClose={() => setAddTarget(null)}
                 participantId={addTarget?.id ?? ''} participantName={addTarget?.name ?? ''}
                 events={events}
-                participants={isFacultyRepresentative ? undefined : participantsList} />
+                participants={isFacultyRepresentative ? undefined : faculties} />
 
             <ConfirmUnregisterDialog open={!!unregTarget} onClose={() => setUnregTarget(null)}
                 onConfirm={handleUnregister} participantName={unregTarget?.participantName ?? ''}

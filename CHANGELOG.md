@@ -6,6 +6,12 @@
 
 ## Unreleased
 
+- Fixed guest and authenticated header logo/name links to resolve the public home route under the deployed `/saf/portal/` subfolder.
+- Fixed the public portal header and `index.php` canonicalization to use the generated public-home URL instead of hardcoded `/portal/` paths.
+- Fixed the public portal header to read the configured organization logo from Settings.
+- Fixed locale persistence when deployments retain a legacy `/portal` session-cookie path by adding a root-path locale fallback cookie.
+- Fixed the locale switch endpoint returning HTTP 419 on the IIS subfolder deployment by excluding the preference-only endpoint from CSRF validation.
+- Registered the locale CSRF exemption through Laravel's global middleware configuration for production consistency.
 - Refactored the administrator dashboard into a role-aware system command centre with prioritized KPIs, operational readiness, registration pipeline, participation coverage, match completion, upcoming events, sport participation ranking, recent sessions/tournaments, and responsive quick actions.
 - Hardened dashboard refresh behavior: partial query fallbacks are no longer cached, cache keys include tenant context, and regression coverage verifies consistent repeated loads.
 - Canonicalized the IIS application-directory request so `/saf/portal` redirects to `/saf/portal/` before Laravel route matching instead of returning 404.
@@ -395,3 +401,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Fixed` — Bug fixes
 - `Security` — Security-related fixes
 ok
+# Unreleased
+
+- Refreshed the event registration workspace with accurate all-registration totals and a clearer administrator quick-registration callout.
+- Refactored event participant registration to support selecting and submitting multiple events in one administrator workflow.
