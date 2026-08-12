@@ -35,7 +35,7 @@
 - **Multi-tenancy**: `BelongsToOrganization` trait + global scope on all tenant-aware models; per-org slug uniqueness.
 - **RBAC**: Spatie with roles: super-admin, org-admin, staff, faculty-representative, dean. 30+ granular permissions. 12 Policies.
 - **Actions + Form Requests**: Complete Create/Update/Delete Actions for every domain module.
-- **Controllers**: 38 controller files including authentication controllers.
+- **Controllers**: 40 controller files including authentication controllers.
 - **Frontend**: 37 TypeScript Inertia pages, shadcn/ui components, a global Error page, role-aware dashboards, and an explicit policy-aligned sidebar role matrix.
 - **Exports**: PDF (Dompdf) + Excel (Maatwebsite) for Fixtures, Results, Rankings. Printable match sheet.
 - **Reports**: Dashboard with stats, completion rate, recent results, quick export links.
@@ -48,7 +48,7 @@
 - **Logo Upload**: Faculty crest/logo upload and display.
 - **Dashboard**: Real data with safe guards, Cache, try/catch (prevents 500s on partial prod DBs).
 - **Public portal**: Bahasa Malaysia SAF 2026 hub at `/` and `/index.php` with schedules, results, progress, sports, and medal standings; only participant display names/logos are exposed.
-- **Routes**: 123 application routes (web + auth); no REST API routes.
+- **Routes**: 129 application routes (web + auth); no REST API routes.
 - **Migrations**: 59 migration files covering domain, framework, fixes, and later features.
 - **Seeding**: `DatabaseSeeder` seeds the 24-sport SAF master list, then `SAF2026DataSeeder` seeds SAF 2026 categories/events with quota fields. Reusable and idempotent.
 - **Tests**: 88 PHP test files; the current local suite covers 394 tests / 1,555 assertions. Six Playwright desktop/mobile journeys, including axe checks, passed in connected CI on commit `ae42a50`.
