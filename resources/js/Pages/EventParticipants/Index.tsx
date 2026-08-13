@@ -744,10 +744,18 @@ export default function EventParticipantsIndex({
                     <div className="inline-flex items-center gap-0.5 rounded-lg border bg-muted/20 p-0.5">
                         <button onClick={() => setViewMode('grid')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                            title="Grid view"><LayoutGrid className="size-3.5" /></button>
+                            title={t('Grid view')}
+                            aria-label={t('Grid view')}
+                            aria-pressed={viewMode === 'grid'}>
+                            <LayoutGrid className="size-3.5" />
+                        </button>
                         <button onClick={() => setViewMode('table')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                            title="Table view"><List className="size-3.5" /></button>
+                            title={t('Table view')}
+                            aria-label={t('Table view')}
+                            aria-pressed={viewMode === 'table'}>
+                            <List className="size-3.5" />
+                        </button>
                     </div>
                 )}
             </div>

@@ -1,0 +1,8 @@
+import fs from 'fs';
+
+const content = `## 2025-03-01 - Add missing ARIA attributes to localized toggle buttons
+**Learning:** Found that view toggle buttons (like Grid vs Table) in the STMS EventParticipants dashboard used localized \`title\` attributes, but lacked proper \`aria-label\` and \`aria-pressed\` states for screen readers. Given the app supports multiple locales, adding \`t('...')\` to ARIA attributes ensures translations apply correctly to accessibility labels as well.
+**Action:** When working on localized components that contain icon-only actions (like Grid/Table view toggles), always wrap \`aria-label\` values in the i18n translation function \`t()\` and use \`aria-pressed\` to denote toggle state correctly.
+`;
+
+fs.writeFileSync('.jules/palette.md', content);
