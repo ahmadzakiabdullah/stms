@@ -212,8 +212,12 @@ class EventParticipantController extends Controller
         $failures = [];
         $created = [];
 
-        foreach (array_unique($validated['event_ids']) as $eventId) {
-            $event = Event::find($eventId);
+        $eventIds = array_unique($validated['event_ids']);
+        // ⚡ Bolt: Fetch all events in one query to prevent N+1 in the loop
+        $events = Event::whereIn('id', $eventIds)->get()->keyBy('id');
+
+        foreach ($eventIds as $eventId) {
+            $event = $events->get($eventId);
 
             if ($event && $event->registration_deadline && now()->greaterThan($event->registration_deadline)) {
                 $failures[] = "{$event->name} — registration deadline has passed.";
