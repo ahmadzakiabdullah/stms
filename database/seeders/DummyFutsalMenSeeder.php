@@ -7,7 +7,6 @@ use App\Models\EventParticipant;
 use App\Models\Participant;
 use App\Models\SquadMember;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class DummyFutsalMenSeeder extends Seeder
 {
