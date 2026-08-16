@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Models\Event;
 use App\Models\EventParticipant;
-use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Pool;
