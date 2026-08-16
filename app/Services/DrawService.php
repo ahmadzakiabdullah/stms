@@ -283,6 +283,7 @@ class DrawService
                 if ($seedNumber !== null) {
                     $ep->update(['seed_number' => $seedNumber]);
                 }
+
                 return;
             }
 

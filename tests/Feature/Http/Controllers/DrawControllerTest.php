@@ -301,7 +301,7 @@ class DrawControllerTest extends TestCase
         ]);
 
         $response->assertRedirect(route('events.draw-result', $event));
-        $response->assertSessionHas('success', 'Participant moved and fixtures regenerated.');
+        $response->assertSessionHas('success', 'Participant moved and group assignment saved.');
 
         $this->assertDatabaseHas('event_participants', [
             'id' => $participant->id,

@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Models\Event;
 use App\Models\EventParticipant;
-use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Pool;
@@ -139,7 +138,35 @@ class DrawServiceTest extends TestCase
         $this->assertEquals([2, 2, 3], $counts);
     }
 
-    public function test_it_moves_participant_to_pool()
+    public function test_it_moves_participant_to_pool_before_fixtures()
+    {
+        $event = Event::factory()->create([
+            'organization_id' => $this->organization->id,
+            'pool_size' => 2,
+        ]);
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->createEventParticipant($event, 'confirmed');
+        }
+
+        $this->service->drawGroups($event);
+
+        $this->assertDatabaseCount('matches', 0);
+
+        $pools = Pool::where('event_id', $event->id)->get();
+        $poolA = $pools[0];
+        $poolB = $pools[1];
+
+        // Find a participant in pool A
+        $participantToMove = EventParticipant::where('pool_id', $poolA->id)->first();
+
+        $this->service->moveParticipantToPool($event, $participantToMove->id, $poolB->id);
+
+        $updatedParticipant = EventParticipant::find($participantToMove->id);
+        $this->assertEquals($poolB->id, $updatedParticipant->pool_id);
+    }
+
+    public function test_it_throws_exception_if_moving_participant_after_fixtures()
     {
         $event = Event::factory()->create([
             'organization_id' => $this->organization->id,
@@ -152,25 +179,15 @@ class DrawServiceTest extends TestCase
 
         $this->service->drawAndGenerateFixtures($event);
 
-        // At this point we have 4 participants, 2 pools of 2.
-        // Total fixtures: pool A (1 match) + pool B (1 match) = 2 matches.
-        $this->assertDatabaseCount('matches', 2);
-
         $pools = Pool::where('event_id', $event->id)->get();
         $poolA = $pools[0];
         $poolB = $pools[1];
 
-        // Find a participant in pool A
         $participantToMove = EventParticipant::where('pool_id', $poolA->id)->first();
 
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Reset the draw before changing groups after fixtures have been created.');
+
         $this->service->moveParticipantToPool($event, $participantToMove->id, $poolB->id);
-
-        // Now Pool A has 1 participant -> 0 matches.
-        // Pool B has 3 participants -> 3 matches.
-        // Total fixtures should be 3.
-        $this->assertEquals(3, Fixture::count());
-
-        $updatedParticipant = EventParticipant::find($participantToMove->id);
-        $this->assertEquals($poolB->id, $updatedParticipant->pool_id);
     }
 }
