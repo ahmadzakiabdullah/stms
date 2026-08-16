@@ -6,12 +6,12 @@ use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\SquadMember;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 use RuntimeException;
 
 class HockeyMensSquadSampleSeeder extends Seeder
 {
     private const ATHLETE_NAMES = ['Aiman', 'Amirul', 'Azlan', 'Faiz', 'Hafiz', 'Iqbal', 'Irfan', 'Kamal', 'Khairul', 'Luqman', 'Nazrin', 'Ridzuan', 'Syafiq', 'Taufik', 'Zaim'];
+
     private const FAMILY_NAMES = ['Ahmad', 'Ismail', 'Abdullah', 'Rahman', 'Hashim', 'Yusof', 'Zainal', 'Omar'];
 
     public function run(): void
@@ -32,7 +32,7 @@ class HockeyMensSquadSampleSeeder extends Seeder
 
         foreach ($registrations as $teamIndex => $registration) {
             $rows = [[
-                'matrix_no' => "HOC-".str_pad((string) ($teamIndex + 1), 2, '0', STR_PAD_LEFT).'-O01',
+                'matrix_no' => 'HOC-'.str_pad((string) ($teamIndex + 1), 2, '0', STR_PAD_LEFT).'-O01',
                 'name' => 'Manager '.($registration->participant?->name ?? 'Team '.($teamIndex + 1)),
                 'role' => 'manager',
                 'phone' => '012-'.str_pad((string) ($teamIndex + 1), 7, '0', STR_PAD_LEFT),
