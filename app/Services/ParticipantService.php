@@ -34,6 +34,7 @@ class ParticipantService
             Log::info('Participant created', ['id' => $participant->id, 'name' => $participant->name, 'org_id' => $participant->organization_id]);
 
             $this->ensureUserLinked($participant, $data['organization_id']);
+            app(PublicPortalService::class)->forgetForOrganization($participant->organization_id);
 
             return $participant;
         } catch (QueryException $e) {
@@ -101,6 +102,7 @@ class ParticipantService
         try {
             $participant->update($data);
             Log::info('Participant updated', ['id' => $participant->id, 'name' => $participant->name]);
+            app(PublicPortalService::class)->forgetForOrganization($participant->organization_id);
 
             return $participant;
         } catch (QueryException $e) {
@@ -121,6 +123,7 @@ class ParticipantService
     {
         $participant->delete();
         Log::info('Participant deleted', ['id' => $participant->id, 'name' => $participant->name]);
+        app(PublicPortalService::class)->forgetForOrganization($participant->organization_id);
     }
 
     public function registerToEvent(Participant $participant, string $eventId, array $data = []): EventParticipant

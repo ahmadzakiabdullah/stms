@@ -4,17 +4,18 @@ namespace App\Exports;
 
 use App\Models\Fixture;
 use App\Models\Organization;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithCustomChunkSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class FixtureExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
+class FixtureExport implements FromQuery, ShouldAutoSize, WithCustomChunkSize, WithHeadings, WithMapping, WithStyles
 {
-    private Collection $fixtures;
+    private Builder $fixtures;
 
     private int $row = 0;
 
@@ -27,12 +28,17 @@ class FixtureExport implements FromCollection, ShouldAutoSize, WithHeadings, Wit
             $query->where('event_id', $eventId);
         }
 
-        $this->fixtures = $query->orderBy('scheduled_at')->get();
+        $this->fixtures = $query->orderBy('scheduled_at');
     }
 
-    public function collection(): Collection
+    public function query(): Builder
     {
         return $this->fixtures;
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
     }
 
     public function headings(): array

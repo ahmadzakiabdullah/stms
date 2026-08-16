@@ -29,6 +29,7 @@ use App\Policies\SportCategoryPolicy;
 use App\Policies\SportPolicy;
 use App\Policies\TournamentPolicy;
 use App\Services\TenantContext;
+use App\Support\ProductionConfiguration;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
@@ -53,6 +54,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (app()->environment('production')) {
+            if (config('app.production_config_enforce')) {
+                ProductionConfiguration::validate();
+            }
             URL::forceRootUrl(rtrim((string) config('app.url'), '/'));
             URL::forceScheme('https');
         }

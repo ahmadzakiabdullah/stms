@@ -25,9 +25,10 @@ class StoreRegistrationRequest extends FormRequest
     {
         $user = $this->user();
         $isSuper = $user && $user->hasRole('super-admin');
+        $organizationRule = $isSuper ? Rule::exists('organizations', 'id') : Rule::in([$user?->organization_id]);
 
         return [
-            'organization_id' => ['required', 'uuid', 'exists:organizations,id'],
+            'organization_id' => ['required', 'uuid', $organizationRule],
             'tournament_id' => [
                 'required',
                 'uuid',

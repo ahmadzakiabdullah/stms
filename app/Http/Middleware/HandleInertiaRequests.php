@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Organization;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -44,6 +45,8 @@ class HandleInertiaRequests extends Middleware
                     try {
                         return $user->loadMissing('roles');
                     } catch (\Throwable $e) {
+                        $this->logShareFallback($request, 'auth_user_roles', $e);
+
                         return $user;
                     }
                 })() : null,
@@ -87,12 +90,14 @@ class HandleInertiaRequests extends Middleware
                 $isSuperAdmin = $user->hasRole('super-admin');
             } catch (\Throwable $e) {
                 $isSuperAdmin = false;
+                $this->logShareFallback($request, 'super_admin_role', $e);
             }
 
             try {
                 $shared['currentOrganization'] = $user->organization;
             } catch (\Throwable $e) {
                 $shared['currentOrganization'] = null;
+                $this->logShareFallback($request, 'current_organization', $e);
             }
 
             $shared['isSuperAdmin'] = $isSuperAdmin;
@@ -101,12 +106,14 @@ class HandleInertiaRequests extends Middleware
                 $shared['isFacultyRep'] = $user->hasRole('faculty-representative') && $user->participant_id;
             } catch (\Throwable $e) {
                 $shared['isFacultyRep'] = false;
+                $this->logShareFallback($request, 'faculty_representative_role', $e);
             }
 
             try {
                 $shared['isDean'] = $user->hasRole('dean') && $user->participant_id;
             } catch (\Throwable $e) {
                 $shared['isDean'] = false;
+                $this->logShareFallback($request, 'dean_role', $e);
             }
 
             // For super admins, provide all active organizations for switching/context
@@ -118,6 +125,7 @@ class HandleInertiaRequests extends Middleware
                         ->get(['id', 'name', 'slug']);
                 } catch (\Throwable $e) {
                     $shared['organizations'] = [];
+                    $this->logShareFallback($request, 'organizations', $e);
                 }
             }
 
@@ -134,9 +142,22 @@ class HandleInertiaRequests extends Middleware
             } catch (\Throwable $e) {
                 $shared['notification_count'] = 0;
                 $shared['notifications'] = [];
+                $this->logShareFallback($request, 'notifications', $e);
             }
         }
 
         return $shared;
+    }
+
+    private function logShareFallback(Request $request, string $operation, \Throwable $exception): void
+    {
+        Log::warning('Inertia shared prop fallback activated.', [
+            'operation' => $operation,
+            'exception' => $exception,
+            'correlation_id' => $request->attributes->get('correlation_id'),
+            'user_id' => $request->user()?->uuid,
+            'organization_id' => $request->user()?->organization_id,
+            'route' => $request->path(),
+        ]);
     }
 }

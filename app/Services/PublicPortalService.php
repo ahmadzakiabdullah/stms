@@ -7,10 +7,14 @@ use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Cache;
 
 class PublicPortalService
 {
-    public function __construct(private readonly RankingService $rankingService) {}
+    public function __construct(
+        private readonly RankingService $rankingService,
+        private readonly PublicWeatherService $weatherService,
+    ) {}
 
     public function data(?int $limit = 12): array
     {
@@ -19,27 +23,64 @@ class PublicPortalService
             return $this->emptyData();
         }
 
+        $cacheKey = 'public-portal:v3:'.$session->id.':'.($limit ?? 'all');
+
+        return Cache::remember($cacheKey, now()->addMinutes(2), function () use ($session, $limit): array {
+            return $this->buildData($session, $limit);
+        });
+    }
+
+    public function forget(?string $sessionId = null): void
+    {
+        if ($sessionId) {
+            foreach ([12, 'all'] as $limit) {
+                Cache::forget('public-portal:v2:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v3:'.$sessionId.':'.$limit);
+            }
+
+            return;
+        }
+
+        $session = $this->publicSession();
+        if ($session) {
+            $this->forget($session->id);
+        }
+    }
+
+    public function forgetForOrganization(string $organizationId): void
+    {
+        $session = $this->publicSession();
+
+        if ($session && $session->organization_id === $organizationId) {
+            $this->forget($session->id);
+        }
+    }
+
+    private function buildData(Session $session, ?int $limit): array
+    {
         $organizationId = $session->organization_id;
         $tournamentIds = $session->tournaments()->pluck('id');
         $eventQuery = $session->events()->where('events.organization_id', $organizationId);
-        $fixtures = Fixture::query()->where('organization_id', $organizationId)
+
+        $fixtureQuery = fn () => Fixture::query()->where('organization_id', $organizationId)
             ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds))
-            ->with(['event.sport', 'pool:id,name', 'homeParticipant:id,name,team_name,logo_path', 'awayParticipant:id,name,team_name,logo_path', 'result'])
-            ->orderBy('scheduled_at')->get();
-        $matches = $fixtures->map(fn (Fixture $fixture) => $this->matchData($fixture));
-        $completed = $matches->where('status', 'completed')->sortByDesc('scheduled_at')->values();
+            ->with(['event.sport', 'pool:id,name', 'homeParticipant:id,name,team_name,logo_path', 'awayParticipant:id,name,team_name,logo_path', 'result']);
+
+        $upcomingFixtures = $fixtureQuery()->whereIn('status', ['scheduled', 'in_progress'])
+            ->orderByRaw('scheduled_at IS NULL, scheduled_at')
+            ->when($limit !== null, fn ($query) => $query->limit($limit))
+            ->get();
+        $completedFixtures = $fixtureQuery()->where('status', 'completed')
+            ->orderByDesc('scheduled_at')
+            ->when($limit !== null, fn ($query) => $query->limit($limit))
+            ->get();
+        $upcoming = $upcomingFixtures->map(fn (Fixture $fixture) => $this->matchData($fixture))->values();
+        $completed = $completedFixtures->map(fn (Fixture $fixture) => $this->matchData($fixture))->values();
         // Draw-generated fixtures may exist before the organizer assigns a date.
         // Keep them visible publicly as "to be determined" instead of hiding the
         // entire schedule; dated fixtures remain first.
-        $upcoming = $matches->whereIn('status', ['scheduled', 'in_progress'])
-            ->sortBy(fn (array $match) => $match['scheduled_at'] ?? '9999-12-31T23:59:59Z')
-            ->values();
-        $playable = $matches->whereIn('status', ['scheduled', 'in_progress', 'completed']);
-        $lastUpdated = collect([$session->updated_at])
-            ->concat($fixtures->map(fn (Fixture $fixture) => $fixture->updated_at))
-            ->concat($fixtures->map(fn (Fixture $fixture) => $fixture->result?->updated_at))
-            ->filter()
-            ->max(fn ($value) => $value->getTimestamp());
+        $playableCount = $fixtureQuery()->whereIn('status', ['scheduled', 'in_progress', 'completed'])->count();
+        $lastUpdated = collect([$session->updated_at, $fixtureQuery()->max('updated_at')])->filter()->max();
 
         return [
             'app_name' => Setting::where('organization_id', $session->organization_id)->where('key', 'app_name')->value('value') ?? config('app.name'),
@@ -48,23 +89,24 @@ class PublicPortalService
                 'organization' => $session->organization?->name],
             'stats' => ['sports' => (clone $eventQuery)->distinct()->count('sport_id'), 'events' => (clone $eventQuery)->count(),
                 'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()->count(),
-                'completed_matches' => $completed->count(), 'total_matches' => $playable->count()],
+                'completed_matches' => $completedFixtures->count(), 'total_matches' => $playableCount],
             'sports_catalog' => (clone $eventQuery)->with(['sport:id,name', 'sportCategory:id,name'])->get()
                 ->groupBy('sport_id')->map(fn ($events) => [
                     'name' => $events->first()->sport?->name,
-                    'events' => $events->map(fn ($event) => $event->name)->sort()->values(),
-                ])->filter(fn ($sport) => filled($sport['name']))->sortBy('name')->values(),
-            'sports' => (clone $eventQuery)->with('sport:id,name')->get()->pluck('sport.name')->filter()->unique()->sort()->values(),
-            'upcoming' => ($limit === null ? $upcoming : $upcoming->take($limit))->values(),
-            'results' => ($limit === null ? $completed : $completed->take($limit))->values(),
+                    'events' => $events->map(fn ($event) => $event->name)->sort()->values()->all(),
+                ])->filter(fn ($sport) => filled($sport['name']))->sortBy('name')->values()->all(),
+            'sports' => (clone $eventQuery)->with('sport:id,name')->get()->pluck('sport.name')->filter()->unique()->sort()->values()->all(),
+            'upcoming' => $upcoming->all(),
+            'results' => $completed->all(),
             'medals' => ($limit === null
                 ? $this->rankingService->calculateMedalTallyForSession($session)
-                : $this->rankingService->calculateMedalTallyForSession($session)->take(20))->values(),
+                : $this->rankingService->calculateMedalTallyForSession($session)->take(20))->values()->all(),
             'contact' => [
                 'address' => Setting::where('organization_id', $session->organization_id)
                     ->where('key', 'secretariat_address')->value('value'),
             ],
-            'updated_at' => ($lastUpdated ? now()->setTimestamp($lastUpdated) : now())->toIso8601String(),
+            'updated_at' => ($lastUpdated instanceof \DateTimeInterface ? $lastUpdated : now())->toIso8601String(),
+            'weather' => $this->weatherService->current(),
         ];
     }
 
@@ -105,6 +147,7 @@ class PublicPortalService
     {
         return ['app_name' => config('app.name'), 'competition' => null, 'stats' => ['sports' => 0, 'events' => 0, 'faculties' => 0, 'completed_matches' => 0, 'total_matches' => 0],
             'sports' => [], 'sports_catalog' => [], 'upcoming' => [], 'results' => [], 'medals' => [],
-            'contact' => ['address' => null], 'updated_at' => now()->toIso8601String()];
+            'contact' => ['address' => null], 'updated_at' => now()->toIso8601String(),
+            'weather' => $this->weatherService->current()];
     }
 }

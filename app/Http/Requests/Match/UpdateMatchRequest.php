@@ -14,9 +14,13 @@ class UpdateMatchRequest extends FormRequest
 
     public function rules(): array
     {
+        $organizationId = $this->user()?->organization_id;
+        $isSuperAdmin = $this->user()?->hasRole('super-admin');
+        $tenant = fn ($query) => $isSuperAdmin ? $query : $query->where('organization_id', $organizationId);
+
         return [
-            'event_id' => ['sometimes', 'required', 'uuid', 'exists:events,id'],
-            'pool_id' => ['nullable', 'uuid', 'exists:pools,id'],
+            'event_id' => ['sometimes', 'required', 'uuid', Rule::exists('events', 'id')->where($tenant)],
+            'pool_id' => ['nullable', 'uuid', Rule::exists('pools', 'id')->where($tenant)],
             'round' => ['nullable', 'integer', 'min:1'],
             'match_number' => [
                 'sometimes',
@@ -29,8 +33,8 @@ class UpdateMatchRequest extends FormRequest
                         ->whereNull('deleted_at'))
                     ->ignore($this->route('match')?->id),
             ],
-            'home_participant_id' => ['nullable', 'uuid', 'exists:participants,id'],
-            'away_participant_id' => ['nullable', 'uuid', 'different:home_participant_id', 'exists:participants,id'],
+            'home_participant_id' => ['nullable', 'uuid', Rule::exists('participants', 'id')->where($tenant)],
+            'away_participant_id' => ['nullable', 'uuid', 'different:home_participant_id', Rule::exists('participants', 'id')->where($tenant)],
             'venue' => ['nullable', 'string', 'max:255'],
             'scheduled_at' => ['nullable', 'date'],
             'status' => ['nullable', Rule::in(['scheduled', 'in_progress', 'completed', 'cancelled'])],

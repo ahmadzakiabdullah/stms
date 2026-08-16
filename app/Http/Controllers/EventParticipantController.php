@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\EventParticipants\UpdateEventParticipantStatus;
+use App\Actions\Participants\BatchRegisterParticipantToEvents;
 use App\Actions\Participants\RegisterParticipantToEvent;
+use App\Http\Requests\EventParticipant\BatchRegisterEventParticipantsRequest;
+use App\Http\Requests\EventParticipant\RegisterEventParticipantRequest;
+use App\Http\Requests\EventParticipant\UpdateEventParticipantStatusRequest;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Participant;
 use App\Models\SquadMember;
-use App\Models\User;
-use App\Notifications\EventParticipantConfirmed;
-use App\Notifications\EventParticipantRejected;
-use App\Notifications\NewEventRegistration;
-use App\Services\SquadQuotaService;
+use App\Services\EventParticipantNotificationService;
+use App\Services\SquadManagementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -145,7 +147,7 @@ class EventParticipantController extends Controller
         return $response;
     }
 
-    public function store(Request $request, RegisterParticipantToEvent $action): RedirectResponse
+    public function store(RegisterEventParticipantRequest $request, RegisterParticipantToEvent $action, EventParticipantNotificationService $notificationService): RedirectResponse
     {
         $user = Auth::user();
         $isWakil = $user->hasRole('faculty-representative') && $user->participant_id;
@@ -154,42 +156,27 @@ class EventParticipantController extends Controller
             $participantId = $user->participant_id;
         } else {
             Gate::authorize('create', EventParticipant::class);
-            $validated = $request->validate([
-                'event_id' => 'required|string|exists:events,id',
-                'participant_id' => 'required|string|exists:participants,id',
-            ]);
+            $validated = $request->validated();
             $participantId = $validated['participant_id'];
         }
 
-        $eventId = $request->validate(['event_id' => 'required|string|exists:events,id'])['event_id'];
+        $eventId = $request->input('event_id');
         $participant = Participant::findOrFail($participantId);
 
-        $event = Event::findOrFail($eventId);
-        if ($event->registration_deadline && now()->greaterThan($event->registration_deadline)) {
-            return redirect()->route($isWakil ? 'dashboard' : 'event-participants.index')
-                ->with('error', 'Registration deadline for this event has passed.');
-        }
-
         try {
-            $action->handle($participant, $eventId);
+            $ep = $action->handle($participant, $eventId);
         } catch (ValidationException $e) {
             return redirect()->route($isWakil ? 'dashboard' : 'event-participants.index')
                 ->with('error', $e->getMessage());
         }
 
-        $ep = EventParticipant::where('event_id', $eventId)
-            ->where('participant_id', $participant->id)
-            ->latest()
-            ->first();
-        if ($ep) {
-            $this->notifyRegistrationRecipients($ep);
-        }
+        $notificationService->notifyRegistration($ep);
 
         return redirect()->route($isWakil ? 'dashboard' : 'event-participants.index')
             ->with('success', 'Participant registered to event successfully.');
     }
 
-    public function storeBatch(Request $request, RegisterParticipantToEvent $action): RedirectResponse
+    public function storeBatch(BatchRegisterEventParticipantsRequest $request, BatchRegisterParticipantToEvents $action, EventParticipantNotificationService $notificationService): RedirectResponse
     {
         $user = Auth::user();
         $isWakil = $user->hasRole('faculty-representative') && $user->participant_id;
@@ -198,49 +185,15 @@ class EventParticipantController extends Controller
             $participant = Participant::findOrFail($user->participant_id);
         } else {
             Gate::authorize('create', EventParticipant::class);
-            $participant = Participant::findOrFail($request->validate([
-                'participant_id' => 'required|string|exists:participants,id',
-            ])['participant_id']);
+            $participant = Participant::findOrFail($request->input('participant_id'));
         }
 
-        $validated = $request->validate([
-            'event_ids' => ['required', 'array', 'min:1'],
-            'event_ids.*' => ['required', 'string', 'exists:events,id'],
-        ]);
+        $validated = $request->validated();
 
-        $registered = 0;
-        $failures = [];
-        $created = [];
-
-        foreach (array_unique($validated['event_ids']) as $eventId) {
-            $event = Event::find($eventId);
-
-            if ($event && $event->registration_deadline && now()->greaterThan($event->registration_deadline)) {
-                $failures[] = "{$event->name} — registration deadline has passed.";
-
-                continue;
-            }
-
-            try {
-                $action->handle($participant, $eventId);
-                $registered++;
-
-                $ep = EventParticipant::where('event_id', $eventId)
-                    ->where('participant_id', $participant->id)
-                    ->latest()
-                    ->first();
-                if ($ep) {
-                    $created[] = $ep;
-                }
-            } catch (ValidationException $e) {
-                $failures[] = "{$event?->name}: {$e->getMessage()}";
-            } catch (\Throwable $e) {
-                $failures[] = "{$event?->name}: failed to register.";
-            }
-        }
+        ['registered' => $registered, 'failures' => $failures, 'created' => $created] = $action->handle($participant, $validated['event_ids']);
 
         foreach ($created as $ep) {
-            $this->notifyRegistrationRecipients($ep);
+            $notificationService->notifyRegistration($ep);
         }
 
         $redirect = $isWakil ? 'dashboard' : 'event-participants.index';
@@ -255,21 +208,6 @@ class EventParticipantController extends Controller
             ->with('error', count($failures) > 0 ? implode(' ', $failures) : null);
     }
 
-    private function notifyRegistrationRecipients(EventParticipant $ep): void
-    {
-        $deanUsers = User::where('participant_id', $ep->participant_id)
-            ->role('dean')
-            ->get();
-
-        $adminUsers = User::where('organization_id', $ep->organization_id)
-            ->role(['super-admin', 'org-admin'])
-            ->get();
-
-        foreach ($deanUsers->concat($adminUsers)->unique('uuid') as $recipient) {
-            $recipient->notify(new NewEventRegistration($ep));
-        }
-    }
-
     public function destroy(EventParticipant $eventParticipant): RedirectResponse
     {
         Gate::authorize('delete', $eventParticipant);
@@ -280,23 +218,12 @@ class EventParticipantController extends Controller
             ->with('success', 'Event registration deleted.');
     }
 
-    public function updateStatus(Request $request, EventParticipant $eventParticipant): RedirectResponse
+    public function updateStatus(UpdateEventParticipantStatusRequest $request, EventParticipant $eventParticipant, UpdateEventParticipantStatus $action): RedirectResponse
     {
         Gate::authorize('update', $eventParticipant);
 
-        $validated = $request->validate([
-            'status' => 'required|string|in:confirmed,rejected',
-        ]);
-
-        $eventParticipant->update(['status' => $validated['status']]);
-
-        if ($eventParticipant->participant?->users) {
-            foreach ($eventParticipant->participant->users as $user) {
-                $user->notify($validated['status'] === 'confirmed'
-                    ? new EventParticipantConfirmed($eventParticipant)
-                    : new EventParticipantRejected($eventParticipant));
-            }
-        }
+        $validated = $request->validated();
+        $action->handle($eventParticipant, $validated['status']);
 
         return redirect()->route('event-participants.index', collect($request->query())->only([
             'search', 'sport_id', 'category_id', 'participant_id', 'status',
@@ -305,9 +232,9 @@ class EventParticipantController extends Controller
             : 'Registration rejected.');
     }
 
-    public function storeSquad(Request $request, EventParticipant $eventParticipant, SquadQuotaService $quotaService): RedirectResponse
+    public function storeSquad(Request $request, EventParticipant $eventParticipant, SquadManagementService $squadService): RedirectResponse
     {
-        $this->authorizeSquadManagement();
+        $this->authorizeSquadManagement($eventParticipant);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -317,54 +244,19 @@ class EventParticipantController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $ep = $eventParticipant->load('event.sportCategory');
-
-        if ($ep->status !== 'confirmed') {
-            return redirect()->back()
-                ->with('error', 'Only confirmed registrations can add squad members.');
+        try {
+            $squadService->add($eventParticipant, $validated);
+        } catch (ValidationException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-
-        $isOfficial = in_array($validated['role'], ['assistant_manager', 'manager', 'coach', 'physio'], true);
-        if ($isOfficial && blank($validated['phone'])) {
-            return redirect()->back()
-                ->with('error', 'Officials must provide a phone number.');
-        }
-
-        if (! $isOfficial && ! $ep->squadMembers()->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->exists()) {
-            return redirect()->back()
-                ->with('error', 'Add officials before athletes.');
-        }
-
-        $quotaError = $quotaService->validateAddition($ep, $validated['role']);
-        if ($quotaError) {
-            return redirect()->back()
-                ->with('error', $quotaError);
-        }
-
-        SquadMember::create([
-            'event_participant_id' => $ep->id,
-            'organization_id' => $ep->event?->organization_id ?? Auth::user()->organization_id,
-            'name' => $validated['name'],
-            'matrix_no' => $validated['matrix_no'],
-            'role' => $validated['role'],
-            'identification_no' => $validated['identification_no'],
-            'phone' => $validated['phone'],
-        ]);
 
         return redirect()->back()
             ->with('success', 'Squad member added.');
     }
 
-    public function updateSquad(Request $request, EventParticipant $eventParticipant, SquadMember $squadMember, SquadQuotaService $quotaService): RedirectResponse
+    public function updateSquad(Request $request, EventParticipant $eventParticipant, SquadMember $squadMember, SquadManagementService $squadService): RedirectResponse
     {
-        $this->authorizeSquadManagement();
-
-        abort_unless($squadMember->event_participant_id === $eventParticipant->id, 404);
-
-        if ($eventParticipant->status !== 'confirmed') {
-            return redirect()->back()
-                ->with('error', 'Only confirmed registrations can manage squad members.');
-        }
+        $this->authorizeSquadManagement($eventParticipant);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -374,51 +266,34 @@ class EventParticipantController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
-        if ($squadMember->role !== $validated['role']) {
-            $ep = $eventParticipant->load('event.sportCategory');
-
-            $isOfficial = in_array($validated['role'], ['assistant_manager', 'manager', 'coach', 'physio'], true);
-            if ($isOfficial && blank($validated['phone'])) {
-                return redirect()->back()
-                    ->with('error', 'Officials must provide a phone number.');
-            }
-
-            if (! $isOfficial && ! $ep->squadMembers()
-                ->where('id', '!=', $squadMember->id)
-                ->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])
-                ->exists()) {
-                return redirect()->back()
-                    ->with('error', 'Add officials before athletes.');
-            }
-
-            $quotaError = $quotaService->validateAddition($ep, $validated['role']);
-            if ($quotaError) {
-                return redirect()->back()
-                    ->with('error', $quotaError);
-            }
+        try {
+            $squadService->update($eventParticipant, $squadMember, $validated);
+        } catch (ValidationException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-
-        $squadMember->update($validated);
 
         return redirect()->back()
             ->with('success', 'Squad member updated.');
     }
 
-    public function destroySquad(EventParticipant $eventParticipant, SquadMember $squadMember): RedirectResponse
+    public function destroySquad(EventParticipant $eventParticipant, SquadMember $squadMember, SquadManagementService $squadService): RedirectResponse
     {
-        $this->authorizeSquadManagement();
+        $this->authorizeSquadManagement($eventParticipant);
 
-        abort_unless($squadMember->event_participant_id === $eventParticipant->id, 404);
-
-        $squadMember->delete();
+        $squadService->remove($eventParticipant, $squadMember);
 
         return redirect()->back()
             ->with('success', 'Squad member removed.');
     }
 
-    private function authorizeSquadManagement(): void
+    private function authorizeSquadManagement(EventParticipant $eventParticipant): void
     {
         $user = Auth::user();
         abort_unless($user->hasRole('super-admin') || $user->hasRole('org-admin'), 403);
+
+        abort_unless(
+            $user->hasRole('super-admin') || $user->organization_id === $eventParticipant->organization_id,
+            404,
+        );
     }
 }

@@ -77,7 +77,7 @@ class UserController extends Controller
         $data = $request->validated();
         $currentUser = Auth::user();
 
-        if (! $currentUser->hasRole('super-admin') && empty($data['organization_id'])) {
+        if (! $currentUser->hasRole('super-admin')) {
             $data['organization_id'] = $currentUser->organization_id;
         }
 
@@ -94,8 +94,8 @@ class UserController extends Controller
         $data = $request->validated();
         $currentUser = Auth::user();
 
-        if (! $currentUser->hasRole('super-admin') && empty($data['organization_id'])) {
-            $data['organization_id'] = $user->organization_id; // keep original if not super
+        if (! $currentUser->hasRole('super-admin')) {
+            $data['organization_id'] = $currentUser->organization_id;
         }
 
         $action->handle($user, $data);

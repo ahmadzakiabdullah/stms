@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
+use App\Http\Requests\UpdateSettingsRequest;
+use App\Services\PublicPortalService;
 use App\Services\SettingAssetService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -27,21 +28,19 @@ class SettingController extends Controller
                 'favicon_url' => $settings['favicon_url'] ?? null,
                 'tournament_logo_url' => $settings['tournament_logo_url'] ?? null,
                 'secretariat_address' => $settings['secretariat_address'] ?? '',
+                'public_theme_dark' => $settings['public_theme_dark'] ?? '#071B33',
+                'public_theme_primary' => $settings['public_theme_primary'] ?? '#0057A8',
+                'public_theme_accent' => $settings['public_theme_accent'] ?? '#20B8E6',
+                'public_theme_highlight' => $settings['public_theme_highlight'] ?? '#F4B942',
+                'public_theme_background' => $settings['public_theme_background'] ?? '#F4F7FA',
+                'public_theme_text' => $settings['public_theme_text'] ?? '#102A43',
             ],
         ]);
     }
 
-    public function update(Request $request, SettingAssetService $assetService): RedirectResponse
+    public function update(UpdateSettingsRequest $request, SettingAssetService $assetService, PublicPortalService $publicPortal): RedirectResponse
     {
         Gate::authorize('update-settings');
-
-        $request->validate([
-            'app_name' => 'nullable|string|max:255',
-            'logo' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp|max:2048',
-            'favicon' => 'nullable|file|mimes:png,ico,svg|max:1024',
-            'tournament_logo' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp|max:2048',
-            'secretariat_address' => 'nullable|string|max:1000',
-        ]);
 
         $orgId = Auth::user()->organization_id;
 
@@ -65,6 +64,13 @@ class SettingController extends Controller
             ['value' => (string) $request->input('secretariat_address', '')]
         );
 
+        foreach (['public_theme_dark', 'public_theme_primary', 'public_theme_accent', 'public_theme_highlight', 'public_theme_background', 'public_theme_text'] as $key) {
+            Setting::updateOrCreate(
+                ['organization_id' => $orgId, 'key' => $key],
+                ['value' => strtoupper($request->string($key)->toString())]
+            );
+        }
+
         if ($request->hasFile('tournament_logo')) {
             $url = $assetService->store($request->file('tournament_logo'));
             Setting::updateOrCreate(
@@ -80,6 +86,8 @@ class SettingController extends Controller
                 ['value' => $url]
             );
         }
+
+        $publicPortal->forgetForOrganization($orgId);
 
         return redirect()->back()->with('success', 'Settings updated.');
     }

@@ -24,21 +24,27 @@ class UpdateRegistrationRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->user();
+        $isSuper = $user && $user->hasRole('super-admin');
+        $organizationRule = $isSuper ? Rule::exists('organizations', 'id') : Rule::in([$user?->organization_id]);
 
         return [
-            'organization_id' => ['required', 'uuid', 'exists:organizations,id'],
+            'organization_id' => ['required', 'uuid', $organizationRule],
             'tournament_id' => [
                 'required',
                 'uuid',
-                Rule::exists('tournaments', 'id')->where(function ($query) use ($user) {
-                    $query->where('organization_id', $user->organization_id);
+                Rule::exists('tournaments', 'id')->where(function ($query) use ($isSuper, $user) {
+                    if (! $isSuper) {
+                        $query->where('organization_id', $user->organization_id);
+                    }
                 }),
             ],
             'participant_id' => [
                 'required',
                 'uuid',
-                Rule::exists('participants', 'id')->where(function ($query) use ($user) {
-                    $query->where('organization_id', $user->organization_id);
+                Rule::exists('participants', 'id')->where(function ($query) use ($isSuper, $user) {
+                    if (! $isSuper) {
+                        $query->where('organization_id', $user->organization_id);
+                    }
                 }),
             ],
             'status' => ['nullable', 'in:pending,confirmed,rejected,cancelled'],

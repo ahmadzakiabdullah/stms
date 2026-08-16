@@ -1,6 +1,6 @@
 # Testing Strategy
 
-> **Current baseline (7 August 2026):** 87 PHP test files, 394 tests, and 1,555 assertions. PHPUnit, Pint, TypeScript, dependency audits, Vite build and bundle-budget gates pass from a local-disk verification copy. Connected-CI Playwright/axe passed all six journeys on commit `ae42a50`; the connected coverage percentage remains to be recorded.
+> **Recorded baseline (12 August 2026):** the repository now contains 92 PHP test files; the latest completed suite recorded 415 tests and 1,669 assertions. TypeScript and mapped-drive production builds pass after the public-portal cache normalization fix; connected-CI evidence remains environment-dependent and must be rerun for a new release.
 
 Dokumen ini menggariskan falsafah, strategi, dan amalan terbaik untuk ujian automatik (automated testing) dalam aplikasi STMS. Matlamat utama ujian adalah untuk memastikan ketepatan kod, mencegah regresi, dan menguatkuasakan keselamatan data, terutamanya dalam konteks multi-tenancy.
 

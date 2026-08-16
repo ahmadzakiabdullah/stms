@@ -10,6 +10,7 @@ use App\Models\Tournament;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class ReportingController extends Controller implements HasMiddleware
@@ -48,6 +49,15 @@ class ReportingController extends Controller implements HasMiddleware
 
                 return $builder->count();
             } catch (\Throwable $e) {
+                Log::warning('Report count fallback activated.', [
+                    'exception' => $e,
+                    'correlation_id' => $request->attributes->get('correlation_id'),
+                    'user_id' => $request->user()?->uuid,
+                    'organization_id' => $org->id,
+                    'route' => $request->path(),
+                    'model' => $modelClass,
+                ]);
+
                 return 0;
             }
         };
@@ -84,6 +94,13 @@ class ReportingController extends Controller implements HasMiddleware
                     'created_at' => $r->created_at->format('d M Y H:i'),
                 ]);
         } catch (\Throwable $e) {
+            Log::warning('Report recent results fallback activated.', [
+                'exception' => $e,
+                'correlation_id' => $request->attributes->get('correlation_id'),
+                'user_id' => $request->user()?->uuid,
+                'organization_id' => $org->id,
+                'route' => $request->path(),
+            ]);
             $recentResults = collect();
         }
 
@@ -101,6 +118,13 @@ class ReportingController extends Controller implements HasMiddleware
                     ])->values();
                 });
         } catch (\Throwable $e) {
+            Log::warning('Report tournament breakdown fallback activated.', [
+                'exception' => $e,
+                'correlation_id' => $request->attributes->get('correlation_id'),
+                'user_id' => $request->user()?->uuid,
+                'organization_id' => $org->id,
+                'route' => $request->path(),
+            ]);
             $fixturesByTournament = collect();
         }
 

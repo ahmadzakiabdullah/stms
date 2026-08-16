@@ -7,7 +7,6 @@ use App\Models\EventParticipant;
 use App\Models\Participant;
 use App\Models\SquadMember;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class DummyFutsalMenSeeder extends Seeder
 {
@@ -23,6 +22,12 @@ class DummyFutsalMenSeeder extends Seeder
 
     public function run(): void
     {
+        if (app()->environment('production') && ! config('app.allow_demo_seeding')) {
+            throw new \RuntimeException(
+                'DummyFutsalMenSeeder is disabled in production. Set ALLOW_DEMO_SEEDING=true only for an approved, controlled data load.'
+            );
+        }
+
         $event = Event::query()
             ->whereHas('tournament', fn ($query) => $query->where('name', 'SAF 2026 Fasa 2'))
             ->whereHas('sport', fn ($query) => $query->where('slug', 'futsal'))

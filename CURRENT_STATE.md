@@ -1,14 +1,16 @@
 # CURRENT STATE
 
-> **Snapshot of the STMS project implementation status.**
+> **Snapshot of the STMS project implementation status as of 12 August 2026.**
 > This document reflects the reality as of the latest full system review. It should be read together with `CLAUDE.md`, `AGENTS.md`, `TODOS.md`, and `ROADMAP.md`.
 
 **Overall Status:** The SAF 2026 web MVP is operational and in maintenance/production-hardening mode. Core flows cover Organization/User/RBAC → Sport/Category/Session/Tournament/Event → Participant/Registration → Squad Management and printable team forms → Dean Verification → Match/Result → Rankings → Exports/Reporting → Draw/Groups → Notifications → Settings and Activity Logs.
 **Code Maturity:** Operational MVP with production-hardening Sprints 1-3 implemented in the repository. CI covers lint, TypeScript, PHPUnit, dependency audits, PCOV coverage artifacts, build budgets, and Playwright desktop/mobile journeys with axe. Backend query and k6 thresholds are defined; encrypted backup/restore and internal health monitoring are implemented. Connected-CI Playwright/axe is now evidenced on commit `ae42a50`. An isolated encrypted MySQL restore drill also passed with a sanitized production-sized dataset. The corrected authenticated load path passed all functional checks but missed its latency target on a single-process development server; multi-worker staging performance, real external alert receipt, and actual production-backup/off-site recovery remain open.
 
-**Unreleased hardening work (10 August 2026):** The working tree contains scoped tenant lifecycle handling, tenant-aware queue middleware, explicit public organization/session selection, tenant-safe `User` route binding, report-only CSP hardening (enforcing-ready via `CSP_REPORT_ONLY=false`), a CI tenant-bypass allowlist, corrected per-VU k6 authentication, versioned draw rollback, consistent SVG sanitization, Redis-backed production sessions, consistent `verified` email middleware across all authenticated routes, and a release runbook. A local-disk verification copy passes 394 PHPUnit tests / 1,555 assertions, Pint, TypeScript, production build, bundle budget and both dependency audits. These changes are not yet a connected-CI, tagged or deployed release.
+**Unreleased hardening work (12 August 2026):** The working tree contains scoped tenant lifecycle handling, tenant-aware queue middleware, explicit public organization/session selection, tenant-safe `User` route binding, org-admin tenant/role payload enforcement, guarded dummy seeders, report-only CSP hardening (enforcing-ready via `CSP_REPORT_ONLY=false`), a CI tenant-bypass allowlist, corrected per-VU k6 authentication, versioned draw rollback, consistent SVG sanitization, Redis-backed production sessions, consistent `verified` email middleware across all authenticated routes, and a release runbook. Local verification passes 407 PHPUnit tests / 1,635 assertions, Pint, TypeScript, production build, tenant-bypass validation, and both dependency audits. These changes are not yet a connected-CI, tagged or deployed release.
 
 **Administrator dashboard refresh (10 August 2026):** The administrator workspace now presents a whole-system operational overview with prioritized KPIs, readiness indicators, registration pipeline, competition progress and role-aware actions. Partial query fallback payloads are not cached and tenant context is included in cache keys so repeated refreshes retain consistent data.
+
+**Recent operational UI updates (12 August 2026):** Event registration now supports administrator multi-event batch registration with active/unregistered faculty filtering. Draw result pages refresh pool state after participant moves and expose a Create Fixtures action. Results management exposes pending matches and a Record Next Result workflow. The public portal now includes a Sports programme page at `/sports-programme`, an improved medal-tally dashboard, and a tenant-safe public route name `public.sports`.
 
 ---
 
@@ -25,7 +27,7 @@
 | Authorization  | Spatie + 12 Policies + Gate in controllers   | Spatie Laravel Permission + Policies + Gates | Implemented |
 | Domain Models  | 16 model files, including tenant/domain models and Setting | Full hierarchy | Implemented |
 | API            | None (web/Inertia only)                      | RESTful `/api/v1` (future)                   | Future      |
-| Tests          | 88 PHP test files; 394 tests and 1,555 assertions in the current local suite, plus 6 Playwright/axe journeys | PHP + browser + accessibility | PHPUnit, Pint, type-check, dependency audits and production build pass from the local verification copy; connected-CI Playwright/axe passed on `ae42a50` |
+| Tests          | 92 PHP test files; the latest completed baseline covers 415 tests and 1,669 assertions, plus 6 Playwright/axe journeys | PHP + browser + accessibility | PHPUnit, Pint, type-check, dependency audits and production build pass from the local verification copy; connected-CI Playwright/axe passed on `ae42a50` |
 
 ---
 
@@ -35,8 +37,8 @@
 - **Multi-tenancy**: `BelongsToOrganization` trait + global scope on all tenant-aware models; per-org slug uniqueness.
 - **RBAC**: Spatie with roles: super-admin, org-admin, staff, faculty-representative, dean. 30+ granular permissions. 12 Policies.
 - **Actions + Form Requests**: Complete Create/Update/Delete Actions for every domain module.
-- **Controllers**: 38 controller files including authentication controllers.
-- **Frontend**: 37 TypeScript Inertia pages, shadcn/ui components, a global Error page, role-aware dashboards, and an explicit policy-aligned sidebar role matrix.
+- **Controllers**: 39 controller files including authentication controllers.
+- **Frontend**: 38 TypeScript Inertia pages, shadcn/ui components, a global Error page, role-aware dashboards, and an explicit policy-aligned sidebar role matrix.
 - **Exports**: PDF (Dompdf) + Excel (Maatwebsite) for Fixtures, Results, Rankings. Printable match sheet.
 - **Reports**: Dashboard with stats, completion rate, recent results, quick export links.
 - **Faculty Dashboard**: Squad member management with role-based and total-athlete quota validation. Bulk Excel/CSV import uses the same quota rules. Each event registration links to a tenant-safe A4 Team Registration Form populated from the current roster.
@@ -48,10 +50,11 @@
 - **Logo Upload**: Faculty crest/logo upload and display.
 - **Dashboard**: Real data with safe guards, Cache, try/catch (prevents 500s on partial prod DBs).
 - **Public portal**: Bahasa Malaysia SAF 2026 hub at `/` and `/index.php` with schedules, results, progress, sports, and medal standings; only participant display names/logos are exposed.
-- **Routes**: 123 application routes (web + auth); no REST API routes.
+- **Public routes**: `/medal-tally`, `/sports-programme`, `/schedules`, `/results`, and `/contact-us`; `/sports` remains the authenticated administration route.
+- **Routes**: 125 application routes (web + auth); no REST API routes.
 - **Migrations**: 59 migration files covering domain, framework, fixes, and later features.
 - **Seeding**: `DatabaseSeeder` seeds the 24-sport SAF master list, then `SAF2026DataSeeder` seeds SAF 2026 categories/events with quota fields. Reusable and idempotent.
-- **Tests**: 88 PHP test files; the current local suite covers 394 tests / 1,555 assertions. Six Playwright desktop/mobile journeys, including axe checks, passed in connected CI on commit `ae42a50`.
+- **Tests**: 92 PHP test files; the latest completed local baseline covers 415 tests / 1,669 assertions. Six Playwright desktop/mobile journeys, including axe checks, passed in connected CI on commit `ae42a50`.
 - **Docker**: `Dockerfile` + `docker-compose.yml` + nginx/supervisor config.
 - **CI/CD**: `.github/workflows/ci.yml` (Pint lint → PHPUnit → npm build).
 - **Assurance**: PCOV/Clover reporting, Playwright critical journeys, axe WCAG checks, dashboard query budget, k6 thresholds, and frontend bundle budgets.
@@ -104,4 +107,4 @@ Production defaults to `SEED_DEMO_DATA=false`; `DatabaseSeeder` then creates onl
 
 ---
 
-**Last Updated:** 10 August 2026 — authenticated routes now enforce `verified` email middleware consistently. CSP enforcing mode is configuration-ready (`CSP_REPORT_ONLY=false`). Release runbook added at `docs/deployment/release-runbook.md`. Multi-worker authenticated performance, actual production/off-site recovery, real external alert receipt, and a clean tagged release remain tracked in `TODOS.md`.
+**Last Updated:** 12 August 2026 — critical user-management privilege escalation is remediated with tenant-aware role/relation validation and regression coverage; dummy operational seeders are production-guarded; all 407 PHPUnit tests and local code/build gates pass. Production role/activity-log review, connected CI, multi-worker performance, actual production/off-site recovery, real external alert receipt, and a clean tagged release remain tracked in `TODOS.md`.

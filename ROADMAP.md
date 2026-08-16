@@ -54,7 +54,9 @@
 | 10    | AI Features                 | Low      | ⏳ Deferred |
 | 11    | REST API Layer              | Low      | ⏳ Deferred |
 
-**Fokus semasa:** Release readiness — complete operational evidence (k6 multi-worker, external alerting, actual DR drill) and create first versioned release tag.
+**Fokus semasa:** Release readiness — complete operational evidence (k6 multi-worker, external alerting, actual DR drill) and create first versioned release tag. Recent maintenance work also refreshed registration, draw, results, and public portal UX without changing the deferred roadmap.
+
+**Current public portal:** `/`, `/medal-tally`, `/sports-programme`, `/schedules`, `/results`, and `/contact-us`. The public Sports page is intentionally separate from the authenticated `/sports` administration route.
 
 **Bukti operasi 5 Ogos 2026:** connected-CI Playwright/axe dan restore MySQL AES-256 terasing telah lulus. Baki sebelum tuntutan production-ready:
 1. k6 berautentikasi pada staging berbilang worker (p95 < 750ms)

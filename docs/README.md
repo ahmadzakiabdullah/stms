@@ -29,3 +29,5 @@ This directory contains architecture, operations, security, testing, and audit r
 - Prefer adding a short update note instead of rewriting historical audit files.
 - Keep tenant and hierarchy terms consistent with project canon:
   `Organization -> Session -> Tournament -> Sport -> Event -> Match -> Result`.
+- Treat documents containing a dated status header, audit date, commit hash, or operational evidence as point-in-time records. Update the canonical documents (`README.md`, `CURRENT_STATE.md`, `ROADMAP.md`, `TODOS.md`, and this index) when the implementation changes; preserve historical audit and ADR content unless the decision itself changes.
+- Current public page: `/`. Public information pages are being rebuilt incrementally; the authenticated administration route `/sports` remains separate.

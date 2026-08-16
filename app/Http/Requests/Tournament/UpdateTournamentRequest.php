@@ -15,6 +15,7 @@ class UpdateTournamentRequest extends FormRequest
     public function rules(): array
     {
         $tournament = $this->route('tournament');
+        $user = $this->user();
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -32,7 +33,14 @@ class UpdateTournamentRequest extends FormRequest
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'is_active' => ['boolean'],
             'sports' => ['array'],
-            'sports.*' => ['uuid', 'exists:sports,id'],
+            'sports.*' => [
+                'uuid',
+                Rule::exists('sports', 'id')->where(function ($query) use ($user) {
+                    if (! $user?->hasRole('super-admin')) {
+                        $query->where('organization_id', $user?->organization_id);
+                    }
+                }),
+            ],
         ];
     }
 }

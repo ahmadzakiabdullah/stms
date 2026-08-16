@@ -1,0 +1,3 @@
+import { type CSSProperties } from 'react';
+export type PublicThemeSettings = { public_theme_dark?: string; public_theme_primary?: string; public_theme_accent?: string; public_theme_highlight?: string; public_theme_background?: string; public_theme_text?: string };
+export const publicThemeStyle = (s: PublicThemeSettings): CSSProperties => ({ '--public-dark': s.public_theme_dark || '#071B33', '--public-primary': s.public_theme_primary || '#0057A8', '--public-accent': s.public_theme_accent || '#20B8E6', '--public-highlight': s.public_theme_highlight || '#F4B942', '--public-background': s.public_theme_background || '#F4F7FA', '--public-text': s.public_theme_text || '#102A43' } as CSSProperties);

@@ -60,8 +60,13 @@ class DrawService
                 ->sortBy(fn (EventParticipant $participant) => hash('sha256', $seed.$participant->id))
                 ->values();
             $poolIndex = 0;
+            $poolPositions = array_fill(0, $numPools, 0);
             foreach ($shuffled as $ep) {
-                $ep->update(['pool_id' => $pools[$poolIndex]->id]);
+                $poolPositions[$poolIndex]++;
+                $ep->update([
+                    'pool_id' => $pools[$poolIndex]->id,
+                    'seed_number' => $poolPositions[$poolIndex],
+                ]);
                 $poolIndex = ($poolIndex + 1) % $numPools;
             }
 
@@ -155,6 +160,9 @@ class DrawService
     {
         $participantIds = EventParticipant::where('pool_id', $pool->id)
             ->where('status', 'confirmed')
+            ->orderByRaw('CASE WHEN seed_number IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('seed_number')
+            ->orderBy('created_at')
             ->pluck('participant_id')
             ->toArray();
 
@@ -257,12 +265,14 @@ class DrawService
         return $number - 1;
     }
 
-    /**
-     * Move a participant to a different pool and regenerate fixtures for affected pools.
-     */
-    public function moveParticipantToPool(Event $event, string $eventParticipantId, string $targetPoolId): void
+    /** Move a participant before fixtures are created. */
+    public function moveParticipantToPool(Event $event, string $eventParticipantId, string $targetPoolId, ?int $seedNumber = null): void
     {
-        DB::transaction(function () use ($event, $eventParticipantId, $targetPoolId) {
+        DB::transaction(function () use ($event, $eventParticipantId, $targetPoolId, $seedNumber) {
+            if (Fixture::where('event_id', $event->id)->exists()) {
+                throw new \InvalidArgumentException('Reset the draw before changing groups after fixtures have been created.');
+            }
+
             $ep = EventParticipant::where('id', $eventParticipantId)
                 ->where('event_id', $event->id)
                 ->firstOrFail();
@@ -270,6 +280,9 @@ class DrawService
             $sourcePoolId = $ep->pool_id;
 
             if ($sourcePoolId === $targetPoolId) {
+                if ($seedNumber !== null) {
+                    $ep->update(['seed_number' => $seedNumber]);
+                }
                 return;
             }
 
@@ -277,20 +290,7 @@ class DrawService
                 ->where('event_id', $event->id)
                 ->firstOrFail();
 
-            $ep->update(['pool_id' => $targetPoolId]);
-
-            $affectedPoolIds = array_unique(array_filter([$sourcePoolId, $targetPoolId]));
-            foreach ($affectedPoolIds as $poolId) {
-                $pool = Pool::find($poolId);
-                if ($pool) {
-                    Fixture::where('event_id', $event->id)
-                        ->where('pool_id', $poolId)
-                        ->forceDelete();
-                    $this->generateRoundRobinFixtures($event, $pool);
-                }
-            }
-
-            $this->renumberEventFixtures($event);
+            $ep->update(['pool_id' => $targetPoolId, 'seed_number' => $seedNumber ?? $ep->seed_number]);
             $this->recordSnapshot($event, 'participant_moved');
         });
     }

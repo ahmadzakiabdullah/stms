@@ -223,10 +223,17 @@ class SAF2026DataSeeder extends Seeder
                         'max_officials' => null,
                     ], is_array($catData) ? $catData : []);
 
-                    $cat = SportCategory::withTrashed()->updateOrCreate(
+                    $cat = SportCategory::query()
+                        ->where('sport_id', $sport->id)
+                        ->whereRaw('LOWER(name) = ?', [mb_strtolower($catName)])
+                        ->first();
+
+                    $cat ??= SportCategory::withTrashed()->updateOrCreate(
                         ['sport_id' => $sport->id, 'slug' => $catSlug],
                         $catAttributes
                     );
+
+                    $cat->fill(collect($catAttributes)->except('slug')->all())->save();
                     if ($cat->trashed()) {
                         $cat->restore();
                     }

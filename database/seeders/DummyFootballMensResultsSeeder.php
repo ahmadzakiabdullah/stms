@@ -11,6 +11,12 @@ class DummyFootballMensResultsSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->environment('production') && ! config('app.allow_demo_seeding')) {
+            throw new \RuntimeException(
+                'DummyFootballMensResultsSeeder is disabled in production. Set ALLOW_DEMO_SEEDING=true only for an approved, controlled data load.'
+            );
+        }
+
         $event = Event::query()
             ->whereHas('tournament', fn ($query) => $query->where('name', 'SAF 2026 Fasa 1'))
             ->whereHas('sport', fn ($query) => $query->where('slug', 'football'))

@@ -62,3 +62,11 @@
 - [ ] Mobile App (Flutter)
 - [ ] REST API Layer (/api/v1)
 - [ ] Advanced notification channels (email/realtime/webhooks)
+
+## Current UI/Portal Additions (12 August 2026)
+
+- [x] Administrator multi-event registration workspace with active/unregistered faculty filtering.
+- [x] Draw pool move persistence refresh and explicit fixture creation action.
+- [x] Results pending-match workflow and quick result-entry action.
+- [x] Public medal tally dashboard with podium, progress summary, search, and logo fallback.
+- [x] Public Sports programme at `/sports-programme`; authenticated sports administration remains `/sports`.

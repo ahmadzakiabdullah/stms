@@ -4,17 +4,23 @@ STMS is a multi-tenant sports tournament platform for organizations ranging from
 
 ## Current status
 
-The web MVP is operational and in production-hardening/maintenance mode. Implemented flows cover:
+The web MVP is operational and in production-hardening/maintenance mode. The current working tree includes:
 
 - Organization, users, RBAC, settings, and activity logs
 - Session, tournament, sport, category, and event setup
 - Faculty/event registration, dean verification, squad quotas, bulk import, and printable team forms
 - Draws, pools, fixtures, results, configurable rankings, exports, reports, and notifications
-- Tenant-safe Bahasa Malaysia SAF 2026 public portal with schedules, results, progress, and medal tally
+- Tenant-safe SAF 2026 public portal with schedules, results, progress, medal tally, and a Sports programme page at `/sports-programme`
+- Public medal-tally dashboard with podium, progress summary, searchable standings, and logo fallbacks
+- Administrator registration workspace with multi-event batch registration and active/unregistered faculty filtering
+- Draw pool editing with persisted participant moves and explicit Create Fixtures action
+- Results workspace with pending-match workflow and quick Record Next Result action
 - Role-aware dashboards and sidebar navigation for super-admin, org-admin, admin-sport, staff, faculty representative, and dean
 - CI quality gates, connected-CI Playwright/axe evidence, encrypted backup/restore tooling, and internal health checks
 
 A sanitized production-sized MySQL restore has passed. Multi-worker authenticated performance, actual production/off-site recovery, and real external operator alert receipt remain open hardening evidence. REST APIs, accreditation, live scoring, mobile apps, advanced analytics, and AI remain deferred. Files under `docs/api/` describe future contracts and are not available endpoints.
+
+The latest repository changes are pushed on `master` at commit `912b385`. Frontend changes require `npm run build`; Laravel route/config changes require `php artisan optimize:clear` in deployed environments.
 
 ## SAF 2026 data profile
 

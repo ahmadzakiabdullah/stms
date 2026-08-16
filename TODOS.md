@@ -3,14 +3,29 @@
 > Senarai tugasan untuk STMS.
 > **Fokus utama:** Maintenance — pastikan kestabilan production.
 
+> **Snapshot:** 12 August 2026. Registration, draw, results, medal-tally, and public Sports programme UX updates are implemented and pushed in commit `912b385`. The latest full Laravel audit is recorded in `docs/audits/2026-08-12-full-laravel-audit.md`; its P0 findings are the current release blockers.
+
 ---
 
 ## ✅ Current Status: Maintenance Mode
 
 ### Current Focus (MVP): Production Hardening
 
+- [x] Compact the Matches add/edit dialog and prevent long select/input content from widening its responsive layout.
+- [x] Use concise `Sport — Category` labels in Matches while preserving full official event names for reports and stored records.
+- [x] Refactor Matches into a responsive competition workspace with compact event selection, clearer filtering, desktop tables, and mobile-first fixture cards.
+- [x] Reconcile the SAF sport-category catalogue to 30 active categories, safely soft-delete 19 unused duplicates, and prevent slug variants from being recreated by SAF seeders.
+- [x] Adapt the Cosmic landing-page visual language to the tenant-safe public portal while retaining the Laravel/Inertia architecture, live schedules/results, localization, and accessibility safeguards.
+- [x] Add organization-scoped public portal theme controls to Settings with validated UTeM Cosmic Blue defaults and an inline preview.
+- [x] Refactor the draw-result workspace with a guided three-step flow, contextual actions, responsive group/fixture layouts, and a compact version-history section.
+- [x] Add an event-wide fixture schedule to the draw result workspace so matches from multiple groups can be operated in one official venue order.
 - [x] Refactor event registration workspace dialog to support multi-event batch registration for administrators, with selection summary and participant reset safety.
 - [x] Refresh event registration workspace UX with accurate totals and a guided administrator quick-registration action.
+- [x] Add active/unregistered faculty filtering and a `Show registered` option to the administrator event-registration dialog.
+- [x] Add public Sports programme page at `/sports-programme` without conflicting with authenticated `/sports` administration routes.
+- [x] Improve public medal tally with podium, summary statistics, progress, search, and logo fallback.
+- [x] Improve draw-result pool refresh after participant moves and expose Create Fixtures action.
+- [x] Improve results management with pending-match visibility and Record Next Result workflow.
 
 - [x] Refactor the administrator dashboard into a responsive whole-system overview and prevent partial fallback payloads from persisting across refreshes.
 - [x] Canonicalize the IIS application-directory request from `/saf/portal` to `/saf/portal/` before Laravel route matching.
@@ -39,6 +54,48 @@
 
 Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 
+### Audit Remediation: Security, Reliability, and Scalability (12 August 2026)
+
+Source of truth: `docs/audits/2026-08-12-full-laravel-audit.md`.
+
+#### P0 — Release Blockers
+
+- [x] Close the user-management escalation exposure with policy-authorized Form Requests plus controller/service defense-in-depth.
+- [x] Prevent org-admins from assigning the `super-admin` role or any role outside their permitted role set.
+- [x] Force org-admin user creation and updates to the authenticated tenant; reject submitted foreign `organization_id`, `participant_id`, and `sport_id` values.
+- [x] Add feature tests proving org-admins cannot create or move users across tenants, assign `super-admin`, or attach foreign participant/sport records.
+- [ ] Review current users, role assignments, and activity logs for unexpected super-admin grants or cross-tenant accounts; rotate affected credentials if any are found.
+- [x] Add an explicit production guard to `DummyFutsalMenSeeder` and `DummyFootballMensResultsSeeder`, require approved opt-in, and ensure they are absent from normal production seeding paths.
+- [x] Repair the five failing email-verification middleware tests by setting the security flag before route bootstrap; the protected-route suite is green.
+- [x] Restore local release gates: 407 PHPUnit tests / 1,635 assertions, Pint, tenant checks, dependency audits, typecheck, inventory validation, and mapped-drive frontend production build are green. Connected CI remains required before release.
+
+#### P1 — Next Hardening Sprint
+
+- [x] Apply tenant-aware validation to user, participant, registration, session, event, tournament, match, result, draw, and squad workflows.
+- [ ] Require an explicit selected tenant context for super-admin mutations instead of allowing accidental unscoped writes.
+- [ ] Move authorization into Form Requests where practical while retaining Policies/Gates as the authoritative access-control layer.
+- [x] Refactor `EventParticipantController` into dedicated registration, batch-registration, status, squad-member, and notification services/actions with Form Requests and per-registration database transactions.
+- [x] Convert registration, verification, and result database notifications to queued notifications using Laravel `ShouldQueue`; worker retry/backoff, failed-job alerting, and operational health checks remain.
+- [x] Define notification retry (3), backoff (10/30/60 seconds), timeout (60 seconds), Redis `after_commit`, and regression tests; failed-job alerting and worker health checks remain operational follow-up.
+- [x] Cache the public portal payload and medal tally; query upcoming and completed fixtures separately with SQL limits instead of loading every fixture into memory.
+- [x] Add a public portal cache invalidation service hook and wire it into result, fixture, event, participant, and public-setting create/update/delete mutations.
+- [x] Add feature coverage proving public portal cache keys are invalidated for the changed organization without affecting another organization.
+- [x] Add request correlation IDs and correlation-aware fallback logging across controllers, dashboard, reports, and Inertia shared props.
+- [ ] Add a secure production environment baseline requiring `APP_DEBUG=false`, enforcing CSP, HTTPS secure cookies, Redis cache/queue, and a configured mail provider.
+- [x] Resolve Pint failures and update the documented inventory to the measured 125 routes, 59 migrations, 39 controllers, 38 pages, and 92 PHP test files.
+- [x] Validate `npm run build` from a mapped/local working directory; UNC execution fails because Vite loses the project root, while the mapped-drive build passes.
+
+#### P2 — 30–60 Day Improvements
+
+- [ ] Add tenant-isolation and policy test matrices for every privileged role and destructive tournament workflow.
+- [ ] Add query-count regression tests and non-production query profiling to detect N+1 issues.
+- [x] Convert fixture and result Excel exports from eager collections to authorized query-based chunked exports (500 rows); ranking/export queue orchestration remains a follow-up.
+- [ ] Introduce cache/query budgets for public portal, medal tally, dashboard, registration, results, and reporting endpoints.
+- [ ] Add audit alerts for super-admin role changes, repeated denied cross-tenant access, failed queue jobs, backup failures, and elevated HTTP 5xx rates.
+- [ ] Complete an approved multi-worker staging load test, verify a real external alert destination, and restore an actual off-host production backup in isolation.
+- [ ] Establish and ratchet coverage targets for Policies, tenant validation, upload sanitization, seeders, queues, and critical competition workflows.
+- [ ] Create a versioned release tag only after all P0 tasks and release gates pass on a clean tree.
+
 ### Sprint 3: Assurance, Accessibility, and Performance
 
 - [x] Add PCOV coverage reporting and publish Clover output in CI; capture the first measured baseline from the connected CI run before setting a ratcheting threshold.
@@ -60,7 +117,7 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Add release runbook at `docs/deployment/release-runbook.md`.
 - [ ] Create first versioned release tag (`v0.1.0`) after CI passes on clean tree.
 - [ ] Configure production email provider (SMTP/Ses/Postmark) — replace `MAIL_MAILER=log`.
-- [ ] Enable CSP enforcing mode in production after report-only observation.
+- [x] Enable CSP enforcing mode through the production environment template (`CSP_REPORT_ONLY=false`) and protect it with an automated enforcing-mode test.
 
 - [x] Matches page CRUD restored with pool/round fields and Name–Logo–VS–Logo–Name fixture layout.
 - [x] Matches event filter URLs now use existing event slugs instead of UUID query values.

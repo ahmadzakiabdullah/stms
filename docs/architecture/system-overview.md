@@ -1,6 +1,6 @@
 # System Overview
 
-> **Current status (7 August 2026):** The unreleased hardening working tree has 121 web/auth routes, 59 migrations, 38 controllers and 37 TypeScript pages, with role-aware dashboards/navigation, printable registration forms, versioned draw history and no REST API. Deferred modules remain listed in CURRENT_STATE.md.
+> **Current status (12 August 2026):** The SAF 2026 web MVP is operational in maintenance/production-hardening mode. It includes role-aware dashboards/navigation, batch event registration, squad/team forms, versioned draw history, result entry, and a public home portal at `/`. There is still no REST API; deferred modules remain listed in `CURRENT_STATE.md`.
 
 Dokumen ini memberikan gambaran keseluruhan peringkat tinggi mengenai seni bina aplikasi Sistem Pengurusan Kejohanan Sukan (STMS). Ia bertujuan untuk menjadi titik permulaan bagi pembangun baharu untuk memahami komponen utama, corak reka bentuk, dan aliran data dalam sistem.
 
@@ -51,7 +51,7 @@ Aplikasi ini sangat bergantung pada beberapa corak reka bentuk untuk memastikan 
 
 ## 4.1 Portal Awam SAF 2026
 
-`PublicPortalController` ialah pengawal nipis bagi `/` dan `/index.php`. `PublicPortalService` memilih sesi aktif (atau `PUBLIC_SESSION_SLUG` yang ditetapkan semasa deployment), menapis semua kueri secara eksplisit dengan `organization_id`, dan membentuk payload awam untuk jadual, keputusan, statistik serta kedudukan pingat. Payload peserta hanya mengandungi nama paparan dan URL logo; butiran hubungan dan data skuad tidak didedahkan. `RankingService` mengira pingat emas/perak/gangsa daripada perlawanan akhir dan penentuan tempat ketiga yang lengkap.
+`PublicPortalController` ialah pengawal nipis bagi `/` dan `/index.php`. Public portal kini dimulakan semula dengan fokus homepage `/`; halaman maklumat awam lain dikeluarkan sementara untuk dibina semula satu per satu. `PublicPortalService` memilih sesi public (atau `PUBLIC_SESSION_SLUG` yang ditetapkan semasa deployment), menapis semua kueri secara eksplisit dengan `organization_id`, dan membentuk payload awam untuk homepage.
 ## 5. Aliran Permintaan (Request Flow)
 
 Aliran permintaan HTTP yang tipikal adalah seperti berikut:

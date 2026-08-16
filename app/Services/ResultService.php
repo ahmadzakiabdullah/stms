@@ -46,7 +46,7 @@ class ResultService
 
     public function create(Organization $organization, array $data): Result
     {
-        return DB::transaction(function () use ($organization, $data) {
+        $result = DB::transaction(function () use ($organization, $data) {
             $data['organization_id'] = $organization->id;
             $result = Result::create($data);
             $this->markMatchCompleted($result->match_id);
@@ -55,11 +55,15 @@ class ResultService
 
             return $result;
         });
+
+        app(PublicPortalService::class)->forgetForOrganization($organization->id);
+
+        return $result;
     }
 
     public function update(Organization $organization, string $id, array $data): Result
     {
-        return DB::transaction(function () use ($organization, $id, $data) {
+        $result = DB::transaction(function () use ($organization, $id, $data) {
             $result = $this->getById($organization, $id);
             $result->update($data);
             $this->markMatchCompleted($result->match_id);
@@ -68,6 +72,10 @@ class ResultService
 
             return $result->fresh();
         });
+
+        app(PublicPortalService::class)->forgetForOrganization($organization->id);
+
+        return $result;
     }
 
     /**
@@ -121,6 +129,8 @@ class ResultService
             $result->delete();
             Log::info('Result deleted', ['id' => $id, 'org_id' => $organization->id]);
         });
+
+        app(PublicPortalService::class)->forgetForOrganization($organization->id);
     }
 
     public function countByOrganization(Organization $organization): int

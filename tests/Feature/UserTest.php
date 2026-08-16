@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
+use App\Models\Participant;
+use App\Models\Sport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
@@ -57,6 +60,86 @@ class UserTest extends TestCase
 
         $response->assertRedirect(route('users.index'));
         $this->assertDatabaseHas('users', ['name' => 'Updated Name']);
+    }
+
+    public function test_org_admin_created_user_is_forced_to_own_organization(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+
+        $response = $this->actingAs($admin)->post(route('users.store'), [
+            'name' => 'Tenant User',
+            'username' => 'tenant_user',
+            'email' => 'tenant-user@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response->assertRedirect(route('users.index'));
+        $this->assertDatabaseHas('users', [
+            'email' => 'tenant-user@example.com',
+            'organization_id' => $org->id,
+        ]);
+    }
+
+    public function test_org_admin_cannot_create_user_in_another_organization(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($orgA);
+
+        $response = $this->actingAs($admin)->post(route('users.store'), [
+            'name' => 'Foreign Tenant User',
+            'username' => 'foreign_tenant_user',
+            'email' => 'foreign-tenant@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'organization_id' => $orgB->id,
+        ]);
+
+        $response->assertSessionHasErrors('organization_id');
+        $this->assertDatabaseMissing('users', ['email' => 'foreign-tenant@example.com']);
+    }
+
+    public function test_org_admin_cannot_assign_super_admin_role(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $superRole = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
+
+        $response = $this->actingAs($admin)->post(route('users.store'), [
+            'name' => 'Escalated User',
+            'username' => 'escalated_user',
+            'email' => 'escalated@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'roles' => [$superRole->id],
+        ]);
+
+        $response->assertSessionHasErrors('roles.0');
+        $this->assertDatabaseMissing('users', ['email' => 'escalated@example.com']);
+    }
+
+    public function test_org_admin_cannot_attach_foreign_participant_or_sport(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($orgA);
+        $participant = Participant::factory()->create(['organization_id' => $orgB->id]);
+        $sport = Sport::factory()->create(['organization_id' => $orgB->id]);
+
+        $response = $this->actingAs($admin)->post(route('users.store'), [
+            'name' => 'Foreign Relation User',
+            'username' => 'foreign_relation_user',
+            'email' => 'foreign-relation@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'participant_id' => $participant->id,
+            'sports' => [$sport->id],
+        ]);
+
+        $response->assertSessionHasErrors(['participant_id', 'sports.0']);
+        $this->assertDatabaseMissing('users', ['email' => 'foreign-relation@example.com']);
     }
 
     public function test_non_super_admin_cannot_update_user_in_other_org(): void

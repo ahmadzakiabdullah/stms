@@ -60,6 +60,8 @@ return [
 
     'csp_report_only' => (bool) env('CSP_REPORT_ONLY', true),
 
+    'production_config_enforce' => (bool) env('PRODUCTION_CONFIG_ENFORCE', false),
+
     'public_registration' => (bool) env(
         'PUBLIC_REGISTRATION_ENABLED',
         env('APP_ENV', 'production') !== 'production'

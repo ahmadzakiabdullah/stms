@@ -4,11 +4,18 @@ namespace App\Notifications;
 
 use App\Models\Result;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class MatchResultNotification extends Notification
+class MatchResultNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 3;
+
+    public array $backoff = [10, 30, 60];
+
+    public int $timeout = 60;
 
     public function __construct(
         public Result $result,

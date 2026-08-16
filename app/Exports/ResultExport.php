@@ -4,17 +4,18 @@ namespace App\Exports;
 
 use App\Models\Organization;
 use App\Models\Result;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithCustomChunkSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ResultExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
+class ResultExport implements FromQuery, ShouldAutoSize, WithCustomChunkSize, WithHeadings, WithMapping, WithStyles
 {
-    private Collection $results;
+    private Builder $results;
 
     private int $row = 0;
 
@@ -27,12 +28,17 @@ class ResultExport implements FromCollection, ShouldAutoSize, WithHeadings, With
             $query->whereHas('match', fn ($q) => $q->where('event_id', $eventId));
         }
 
-        $this->results = $query->orderByDesc('created_at')->get();
+        $this->results = $query->orderByDesc('created_at');
     }
 
-    public function collection(): Collection
+    public function query(): Builder
     {
         return $this->results;
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
     }
 
     public function headings(): array

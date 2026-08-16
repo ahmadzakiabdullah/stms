@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\DummyFootballMensResultsSeeder;
+use Database\Seeders\DummyFutsalMenSeeder;
 use Database\Seeders\SAF2026DataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
@@ -33,5 +35,25 @@ class ProductionSeedingTest extends TestCase
         $this->expectException(RuntimeException::class);
 
         app(SAF2026DataSeeder::class)->run();
+    }
+
+    public function test_futsal_dummy_seeder_requires_explicit_production_override(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        config()->set('app.allow_demo_seeding', false);
+
+        $this->expectException(RuntimeException::class);
+
+        app(DummyFutsalMenSeeder::class)->run();
+    }
+
+    public function test_football_results_dummy_seeder_requires_explicit_production_override(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        config()->set('app.allow_demo_seeding', false);
+
+        $this->expectException(RuntimeException::class);
+
+        app(DummyFootballMensResultsSeeder::class)->run();
     }
 }

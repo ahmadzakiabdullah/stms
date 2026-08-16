@@ -39,7 +39,7 @@ class MatchService
 
     public function create(Organization $organization, array $data): Fixture
     {
-        return DB::transaction(function () use ($organization, $data) {
+        $match = DB::transaction(function () use ($organization, $data) {
             $data['organization_id'] = $organization->id;
             if (empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['match_number'] ?? Str::random(8));
@@ -52,11 +52,15 @@ class MatchService
 
             return $match;
         });
+
+        app(PublicPortalService::class)->forgetForOrganization($organization->id);
+
+        return $match;
     }
 
     public function update(Organization $organization, string $id, array $data): Fixture
     {
-        return DB::transaction(function () use ($organization, $id, $data) {
+        $match = DB::transaction(function () use ($organization, $id, $data) {
             $match = $this->getById($organization, $id);
             if (isset($data['slug']) && empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['match_number'] ?? Str::random(8));
@@ -66,6 +70,10 @@ class MatchService
 
             return $match->fresh();
         });
+
+        app(PublicPortalService::class)->forgetForOrganization($organization->id);
+
+        return $match;
     }
 
     public function delete(Organization $organization, string $id): void
@@ -75,6 +83,8 @@ class MatchService
             $match->delete();
             Log::info('Match deleted', ['id' => $id, 'org_id' => $organization->id]);
         });
+
+        app(PublicPortalService::class)->forgetForOrganization($organization->id);
     }
 
     public function countByOrganization(Organization $organization): int

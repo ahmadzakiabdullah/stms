@@ -705,7 +705,7 @@ const en: Translations = {
     'No draw has been performed yet': 'No draw has been performed yet',
     'Run a draw from the Events page to create groups...': 'Run a draw from the Events page to create groups...',
     'Seed': 'Seed',
-    'Seed #': 'Seed #',
+    'Seed #': 'Seed #', 'Position': 'Position',
     '(current)': '(current)',
     'Empty pool': 'Empty pool',
     'Draw history': 'Draw history',
@@ -714,6 +714,18 @@ const en: Translations = {
     'System': 'System',
     'Restore': 'Restore',
     'Restore version': 'Restore version',
+    'Group draw': 'Group draw',
+    'Assign participants': 'Assign participants',
+    'Create match schedule': 'Create match schedule',
+    'Competition': 'Competition',
+    'Track match progress': 'Track match progress',
+    'Follow these steps to prepare and monitor the event.': 'Follow these steps to prepare and monitor the event.',
+    'Step': 'Step',
+    'fixtures completed': 'fixtures completed',
+    'saved versions': 'saved versions',
+    'View history': 'View history',
+    'Full match schedule': 'Full match schedule',
+    'All groups in official match order for shared venue scheduling.': 'All groups in official match order for shared venue scheduling.',
 
     // Team Registration Form
     'Back to Event Registrations': 'Back to Event Registrations',
@@ -1501,7 +1513,7 @@ const ms: Translations = {
     'No draw has been performed yet': 'Belum ada undian dilakukan',
     'Run a draw from the Events page to create groups...': 'Jalankan undian dari halaman Acara untuk cipta kumpulan...',
     'Seed': 'Benih',
-    'Seed #': 'Benih #',
+    'Seed #': 'Benih #', 'Position': 'Kedudukan',
     '(current)': '(semasa)',
     'Empty pool': 'Kolam kosong',
     'Draw history': 'Sejarah undian',
@@ -1510,6 +1522,18 @@ const ms: Translations = {
     'System': 'Sistem',
     'Restore': 'Pulihkan',
     'Restore version': 'Pulihkan versi',
+    'Group draw': 'Undian kumpulan',
+    'Assign participants': 'Agihkan peserta',
+    'Create match schedule': 'Cipta jadual perlawanan',
+    'Competition': 'Pertandingan',
+    'Track match progress': 'Pantau kemajuan perlawanan',
+    'Follow these steps to prepare and monitor the event.': 'Ikuti langkah ini untuk menyediakan dan memantau acara.',
+    'Step': 'Langkah',
+    'fixtures completed': 'perlawanan selesai',
+    'saved versions': 'versi tersimpan',
+    'View history': 'Lihat sejarah',
+    'Full match schedule': 'Jadual penuh perlawanan',
+    'All groups in official match order for shared venue scheduling.': 'Semua kumpulan mengikut turutan rasmi perlawanan untuk penjadualan venue bersama.',
 
     // Team Registration Form
     'Back to Event Registrations': 'Kembali ke Pendaftaran Acara',
@@ -1596,6 +1620,7 @@ const ms: Translations = {
     'vs': 'lwn',};
 
 Object.assign(en, {
+    'Back to home': 'Back to home', 'Visit the official UTeM website for institutional information and contact channels.': 'Visit the official UTeM website for institutional information and contact channels.', 'Visit UTeM website': 'Visit UTeM website',
     Tournament: 'Tournament', Sport: 'Sport', Category: 'Category', 'Event Name': 'Event Name', Slug: 'Slug', Description: 'Description',
     'Start Date': 'Start Date', 'End Date': 'End Date', 'Registration Deadline': 'Registration Deadline', Format: 'Format', 'Pool Size': 'Pool Size',
     'Select Tournament': '-- Select Tournament --', 'Select Sport': '-- Select Sport --', 'Select Category': '-- Select Category --',
@@ -1613,6 +1638,7 @@ Object.assign(en, {
     'Medal standings will be updated after the final events are completed.': 'Medal standings will be updated after the final events are completed.', Next: 'Next', 'Match schedule': 'Match schedule', Latest: 'Latest', 'Match results': 'Match results', 'Auto-refreshes every 30 seconds': 'Auto-refreshes every 30 seconds', Refresh: 'Refresh', Refreshing: 'Refreshing…', 'No official results recorded yet.': 'No official results recorded yet.', 'Location to be announced': 'Location to be announced', 'To be determined': 'To be determined',
 });
 Object.assign(ms, {
+    'Back to home': 'Kembali ke laman utama', 'Visit the official UTeM website for institutional information and contact channels.': 'Layari laman rasmi UTeM untuk maklumat institusi dan saluran hubungan.', 'Visit UTeM website': 'Layari laman UTeM',
     Tournament: 'Kejohanan', Sport: 'Sukan', Category: 'Kategori', 'Event Name': 'Nama Acara', Slug: 'Slug', Description: 'Penerangan',
     'Start Date': 'Tarikh Mula', 'End Date': 'Tarikh Tamat', 'Registration Deadline': 'Tarikh Tutup Pendaftaran', Format: 'Format', 'Pool Size': 'Saiz Kumpulan',
     'Select Tournament': '-- Pilih Kejohanan --', 'Select Sport': '-- Pilih Sukan --', 'Select Category': '-- Pilih Kategori --', 'No format': 'Tiada format',
@@ -1653,6 +1679,12 @@ Object.assign(en, {
     'Official channels for competition, schedule and contingent management enquiries.': 'Official channels for competition, schedule and contingent management enquiries.',
     'Portal Home': 'Portal Home', 'Official Portal': 'Official Portal', 'Medals': 'Medals', 'Contact': 'Contact',
     'Log in': 'Log in', 'Sport': 'Sport', 'Match': 'Match', 'Finished': 'Finished',
+    'Public navigation': 'Public navigation', 'Sports Programme': 'Sports Programme', 'Competition status': 'Competition status', 'Competition has not started yet.': 'Competition has not started yet.', 'Competition completed.': 'Competition completed.', 'Competition in progress.': 'Competition in progress.', 'completed': 'completed',
+    'At a glance': 'At a glance', 'Everything you need for SAF 2026': 'Everything you need for SAF 2026', 'Competition summary': 'Competition summary', 'No matching contingents found.': 'No matching contingents found.',
+    'The official schedule and results will appear here once published.': 'The official schedule and results will appear here once published.',
+    'Countdown to tournament': 'Countdown to tournament', 'Days': 'Days', 'Hours': 'Hours', 'Minutes': 'Minutes', 'Seconds': 'Seconds',
+    'Melaka weather': 'Melaka weather', 'Melaka': 'Melaka', 'Weather unavailable': 'Weather unavailable', 'Today': 'Today',
+    'Quick links': 'Quick links', 'UTeM Sports Centre': 'UTeM Sports Centre',
     'Venue to be announced': 'Venue to be announced', 'Last updated': 'Last updated',
     'Medal standings are not available yet.': 'Medal standings are not available yet.',
     'The competition schedule has not been published yet.': 'The competition schedule has not been published yet.',
@@ -1672,6 +1704,12 @@ Object.assign(ms, {
     'Official channels for competition, schedule and contingent management enquiries.': 'Saluran rasmi untuk pertanyaan berkaitan pertandingan dan pengurusan kontinjen.',
     'Portal Home': 'Laman Utama', 'Official Portal': 'Portal Rasmi', 'Medals': 'Pingat', 'Contact': 'Hubungi',
     'Log in': 'Log masuk', 'Sport': 'Sukan', 'Match': 'Perlawanan', 'Finished': 'Selesai',
+    'Public navigation': 'Navigasi awam', 'Sports Programme': 'Program Sukan', 'Competition status': 'Status pertandingan', 'Competition has not started yet.': 'Pertandingan belum bermula.', 'Competition completed.': 'Pertandingan selesai.', 'Competition in progress.': 'Pertandingan sedang berlangsung.', 'completed': 'selesai',
+    'At a glance': 'Ringkasan pantas', 'Everything you need for SAF 2026': 'Semua maklumat SAF 2026 di satu tempat', 'Competition summary': 'Ringkasan pertandingan', 'No matching contingents found.': 'Tiada kontinjen sepadan ditemui.',
+    'The official schedule and results will appear here once published.': 'Jadual dan keputusan rasmi akan dipaparkan di sini selepas diterbitkan.',
+    'Countdown to tournament': 'Kiraan detik ke pertandingan', 'Days': 'Hari', 'Hours': 'Jam', 'Minutes': 'Minit', 'Seconds': 'Saat',
+    'Melaka weather': 'Cuaca Melaka', 'Melaka': 'Melaka', 'Weather unavailable': 'Cuaca tidak tersedia', 'Today': 'Hari ini',
+    'Quick links': 'Pautan pantas', 'UTeM Sports Centre': 'Pusat Sukan UTeM',
     'Venue to be announced': 'Lokasi akan diumumkan', 'Last updated': 'Dikemas kini',
     'Medal standings are not available yet.': 'Kedudukan pingat belum tersedia.',
     'The competition schedule has not been published yet.': 'Jadual pertandingan belum diterbitkan.',
@@ -1682,12 +1720,22 @@ Object.assign(ms, {
 });
 
 Object.assign(en, {
+    'Public homepage': 'Public homepage',
+    'Follow the latest tournament information, official schedules, results, and competition updates in one place.': 'Follow the latest tournament information, official schedules, results, and competition updates in one place.',
+    'Explore competition': 'Explore competition', 'Competition dates': 'Competition dates', 'SAF 2026': 'SAF 2026', until: 'until',
+    'Official information for participants, faculties, supporters, and the UTeM community.': 'Official information for participants, faculties, supporters, and the UTeM community.',
+    'Competition overview': 'Competition overview', 'Sports programme': 'Sports programme', 'Official events': 'Official events', 'Participating faculties': 'Participating faculties', 'Fixtures scheduled': 'Fixtures scheduled',
     'Official sports information portal': 'Official sports information portal',
     'Follow schedules, latest results and medal standings in one official view.': 'Follow schedules, latest results and medal standings in one official view.',
     'Competition standings': 'Competition standings', 'Fixtures completed': 'Fixtures completed',
     'No participation records.': 'No participation records.', 'No tournament phases are configured for this session.': 'No tournament phases are configured for this session.', 'Official Stamp': 'Official Stamp',
 });
 Object.assign(ms, {
+    'Public homepage': 'Laman utama awam',
+    'Follow the latest tournament information, official schedules, results, and competition updates in one place.': 'Ikuti maklumat terkini kejohanan, jadual rasmi, keputusan dan kemas kini pertandingan di satu tempat.',
+    'Explore competition': 'Terokai pertandingan', 'Competition dates': 'Tarikh pertandingan', 'SAF 2026': 'SAF 2026', until: 'hingga',
+    'Official information for participants, faculties, supporters, and the UTeM community.': 'Maklumat rasmi untuk peserta, fakulti, penyokong dan komuniti UTeM.',
+    'Competition overview': 'Ringkasan pertandingan', 'Sports programme': 'Program sukan', 'Official events': 'Acara rasmi', 'Participating faculties': 'Fakulti yang mengambil bahagian', 'Fixtures scheduled': 'Perlawanan dijadualkan',
     'Official sports information portal': 'Portal maklumat sukan rasmi',
     'Follow schedules, latest results and medal standings in one official view.': 'Ikuti jadual pertandingan, keputusan terkini dan kedudukan pingat dalam satu paparan rasmi.',
     'Competition standings': 'Kedudukan pertandingan', 'Fixtures completed': 'Perlawanan selesai',
@@ -1757,6 +1805,9 @@ Object.assign(ms, {
     'Events without fixtures': 'Acara tanpa perlawanan', 'Fixtures without schedule': 'Perlawanan tanpa jadual',
     'No operational blockers detected.': 'Tiada halangan operasi dikesan.', inactive: 'tidak aktif',
 });
+
+Object.assign(en, { 'Open menu': 'Open menu', 'Close menu': 'Close menu', 'View results': 'View results', 'Next fixture': 'Next fixture' });
+Object.assign(ms, { 'Open menu': 'Buka menu', 'Close menu': 'Tutup menu', 'View results': 'Lihat keputusan', 'Next fixture': 'Perlawanan seterusnya' });
 
 const dictionaries: Record<string, Translations> = { en, ms };
 

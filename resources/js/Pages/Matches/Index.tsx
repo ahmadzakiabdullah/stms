@@ -53,10 +53,10 @@ interface KnockoutData {
     fixtures: MatchRow[];
 }
 
-interface EventWithRelations extends Omit<Event, 'tournament' | 'sport'> {
+interface EventWithRelations extends Omit<Event, 'tournament' | 'sport' | 'sport_category'> {
     tournament?: { id: string; name: string };
     sport?: { id: string; name: string };
-    sportCategory?: { id: string; name: string };
+    sport_category?: { id: string; name: string };
     pools_count?: number;
 }
 
@@ -83,6 +83,16 @@ interface MatchForm {
     status: Fixture['status'];
     notes: string;
 }
+
+const eventDisplayName = (event: EventWithRelations) => {
+    const sport = event.sport?.name?.trim();
+    const category = event.sport_category?.name?.trim();
+
+    if (sport && category) return `${sport} — ${category}`;
+    if (sport) return sport;
+
+    return event.name;
+};
 
 type ParticipantSummary = Pick<Participant, 'id' | 'name'> & Partial<Pick<Participant, 'team_name' | 'logo_url'>>;
 
@@ -355,6 +365,48 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
     );
 }
 
+function MatchMobileCard({ match, onEdit, onDelete, eventCode: code = '', canManage = true }: MatchRowViewProps) {
+    const scored = match.result?.score_home !== null && match.result?.score_home !== undefined;
+    const detail = match.pool?.name ?? (match.stage ? stageTitle(match.stage, match.round) : `Round ${match.round || 1}`);
+    const label = code ? `${code}${match.match_number}` : matchNumberLabel(match.match_number, match.event?.name);
+
+    return (
+        <article className="rounded-xl border bg-card p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Match #{label} · {detail}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(match.scheduled_at)}</p>
+                </div>
+                {statusBadge(match.status)}
+            </div>
+            <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                <div className="min-w-0 text-center">
+                    <TeamMark participant={match.home_participant} size="mx-auto size-12" />
+                    <p className="mt-1 truncate text-sm font-semibold" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</p>
+                </div>
+                <span className={`rounded-lg px-3 py-2 text-sm font-bold tabular-nums ${scored ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : 'VS'}
+                </span>
+                <div className="min-w-0 text-center">
+                    <TeamMark participant={match.away_participant} size="mx-auto size-12" />
+                    <p className="mt-1 truncate text-sm font-semibold" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</p>
+                </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3">
+                <span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">
+                    <CalendarDays className="size-3.5 shrink-0" /> {match.venue || 'Venue TBD'}
+                </span>
+                {canManage && (
+                    <div className="flex shrink-0 gap-1">
+                        <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit match"><Pencil className="size-3" /></Button>
+                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive" onClick={onDelete} aria-label="Delete match"><Trash2 className="size-3" /></Button>
+                    </div>
+                )}
+            </div>
+        </article>
+    );
+}
+
 export default function MatchesIndex({ events, drawnEventIds, selectedEventId, pools, allFixtures, knockout, participants, canManage = true }: MatchesIndexProps) {
     const { flash } = usePage().props;
     const { t } = useI18n();
@@ -366,6 +418,12 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const fixtures = useMemo(() => (Array.isArray(allFixtures) ? allFixtures : []), [allFixtures]);
     const selectedEvent = events.find((event) => event.id === selectedEventId);
+    const selectedFixtures = useMemo(
+        () => fixtures.filter((match) => match.event_id === selectedEventId),
+        [fixtures, selectedEventId]
+    );
+    const selectedCompleted = selectedFixtures.filter((match) => match.status === 'completed').length;
+    const selectedProgress = matchProgress(selectedFixtures.length, selectedCompleted);
 
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm<MatchForm>({
         event_id: selectedEventId || '',
@@ -530,36 +588,31 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
             {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
             {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
 
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-                <Button
-                    variant={!selectedEventId ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleFilterChange('')}
-                >
-                    {t('All Matches')}
-                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">{fixtures.length}</span>
-                </Button>
-                {events.map((event) => {
-                    const count = fixtures.filter((match) => match.event_id === event.id).length;
-                    if (count === 0 && !drawnEventIds.includes(event.id)) return null;
-
-                    const completed = fixtures.filter((match) => match.event_id === event.id && match.status === 'completed').length;
-                    const progress = drawnEventIds.includes(event.id) ? matchProgress(count, completed) : null;
-
-                    return (
-                        <Button
-                            key={event.id}
-                            variant={selectedEventId === event.id ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => handleFilterChange(event.id)}
+            <Card className="mb-4">
+                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                        <Label htmlFor="event-filter" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Event')}</Label>
+                        <select
+                            id="event-filter"
+                            value={selectedEventId || ''}
+                            onChange={(event) => handleFilterChange(event.target.value)}
+                            className="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
                         >
-                            {event.name}
-                            {progress && <span className={`ml-1.5 size-1.5 rounded-full ${progress.bar}`} />}
-                            <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">{count}</span>
+                            <option value="">{t('All Matches')} ({fixtures.length})</option>
+                            {events.map((event) => {
+                                const count = fixtures.filter((match) => match.event_id === event.id).length;
+                                return <option key={event.id} value={event.id}>{eventDisplayName(event)} ({count})</option>;
+                            })}
+                        </select>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 sm:justify-end">
+                        <span className="text-xs text-muted-foreground">{events.length} events</span>
+                        <Button variant="outline" size="sm" onClick={refreshData}>
+                            <RefreshCw className="mr-2 size-3.5" /> Refresh
                         </Button>
-                    );
-                })}
-            </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {!selectedEvent ? (
                 <>
@@ -571,20 +624,21 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         <StatCard label={t('Cancelled')} value={counts.cancelled} tone="destructive" />
                     </div>
 
-                    <div className="mb-4 flex flex-wrap items-center gap-3">
-                        <div className="relative">
+                    <Card className="mb-4">
+                    <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+                        <div className="relative min-w-0 flex-1">
                             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 placeholder={t('Search team, venue, match #...')}
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
-                                className="w-72 pl-8"
+                                className="w-full pl-8"
                             />
                         </div>
                         <select
                             value={statusFilter}
                             onChange={(event) => setStatusFilter(event.target.value)}
-                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:w-44"
                         >
                             <option value="">{t('All Statuses')}</option>
                             <option value="scheduled">{t('Scheduled')}</option>
@@ -595,7 +649,8 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         <span className="text-sm text-muted-foreground">
                             {t('Showing')} {filteredFixtures.length} {t('of')} {fixtures.length} {t('matches')}
                         </span>
-                    </div>
+                    </CardContent>
+                    </Card>
 
                     <div className="space-y-6">
                         {groupedByEvent.length === 0 && (
@@ -625,13 +680,13 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                         <div className="flex flex-wrap items-start justify-between gap-3">
                                             <div>
                                                 <CardTitle className="flex items-center gap-2 text-lg">
-                                                    {event.name}
+                                                    {eventDisplayName(event)}
                                                     {eventHasDraw && <Badge variant="outline">Drawn</Badge>}
                                                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${progress.badge}`}>{progress.label}</span>
                                                 </CardTitle>
                                                 <CardDescription>
                                                     {event.tournament?.name} · {event.sport?.name}
-                                                    {event.sportCategory && ` — ${event.sportCategory.name}`}
+                                                    {event.sport_category && ` — ${event.sport_category.name}`}
                                                     <span className="mx-1.5">·</span>
                                                     {eventFixtures.length} matches
                                                     <span className="ml-2 inline-flex items-center gap-1.5 align-middle">
@@ -655,7 +710,18 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                         </div>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="overflow-x-auto">
+                                        <div className="grid gap-3 md:hidden">
+                                            {shown.map((match) => (
+                                                <MatchMobileCard
+                                                    key={match.id}
+                                                    match={match}
+                                                    onEdit={() => openEdit(match)}
+                                                    onDelete={() => setDeleteMatch(match)}
+                                                    canManage={canManage}
+                                                />
+                                            ))}
+                                        </div>
+                                        <div className="hidden overflow-x-auto md:block">
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
@@ -698,12 +764,12 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                             <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div>
                                     <CardTitle className="flex items-center gap-2 text-lg">
-                                        {selectedEvent.name}
+                                        {eventDisplayName(selectedEvent)}
                                         {drawnEventIds.includes(selectedEvent.id) && <Badge variant="outline">Drawn</Badge>}
                                     </CardTitle>
                                     <CardDescription>
                                         {selectedEvent.tournament?.name} · {selectedEvent.sport?.name}
-                                        {selectedEvent.sportCategory && ` — ${selectedEvent.sportCategory.name}`}
+                                        {selectedEvent.sport_category && ` — ${selectedEvent.sport_category.name}`}
                                         {pools.length > 0 && ` · ${pools.length} Pool${pools.length > 1 ? 's' : ''}`}
                                     </CardDescription>
                                 </div>
@@ -720,6 +786,25 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 </div>
                             </div>
                         </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-3 gap-3 rounded-lg bg-muted/50 p-3">
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Fixtures</p>
+                                    <p className="mt-0.5 text-xl font-bold tabular-nums">{selectedFixtures.length}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Completed</p>
+                                    <p className="mt-0.5 text-xl font-bold tabular-nums">{selectedCompleted}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Progress</p>
+                                    <p className="mt-0.5 text-xl font-bold tabular-nums">{selectedProgress.pct}%</p>
+                                </div>
+                            </div>
+                            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+                                <div className={`h-full rounded-full ${selectedProgress.bar}`} style={{ width: `${selectedProgress.pct}%` }} />
+                            </div>
+                        </CardContent>
                     </Card>
 
                     {knockout.league_complete && <KnockoutStageSection knockout={knockout} canManage={canManage} />}
@@ -780,7 +865,20 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                     </div>
                                 )}
 
-                                <div className="overflow-x-auto">
+                                <div className="grid gap-3 md:hidden">
+                                    {pool.fixtures.map((fixture) => (
+                                        <MatchMobileCard
+                                            key={fixture.id}
+                                            match={fixture}
+                                            eventCode={eventCode(selectedEvent.name)}
+                                            onEdit={() => openEdit(fixture)}
+                                            onDelete={() => setDeleteMatch(fixture)}
+                                            canManage={canManage}
+                                        />
+                                    ))}
+                                    {pool.fixtures.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">No fixtures in this pool.</p>}
+                                </div>
+                                <div className="hidden overflow-x-auto md:block">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
@@ -816,45 +914,45 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
             )}
 
             <Dialog open={dialogOpen} onOpenChange={(open) => open ? setDialogOpen(true) : closeDialog()}>
-                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-                    <form onSubmit={submitMatch}>
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+                    <form className="min-w-0" onSubmit={submitMatch}>
                         <DialogHeader>
                             <DialogTitle>{editingMatch ? t('Edit Match') : t('Add Match')}</DialogTitle>
                             <DialogDescription>{t('Set teams, pool, round, venue, schedule and status.')}</DialogDescription>
                         </DialogHeader>
-                        <div className="grid gap-4 py-5 sm:grid-cols-2">
-                            <div className="grid gap-2 sm:col-span-2">
+                        <div className="grid min-w-0 gap-4 py-5 sm:grid-cols-2 [&>div]:min-w-0 [&_input]:w-full [&_select]:w-full">
+                            <div className="grid min-w-0 gap-2 sm:col-span-2">
                                 <Label htmlFor="event_id">{t('Event')}</Label>
-                                <select id="event_id" value={data.event_id} onChange={(event) => setData('event_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm" required>
+                                <select id="event_id" value={data.event_id} onChange={(event) => setData('event_id', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm" required>
                                     <option value="">-- Select Event --</option>
-                                    {events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}
+                                    {events.map((event) => <option key={event.id} value={event.id}>{eventDisplayName(event)}</option>)}
                                 </select>
                                 {errors.event_id && <p className="text-sm text-destructive">{errors.event_id}</p>}
                             </div>
-                            <div className="grid gap-2">
+                            <div className="grid min-w-0 gap-2">
                                 <Label htmlFor="pool_id">{t('Pool')}</Label>
-                                <select id="pool_id" value={data.pool_id} onChange={(event) => setData('pool_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm">
+                                <select id="pool_id" value={data.pool_id} onChange={(event) => setData('pool_id', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm">
                                     <option value="">-- No Pool --</option>
                                     {eventPools.map((pool) => <option key={pool.id} value={pool.id}>{pool.name}</option>)}
                                 </select>
                                 {errors.pool_id && <p className="text-sm text-destructive">{errors.pool_id}</p>}
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid min-w-0 grid-cols-2 gap-3">
                                 <div className="grid gap-2"><Label htmlFor="round">{t('Round')}</Label><Input id="round" type="number" min="1" value={data.round} onChange={(event) => setData('round', Number(event.target.value))} /></div>
                                 <div className="grid gap-2"><Label htmlFor="match_number">Match #</Label><Input id="match_number" type="number" min="1" value={data.match_number} onChange={(event) => setData('match_number', Number(event.target.value))} required /></div>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="home_participant_id">{t('Home')}</Label>
-                                <select id="home_participant_id" value={data.home_participant_id} onChange={(event) => setData('home_participant_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
+                                <select id="home_participant_id" value={data.home_participant_id} onChange={(event) => setData('home_participant_id', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="away_participant_id">{t('Away')}</Label>
-                                <select id="away_participant_id" value={data.away_participant_id} onChange={(event) => setData('away_participant_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
+                                <select id="away_participant_id" value={data.away_participant_id} onChange={(event) => setData('away_participant_id', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
                                 {errors.away_participant_id && <p className="text-sm text-destructive">{errors.away_participant_id}</p>}
                             </div>
                             <div className="grid gap-2"><Label htmlFor="venue">Venue</Label><Input id="venue" value={data.venue} onChange={(event) => setData('venue', event.target.value)} /></div>
                             <div className="grid gap-2"><Label htmlFor="scheduled_at">Scheduled At</Label><Input id="scheduled_at" type="datetime-local" value={data.scheduled_at} onChange={(event) => setData('scheduled_at', event.target.value)} /></div>
-                            <div className="grid gap-2"><Label htmlFor="status">{t('Status')}</Label><select id="status" value={data.status} onChange={(event) => setData('status', event.target.value as Fixture['status'])} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="scheduled">{t('Scheduled')}</option><option value="in_progress">{t('In Progress')}</option><option value="completed">{t('Completed')}</option><option value="cancelled">{t('Cancelled')}</option></select></div>
+                            <div className="grid gap-2"><Label htmlFor="status">{t('Status')}</Label><select id="status" value={data.status} onChange={(event) => setData('status', event.target.value as Fixture['status'])} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm"><option value="scheduled">{t('Scheduled')}</option><option value="in_progress">{t('In Progress')}</option><option value="completed">{t('Completed')}</option><option value="cancelled">{t('Cancelled')}</option></select></div>
                             <div className="grid gap-2"><Label htmlFor="notes">Notes</Label><Input id="notes" value={data.notes} onChange={(event) => setData('notes', event.target.value)} /></div>
                         </div>
                         <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>{t('Cancel')}</Button><Button type="submit" disabled={processing}><Save className="mr-2 size-4" />{editingMatch ? t('Update Match') : t('Save')}</Button></DialogFooter>

@@ -11,12 +11,6 @@ class VerifiedMiddlewareTest extends TestCase
 {
     use CreatesTenantUsers, RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        config(['app.email_verification_required' => true]);
-    }
-
     public function test_unverified_user_is_redirected_from_dashboard(): void
     {
         $org = Organization::factory()->create();

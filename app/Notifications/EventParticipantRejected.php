@@ -4,11 +4,18 @@ namespace App\Notifications;
 
 use App\Models\EventParticipant;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class EventParticipantRejected extends Notification
+class EventParticipantRejected extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 3;
+
+    public array $backoff = [10, 30, 60];
+
+    public int $timeout = 60;
 
     public function __construct(public EventParticipant $eventParticipant) {}
 

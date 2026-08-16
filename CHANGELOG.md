@@ -1,4 +1,52 @@
 # Changelog
+
+## Unreleased — Cosmic-inspired public portal (14 August 2026)
+
+- Tightened the Matches add/edit dialog to a more compact responsive width and constrained all form controls so long event or participant values no longer stretch the modal layout.
+- Simplified event labels throughout Matches to the contextual `Sport — Category` format while retaining the full official event and tournament names in stored data and secondary context.
+- Corrected the Matches event relation mapping from frontend camelCase to Laravel's serialized `sport_category` key so category names appear in concise event labels.
+- Refactored Matches into a cleaner operations workspace with a compact event selector, consolidated search/status toolbar, manual refresh control, and purpose-built mobile fixture cards while retaining the detailed desktop tables.
+- Reduced the live SAF sport-category catalogue from 49 to the intended 30 by soft-deleting 19 verified duplicates unused by active events; added a guarded dry-run cleanup command and made SAF seeders reuse an active same-name category instead of recreating slug variants.
+- Adapted the Cosmic visual language for the Laravel/Inertia public homepage without importing its incompatible Next.js 15, React 19, or Tailwind CSS 4 runtime.
+- Added a floating glass navigation shell, atmospheric hero treatment, competition progress panel, staggered overview cards, responsive fixture/result cards, medal cards, and reduced-motion-safe decorative animation.
+- Brought the public Contact page onto the same Cosmic navigation, hero, card, typography, and footer system so public routes now present one consistent identity.
+- Added tenant-scoped public portal colour controls and a live preview to Settings, with validated semantic CSS tokens and UTeM Cosmic Blue defaults for future branding changes without code edits.
+- Consolidated the public header Login action into a reusable, theme-aware button with stronger mobile sizing, focus visibility, interaction feedback, and consistent rendering across Home and Contact.
+- Added an accessible mobile hamburger menu for public navigation, including localized open/close labels and a compact header treatment for narrow screens.
+- Rebalanced the public header into stable desktop brand/navigation/action columns and a simplified mobile brand/menu layout; locale and Login actions now live inside the mobile menu instead of competing for header space.
+- Consolidated desktop navigation into a shared pill-style component with active-page indication, consistent Home/Contact links, balanced three-zone alignment, and an `xl` breakpoint that avoids crowding on tablet-sized screens.
+- Refocused the public homepage hero around the competition itself with tighter typography, schedule/results actions, a dedicated date card, theme-driven progress dashboard, and a live next-fixture preview.
+- Replaced the hero's hardcoded green atmosphere with a theme-driven UTeM blue gradient using the configurable Dark, Primary, and Accent tokens.
+- Replaced the announcement message with a localized current date on the left and a cached, server-fetched Durian Tunggal temperature on the right, with a safe unavailable-state fallback.
+- Updated public typography to Barlow Condensed 700/800 for competition headings and display numbers, paired with Plus Jakarta Sans Variable for navigation and body copy; both families are bundled locally.
+- Switched the public Barlow Condensed display face to its italic 700/800 cuts for a more dynamic sports identity while retaining upright Plus Jakarta Sans body text.
+- Replaced the condensed display face with an all–Plus Jakarta Sans typographic system that approximates the Premier League site's clean regular/bold hierarchy without copying its proprietary PremierLeague font files.
+- Preserved live tenant-safe SAF data, locale switching, automatic partial refreshes, public contact navigation, and the existing authenticated application design.
+
+## Unreleased — Draw result workspace UX (13 August 2026)
+
+- Refactored the draw result page into a clear three-step competition workflow with contextual primary actions, responsive group cards, mobile fixture cards, safer pending-change feedback, and a compact expandable audit history.
+- Added a consolidated event-wide match schedule ordered by match number, with centered team-logo matchups and shared venue/time context; pool cards now focus on group membership without duplicating fixtures.
+- Added English and Bahasa Malaysia labels for the new workflow and status guidance.
+
+## Unreleased — Public portal typography (13 August 2026)
+
+- Changed public portal heading typography to Noto Sans Variable and removed the unused Sora font dependency.
+
+## Unreleased — Competition overview cards (13 August 2026)
+
+- Reworked the public homepage Competition Overview section into responsive statistic cards with icons, hover elevation, and clearer visual hierarchy.
+
+## Unreleased — Public portal header refresh (13 August 2026)
+
+- Updated the public portal header hover/focus state with a navy-to-teal gradient, gold accent border, clearer navigation hover treatment, and stronger contrast for logo and navigation text.
+
+## Unreleased — Audit P0 remediation (12 August 2026)
+
+- Closed an org-admin privilege-escalation and cross-tenant user-management path with policy-authorized Form Requests, tenant-aware organization/participant/sport validation, explicit `super-admin` role rejection, and controller/service defense-in-depth.
+- Added user-management regression tests for foreign tenants, foreign participant/sport relations, and forbidden super-admin assignment.
+- Guarded the Futsal Men's and Football Men's dummy seeders against production execution unless `ALLOW_DEMO_SEEDING=true` is explicitly approved, with production regression tests.
+- Corrected email-verification test bootstrap configuration and restored the complete local quality gate: 407 PHPUnit tests / 1,635 assertions, Pint, TypeScript, tenant and inventory checks, and the Vite production build all pass.
 - Fixed the unverified-user redirect loop by clearing the protected intended URL before the verification prompt returns to the dashboard; verified-route protection remains enforced.
 - Fixed subfolder session-cookie handling by deriving the cookie path from `APP_URL` (for example `/portal`) when `SESSION_PATH` is not explicitly set.
 
@@ -403,5 +451,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ok
 # Unreleased
 
+- Added public Sports programme page at `/sports-programme`, improved medal tally dashboard, and documented the route separation from authenticated `/sports`.
+- Fixed public portal data compatibility so existing `sports` string payloads remain stable while the Sports page consumes `sports_catalog`.
+- Refreshed registration, draw-result, and results-management workflows with clearer operational actions.
 - Refreshed the event registration workspace with accurate all-registration totals and a clearer administrator quick-registration callout.
 - Refactored event participant registration to support selecting and submitting multiple events in one administrator workflow.

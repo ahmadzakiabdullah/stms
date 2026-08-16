@@ -5,6 +5,7 @@ const root = process.cwd();
 const allowedFiles = new Set([
     'app/Console/Commands/CreateSuperAdmin.php',
     'app/Models/Concerns/BelongsToOrganization.php',
+    'app/Services/DuplicateSportCategoryCleanupService.php',
     'app/Services/ParticipantService.php',
     'app/Services/TournamentService.php',
 ]);

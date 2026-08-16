@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -135,7 +136,12 @@ class DrawController extends Controller
 
         $pools = $event->pools()
             ->with([
-                'eventParticipants.participant',
+                'eventParticipants' => function ($query) {
+                    $query->with('participant')
+                        ->orderByRaw('CASE WHEN seed_number IS NULL THEN 1 ELSE 0 END')
+                        ->orderBy('seed_number')
+                        ->orderBy('created_at');
+                },
                 'fixtures' => function ($q) {
                     $q->with(['homeParticipant', 'awayParticipant'])
                         ->orderBy('round')
@@ -193,15 +199,41 @@ class DrawController extends Controller
         }
 
         $request->validate([
-            'event_participant_id' => ['required', 'uuid', 'exists:event_participants,id'],
-            'target_pool_id' => ['required', 'uuid', 'exists:pools,id'],
+            'event_participant_id' => [
+                'required', 'uuid',
+                Rule::exists('event_participants', 'id')->where(fn ($query) => $query
+                    ->where('event_id', $event->id)
+                    ->where('organization_id', $event->organization_id)),
+            ],
+            'target_pool_id' => [
+                'required', 'uuid',
+                Rule::exists('pools', 'id')->where(fn ($query) => $query
+                    ->where('event_id', $event->id)
+                    ->where('organization_id', $event->organization_id)),
+            ],
+            'seed_number' => ['nullable', 'integer', 'min:1'],
         ]);
+
+        if ($request->filled('seed_number')) {
+            $duplicate = EventParticipant::query()
+                ->where('event_id', $event->id)
+                ->where('pool_id', $request->input('target_pool_id'))
+                ->where('id', '!=', $request->input('event_participant_id'))
+                ->where('seed_number', $request->integer('seed_number'))
+                ->exists();
+
+            if ($duplicate) {
+                return redirect()->route('events.draw-result', $event)
+                    ->with('error', 'Position #'.$request->integer('seed_number').' is already assigned in this group. Choose another position.');
+            }
+        }
 
         try {
             $drawService->moveParticipantToPool(
                 $event,
                 $request->input('event_participant_id'),
-                $request->input('target_pool_id')
+                $request->input('target_pool_id'),
+                $request->integer('seed_number') ?: null,
             );
 
             activity()
@@ -215,7 +247,7 @@ class DrawController extends Controller
                 ->log("Participant moved to different pool in '{$event->name}'");
 
             return redirect()->route('events.draw-result', $event)
-                ->with('success', 'Participant moved and fixtures regenerated.');
+                ->with('success', 'Participant moved and group assignment saved.');
         } catch (\Throwable $e) {
             Log::error('Move participant failed', ['event_id' => $event->id, 'error' => $e->getMessage()]);
 

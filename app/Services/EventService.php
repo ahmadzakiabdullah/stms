@@ -34,6 +34,8 @@ class EventService
             $event = Event::create($data);
             Log::info('Event created', ['id' => $event->id, 'name' => $event->name, 'org_id' => $event->organization_id]);
 
+            app(PublicPortalService::class)->forgetForOrganization($event->organization_id);
+
             return $event;
         } catch (QueryException $e) {
             Log::error('Event creation failed', ['name' => $data['name'], 'error' => $e->getMessage()]);
@@ -64,6 +66,8 @@ class EventService
             $event->update($data);
             Log::info('Event updated', ['id' => $event->id, 'name' => $event->name]);
 
+            app(PublicPortalService::class)->forgetForOrganization($event->organization_id);
+
             return $event;
         } catch (QueryException $e) {
             Log::error('Event update failed', ['id' => $event->id, 'error' => $e->getMessage()]);
@@ -86,5 +90,6 @@ class EventService
     {
         $event->delete();
         Log::info('Event deleted', ['id' => $event->id, 'name' => $event->name]);
+        app(PublicPortalService::class)->forgetForOrganization($event->organization_id);
     }
 }

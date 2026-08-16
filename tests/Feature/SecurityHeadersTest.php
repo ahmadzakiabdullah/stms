@@ -94,4 +94,24 @@ class SecurityHeadersTest extends TestCase
             $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
         }
     }
+
+    public function test_csp_enforcing_mode_uses_enforcing_header_and_removes_inline_scripts(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        config(['app.csp_report_only' => false]);
+
+        $org = Organization::factory()->create();
+        $user = $this->createStaffUser($org);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertHeader('Content-Security-Policy');
+        $response->assertHeaderMissing('Content-Security-Policy-Report-Only');
+
+        $policy = $response->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString("script-src 'self';", $policy);
+        $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
+        $this->assertStringContainsString('upgrade-insecure-requests', $policy);
+    }
 }

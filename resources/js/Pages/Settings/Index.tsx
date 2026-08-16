@@ -14,6 +14,12 @@ interface Props {
         favicon_url: string | null;
         tournament_logo_url: string | null;
         secretariat_address: string;
+        public_theme_dark: string;
+        public_theme_primary: string;
+        public_theme_accent: string;
+        public_theme_highlight: string;
+        public_theme_background: string;
+        public_theme_text: string;
     };
 }
 
@@ -26,6 +32,14 @@ export default function SettingsIndex({ settings }: Props) {
     const [tournamentLogoFile, setTournamentLogoFile] = useState<File | null>(null);
     const [secretariatAddress, setSecretariatAddress] = useState(settings.secretariat_address);
     const [saving, setSaving] = useState(false);
+    const [theme, setTheme] = useState({
+        dark: settings.public_theme_dark,
+        primary: settings.public_theme_primary,
+        accent: settings.public_theme_accent,
+        highlight: settings.public_theme_highlight,
+        background: settings.public_theme_background,
+        text: settings.public_theme_text,
+    });
 
     const handleSave = () => {
         const fd = new FormData();
@@ -34,6 +48,7 @@ export default function SettingsIndex({ settings }: Props) {
         if (faviconFile) fd.append('favicon', faviconFile);
         if (tournamentLogoFile) fd.append('tournament_logo', tournamentLogoFile);
         fd.append('secretariat_address', secretariatAddress);
+        Object.entries(theme).forEach(([key, value]) => fd.append(`public_theme_${key}`, value));
 
         setSaving(true);
         router.post(route('settings.update'), fd, {
@@ -51,6 +66,30 @@ export default function SettingsIndex({ settings }: Props) {
             )}
 
             <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Public Portal Theme')}</CardTitle>
+                        <CardDescription>{t('Customize the public portal colours for this organization.')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-5">
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {Object.entries(theme).map(([key, value]) => (
+                                <div key={key} className="space-y-2">
+                                    <Label htmlFor={`theme-${key}`}>{t(key.charAt(0).toUpperCase() + key.slice(1))}</Label>
+                                    <div className="flex gap-2">
+                                        <Input id={`theme-${key}`} type="color" value={value} onChange={(event) => setTheme(current => ({ ...current, [key]: event.target.value.toUpperCase() }))} className="h-10 w-14 cursor-pointer p-1" />
+                                        <Input value={value} onChange={(event) => setTheme(current => ({ ...current, [key]: event.target.value }))} pattern="#[0-9A-Fa-f]{6}" aria-label={`${key} hex colour`} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="overflow-hidden rounded-2xl border" style={{ backgroundColor: theme.background, color: theme.text }}>
+                            <div className="p-5 text-white" style={{ backgroundColor: theme.dark }}><p className="text-xs font-bold uppercase tracking-widest" style={{ color: theme.accent }}>{t('Theme preview')}</p><h3 className="mt-2 text-2xl font-black">{appName}</h3><button type="button" className="mt-4 rounded-lg px-4 py-2 text-sm font-bold" style={{ backgroundColor: theme.highlight, color: theme.dark }}>{t('Primary action')}</button></div>
+                            <div className="flex gap-3 p-5"><span className="size-10 rounded-xl" style={{ backgroundColor: theme.primary }} /><span className="size-10 rounded-xl" style={{ backgroundColor: theme.accent }} /><span className="size-10 rounded-xl" style={{ backgroundColor: theme.highlight }} /></div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('General')}</CardTitle>

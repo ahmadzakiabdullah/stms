@@ -33,8 +33,13 @@ class StoreParticipantRequest extends FormRequest
         $user = $this->user();
 
         return [
-            'organization_id' => ['required', 'uuid', 'exists:organizations,id'],
-            'session_id' => ['nullable', 'uuid', 'exists:event_sessions,id'],
+            'organization_id' => [
+                'required', 'uuid',
+                $user?->hasRole('super-admin')
+                    ? Rule::exists('organizations', 'id')
+                    : Rule::in([$user?->organization_id]),
+            ],
+            'session_id' => ['nullable', 'uuid', Rule::exists('event_sessions', 'id')->where('organization_id', $user?->organization_id)],
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'nullable',

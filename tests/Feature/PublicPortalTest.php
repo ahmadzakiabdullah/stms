@@ -8,13 +8,25 @@ use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
 use App\Models\Tournament;
+use App\Services\PublicPortalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PublicPortalTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::fake([
+            'api.open-meteo.com/*' => Http::response(['current' => ['temperature_2m' => 30.2]]),
+        ]);
+    }
 
     public function test_public_portal_displays_only_active_session_data_without_contact_details(): void
     {
@@ -30,7 +42,9 @@ class PublicPortalTest extends TestCase
         $this->get('/')->assertOk()->assertDontSee('rahsia@example.test')->assertInertia(fn (Assert $page) => $page
             ->component('Public/Index')->where('competition.name', 'Sukan Antara Fakulti 2026')
             ->where('stats.faculties', 2)->has('upcoming', 1)
-            ->where('upcoming.0.home.name', 'Fakulti Teknologi Maklumat'));
+            ->where('upcoming.0.home.name', 'Fakulti Teknologi Maklumat')
+            ->where('weather.location', 'Durian Tunggal')
+            ->where('weather.temperature', 30));
     }
 
     public function test_index_php_redirects_to_the_canonical_public_url(): void
@@ -117,5 +131,24 @@ class PublicPortalTest extends TestCase
 
         $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->where('competition', null)->has('upcoming', 0)->has('results', 0));
+    }
+
+    public function test_public_portal_cache_is_invalidated_only_for_the_changed_organization(): void
+    {
+        $orgA = Organization::factory()->create(['slug' => 'cache-org-a']);
+        $orgB = Organization::factory()->create(['slug' => 'cache-org-b']);
+        $sessionA = Session::factory()->create(['organization_id' => $orgA->id, 'slug' => 'cache-session-a']);
+        $sessionB = Session::factory()->create(['organization_id' => $orgB->id, 'slug' => 'cache-session-b']);
+
+        Cache::put('public-portal:v3:'.$sessionA->id.':12', ['stale' => true], 60);
+        Cache::put('public-portal:v3:'.$sessionA->id.':all', ['stale' => true], 60);
+        Cache::put('public-portal:v3:'.$sessionB->id.':12', ['keep' => true], 60);
+
+        config(['app.public_org_slug' => $orgA->slug, 'app.public_session_slug' => $sessionA->slug]);
+        app(PublicPortalService::class)->forgetForOrganization($orgA->id);
+
+        $this->assertNull(Cache::get('public-portal:v3:'.$sessionA->id.':12'));
+        $this->assertNull(Cache::get('public-portal:v3:'.$sessionA->id.':all'));
+        $this->assertSame(['keep' => true], Cache::get('public-portal:v3:'.$sessionB->id.':12'));
     }
 }

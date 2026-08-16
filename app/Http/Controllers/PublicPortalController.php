@@ -12,4 +12,9 @@ class PublicPortalController extends Controller
     {
         return Inertia::render('Public/Index', $service->data());
     }
+
+    public function contact(PublicPortalService $service): Response
+    {
+        return Inertia::render('Public/Contact', $service->data());
+    }
 }

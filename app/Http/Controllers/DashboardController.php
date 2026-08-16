@@ -50,8 +50,11 @@ class DashboardController extends Controller
 
                 Log::warning('Dashboard count query failed; using fallback value.', [
                     'model' => $modelClass,
-                    'message' => $e->getMessage(),
-                    'path' => request()->path(),
+                    'exception' => $e,
+                    'correlation_id' => request()->attributes->get('correlation_id'),
+                    'user_id' => $user?->uuid,
+                    'organization_id' => $user?->organization_id,
+                    'route' => request()->path(),
                 ]);
 
                 return 0;
@@ -64,8 +67,11 @@ class DashboardController extends Controller
             } catch (\Throwable $e) {
                 $queryFailed = true;
                 Log::warning('Dashboard query failed; using fallback payload.', [
-                    'message' => $e->getMessage(),
-                    'path' => request()->path(),
+                    'exception' => $e,
+                    'correlation_id' => request()->attributes->get('correlation_id'),
+                    'user_id' => $user?->uuid,
+                    'organization_id' => $user?->organization_id,
+                    'route' => request()->path(),
                 ]);
 
                 return $default ?? collect();
@@ -77,6 +83,13 @@ class DashboardController extends Controller
             $isSuper = $user && $user->hasRole('super-admin');
         } catch (\Throwable $e) {
             $isSuper = false;
+            Log::warning('Dashboard role check fallback activated.', [
+                'exception' => $e,
+                'correlation_id' => $request->attributes->get('correlation_id'),
+                'user_id' => $user?->uuid,
+                'organization_id' => $user?->organization_id,
+                'route' => $request->path(),
+            ]);
         }
 
         $isFacultyRep = $user && $user->hasRole('faculty-representative') && $user->participant_id;

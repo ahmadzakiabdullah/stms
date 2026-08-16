@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Participant;
 use App\Models\Sport;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
@@ -16,6 +18,8 @@ class UserService
      */
     public function createUser(array $data): User
     {
+        $data = $this->constrainManagedData($data);
+
         $user = User::create([
             'name' => $data['name'],
             'username' => $data['username'] ?? null,
@@ -48,6 +52,8 @@ class UserService
      */
     public function updateUser(User $user, array $data): User
     {
+        $data = $this->constrainManagedData($data);
+
         $updateData = [
             'name' => $data['name'],
             'username' => $data['username'] ?? $user->username,
@@ -101,6 +107,42 @@ class UserService
         foreach ($sportIds as $sportId) {
             $user->sports()->attach($sportId, ['organization_id' => $orgId]);
         }
+    }
+
+    private function constrainManagedData(array $data): array
+    {
+        $actor = Auth::user();
+
+        if (! $actor || $actor->hasRole('super-admin')) {
+            return $data;
+        }
+
+        $data['organization_id'] = $actor->organization_id;
+
+        if (array_key_exists('participant_id', $data) && $data['participant_id'] !== null) {
+            $data['participant_id'] = Participant::query()
+                ->where('organization_id', $actor->organization_id)
+                ->whereKey($data['participant_id'])
+                ->value('id');
+        }
+
+        if (isset($data['roles'])) {
+            $data['roles'] = Role::query()
+                ->whereIn('id', $data['roles'])
+                ->where('name', '!=', 'super-admin')
+                ->pluck('id')
+                ->all();
+        }
+
+        if (isset($data['sports'])) {
+            $data['sports'] = Sport::query()
+                ->where('organization_id', $actor->organization_id)
+                ->whereIn('id', $data['sports'])
+                ->pluck('id')
+                ->all();
+        }
+
+        return $data;
     }
 
     /**
