@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Setting;
 use App\Http\Requests\UpdateSettingsRequest;
+use App\Models\Setting;
 use App\Services\PublicPortalService;
 use App\Services\SettingAssetService;
 use Illuminate\Http\RedirectResponse;
