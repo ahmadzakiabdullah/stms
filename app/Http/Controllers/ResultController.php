@@ -144,17 +144,18 @@ class ResultController extends Controller
 
     private function notifyMatchParticipants(Result $result, string $action): void
     {
-        $match = $result->match()->with(['event', 'homeParticipant', 'awayParticipant'])->first();
+        // ⚡ Bolt: Added `.users` eager load to home/away participants to avoid N+1 query loop below
+        $match = $result->match()->with(['event', 'homeParticipant.users', 'awayParticipant.users'])->first();
         $result->loadMissing('winner');
 
         if (! $match) {
             return;
         }
 
-        $users = collect([$match->home_participant_id, $match->away_participant_id])
+        // ⚡ Bolt: Collect directly from eagerly loaded relations to eliminate N+1 Participant::find() queries
+        $users = collect([$match->homeParticipant, $match->awayParticipant])
             ->filter()
-            ->unique()
-            ->flatMap(fn ($participantId) => Participant::find($participantId)?->users ?? collect())
+            ->flatMap(fn ($participant) => $participant->users ?? collect())
             ->unique(fn ($user) => $user->getKey());
 
         foreach ($users as $user) {
