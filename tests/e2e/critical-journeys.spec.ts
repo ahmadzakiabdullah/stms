@@ -21,7 +21,7 @@ async function expectAccessible(page: Page): Promise<void> {
 test('super-admin can reach core competition and administration journeys', async ({ page }) => {
     await login(page, 'admin@saf.test');
 
-    for (const path of ['/dashboard', '/participants', '/events', '/matches', '/results', '/rankings', '/roles', '/reports']) {
+    for (const path of ['/dashboard', '/participants', '/events', '/matches', '/results/manage', '/rankings', '/roles', '/reports']) {
         const response = await page.goto(path);
         expect(response?.status(), path).toBeLessThan(400);
         await expect(page.locator('body')).not.toContainText(/server error|exception/i);
