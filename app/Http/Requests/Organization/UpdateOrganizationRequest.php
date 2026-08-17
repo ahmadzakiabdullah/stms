@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Organization;
 
+use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,7 +10,10 @@ class UpdateOrganizationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $organization = $this->route('organization');
+
+        return $organization instanceof Organization
+            && ($this->user()?->can('update', $organization) ?? false);
     }
 
     protected function prepareForValidation(): void

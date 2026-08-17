@@ -19,6 +19,8 @@ class SessionController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', Session::class);
+
         $user = Auth::user();
 
         // Defensive queries

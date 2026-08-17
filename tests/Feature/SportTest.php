@@ -22,7 +22,7 @@ class SportTest extends TestCase
         $sportA = Sport::factory()->create(['organization_id' => $orgA->id, 'name' => 'Football A']);
         $sportB = Sport::factory()->create(['organization_id' => $orgB->id, 'name' => 'Football B']);
 
-        $userA = $this->createStaffUser($orgA);
+        $userA = $this->createOrgAdmin($orgA);
 
         $response = $this->actingAs($userA)->get(route('sports.index'));
 

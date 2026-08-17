@@ -8,6 +8,7 @@ use App\Models\EventParticipant;
 use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Pool;
+use App\Services\DrawService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
@@ -301,12 +302,44 @@ class DrawControllerTest extends TestCase
         ]);
 
         $response->assertRedirect(route('events.draw-result', $event));
-        $response->assertSessionHas('success', 'Participant moved and fixtures regenerated.');
+        $response->assertSessionHas('success', 'Participant moved and group assignment saved.');
 
         $this->assertDatabaseHas('event_participants', [
             'id' => $participant->id,
             'pool_id' => $poolB->id,
         ]);
+    }
+
+    public function test_moving_participant_regenerates_scheduled_group_fixtures_atomically(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createOrgAdmin($org);
+        $event = Event::factory()->create(['organization_id' => $org->id]);
+        $poolA = Pool::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'sort_order' => 1]);
+        $poolB = Pool::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'sort_order' => 2]);
+
+        $registrations = collect();
+        foreach ([$poolA, $poolA, $poolB, $poolB] as $pool) {
+            $registrations->push(EventParticipant::factory()->create([
+                'organization_id' => $org->id,
+                'event_id' => $event->id,
+                'pool_id' => $pool->id,
+                'status' => 'confirmed',
+            ]));
+        }
+
+        app(DrawService::class)->generateFixtures($event);
+        $this->assertDatabaseCount('matches', 2);
+
+        $response = $this->actingAs($manager)->post(route('events.draw.move-participant', $event), [
+            'event_participant_id' => $registrations->first()->id,
+            'target_pool_id' => $poolB->id,
+        ]);
+
+        $response->assertRedirect(route('events.draw-result', $event));
+        $response->assertSessionHas('success', 'Participant moved and fixtures regenerated.');
+        $this->assertDatabaseCount('matches', 3);
+        $this->assertSame($poolB->id, $registrations->first()->fresh()->pool_id);
     }
 
     public function test_cannot_move_participant_if_matches_have_started(): void

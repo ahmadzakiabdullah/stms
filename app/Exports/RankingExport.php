@@ -29,7 +29,7 @@ class RankingExport implements FromCollection, ShouldAutoSize, WithHeadings, Wit
 
         $this->strategy = $tournament->ranking_strategy ?? 'points';
 
-        $service = new RankingService;
+        $service = app(RankingService::class);
         $this->rankings = $service->calculateForTournament($tournament);
     }
 

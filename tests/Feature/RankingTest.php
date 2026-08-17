@@ -25,7 +25,7 @@ class RankingTest extends TestCase
     public function test_authenticated_user_can_view_rankings_page(): void
     {
         $org = Organization::factory()->create();
-        $user = $this->createStaffUser($org);
+        $user = $this->createOrgAdmin($org);
 
         $response = $this->actingAs($user)->get(route('rankings.index'));
         $response->assertOk();
@@ -59,6 +59,50 @@ class RankingTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('ranking_strategy');
+    }
+
+    public function test_org_admin_can_store_validated_ranking_rules(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+
+        $response = $this->actingAs($admin)->put(route('rankings.updateStrategy', $tournament), [
+            'ranking_strategy' => 'points',
+            'ranking_rules' => [
+                'points' => [
+                    'win_points' => 5,
+                    'draw_points' => 2,
+                    'loss_points' => 0,
+                    'tiebreakers' => ['points', 'wins'],
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertSame(5, $tournament->fresh()->ranking_rules['points']['win_points']);
+    }
+
+    public function test_invalid_ranking_rule_is_rejected(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+
+        $this->actingAs($admin)->put(route('rankings.updateStrategy', $tournament), [
+            'ranking_strategy' => 'points',
+            'ranking_rules' => [
+                'points' => [
+                    'win_points' => 500,
+                    'draw_points' => 1,
+                    'loss_points' => 0,
+                    'tiebreakers' => ['password'],
+                ],
+            ],
+        ])->assertSessionHasErrors([
+            'ranking_rules.points.win_points',
+            'ranking_rules.points.tiebreakers.0',
+        ]);
     }
 
     public function test_ranking_calculation_with_completed_matches(): void

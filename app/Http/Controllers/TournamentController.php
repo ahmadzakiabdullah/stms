@@ -22,6 +22,8 @@ class TournamentController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', Tournament::class);
+
         $user = Auth::user();
 
         // Defensive queries (prevent 500 when prod DB is not migrated)

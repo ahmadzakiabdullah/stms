@@ -133,7 +133,7 @@ class ExportController extends Controller implements HasMiddleware
             ->with(['session'])
             ->findOrFail($tournamentId);
 
-        $service = new RankingService;
+        $service = app(RankingService::class);
         $rankings = $service->calculateForTournament($tournament);
         $strategy = $tournament->ranking_strategy ?? 'points';
 

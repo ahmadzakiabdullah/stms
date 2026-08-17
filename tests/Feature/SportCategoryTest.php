@@ -24,10 +24,15 @@ class SportCategoryTest extends TestCase
         $catA = SportCategory::factory()->create(['organization_id' => $orgA->id, 'sport_id' => $sportA->id, 'name' => 'Category A']);
         $catB = SportCategory::factory()->create(['organization_id' => $orgB->id, 'sport_id' => $sportB->id, 'name' => 'Category B']);
 
-        $userA = $this->createStaffUser($orgA);
+        $userA = $this->createOrgAdmin($orgA);
 
         $response = $this->actingAs($userA)->get(route('sport-categories.index'));
         $response->assertOk();
+        $categories = $response->viewData('page')['props']['categories']['data'] ?? [];
+        $names = collect($categories)->pluck('name');
+
+        $this->assertTrue($names->contains($catA->name));
+        $this->assertFalse($names->contains($catB->name));
     }
 
     public function test_super_admin_can_create_sport_category(): void

@@ -34,7 +34,7 @@ class EventTest extends TestCase
         // Event in other org
         Event::factory()->create(['organization_id' => $orgB->id]);
 
-        $staff = $this->createStaffUser($orgA);
+        $staff = $this->createOrgAdmin($orgA);
 
         $response = $this->actingAs($staff)->get(route('events.index'));
 

@@ -229,7 +229,7 @@ class DrawController extends Controller
         }
 
         try {
-            $drawService->moveParticipantToPool(
+            $fixturesRegenerated = $drawService->moveParticipantToPool(
                 $event,
                 $request->input('event_participant_id'),
                 $request->input('target_pool_id'),
@@ -247,7 +247,9 @@ class DrawController extends Controller
                 ->log("Participant moved to different pool in '{$event->name}'");
 
             return redirect()->route('events.draw-result', $event)
-                ->with('success', 'Participant moved and group assignment saved.');
+                ->with('success', $fixturesRegenerated
+                    ? 'Participant moved and fixtures regenerated.'
+                    : 'Participant moved and group assignment saved.');
         } catch (\Throwable $e) {
             Log::error('Move participant failed', ['event_id' => $event->id, 'error' => $e->getMessage()]);
 

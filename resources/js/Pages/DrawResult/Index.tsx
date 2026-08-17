@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import ParticipantLogo from '@/components/ParticipantLogo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -74,30 +74,19 @@ const participantFullName = (participant?: Participant, fallback = '') => {
     return participant.team_name || participant.name || fallback;
 };
 
-const participantInitials = (participant?: Participant) => {
-    const name = participantName(participant, '?');
-    return name.slice(0, 2).toUpperCase();
-};
-
-const ParticipantAvatar = ({ participant, size = 'sm' }: { participant?: Participant; size?: 'sm' | 'lg' }) => (
-    <Avatar size={size} className="rounded-lg">
-        {participant?.logo_url ? (
-            <AvatarImage src={participant.logo_url} alt={participantName(participant)} className="rounded-lg object-contain" />
-        ) : (
-            <AvatarFallback className="rounded-lg">{participantInitials(participant)}</AvatarFallback>
-        )}
-    </Avatar>
+const ParticipantAvatar = ({ participant, variant = 'roster' }: { participant?: Participant; variant?: 'roster' | 'matchup' }) => (
+    <ParticipantLogo participant={participant} size={variant === 'matchup' ? 'lg' : 'md'} alt="" />
 );
 
 const Matchup = ({ home, away }: { home?: Participant; away?: Participant }) => (
     <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
         <div className="flex min-w-0 items-center justify-end gap-2 text-right">
             <span className="truncate text-sm font-semibold" title={participantFullName(home)}>{participantName(home)}</span>
-            <ParticipantAvatar participant={home} />
+            <ParticipantAvatar participant={home} variant="matchup" />
         </div>
         <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">VS</span>
         <div className="flex min-w-0 items-center gap-2 text-left">
-            <ParticipantAvatar participant={away} />
+            <ParticipantAvatar participant={away} variant="matchup" />
             <span className="truncate text-sm font-semibold" title={participantFullName(away)}>{participantName(away)}</span>
         </div>
     </div>

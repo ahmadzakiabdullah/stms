@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Organization;
 
+use App\Models\Organization;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -9,8 +10,7 @@ class StoreOrganizationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // For M1 bootstrap: allow authenticated users to create (later tighten with Policy)
-        return $this->user() !== null;
+        return $this->user()?->can('create', Organization::class) ?? false;
     }
 
     protected function prepareForValidation(): void

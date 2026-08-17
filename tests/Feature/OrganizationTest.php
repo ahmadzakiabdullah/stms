@@ -43,16 +43,18 @@ class OrganizationTest extends TestCase
         $response->assertSessionHasErrors('organization_type');
     }
 
-    public function test_non_super_admin_cannot_see_other_organizations_data_via_global_scope(): void
+    public function test_non_super_admin_cannot_enumerate_organizations_through_the_index_route(): void
     {
         $orgA = Organization::factory()->create(['slug' => 'org-a-'.uniqid()]);
         $orgB = Organization::factory()->create(['slug' => 'org-b-'.uniqid()]);
 
         $userA = $this->createStaffUser($orgA);
 
-        // With global scope, userA should only see orgA's sports (once Sport model has the trait)
-        // This test mainly verifies the factory + trait application works.
-        $this->assertNotEquals($orgA->id, $orgB->id);
+        $response = $this->actingAs($userA)->get(route('organizations.index'));
+
+        $response->assertForbidden();
+        $response->assertDontSee($orgA->name);
+        $response->assertDontSee($orgB->name);
     }
 
     public function test_super_admin_can_update_and_delete_any_organization(): void

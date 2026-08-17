@@ -9,7 +9,7 @@ class EventPolicy
 {
     public function viewAny(User $user): bool
     {
-        if ($user->hasRole('super-admin') || $user->hasRole('org-admin') || $user->hasRole('tournament-manager')) {
+        if ($user->hasAnyRole(['super-admin', 'org-admin', 'admin-sport', 'tournament-manager'])) {
             return true;
         }
 
@@ -22,7 +22,15 @@ class EventPolicy
             return true;
         }
 
-        return $user->organization_id === $event->organization_id;
+        if ($user->organization_id !== $event->organization_id) {
+            return false;
+        }
+
+        if ($user->hasRole('admin-sport')) {
+            return $user->canManageSport($event->sport_id);
+        }
+
+        return true;
     }
 
     public function create(User $user): bool

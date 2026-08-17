@@ -20,6 +20,7 @@ use App\Policies\ExportPolicy;
 use App\Policies\MatchPolicy;
 use App\Policies\OrganizationPolicy;
 use App\Policies\ParticipationConfirmationPolicy;
+use App\Policies\RankingPolicy;
 use App\Policies\ReportingPolicy;
 use App\Policies\ResultPolicy;
 use App\Policies\RolePolicy;
@@ -32,7 +33,6 @@ use App\Services\TenantContext;
 use App\Support\ProductionConfiguration;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
 
@@ -72,8 +72,6 @@ class AppServiceProvider extends ServiceProvider
             );
         }
 
-        Vite::prefetch(concurrency: 3);
-
         // M1: Explicitly register Organization policy (auto-discovery also works in modern Laravel)
         Gate::policy(Organization::class, OrganizationPolicy::class);
 
@@ -110,6 +108,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('export-data', [ExportPolicy::class, 'viewAny']);
         Gate::define('view-reports', [ReportingPolicy::class, 'viewAny']);
         Gate::define('view-participation-confirmations', [ParticipationConfirmationPolicy::class, 'viewAny']);
+        Gate::define('view-rankings', [RankingPolicy::class, 'viewAny']);
         Gate::define('view-settings', [SettingPolicy::class, 'viewAny']);
         Gate::define('update-settings', [SettingPolicy::class, 'update']);
         Gate::define('view-dean-dashboard', [DeanVerificationPolicy::class, 'viewAny']);

@@ -21,6 +21,8 @@ class ResultController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', Result::class);
+
         $dataLoadFailed = false;
 
         $user = auth()->user();
@@ -36,8 +38,8 @@ class ResultController extends Controller
                 ->with([
                     'match.event',
                     'match.pool:id,name',
-                    'match.homeParticipant:id,name,team_name,logo_path',
-                    'match.awayParticipant:id,name,team_name,logo_path',
+                    'match.homeParticipant:id,name,team_name,logo_path,inverse_logo_path',
+                    'match.awayParticipant:id,name,team_name,logo_path,inverse_logo_path',
                     'winner:id,name,team_name',
                 ])
                 ->select('results.*')
@@ -59,8 +61,8 @@ class ResultController extends Controller
             ->with([
                 'event:id,name,sport_id',
                 'pool:id,name',
-                'homeParticipant:id,name,team_name,logo_path',
-                'awayParticipant:id,name,team_name,logo_path',
+                'homeParticipant:id,name,team_name,logo_path,inverse_logo_path',
+                'awayParticipant:id,name,team_name,logo_path,inverse_logo_path',
             ])
             ->whereDoesntHave('result')
             ->whereNotNull('home_participant_id')

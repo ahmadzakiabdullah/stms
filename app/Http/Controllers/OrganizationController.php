@@ -17,6 +17,8 @@ class OrganizationController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', Organization::class);
+
         // Defensive query
         $organizations = $this->safePaginatedQuery(function () {
             return Organization::with('parent')

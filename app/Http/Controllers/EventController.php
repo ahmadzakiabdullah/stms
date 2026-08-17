@@ -14,6 +14,7 @@ use App\Models\SportCategory;
 use App\Models\Tournament;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -25,7 +26,11 @@ class EventController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', Event::class);
+
         $user = Auth::user();
+        $scopeToAdminSports = $user->hasRole('admin-sport') && ! $user->hasRole(['super-admin', 'org-admin']);
+        $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
 
         // Defensive queries to prevent 500 errors on production when the database
         // has not been fully migrated (common cause of /events 500).
@@ -33,7 +38,7 @@ class EventController extends Controller
         // See similar pattern in routes/web.php dashboard closure.
         $dataLoadFailed = false;
 
-        $events = $this->safePaginatedQuery(function () {
+        $events = $this->safePaginatedQuery(function () use ($sportIds) {
             $query = Event::with(['tournament', 'sport', 'sportCategory', 'organization'])
                 ->withCount('pools')
                 ->withCount([
@@ -43,6 +48,10 @@ class EventController extends Controller
                     'eventParticipants as confirmed_participants_count' => fn ($q) => $q->where('status', 'confirmed'),
                     'eventParticipants as pending_participants_count' => fn ($q) => $q->where('status', 'pending'),
                 ]);
+
+            if ($sportIds !== null) {
+                $query->whereIn('sport_id', $sportIds);
+            }
 
             if ($tournamentId = request('tournament_id')) {
                 $query->where('tournament_id', $tournamentId);
@@ -76,9 +85,10 @@ class EventController extends Controller
             $event->participants_count = $participantCounts[$event->organization_id] ?? 0;
         }
 
-        $tournaments = $this->safeCollectionQuery(function () {
+        $tournaments = $this->safeCollectionQuery(function () use ($sportIds) {
             return Tournament::query()
                 ->with('sports:id,name')
+                ->when($sportIds !== null, fn ($query) => $query->whereHas('sports', fn ($sports) => $sports->whereIn('sports.id', $sportIds)))
                 ->orderBy('start_date', 'desc')
                 ->get(['id', 'name', 'slug', 'start_date', 'end_date']);
         }, function () use (&$dataLoadFailed) {
@@ -87,8 +97,9 @@ class EventController extends Controller
             return collect();
         });
 
-        $sports = $this->safeCollectionQuery(function () {
+        $sports = $this->safeCollectionQuery(function () use ($sportIds) {
             return Sport::query()
+                ->when($sportIds !== null, fn ($query) => $query->whereIn('id', $sportIds))
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug']);
         }, function () use (&$dataLoadFailed) {
@@ -97,9 +108,10 @@ class EventController extends Controller
             return collect();
         });
 
-        $categories = $this->safeCollectionQuery(function () {
+        $categories = $this->safeCollectionQuery(function () use ($sportIds) {
             return SportCategory::query()
                 ->with('sport')
+                ->when($sportIds !== null, fn ($query) => $query->whereIn('sport_id', $sportIds))
                 ->orderBy('name')
                 ->get(['id', 'name', 'slug', 'sport_id']);
         }, function () use (&$dataLoadFailed) {
@@ -109,6 +121,7 @@ class EventController extends Controller
         });
 
         $usedCategoryIds = Event::query()
+            ->when($sportIds !== null, fn ($query) => $query->whereIn('sport_id', $sportIds))
             ->select('tournament_id', 'sport_id', 'sport_category_id')
             ->get()
             ->groupBy(fn ($e) => $e->tournament_id.':'.$e->sport_id)

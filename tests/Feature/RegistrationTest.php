@@ -27,10 +27,14 @@ class RegistrationTest extends TestCase
             'participant_id' => $participantA->id,
         ]);
 
-        $userA = $this->createStaffUser($orgA);
+        $userA = $this->createOrgAdmin($orgA);
 
         $response = $this->actingAs($userA)->get(route('registrations.index'));
         $response->assertOk();
+        $registrations = $response->viewData('page')['props']['registrations']['data'] ?? [];
+
+        $this->assertCount(1, $registrations);
+        $this->assertSame($orgA->id, $registrations[0]['organization_id']);
     }
 
     public function test_super_admin_can_create_registration(): void

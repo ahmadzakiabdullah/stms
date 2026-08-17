@@ -24,6 +24,8 @@ class UserController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', User::class);
+
         $user = Auth::user();
 
         // Manual scoping kept (trait skips users table for auth safety)
@@ -39,8 +41,11 @@ class UserController extends Controller
                 ->withQueryString();
         });
 
-        $roles = $this->safeCollectionQuery(function () {
-            return Role::orderBy('name')->get();
+        $roles = $this->safeCollectionQuery(function () use ($user) {
+            return Role::query()
+                ->when(! $user->hasRole('super-admin'), fn ($query) => $query->where('name', '!=', 'super-admin'))
+                ->orderBy('name')
+                ->get();
         });
 
         $organizations = $this->safeCollectionQuery(function () use ($user) {

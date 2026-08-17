@@ -80,6 +80,7 @@ export interface Session {
     end_date: string;
     is_active: boolean;
     ranking_strategy: string | null;
+    ranking_rules?: RankingRules | null;
     created_at: string;
     updated_at: string;
 }
@@ -96,10 +97,22 @@ export interface Tournament {
     end_date: string;
     is_active: boolean;
     ranking_strategy: string | null;
+    ranking_rules?: RankingRules | null;
     session?: Session;
     sports?: { id: string; name: string }[];
     created_at: string;
     updated_at: string;
+}
+
+export interface RankingRules {
+    points?: {
+        win_points: number;
+        draw_points: number;
+        loss_points: number;
+        tiebreakers: string[];
+    };
+    win_rate?: { tiebreakers: string[] };
+    medal_tally?: { tiebreakers: string[] };
 }
 
 // ─── Event ───
@@ -158,6 +171,8 @@ export interface Participant {
     notes: string | null;
     logo_path: string | null;
     logo_url: string | null;
+    inverse_logo_path: string | null;
+    inverse_logo_url: string | null;
     is_active: boolean;
     created_at: string;
     updated_at: string;

@@ -20,6 +20,8 @@ class RegistrationController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', Registration::class);
+
         $dataLoadFailed = false;
 
         $registrations = $this->safePaginatedQuery(function () {

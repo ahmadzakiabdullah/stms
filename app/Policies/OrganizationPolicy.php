@@ -12,11 +12,7 @@ class OrganizationPolicy
      */
     public function viewAny(User $user): bool
     {
-        if ($user->hasRole('super-admin') || $user->hasRole('org-admin')) {
-            return true;
-        }
-
-        return $user->hasPermissionTo('view organizations');
+        return $user->hasRole('super-admin');
     }
 
     /**
@@ -36,11 +32,7 @@ class OrganizationPolicy
      */
     public function create(User $user): bool
     {
-        if ($user->hasRole('super-admin')) {
-            return true;
-        }
-
-        return $user->hasPermissionTo('create organizations') || $user->hasRole('org-admin');
+        return $user->hasRole('super-admin');
     }
 
     /**
@@ -48,11 +40,7 @@ class OrganizationPolicy
      */
     public function update(User $user, Organization $organization): bool
     {
-        if ($user->hasRole('super-admin')) {
-            return true;
-        }
-
-        return $user->organization_id === $organization->id && ($user->hasPermissionTo('edit organizations') || $user->hasRole('org-admin'));
+        return $user->hasRole('super-admin');
     }
 
     /**
@@ -60,10 +48,6 @@ class OrganizationPolicy
      */
     public function delete(User $user, Organization $organization): bool
     {
-        if ($user->hasRole('super-admin')) {
-            return true;
-        }
-
-        return $user->organization_id === $organization->id && ($user->hasPermissionTo('delete organizations') || $user->hasRole('org-admin'));
+        return $user->hasRole('super-admin');
     }
 }

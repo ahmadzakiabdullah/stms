@@ -27,6 +27,8 @@ class EventParticipantController extends Controller
 {
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', EventParticipant::class);
+
         $user = Auth::user();
         $dataLoadFailed = false;
 

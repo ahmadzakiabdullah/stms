@@ -27,6 +27,8 @@ class MatchController extends Controller
 
     public function index(Request $request): Response|RedirectResponse
     {
+        Gate::authorize('viewAny', Fixture::class);
+
         $user = $request->user();
         $scopeToAdminSports = $user->hasRole('admin-sport') && ! $user->hasRole(['super-admin', 'org-admin']);
         $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
@@ -80,7 +82,7 @@ class MatchController extends Controller
                             return [
                                 ...$row,
                                 'participant' => $participant
-                                    ? ['id' => $participant->id, 'name' => $participant->name, 'team_name' => $participant->team_name, 'logo_url' => $participant->logo_url]
+                                    ? ['id' => $participant->id, 'name' => $participant->name, 'team_name' => $participant->team_name, 'logo_url' => $participant->logo_url, 'inverse_logo_url' => $participant->inverse_logo_url]
                                     : null,
                             ];
                         })->values(),
@@ -95,8 +97,8 @@ class MatchController extends Controller
             ->with([
                 'event:id,name,slug',
                 'pool:id,name',
-                'homeParticipant:id,name,team_name,logo_path',
-                'awayParticipant:id,name,team_name,logo_path',
+                'homeParticipant:id,name,team_name,logo_path,inverse_logo_path',
+                'awayParticipant:id,name,team_name,logo_path,inverse_logo_path',
                 'result',
             ])
             ->when($sportIds !== null, fn ($q) => $q->whereIn('events.sport_id', $sportIds))

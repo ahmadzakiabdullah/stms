@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ParticipantLogo, { type ParticipantLogoSize } from '@/components/ParticipantLogo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -80,29 +81,13 @@ const participantFullName = (participant?: Participant, fallback = '') => {
     return participant.team_name || participant.name || fallback;
 };
 
-const participantInitials = (name: string) =>
-    name
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() || '')
-        .join('');
-
 const formatDateTime = (value: string | null | undefined) =>
     value ? new Date(value).toLocaleString() : 'Time TBD';
 
-function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { participant?: Participant; fallback?: string; size?: string }) {
+function TeamMark({ participant, fallback = 'TBD', size = 'sm' }: { participant?: Participant; fallback?: string; size?: ParticipantLogoSize }) {
     const name = participantName(participant, fallback);
 
-    if (participant?.logo_url) {
-        return <img src={participant.logo_url} alt={name} className={`${size} shrink-0 object-contain`} />;
-    }
-
-    return (
-        <span className={`flex ${size} shrink-0 items-center justify-center rounded-md border bg-muted text-[10px] font-semibold text-muted-foreground`}>
-            {participantInitials(name)}
-        </span>
-    );
+    return <ParticipantLogo participant={participant ?? { name }} size={size} alt={name} />;
 }
 
 const stageTitle = (stage: string | null | undefined, round?: number | null) => {
@@ -233,11 +218,11 @@ function ResultRowView({ result, onEdit, onDelete, canManage = true }: ResultRow
             <TableCell>
                 <div className="flex min-w-[260px] items-center gap-2">
                     <span className="max-w-[110px] truncate font-medium text-right" title={participantFullName(result.match?.home_participant)}>{participantName(result.match?.home_participant)}</span>
-                    <TeamMark participant={result.match?.home_participant} size="size-12" />
+                    <TeamMark participant={result.match?.home_participant} size="lg" />
                     <span className={`mx-1 shrink-0 rounded-md px-2 py-0.5 text-sm font-bold tabular-nums ${scored ? 'bg-muted' : 'text-muted-foreground'}`}>
                         {scored ? `${result.score_home} : ${result.score_away}` : 'VS'}
                     </span>
-                    <TeamMark participant={result.match?.away_participant} size="size-12" />
+                    <TeamMark participant={result.match?.away_participant} size="lg" />
                     <span className="max-w-[110px] truncate font-medium" title={participantFullName(result.match?.away_participant)}>{participantName(result.match?.away_participant)}</span>
                 </div>
             </TableCell>
@@ -774,9 +759,9 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                             <div className="flex min-w-0 items-center gap-3">
                                                 <span className="w-14 shrink-0 text-sm font-semibold text-muted-foreground">#{matchNumberLabel(match.match_number, match.event?.name)}</span>
                                                 <span className="max-w-[110px] truncate text-sm font-medium" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
-                                                <TeamMark participant={match.home_participant} size="size-12" />
+                                                <TeamMark participant={match.home_participant} size="lg" />
                                                 <span className="text-xs font-bold text-muted-foreground">VS</span>
-                                                <TeamMark participant={match.away_participant} size="size-12" />
+                                                <TeamMark participant={match.away_participant} size="lg" />
                                                 <span className="max-w-[110px] truncate text-sm font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
                                                 <span className="hidden text-xs text-muted-foreground sm:inline">· {matchDetail(match)}</span>
                                             </div>

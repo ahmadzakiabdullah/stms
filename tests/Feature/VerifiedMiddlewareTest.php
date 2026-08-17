@@ -86,7 +86,7 @@ class VerifiedMiddlewareTest extends TestCase
     public function test_verified_user_can_access_sensitive_routes(): void
     {
         $org = Organization::factory()->create();
-        $user = $this->createStaffUser($org);
+        $user = $this->createOrgAdmin($org);
         $user->email_verified_at = now();
         $user->save();
 

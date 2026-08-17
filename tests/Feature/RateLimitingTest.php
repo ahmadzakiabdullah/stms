@@ -96,7 +96,7 @@ class RateLimitingTest extends TestCase
     public function test_exports_are_rate_limited(): void
     {
         $org = Organization::factory()->create();
-        $user = $this->createStaffUser($org);
+        $user = $this->createOrgAdmin($org);
 
         for ($i = 0; $i < 10; $i++) {
             $response = $this->actingAs($user)->get(route('exports.fixtures.pdf'));
@@ -110,7 +110,7 @@ class RateLimitingTest extends TestCase
     public function test_match_index_not_rate_limited(): void
     {
         $org = Organization::factory()->create();
-        $user = $this->createStaffUser($org);
+        $user = $this->createOrgAdmin($org);
 
         for ($i = 0; $i < 35; $i++) {
             $response = $this->actingAs($user)->get(route('matches.index'));
@@ -122,7 +122,7 @@ class RateLimitingTest extends TestCase
     public function test_results_index_not_rate_limited(): void
     {
         $org = Organization::factory()->create();
-        $user = $this->createStaffUser($org);
+        $user = $this->createOrgAdmin($org);
 
         for ($i = 0; $i < 35; $i++) {
             $response = $this->actingAs($user)->get(route('results.index'));

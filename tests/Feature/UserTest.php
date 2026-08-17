@@ -14,6 +14,27 @@ class UserTest extends TestCase
 {
     use CreatesTenantUsers, RefreshDatabase;
 
+    public function test_org_admin_user_index_is_scoped_and_excludes_super_admin_role_assignment(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($orgA);
+        $ownUser = $this->createUserInOrganization($orgA, ['name' => 'Own Tenant User']);
+        $foreignUser = $this->createUserInOrganization($orgB, ['name' => 'Foreign Tenant User']);
+        Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
+
+        $response = $this->actingAs($admin)->get(route('users.index'));
+
+        $response->assertOk();
+        $props = $response->viewData('page')['props'];
+        $userIds = collect($props['users']['data'])->pluck('uuid');
+        $roleNames = collect($props['roles'])->pluck('name');
+
+        $this->assertTrue($userIds->contains($ownUser->uuid));
+        $this->assertFalse($userIds->contains($foreignUser->uuid));
+        $this->assertFalse($roleNames->contains('super-admin'));
+    }
+
     public function test_super_admin_can_create_user(): void
     {
         $org = Organization::factory()->create();

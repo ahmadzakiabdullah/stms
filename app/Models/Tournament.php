@@ -24,12 +24,14 @@ class Tournament extends Model
         'end_date',
         'is_active',
         'ranking_strategy',
+        'ranking_rules',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'is_active' => 'boolean',
+        'ranking_rules' => 'array',
     ];
 
     public function organization()

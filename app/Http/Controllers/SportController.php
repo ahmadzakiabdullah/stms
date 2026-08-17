@@ -18,6 +18,8 @@ class SportController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', Sport::class);
+
         // Defensive query (prevent 500 on unmigrated prod DB)
         $sports = $this->safePaginatedQuery(function () {
             return Sport::with('organization', 'categories')

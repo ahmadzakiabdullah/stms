@@ -20,10 +20,15 @@ class SessionTest extends TestCase
         $sessionA = Session::factory()->create(['organization_id' => $orgA->id, 'name' => 'Session A']);
         $sessionB = Session::factory()->create(['organization_id' => $orgB->id, 'name' => 'Session B']);
 
-        $userA = $this->createStaffUser($orgA);
+        $userA = $this->createOrgAdmin($orgA);
 
         $response = $this->actingAs($userA)->get(route('sessions.index'));
         $response->assertOk();
+        $sessions = $response->viewData('page')['props']['sessions']['data'] ?? [];
+        $names = collect($sessions)->pluck('name');
+
+        $this->assertTrue($names->contains($sessionA->name));
+        $this->assertFalse($names->contains($sessionB->name));
     }
 
     public function test_super_admin_can_create_session(): void

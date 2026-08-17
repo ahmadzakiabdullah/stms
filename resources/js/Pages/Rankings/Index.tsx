@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
     Card,
     CardContent,
@@ -17,8 +18,9 @@ import {
 } from '@/components/ui/table';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Medal, Save, Trophy } from 'lucide-react';
-import { type PageProps, type RankingEntry, type Session, type Tournament } from '@/types';
+import { type PageProps, type RankingEntry, type RankingRules, type Session, type Tournament } from '@/types';
 import { useI18n } from '@/lib/i18n';
+import { useEffect } from 'react';
 
 interface RankingsIndexProps {
     sessions: Session[];
@@ -29,12 +31,6 @@ interface RankingsIndexProps {
     events: Record<string, unknown>;
     strategies: Record<string, string>;
 }
-
-const strategyLabels: Record<string, string> = {
-    points: 'Points (W=3, D=1, L=0)',
-    win_rate: 'Win Rate',
-    medal_tally: 'Medal Tally',
-};
 
 const rankColors: Record<number, string> = {
     1: 'text-yellow-600 font-bold',
@@ -50,9 +46,29 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
     const selectedTournamentData = tournaments.find(t => t.slug === selectedTournament);
     const isSessionLevel = !!selectedSession && !selectedTournament;
 
-    const { data, setData, put, processing } = useForm({
+    const activeRules = selectedTournamentData?.ranking_rules ?? selectedSessionData?.ranking_rules;
+    const defaultRules: Required<RankingRules> = {
+        points: { win_points: 3, draw_points: 1, loss_points: 0, tiebreakers: ['points', 'goal_difference', 'score_for'] },
+        win_rate: { tiebreakers: ['win_rate', 'wins', 'goal_difference'] },
+        medal_tally: { tiebreakers: ['gold', 'silver', 'bronze'] },
+    };
+    const formRules: Required<RankingRules> = {
+        points: { ...defaultRules.points, ...activeRules?.points },
+        win_rate: { ...defaultRules.win_rate, ...activeRules?.win_rate },
+        medal_tally: { ...defaultRules.medal_tally, ...activeRules?.medal_tally },
+    };
+
+    const { data, setData, put, processing, errors } = useForm({
         ranking_strategy: selectedSessionData?.ranking_strategy || 'points',
+        ranking_rules: formRules,
     });
+
+    useEffect(() => {
+        setData({
+            ranking_strategy: selectedTournamentData?.ranking_strategy ?? selectedSessionData?.ranking_strategy ?? 'points',
+            ranking_rules: formRules,
+        });
+    }, [selectedSession, selectedTournament]);
 
     const handleSessionChange = (slug: string) => {
         if (slug) {
@@ -145,7 +161,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                         )}
 
                         {selectedSessionData && (
-                            <form onSubmit={updateStrategy} className="flex items-end gap-2">
+                            <form onSubmit={updateStrategy} className="flex flex-wrap items-end gap-2">
                                 <div>
                                     <label className="text-sm font-medium mb-1 block">Strategy</label>
                                     <select
@@ -158,10 +174,75 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                         ))}
                                     </select>
                                 </div>
+                                {data.ranking_strategy === 'points' && (
+                                    <>
+                                        {(['win_points', 'draw_points', 'loss_points'] as const).map((field) => (
+                                            <div key={field} className="w-24">
+                                                <label className="mb-1 block text-xs font-medium">
+                                                    {field === 'win_points' ? 'Win' : field === 'draw_points' ? 'Draw' : 'Loss'}
+                                                </label>
+                                                <Input
+                                                    type="number"
+                                                    min={-100}
+                                                    max={100}
+                                                    value={data.ranking_rules.points[field]}
+                                                    onChange={(event) => setData('ranking_rules', {
+                                                        ...data.ranking_rules,
+                                                        points: { ...data.ranking_rules.points, [field]: Number(event.target.value) },
+                                                    })}
+                                                />
+                                            </div>
+                                        ))}
+                                        <div className="min-w-72 flex-1">
+                                            <label className="mb-1 block text-xs font-medium">Tiebreakers</label>
+                                            <Input
+                                                value={data.ranking_rules.points.tiebreakers.join(', ')}
+                                                onChange={(event) => setData('ranking_rules', {
+                                                    ...data.ranking_rules,
+                                                    points: {
+                                                        ...data.ranking_rules.points,
+                                                        tiebreakers: event.target.value.split(',').map((value) => value.trim()).filter(Boolean),
+                                                    },
+                                                })}
+                                                aria-describedby="ranking-rules-help"
+                                            />
+                                        </div>
+                                    </>
+                                )}
+                                {data.ranking_strategy === 'win_rate' && (
+                                    <div className="min-w-72 flex-1">
+                                        <label className="mb-1 block text-xs font-medium">Tiebreakers</label>
+                                        <Input
+                                            value={data.ranking_rules.win_rate.tiebreakers.join(', ')}
+                                            onChange={(event) => setData('ranking_rules', {
+                                                ...data.ranking_rules,
+                                                win_rate: { tiebreakers: event.target.value.split(',').map((value) => value.trim()).filter(Boolean) },
+                                            })}
+                                        />
+                                    </div>
+                                )}
+                                {data.ranking_strategy === 'medal_tally' && (
+                                    <div className="min-w-72 flex-1">
+                                        <label className="mb-1 block text-xs font-medium">Medal order</label>
+                                        <Input
+                                            value={data.ranking_rules.medal_tally.tiebreakers.join(', ')}
+                                            onChange={(event) => setData('ranking_rules', {
+                                                ...data.ranking_rules,
+                                                medal_tally: { tiebreakers: event.target.value.split(',').map((value) => value.trim()).filter(Boolean) },
+                                            })}
+                                        />
+                                    </div>
+                                )}
                                 <Button type="submit" size="sm" disabled={processing}>
                                     <Save className="mr-1 size-3" /> {t('Apply')}
                                 </Button>
                             </form>
+                        )}
+                        {selectedSessionData && (
+                            <div className="w-full text-xs text-muted-foreground" id="ranking-rules-help">
+                                Allowed fields depend on strategy. Separate tiebreakers with commas.
+                                {Object.keys(errors).length > 0 && <span className="ml-2 text-destructive">Check the ranking rule values.</span>}
+                            </div>
                         )}
                         {selectedSessionData && (
                             <div className="flex gap-2">
@@ -198,7 +279,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                             {selectedTournamentData ? ` — ${selectedTournamentData.name}` : ' (All Phases)'}
                         </CardTitle>
                         <CardDescription>
-                            Strategy: {strategyLabels[selectedTournamentData?.ranking_strategy ?? selectedSessionData?.ranking_strategy ?? 'points'] || 'Points'} |
+                            Strategy: {strategies[selectedTournamentData?.ranking_strategy ?? selectedSessionData?.ranking_strategy ?? 'points'] || 'Points'} |
                             Based on {rankings.length} participant(s) with match results
                         </CardDescription>
                     </CardHeader>

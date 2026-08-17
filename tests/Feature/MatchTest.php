@@ -32,7 +32,7 @@ class MatchTest extends TestCase
             'event_id' => $eventB->id,
         ]);
 
-        $userA = $this->createStaffUser($orgA);
+        $userA = $this->createOrgAdmin($orgA);
 
         $response = $this->actingAs($userA)->get(route('matches.index'));
         $response->assertOk();
@@ -51,7 +51,7 @@ class MatchTest extends TestCase
             'name' => 'Pool A',
             'sort_order' => 1,
         ]);
-        $user = $this->createStaffUser($org);
+        $user = $this->createOrgAdmin($org);
 
         $response = $this->actingAs($user)->get(route('matches.index', [
             'event' => $event->slug,

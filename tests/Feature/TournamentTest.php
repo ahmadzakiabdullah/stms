@@ -25,7 +25,7 @@ class TournamentTest extends TestCase
         Tournament::factory()->create(['organization_id' => $orgA->id, 'session_id' => $sessionA->id]);
         Tournament::factory()->create(['organization_id' => $orgB->id, 'session_id' => $sessionB->id]);
 
-        $staffA = $this->createStaffUser($orgA);
+        $staffA = $this->createOrgAdmin($orgA);
 
         $response = $this->actingAs($staffA)->get(route('tournaments.index'));
 

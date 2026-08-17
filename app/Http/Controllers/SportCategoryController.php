@@ -19,6 +19,8 @@ class SportCategoryController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', SportCategory::class);
+
         $user = Auth::user();
 
         // Defensive queries

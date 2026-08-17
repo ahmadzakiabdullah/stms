@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ParticipantLogo, { type ParticipantLogoSize } from '@/components/ParticipantLogo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +32,7 @@ interface StandingRow {
     goals_against: number;
     goal_difference: number;
     points: number;
-    participant?: { id: string; name: string; team_name?: string; logo_url?: string } | null;
+    participant?: { id: string; name: string; team_name?: string; logo_url?: string | null; inverse_logo_url?: string | null } | null;
 }
 
 interface PoolWithRelations extends Pool {
@@ -94,7 +95,7 @@ const eventDisplayName = (event: EventWithRelations) => {
     return event.name;
 };
 
-type ParticipantSummary = Pick<Participant, 'id' | 'name'> & Partial<Pick<Participant, 'team_name' | 'logo_url'>>;
+type ParticipantSummary = Pick<Participant, 'id' | 'name'> & Partial<Pick<Participant, 'team_name' | 'logo_url' | 'inverse_logo_url'>>;
 
 const participantName = (participant?: ParticipantSummary | null, fallback = 'TBD') => {
     if (!participant) return fallback;
@@ -113,29 +114,13 @@ const participantFullName = (participant?: ParticipantSummary | null, fallback =
     return participant.team_name || participant.name || fallback;
 };
 
-const participantInitials = (name: string) =>
-    name
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() || '')
-        .join('');
-
 const formatDateTime = (value: string | null | undefined) =>
     value ? new Date(value).toLocaleString() : 'Time TBD';
 
-function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { participant?: ParticipantSummary | null; fallback?: string; size?: string }) {
+function TeamMark({ participant, fallback = 'TBD', size = 'sm', className }: { participant?: ParticipantSummary | null; fallback?: string; size?: ParticipantLogoSize; className?: string }) {
     const name = participantName(participant, fallback);
 
-    if (participant?.logo_url) {
-        return <img src={participant.logo_url} alt={name} className={`${size} shrink-0 object-contain`} />;
-    }
-
-    return (
-        <span className={`flex ${size} shrink-0 items-center justify-center rounded-md border bg-muted text-[10px] font-semibold text-muted-foreground`}>
-            {participantInitials(name)}
-        </span>
-    );
+    return <ParticipantLogo participant={participant ?? { name }} size={size} className={className} alt={name} />;
 }
 
 function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: ParticipantSummary | null; fallback?: string }) {
@@ -143,7 +128,7 @@ function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: 
 
     return (
         <div className="flex items-center gap-2">
-            <TeamMark participant={participant} fallback={fallback} size="size-12" />
+            <TeamMark participant={participant} fallback={fallback} size="lg" />
             <span title={participantFullName(participant)}>{name}</span>
         </div>
     );
@@ -193,9 +178,7 @@ function LeagueTable({ standings }: { standings: StandingRow[] }) {
                                 <TableCell className="font-medium">{index + 1}</TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
-                                        {row.participant?.logo_url && (
-                                            <img src={row.participant.logo_url} alt={name} className="size-6 shrink-0 object-contain" />
-                                        )}
+                                        <ParticipantLogo participant={row.participant ?? { name }} size="xs" alt="" />
                                         <span className="truncate font-medium">{name}</span>
                                         {isLeader && <Badge variant="secondary">Leader</Badge>}
                                     </div>
@@ -338,11 +321,11 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
             <TableCell>
                 <div className="flex min-w-[260px] items-center gap-2">
                     <span className="max-w-[110px] truncate font-medium text-right" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
-                    <TeamMark participant={match.home_participant} size="size-12" />
+                    <TeamMark participant={match.home_participant} size="lg" />
                     <span className={`mx-1 shrink-0 rounded-md px-2 py-0.5 text-sm font-bold tabular-nums ${scored ? 'bg-muted' : 'text-muted-foreground'}`}>
                         {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : 'VS'}
                     </span>
-                    <TeamMark participant={match.away_participant} size="size-12" />
+                    <TeamMark participant={match.away_participant} size="lg" />
                     <span className="max-w-[110px] truncate font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
                 </div>
             </TableCell>
@@ -381,14 +364,14 @@ function MatchMobileCard({ match, onEdit, onDelete, eventCode: code = '', canMan
             </div>
             <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <div className="min-w-0 text-center">
-                    <TeamMark participant={match.home_participant} size="mx-auto size-12" />
+                    <TeamMark participant={match.home_participant} size="lg" className="mx-auto" />
                     <p className="mt-1 truncate text-sm font-semibold" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</p>
                 </div>
                 <span className={`rounded-lg px-3 py-2 text-sm font-bold tabular-nums ${scored ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                     {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : 'VS'}
                 </span>
                 <div className="min-w-0 text-center">
-                    <TeamMark participant={match.away_participant} size="mx-auto size-12" />
+                    <TeamMark participant={match.away_participant} size="lg" className="mx-auto" />
                     <p className="mt-1 truncate text-sm font-semibold" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</p>
                 </div>
             </div>

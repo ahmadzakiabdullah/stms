@@ -26,6 +26,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ParticipantLogo from '@/components/ParticipantLogo';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Download, FileText, Plus, Search, Trash2, Upload, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -242,14 +243,17 @@ export default function FacultyDashboard({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Faculty Dashboard')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {participant ? participant.name : t('No faculty profile linked')}
-                        </p>
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                        {participant && <ParticipantLogo participant={participant} size="lg" className="sm:size-14" alt="" />}
+                        <div className="min-w-0">
+                            <h1 className="text-2xl font-semibold tracking-tight">{t('Faculty Dashboard')}</h1>
+                            <p className="truncate text-sm text-muted-foreground">
+                                {participant ? participant.name : t('No faculty profile linked')}
+                            </p>
+                        </div>
                     </div>
-                    <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
+                    <Button className="shrink-0" onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
                         <Plus className="mr-2 size-4" />
                         {t('Register for Events')}
                     </Button>

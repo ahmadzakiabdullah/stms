@@ -22,7 +22,7 @@ class RankingServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new RankingService;
+        $this->service = app(RankingService::class);
     }
 
     public function test_calculate_for_tournament_returns_ranked_participants(): void
@@ -97,6 +97,44 @@ class RankingServiceTest extends TestCase
         $rankings = $this->service->calculateForTournament($tournament);
 
         $this->assertEquals(100.0, $rankings->first()['win_rate']);
+    }
+
+    public function test_points_strategy_uses_tournament_rules_from_the_database(): void
+    {
+        $org = Organization::factory()->create();
+        $tournament = Tournament::factory()->create([
+            'organization_id' => $org->id,
+            'ranking_strategy' => 'points',
+            'ranking_rules' => [
+                'points' => [
+                    'win_points' => 5,
+                    'draw_points' => 2,
+                    'loss_points' => -1,
+                    'tiebreakers' => ['points', 'wins'],
+                ],
+            ],
+        ]);
+        $event = Event::factory()->create(['organization_id' => $org->id, 'tournament_id' => $tournament->id]);
+        $winner = Participant::factory()->create(['organization_id' => $org->id]);
+        $loser = Participant::factory()->create(['organization_id' => $org->id]);
+        $match = Fixture::factory()->completed()->create([
+            'organization_id' => $org->id,
+            'event_id' => $event->id,
+            'home_participant_id' => $winner->id,
+            'away_participant_id' => $loser->id,
+        ]);
+        Result::factory()->create([
+            'organization_id' => $org->id,
+            'match_id' => $match->id,
+            'score_home' => 1,
+            'score_away' => 0,
+            'winner_participant_id' => $winner->id,
+        ]);
+
+        $rankings = $this->service->calculateForTournament($tournament);
+
+        $this->assertSame(5, $rankings->firstWhere('participant_id', $winner->id)['points']);
+        $this->assertSame(-1, $rankings->firstWhere('participant_id', $loser->id)['points']);
     }
 
     public function test_empty_results_returns_empty(): void

@@ -35,7 +35,7 @@ class ResultTest extends TestCase
         $matchB = Fixture::factory()->create(['organization_id' => $orgB->id, 'event_id' => $eventB->id]);
         Result::factory()->create(['organization_id' => $orgB->id, 'match_id' => $matchB->id]);
 
-        $userA = $this->createStaffUser($orgA);
+        $userA = $this->createOrgAdmin($orgA);
 
         $response = $this->actingAs($userA)->get(route('results.index'));
         $response->assertOk();
