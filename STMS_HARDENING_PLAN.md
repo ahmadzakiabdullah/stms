@@ -12,17 +12,17 @@
 - [x] Production configuration validation yang fail-closed untuk Redis, mail, verification, timezone, secure session dan CSP.
 - [x] Queue backlog runtime dikosongkan kepada 0 pending/0 failed.
 - [x] Guzzle/PSR-7 advisory ditutup.
-- [x] PHPUnit 430/430, Pint, TypeScript, build, budget, dependency audits dan Playwright/axe 8/8 hijau.
+- [x] PHPUnit 434/434, Pint, TypeScript, build, budget, dependency audits dan Playwright/axe 8/8 hijau.
 - [x] Remediation dipecah kepada commit logik yang boleh disemak.
-- [x] Connected CI #104 lulus pada commit `49aec84` untuk semua enam job; action rasmi v7 menutup amaran runtime Node.js 20.
+- [x] Connected CI #105 lulus pada commit `5bb86a8` untuk semua enam job; action rasmi v7 menutup amaran runtime Node.js 20.
 - [x] Product owner mengesahkan tarikh, satu tournament, 30 acara, 8 kontinjen dan single-page IA; data operasi kekal boleh dikemas kini.
+- [x] Contact rasmi Pusat Sukan disimpan sebagai tetapan tenant-editable dan dilindungi oleh validasi serta output filtering.
 
 ## Baki Release Operations
 
 - [ ] Operator menyediakan real mail transport dan reset-password evidence.
 - [ ] Deploy Redis cache/queue/session, Malaysia timezone, verification dan CSP enforcement melalui release runbook.
 - [ ] DBA mengehadkan principal kepada schema STMS dan merekod grants.
-- [ ] Lengkapkan production contact details.
 - [ ] Off-host backup, deploy smoke dan release tag.
 
 ## Reliability Selepas Release

@@ -28,6 +28,12 @@ class SettingController extends Controller
                 'favicon_url' => $settings['favicon_url'] ?? null,
                 'tournament_logo_url' => $settings['tournament_logo_url'] ?? null,
                 'secretariat_address' => $settings['secretariat_address'] ?? '',
+                'secretariat_email' => $settings['secretariat_email'] ?? '',
+                'secretariat_phone' => $settings['secretariat_phone'] ?? '',
+                'secretariat_facebook_url' => $settings['secretariat_facebook_url'] ?? '',
+                'secretariat_instagram_url' => $settings['secretariat_instagram_url'] ?? '',
+                'secretariat_tiktok_url' => $settings['secretariat_tiktok_url'] ?? '',
+                'secretariat_youtube_url' => $settings['secretariat_youtube_url'] ?? '',
                 'public_theme_dark' => $settings['public_theme_dark'] ?? '#071B33',
                 'public_theme_primary' => $settings['public_theme_primary'] ?? '#0057A8',
                 'public_theme_accent' => $settings['public_theme_accent'] ?? '#20B8E6',
@@ -59,10 +65,20 @@ class SettingController extends Controller
             );
         }
 
-        Setting::updateOrCreate(
-            ['organization_id' => $orgId, 'key' => 'secretariat_address'],
-            ['value' => (string) $request->input('secretariat_address', '')]
-        );
+        foreach ([
+            'secretariat_address',
+            'secretariat_email',
+            'secretariat_phone',
+            'secretariat_facebook_url',
+            'secretariat_instagram_url',
+            'secretariat_tiktok_url',
+            'secretariat_youtube_url',
+        ] as $key) {
+            Setting::updateOrCreate(
+                ['organization_id' => $orgId, 'key' => $key],
+                ['value' => (string) $request->input($key, '')]
+            );
+        }
 
         foreach (['public_theme_dark', 'public_theme_primary', 'public_theme_accent', 'public_theme_highlight', 'public_theme_background', 'public_theme_text'] as $key) {
             Setting::updateOrCreate(

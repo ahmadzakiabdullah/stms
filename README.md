@@ -6,8 +6,8 @@ STMS ialah platform pengurusan kejohanan sukan multi-tenant. Repository ini meng
 
 MVP produk beroperasi dan quality gate repository semasa hijau. Deployment production masih menunggu tindakan operator/owner:
 
-- 126 routes, 61 migrations, 39 controllers, 38 Inertia pages dan 93 PHP test files.
-- PHPUnit 430/430 (1,860 assertions), Pint, TypeScript, Vite build, bundle budget dan tenant-bypass check lulus.
+- 126 routes, 61 migrations, 39 controllers, 38 Inertia pages dan 94 PHP test files.
+- PHPUnit 434/434 (1,937 assertions), Pint, TypeScript, Vite build, bundle budget dan tenant-bypass check lulus.
 - Composer/npm audit bersih selepas Guzzle/PSR-7 security update.
 - Playwright/axe lulus 8/8 pada desktop/mobile menggunakan SQLite terasing.
 - Runtime workspace `production` tidak sepadan dengan baseline Redis/session/verification/CSP yang didokumenkan.
@@ -24,7 +24,7 @@ Rujuk [`CURRENT_STATE.md`](CURRENT_STATE.md) dan [audit penuh 17 Ogos 2026](docs
 - Draw, pools, fixtures, results, rankings, exports dan reports
 - Queued in-app notifications dan role-aware dashboards
 - Standard/inverse participant logos dengan sanitized upload
-- Public SAF homepage, schedules/results/medal sections dan Contact page
+- Public SAF homepage, schedules/results/medal sections dan Contact page dengan butiran rasmi tenant-editable
 - Docker, GitHub Actions, health checks dan encrypted backup tooling
 
 REST API, accreditation, live scoring, mobile app, advanced analytics dan AI kekal deferred.

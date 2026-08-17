@@ -4,11 +4,11 @@
 
 ## Keadaan Semasa
 
-- Repositori mengandungi **93 fail ujian PHP**.
-- PHPUnit menjalankan **430 ujian / 1,860 assertions** dan semuanya lulus.
+- Repositori mengandungi **94 fail ujian PHP**.
+- PHPUnit menjalankan **434 ujian / 1,937 assertions** dan semuanya lulus.
 - Pint, TypeScript, Vite build, bundle budget, inventory/tenant guards dan dependency audits lulus.
 - Playwright/axe menjalankan **8/8 journeys** pada desktop/mobile menggunakan SQLite terasing.
-- Connected [CI #104](https://github.com/ahmadzakiabdullah/stms/actions/runs/32009762360) pada commit `49aec84` mengesahkan dependency audit, lint, test, coverage, build dan browser E2E semuanya lulus; action rasmi v7 berjalan tanpa amaran Node.js 20.
+- Connected [CI #105](https://github.com/ahmadzakiabdullah/stms/actions/runs/32009988117) pada commit `5bb86a8` mengesahkan dependency audit, lint, test, coverage, build dan browser E2E semuanya lulus; action rasmi v7 berjalan tanpa amaran Node.js 20.
 - Evidence ini melayakkan commit tersebut sebagai pre-deploy candidate; smoke test deployment sebenar masih wajib.
 
 ## Strategi

@@ -7,6 +7,7 @@ use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
+use App\Models\Setting;
 use App\Models\Tournament;
 use App\Services\PublicPortalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -109,6 +110,61 @@ class PublicPortalTest extends TestCase
     {
         $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Public/Index')->where('competition', null)->has('upcoming', 0)->has('results', 0));
+    }
+
+    public function test_public_contact_exposes_only_valid_channels_for_the_configured_organization(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $otherOrganization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+
+        foreach ([
+            'secretariat_address' => "Pusat Sukan\nUniversiti Teknikal Malaysia Melaka",
+            'secretariat_email' => 'pusatsukan@utem.edu.my',
+            'secretariat_phone' => '+606-2292326',
+            'secretariat_facebook_url' => 'https://www.facebook.com/pusatsukanutem',
+            'secretariat_instagram_url' => 'https://www.instagram.com/pusatsukanutem',
+            'secretariat_tiktok_url' => 'https://www.tiktok.com/pusatsukanutem',
+            'secretariat_youtube_url' => 'https://www.youtube.com/pusatsukanutem',
+        ] as $key => $value) {
+            Setting::create(['organization_id' => $organization->id, 'key' => $key, 'value' => $value]);
+        }
+
+        Setting::create([
+            'organization_id' => $otherOrganization->id,
+            'key' => 'secretariat_email',
+            'value' => 'private-other@example.test',
+        ]);
+
+        $this->get(route('public.contact'))
+            ->assertOk()
+            ->assertDontSee('private-other@example.test')
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/Contact')
+                ->where('contact.address', "Pusat Sukan\nUniversiti Teknikal Malaysia Melaka")
+                ->where('contact.email', 'pusatsukan@utem.edu.my')
+                ->where('contact.phone', '+606-2292326')
+                ->where('contact.social.facebook', 'https://www.facebook.com/pusatsukanutem')
+                ->where('contact.social.instagram', 'https://www.instagram.com/pusatsukanutem')
+                ->where('contact.social.tiktok', 'https://www.tiktok.com/pusatsukanutem')
+                ->where('contact.social.youtube', 'https://www.youtube.com/pusatsukanutem'));
+    }
+
+    public function test_public_contact_filters_unsafe_channels_inserted_outside_the_settings_form(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+
+        Setting::create(['organization_id' => $organization->id, 'key' => 'secretariat_email', 'value' => 'invalid-email']);
+        Setting::create(['organization_id' => $organization->id, 'key' => 'secretariat_phone', 'value' => 'invalid-phone']);
+        Setting::create(['organization_id' => $organization->id, 'key' => 'secretariat_facebook_url', 'value' => 'javascript:alert(1)']);
+
+        $this->get(route('public.contact'))->assertInertia(fn (Assert $page) => $page
+            ->where('contact.email', null)
+            ->where('contact.phone', null)
+            ->where('contact.social.facebook', null));
     }
 
     public function test_same_session_slug_in_two_organizations_never_mixes_public_data(): void

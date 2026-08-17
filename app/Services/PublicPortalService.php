@@ -23,7 +23,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v4:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v5:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::remember($cacheKey, now()->addMinutes(2), function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -37,6 +37,7 @@ class PublicPortalService
                 Cache::forget('public-portal:v2:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v3:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v4:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v5:'.$sessionId.':'.$limit);
             }
 
             return;
@@ -60,6 +61,20 @@ class PublicPortalService
     private function buildData(Session $session, ?int $limit): array
     {
         $organizationId = $session->organization_id;
+        $portalSettings = Setting::query()
+            ->where('organization_id', $organizationId)
+            ->whereIn('key', [
+                'app_name',
+                'secretariat_address',
+                'secretariat_email',
+                'secretariat_phone',
+                'secretariat_facebook_url',
+                'secretariat_instagram_url',
+                'secretariat_tiktok_url',
+                'secretariat_youtube_url',
+            ])
+            ->pluck('value', 'key')
+            ->all();
         $tournamentIds = $session->tournaments()->pluck('id');
         $eventQuery = $session->events()->where('events.organization_id', $organizationId);
 
@@ -84,7 +99,7 @@ class PublicPortalService
         $lastUpdated = collect([$session->updated_at, $fixtureQuery()->max('updated_at')])->filter()->max();
 
         return [
-            'app_name' => Setting::where('organization_id', $session->organization_id)->where('key', 'app_name')->value('value') ?? config('app.name'),
+            'app_name' => filled($portalSettings['app_name'] ?? null) ? $portalSettings['app_name'] : config('app.name'),
             'competition' => ['name' => $session->name, 'description' => $session->description,
                 'start_date' => $session->start_date?->toDateString(), 'end_date' => $session->end_date?->toDateString(),
                 'organization' => $session->organization?->name],
@@ -102,10 +117,7 @@ class PublicPortalService
             'medals' => ($limit === null
                 ? $this->rankingService->calculateMedalTallyForSession($session)
                 : $this->rankingService->calculateMedalTallyForSession($session)->take(20))->values()->all(),
-            'contact' => [
-                'address' => Setting::where('organization_id', $session->organization_id)
-                    ->where('key', 'secretariat_address')->value('value'),
-            ],
+            'contact' => $this->contactData($portalSettings),
             'updated_at' => ($lastUpdated instanceof \DateTimeInterface ? $lastUpdated : now())->toIso8601String(),
             'weather' => $this->weatherService->current(),
         ];
@@ -152,7 +164,42 @@ class PublicPortalService
     {
         return ['app_name' => config('app.name'), 'competition' => null, 'stats' => ['sports' => 0, 'events' => 0, 'faculties' => 0, 'completed_matches' => 0, 'total_matches' => 0],
             'sports' => [], 'sports_catalog' => [], 'upcoming' => [], 'results' => [], 'medals' => [],
-            'contact' => ['address' => null], 'updated_at' => now()->toIso8601String(),
+            'contact' => $this->contactData([]), 'updated_at' => now()->toIso8601String(),
             'weather' => $this->weatherService->current()];
+    }
+
+    private function contactData(array $settings): array
+    {
+        $value = static function (string $key) use ($settings): ?string {
+            $candidate = trim((string) ($settings[$key] ?? ''));
+
+            return $candidate !== '' ? $candidate : null;
+        };
+
+        $email = $value('secretariat_email');
+        $phone = $value('secretariat_phone');
+
+        return [
+            'address' => $value('secretariat_address'),
+            'email' => $email && filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null,
+            'phone' => $phone && preg_match('/^\+?[0-9\s().-]{7,50}$/', $phone) === 1 ? $phone : null,
+            'social' => [
+                'facebook' => $this->safeHttpUrl($value('secretariat_facebook_url')),
+                'instagram' => $this->safeHttpUrl($value('secretariat_instagram_url')),
+                'tiktok' => $this->safeHttpUrl($value('secretariat_tiktok_url')),
+                'youtube' => $this->safeHttpUrl($value('secretariat_youtube_url')),
+            ],
+        ];
+    }
+
+    private function safeHttpUrl(?string $value): ?string
+    {
+        if (! $value || ! filter_var($value, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        return in_array(strtolower((string) parse_url($value, PHP_URL_SCHEME)), ['http', 'https'], true)
+            ? $value
+            : null;
     }
 }

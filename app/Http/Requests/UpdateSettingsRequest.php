@@ -19,6 +19,12 @@ class UpdateSettingsRequest extends FormRequest
             'favicon' => 'nullable|image|mimes:png,ico,svg|max:1024',
             'tournament_logo' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp|max:2048',
             'secretariat_address' => 'nullable|string|max:1000',
+            'secretariat_email' => ['nullable', 'email:rfc', 'max:255'],
+            'secretariat_phone' => ['nullable', 'string', 'max:50', 'regex:/^\+?[0-9\s().-]{7,50}$/'],
+            'secretariat_facebook_url' => ['nullable', 'url:http,https', 'max:2048'],
+            'secretariat_instagram_url' => ['nullable', 'url:http,https', 'max:2048'],
+            'secretariat_tiktok_url' => ['nullable', 'url:http,https', 'max:2048'],
+            'secretariat_youtube_url' => ['nullable', 'url:http,https', 'max:2048'],
             'public_theme_dark' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'public_theme_primary' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'public_theme_accent' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
@@ -26,5 +32,22 @@ class UpdateSettingsRequest extends FormRequest
             'public_theme_background' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'public_theme_text' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $contactKeys = [
+            'secretariat_address',
+            'secretariat_email',
+            'secretariat_phone',
+            'secretariat_facebook_url',
+            'secretariat_instagram_url',
+            'secretariat_tiktok_url',
+            'secretariat_youtube_url',
+        ];
+
+        $this->merge(collect($contactKeys)
+            ->mapWithKeys(fn (string $key): array => [$key => trim((string) $this->input($key, ''))])
+            ->all());
     }
 }

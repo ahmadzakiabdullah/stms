@@ -16,16 +16,16 @@
 - [x] Kukuhkan production configuration guard untuk Redis, verification, Malaysia timezone, secure session, CSP dan real mail transport.
 - [x] Buang Bunny Fonts, self-host font dan sediakan CSP-enforcing code path.
 - [x] Naik taraf Guzzle/PSR-7 dan sahkan Composer/npm audit bersih.
-- [x] Jalankan quality gate tempatan semasa: PHPUnit 430/430, Pint, TypeScript, build, budget, tenant guard dan Playwright/axe 8/8.
+- [x] Jalankan quality gate tempatan semasa: PHPUnit 434/434, Pint, TypeScript, build, budget, tenant guard dan Playwright/axe 8/8.
 - [x] Pecahkan remediation kepada empat commit logik bagi logo peserta, authorization/draw/ranking, portal/production hardening dan dokumentasi audit.
-- [x] Connected CI #104 lulus pada commit `49aec84`: dependency audit, lint, test, coverage, build dan browser E2E; action v7 menggunakan runtime Node.js 24 tanpa amaran Node.js 20.
+- [x] Connected CI #105 lulus pada commit `5bb86a8`: dependency audit, lint, test, coverage, build dan browser E2E; action v7 menggunakan runtime Node.js 24 tanpa amaran Node.js 20.
 - [x] Product owner mengesahkan SAF 2026 ialah 1–31 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan navigation single-page; rekod pertandingan boleh dikemas kini kemudian jika maklumat rasmi berubah.
+- [x] Lengkapkan alamat, e-mel, telefon dan empat pautan media sosial rasmi Pusat Sukan sebagai tetapan tenant yang boleh diedit; data workspace UTeM telah dikemas kini dan cache portal dibersihkan.
 
 ### Memerlukan owner/production operator
 
 - [ ] Konfigurasi mail transport sebenar dan uji reset-password sebelum `EMAIL_VERIFICATION_REQUIRED=true` dihidupkan.
 - [ ] Deploy dengan `PRODUCTION_CONFIG_ENFORCE=true`, Redis cache/queue/session, `APP_TIMEZONE=Asia/Kuala_Lumpur`, secure cookie dan CSP enforcing; lakukan smoke test serta pelan session cutover.
-- [ ] Lengkapkan contact email, phone dan address production.
 - [ ] Ambil backup off-host, deploy release candidate, sahkan smoke test dan cipta release tag.
 
 ## Hardening Seterusnya

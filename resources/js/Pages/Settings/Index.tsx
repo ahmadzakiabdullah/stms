@@ -14,6 +14,12 @@ interface Props {
         favicon_url: string | null;
         tournament_logo_url: string | null;
         secretariat_address: string;
+        secretariat_email: string;
+        secretariat_phone: string;
+        secretariat_facebook_url: string;
+        secretariat_instagram_url: string;
+        secretariat_tiktok_url: string;
+        secretariat_youtube_url: string;
         public_theme_dark: string;
         public_theme_primary: string;
         public_theme_accent: string;
@@ -30,7 +36,15 @@ export default function SettingsIndex({ settings }: Props) {
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [faviconFile, setFaviconFile] = useState<File | null>(null);
     const [tournamentLogoFile, setTournamentLogoFile] = useState<File | null>(null);
-    const [secretariatAddress, setSecretariatAddress] = useState(settings.secretariat_address);
+    const [contact, setContact] = useState({
+        secretariat_address: settings.secretariat_address,
+        secretariat_email: settings.secretariat_email,
+        secretariat_phone: settings.secretariat_phone,
+        secretariat_facebook_url: settings.secretariat_facebook_url,
+        secretariat_instagram_url: settings.secretariat_instagram_url,
+        secretariat_tiktok_url: settings.secretariat_tiktok_url,
+        secretariat_youtube_url: settings.secretariat_youtube_url,
+    });
     const [saving, setSaving] = useState(false);
     const [theme, setTheme] = useState({
         dark: settings.public_theme_dark,
@@ -47,7 +61,7 @@ export default function SettingsIndex({ settings }: Props) {
         if (logoFile) fd.append('logo', logoFile);
         if (faviconFile) fd.append('favicon', faviconFile);
         if (tournamentLogoFile) fd.append('tournament_logo', tournamentLogoFile);
-        fd.append('secretariat_address', secretariatAddress);
+        Object.entries(contact).forEach(([key, value]) => fd.append(key, value));
         Object.entries(theme).forEach(([key, value]) => fd.append(`public_theme_${key}`, value));
 
         setSaving(true);
@@ -124,7 +138,7 @@ export default function SettingsIndex({ settings }: Props) {
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('Participation Form Branding')}</CardTitle>
-                        <CardDescription>{t('Configure the tournament logo and secretariat address shown on the printable confirmation form.')}</CardDescription>
+                        <CardDescription>{t('Configure the tournament logo shown on the printable confirmation form.')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {settings.tournament_logo_url && (
@@ -137,9 +151,41 @@ export default function SettingsIndex({ settings }: Props) {
                             <Label htmlFor="tournament_logo">{t('Upload Tournament Logo')}</Label>
                             <Input id="tournament_logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={(e) => setTournamentLogoFile(e.target.files?.[0] || null)} />
                         </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Public Contact')}</CardTitle>
+                        <CardDescription>{t('Configure the official contact details and social media links shown on the public portal.')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="secretariat_address">{t('Secretariat Address')}</Label>
-                            <textarea id="secretariat_address" rows={4} className="w-full rounded-md border bg-background px-3 py-2 text-sm" value={secretariatAddress} onChange={(e) => setSecretariatAddress(e.target.value)} placeholder={t('Enter the full secretariat address')} />
+                            <textarea id="secretariat_address" rows={6} className="w-full rounded-md border bg-background px-3 py-2 text-sm" value={contact.secretariat_address} onChange={(event) => setContact(current => ({ ...current, secretariat_address: event.target.value }))} placeholder={t('Enter the full secretariat address')} />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="secretariat_email">{t('Secretariat Email')}</Label>
+                                <Input id="secretariat_email" type="email" autoComplete="email" value={contact.secretariat_email} onChange={(event) => setContact(current => ({ ...current, secretariat_email: event.target.value }))} placeholder="secretariat@example.edu.my" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="secretariat_phone">{t('Secretariat Phone')}</Label>
+                                <Input id="secretariat_phone" type="tel" autoComplete="tel" value={contact.secretariat_phone} onChange={(event) => setContact(current => ({ ...current, secretariat_phone: event.target.value }))} placeholder="+60 6-000 0000" />
+                            </div>
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            {([
+                                ['secretariat_facebook_url', 'Facebook URL'],
+                                ['secretariat_instagram_url', 'Instagram URL'],
+                                ['secretariat_tiktok_url', 'TikTok URL'],
+                                ['secretariat_youtube_url', 'YouTube URL'],
+                            ] as const).map(([key, label]) => (
+                                <div key={key} className="space-y-2">
+                                    <Label htmlFor={key}>{t(label)}</Label>
+                                    <Input id={key} type="url" inputMode="url" value={contact[key]} onChange={(event) => setContact(current => ({ ...current, [key]: event.target.value }))} placeholder="https://" />
+                                </div>
+                            ))}
                         </div>
                     </CardContent>
                 </Card>

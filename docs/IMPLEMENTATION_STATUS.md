@@ -17,8 +17,8 @@
 | Results/Rankings | Implemented | Contract/registry strategies + validated session/tournament rules |
 | Exports/Reports | Implemented | PDF, Excel, match sheet, reports |
 | Notifications | Implemented | Queueable database notifications |
-| Settings/Activity logs | Implemented | Operational audit trail, bukan immutable compliance ledger |
-| Public portal | Implemented | Homepage sections + Contact; legacy public subpages absent |
+| Settings/Activity logs | Implemented | Termasuk contact rasmi tenant-editable; operational audit trail bukan immutable compliance ledger |
+| Public portal | Implemented | Homepage sections + Contact dengan alamat/e-mel/telefon/media sosial tervalidasi; legacy public subpages absent |
 | Docker/CI/Health/Backup | Implemented in repository | Runtime/operational evidence belum lengkap |
 
 ## Explicit Exceptions to Project Defaults
@@ -36,12 +36,12 @@
 | Inventory / tenant bypass / TypeScript | Pass |
 | Vite build + bundle budget | Pass |
 | Composer/npm audit | Pass |
-| PHPUnit | Pass — 430/430, 1,860 assertions |
+| PHPUnit | Pass — 434/434, 1,937 assertions |
 | Pint | Pass |
 | Playwright/axe | Pass — 8/8 desktop/mobile, isolated SQLite |
 | Committed remediation | Pass — logical commits created |
 | Release tag | Fail — no release tag |
-| Current connected CI | Pass — run #104 on `49aec84`, all six jobs successful, no Node.js 20 warning |
+| Current connected CI | Pass — run #105 on `5bb86a8`, all six jobs successful, no Node.js 20 warning |
 
 ## Production Snapshot
 

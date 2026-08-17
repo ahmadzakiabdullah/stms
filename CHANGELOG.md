@@ -2,7 +2,7 @@
 
 ## Unreleased — Audit remediation (17 August 2026)
 
-- Restored the complete quality gate: 430/430 PHPUnit tests (1,860 assertions), Pint, TypeScript, tenant guard, Vite build/budget, clean dependency audits and 8/8 isolated desktop/mobile Playwright/axe journeys.
+- Restored the complete quality gate: 434/434 PHPUnit tests (1,937 assertions), Pint, TypeScript, tenant guard, Vite build/budget, clean dependency audits and 8/8 isolated desktop/mobile Playwright/axe journeys.
 - Enforced policy-backed read authorization across sensitive indexes and added a six-role manual-URL matrix plus real tenant payload assertions.
 - Made draw participant movement regenerate scheduled fixtures atomically while protecting started/completed competition data.
 - Replaced hardcoded ranking orchestration with a strategy contract/registry and validated session/tournament rule storage.
@@ -11,7 +11,8 @@
 - Realigned installed dependencies with the safe lockfile (Guzzle 7.15.2 and PSR-7 2.13.0) to close newly reported security advisories.
 - Confirmed connected CI run #101 on commit `35b9dac`: dependency audit, lint, test, coverage, build and browser E2E all passed.
 - Recorded product-owner confirmation for the 1–31 October 2026 dates, one tournament, 30 events, eight contingents and single-page public information architecture; operational records remain editable for later official changes.
-- Upgraded `actions/checkout`, `actions/setup-node` and `actions/upload-artifact` to official v7 releases using the Node.js 24 action runtime; CI #104 passed with no Node.js 20 deprecation annotations.
+- Upgraded `actions/checkout`, `actions/setup-node` and `actions/upload-artifact` to official v7 releases using the Node.js 24 action runtime; CI #105 passed with no Node.js 20 deprecation annotations.
+- Added tenant-editable public contact settings for the official address, email, phone, Facebook, Instagram, TikTok and YouTube channels; validated and safely filtered values now render on the public Contact page.
 
 ## Unreleased — Documentation and production audit baseline (17 August 2026)
 

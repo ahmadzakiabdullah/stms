@@ -6,7 +6,7 @@
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** semua quality gate tempatan hijau dan connected CI #104 lulus pada commit `49aec84`. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail dan backup diselesaikan.
+**Repository:** semua quality gate tempatan hijau dan connected CI #105 lulus pada commit `5bb86a8`. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail dan backup diselesaikan.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
@@ -25,7 +25,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Services | 35 |
 | Models | 16 |
 | Inertia `.tsx` pages | 38 |
-| PHP tests | 93 PHP test files |
+| PHP tests | 94 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
 ## Tech Stack
@@ -53,12 +53,15 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Production configuration validator kini mewajibkan Redis session/cache/queue, Asia/Kuala_Lumpur, email verification, secure cookie, CSP enforcing dan mail bukan `log`.
 - Vendor dependencies diselaraskan kepada lockfile selamat (Guzzle 7.15.2, PSR-7 2.13.0) untuk menutup advisory semasa.
 - Axe/keyboard smoke tests meliputi login, dashboard, homepage dan Contact pada desktop/mobile; contrast dan ARIA findings semasa telah dibaiki.
+- Butiran hubungan awam kini tenant-scoped dan boleh diedit melalui Settings: alamat, e-mel, telefon serta pautan Facebook, Instagram, TikTok dan YouTube divalidasi sebelum dipaparkan.
 
 ## Runtime Workspace
 
 Semakan baca-sahaja mendapati 17 pengguna aktif, 17 role assignments, satu super-admin, tiada pengguna tanpa role, tiada orphan role assignment, dan tiada participant/sport assignment silang organisasi. Credential tidak diputar kerana tiada anomali ditemui.
 
 Backlog 32 database-notification jobs telah diproses dengan `queue:work --stop-when-empty`. Selepas pemprosesan: **0 pending, 0 failed**; `stms:health-check` lulus.
+
+Tujuh tetapan hubungan rasmi Pusat Sukan telah disimpan untuk organisasi `utem` dalam runtime workspace dan cache portal dibersihkan. Nilai ini boleh disunting kemudian melalui Settings tanpa perubahan kod. Paparan penuh pada production awam masih bergantung pada deployment release candidate.
 
 Runtime masih menggunakan nilai berikut sehingga deployment berjadual dibuat:
 
@@ -76,7 +79,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 | Gate | Keputusan 17 Ogos 2026 |
 |---|---|
-| PHPUnit | **Lulus — 430/430, 1,860 assertions** |
+| PHPUnit | **Lulus — 434/434, 1,937 assertions** |
 | Pint | Lulus |
 | TypeScript | Lulus |
 | Tenant bypass allowlist | Lulus |
@@ -85,8 +88,8 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | Composer audit | Lulus — 0 advisory |
 | npm audit | Lulus — 0 vulnerability |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
-| Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 93` |
-| Connected CI | **Lulus — [run #104](https://github.com/ahmadzakiabdullah/stms/actions/runs/32009762360)** pada `49aec84`; enam job berjaya, 0 amaran Node.js 20 |
+| Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 94` |
+| Connected CI | **Lulus — [run #105](https://github.com/ahmadzakiabdullah/stms/actions/runs/32009988117)** pada `5bb86a8`; enam job berjaya, 0 amaran Node.js 20 |
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
@@ -96,8 +99,7 @@ Portal production ialah single-page homepage berseksyen plus `/contact-us`. Prod
 
 1. Operator menyediakan mail transport sebenar, menukar runtime kepada baseline production selamat dan melakukan smoke test selepas deploy.
 2. DBA menghadkan principal kepada schema STMS dan merekod grants.
-3. Contact email/phone/address production dilengkapkan.
-4. Backup release diambil, deployment disahkan dan release tag diwujudkan; connected CI #104 sudah lulus pada `49aec84`.
-5. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
+3. Backup release diambil, deployment disahkan dan release tag diwujudkan; connected CI #105 sudah lulus pada `5bb86a8`.
+4. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
 
 **Last updated:** 17 Ogos 2026.
