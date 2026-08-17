@@ -1,39 +1,26 @@
 # Caching Strategy
 
-This document describes the caching strategy for the STMS application.
+## Current State
 
-## Overview
+Cache driver is environment-controlled. The audited workspace runs as `production` with `CACHE_STORE=database`.
 
-Caching is used to store the results of expensive operations and reduce the number of database queries, leading to faster response times. Laravel's cache facade provides a unified API for various caching backends.
+Implemented caches include:
 
-## Current Implementation
+- role/permission cache from Spatie;
+- dashboard payloads keyed by user/tenant/filter;
+- public portal payload keyed by public session and limit for two minutes.
 
--   **Driver**: The application currently uses the `database` driver for caching. This means that cached data is stored in a table within the main application database.
--   **Usage**: The audit found that caching is used in several places, including the main dashboard, to cache counts and other aggregated data.
+`PublicPortalService` invalidation is called by relevant event/fixture/result/participant/setting mutations and keeps organization boundaries.
 
-## Weaknesses & Risks
+## Production Target
 
-Using the `database` driver for caching is simple to set up but is not a scalable solution.
+Production and multi-worker staging must use Redis. Database cache adds load to the primary database and does not satisfy the current production baseline.
 
--   **Performance Bottleneck**: It adds extra load to the very database we are trying to protect from excessive queries.
--   **Scalability**: It does not perform well under high load compared to in-memory solutions.
+`.env.production.example` sets Redis, but an example file is not runtime evidence. `PRODUCTION_CONFIG_ENFORCE` should reject non-Redis production cache/session/queue values.
 
-## Recommended Strategy
+## Rules
 
-For any production or staging environment, the caching driver should be switched to an in-memory store.
-
--   **Recommended Driver**: **Redis** (`redis`)
--   **Configuration**:
-    -   Set `CACHE_STORE=redis` in the `.env` file.
-    -   Ensure a Redis server is available and configured in `config/database.php` and the relevant `.env` variables (`REDIS_HOST`, `REDIS_PORT`, etc.). The project's `docker-compose.yml` already includes a Redis service.
-
-## What to Cache
-
-The following are good candidates for caching:
-
--   **Aggregated Data**: Counts, sums, and other statistics that are displayed on dashboards and don't need to be real-time to the second.
--   **Configuration**: Application settings that are stored in the database.
--   **Permissions**: Resolved role and permission sets from the Spatie package.
--   **Complex Queries**: The results of any database query that is slow and whose results are not highly volatile.
-
-When implementing caching, always have a clear cache invalidation strategy. For example, when a tournament's details are updated, any cached data related to that tournament should be cleared.
+- Every key containing tenant data must include organization/session context.
+- Do not cache partial fallback/error payloads.
+- Every mutation affecting cached output must invalidate only the affected tenant.
+- Add query/cache budgets for dashboard, registration, results, reports and public portal.

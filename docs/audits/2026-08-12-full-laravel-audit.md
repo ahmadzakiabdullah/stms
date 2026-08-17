@@ -1,5 +1,7 @@
 # Full Laravel Security, Architecture, and Performance Audit
 
+> **Historical snapshot — superseded for current status.** Remediation and pass counts below apply to the 12 August working tree. The repository changed afterward; use the [17 August 2026 full project and production audit](2026-08-17-full-project-and-production-audit.md).
+
 **Audit date:** 12 August 2026
 **Scope:** Laravel/PHP application, React/Inertia integration, routes, models, policies, requests, services/actions, migrations, seeders, tests, configuration, and locked dependencies.
 **Method:** Static review, targeted source inspection, Composer/npm audit, tenant guard scripts, PHPUnit, TypeScript, Vite build, and Pint validation. This is a source-code audit; it is not a penetration test or an infrastructure audit.

@@ -1,5 +1,7 @@
 # Enterprise System Audit — 31 July 2026
 
+> **Historical evidence only.** Counts, scores and pass results apply to the dated commit/worktree. They are superseded for current decisions by the [17 August 2026 audit](2026-08-17-full-project-and-production-audit.md).
+
 ## Executive Summary
 
 STMS is a functional Laravel/Inertia MVP with broad tournament-management coverage and a healthy automated-test baseline. The source contains 104 routes, 16 model files, 36 controller files, 19 policies, 17 services, 35 actions, and 51 migrations. After Sprint 3, the PHP suite passes: **266 tests, 810 assertions**. The frontend production build and bundle budget also pass.

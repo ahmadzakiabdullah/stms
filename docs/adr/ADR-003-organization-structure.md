@@ -58,5 +58,6 @@ We will create an `organizations` table with support for hierarchical structure 
 - CLAUDE.md - Core Architecture
 - ADR-002: Multi-Tenant Design
 
-## Implementation Status
-Implemented as of June 2026. `organizations` table with `parent_id` and `organization_type` exists. See `CURRENT_STATE.md` for details.
+## Implementation Status (audited 2026-08-17)
+
+The table, self-reference and organization types exist, and services validate hierarchy changes. The authorization semantics for listing and creating organizations still require review: the root model has no tenant global scope, `OrganizationController@index` omits `viewAny`, and current policy permits `org-admin` creation. See the current audit before extending delegated hierarchy administration.

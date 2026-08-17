@@ -57,5 +57,6 @@ We will use the **Spatie Laravel Permission** package to implement Role-Based Ac
 - ADR-002: Multi-Tenant Design
 - ADR-003: Organization Structure
 
-## Implementation Status
-Implemented as of June 2026. Spatie Laravel Permission installed with roles (super-admin, org-admin, staff, sport-coordinator, tournament-manager), 30+ permissions, and 12 Policies. See `CURRENT_STATE.md` for details.
+## Implementation Status (audited 2026-08-17)
+
+Spatie Laravel Permission is installed. The audited database has 6 active role names (`super-admin`, `org-admin`, `staff`, `admin-sport`, `faculty-representative`, `dean`), 42 permissions and 17 role assignments; the repository has 20 policy files. Role names in the original proposal are illustrative, not the live set. Enforcement is incomplete because several controller index methods omit `viewAny`; UI visibility must not be treated as authorization.

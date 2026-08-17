@@ -1,92 +1,23 @@
 # Frontend Architecture
 
-Dokumen ini menerangkan seni bina, timbunan teknologi, dan amalan terbaik untuk pembangunan antaramuka pengguna (frontend) aplikasi STMS.
+Frontend menggunakan React 18, Inertia React 2, TypeScript, Tailwind CSS 3, Vite 8 dan komponen shadcn/ui/Radix. Repositori mempunyai 38 Inertia page files. Semua page adalah TSX; beberapa shared UI/layout compatibility files masih `.jsx`, jadi migrasi TypeScript belum menyeluruh.
 
-## 1. Gambaran Keseluruhan & Falsafah
+## Struktur
 
-Frontend STMS dibina sebagai **Single-Page Application (SPA) yang diganding rapat (tightly-coupled)** menggunakan **Inertia.js**. Falsafah ini membolehkan kita membina UI yang moden dan reaktif menggunakan React, tanpa perlu membina dan menyelenggara API REST/GraphQL yang berasingan. Backend Laravel berkomunikasi secara terus dengan komponen React.
+- `resources/js/Pages/` — page modules mengikut domain.
+- `resources/js/Components/` — komponen aplikasi dan public portal.
+- `resources/js/Components/ui/` — primitive shadcn/Radix.
+- `resources/js/Layouts/` — authenticated, guest dan public layouts.
+- `resources/js/types/` — kontrak TypeScript bersama.
 
-## 2. Timbunan Teknologi (Tech Stack)
+Form baharu/yang dimigrasi menggunakan React Hook Form dan Zod; form lama masih menggunakan Inertia `useForm`. TanStack Table tersedia sebagai pilihan projek tetapi belum digunakan dalam source semasa. Jangan tambah UI framework lain.
 
--   **Framework:** React 18+
--   **Bahasa:** TypeScript
--   **"Gam" Backend-Frontend:** Inertia.js
--   **Styling:** Tailwind CSS
--   **Perpustakaan Komponen (Base):** shadcn/ui
--   **Bundler:** Vite
+## Public Portal
 
-## 3. Struktur Direktori Utama (`resources/js`)
+Route `/` dan alias `/portal` merender `Public/Index`; `/contact-us` ialah page awam tambahan. Medal tally, programme, schedule dan ringkasan result berada sebagai seksyen/data pada landing page, bukan route standalone. Portal menggunakan cache server-side jangka pendek dan refresh Inertia.
 
-```
-resources/js/
-├── app.tsx               # Titik masuk utama aplikasi frontend
-├── bootstrap.js          # Konfigurasi awal (cth: axios)
-├── Components/           # Komponen React boleh guna semula (UI & domain)
-│   ├── ui/               # Komponen shadcn/ui (Button, Input, dll.)
-│   └── ...               # Komponen aplikasi (cth: TournamentCard.tsx)
-├── Layouts/              # Komponen susun atur halaman (cth: AuthenticatedLayout.tsx)
-├── lib/                  # Fungsi utiliti (cth: utils.ts untuk cn())
-├── Pages/                # Komponen peringkat atasan yang mewakili satu halaman penuh
-│   ├── Auth/             # Halaman pengesahan (Login, Register)
-│   ├── Tournaments/
-│   │   ├── Index.tsx     # Halaman senarai kejohanan
-│   │   └── Show.tsx      # Halaman butiran kejohanan
-│   └── Dashboard.tsx
-└── types/                # Definisi jenis TypeScript global (cth: index.d.ts)
-```
+## Build dan Aksesibiliti
 
-## 4. Komponen
+Quality gate frontend: typecheck, Vite production build, bundle budget, Playwright smoke dan axe. Build semasa lulus dengan JS terbesar kira-kira 351 KB dan CSS kira-kira 92 KB di bawah budget 400/100 KB. Playwright/axe tempatan lulus 8/8 desktop/mobile; connected CI selepas commit masih diperlukan.
 
-### 4.1. Halaman (`Pages/`)
-
-Setiap fail dalam direktori `Pages/` mewakili satu halaman dalam aplikasi. Controller Laravel akan merender komponen ini menggunakan `Inertia::render('Folder/PageName', $props)`. Komponen halaman bertanggungjawab untuk menyusun atur komponen-komponen yang lebih kecil.
-
-### 4.2. Komponen Boleh Guna Semula (`Components/`)
-
--   **Komponen UI (`Components/ui/`):** Ini adalah komponen asas yang dijana oleh `shadcn/ui` seperti `Button`, `Card`, `Input`, dll. Ia tidak mempunyai logik bisnes dan boleh digunakan di mana-mana sahaja.
--   **Komponen Domain:** Ini adalah komponen yang lebih kompleks dan spesifik kepada domain aplikasi, seperti `TournamentList`, `FixtureItem`, dll. Ia mungkin mengandungi logik UI dan menguruskan *state* tempatan.
-
-### 4.3. Susun Atur (`Layouts/`)
-
-Komponen susun atur menyediakan struktur halaman yang konsisten (cth: sidebar, header, footer). Komponen Halaman (`Pages/`) akan "dibungkus" di dalam komponen susun atur ini. Ini dicapai melalui *persistent layouts* Inertia.
-
-## 5. Pengurusan State (State Management)
-
-Pendekatan pengurusan *state* kita adalah minimalis, hasil daripada penggunaan Inertia.js.
-
--   **Props dari Backend:** Sumber utama *state* untuk setiap halaman datang terus dari *controller* Laravel sebagai *props*. Tidak perlu *fetch* data secara manual pada *page load*.
--   **`useForm` Hook (Inertia):** Untuk menguruskan *state* borang (input, ralat pengesahan, status *submitting*), kita menggunakan *hook* `useForm` yang disediakan oleh Inertia. Ia menyepadukan dengan baik dengan sistem pengesahan Laravel.
--   **`useState` & `useReducer` (React):** Untuk *state* UI yang bersifat tempatan dan sementara (cth: status *dropdown* terbuka/tertutup, *tab* aktif), gunakan *hook* standard React.
-
-## 6. Styling
-
-Styling dikendalikan sepenuhnya oleh **Tailwind CSS**.
-
--   **Kelas Utiliti:** Gunakan kelas utiliti Tailwind secara terus dalam JSX.
--   **`cn` Utility:** Untuk menggabungkan kelas secara bersyarat, gunakan fungsi `cn` dari `lib/utils.ts`. Ini amat berguna apabila menggabungkan gaya lalai komponen dengan gaya yang dipas (passed) melalui `props`.
--   **Tema:** Warna, fon, dan pembolehubah reka bentuk lain dikonfigurasi dalam `tailwind.config.js` untuk memastikan konsistensi dengan sistem reka bentuk.
-
-## 7. Jenis & Keselamatan Jenis (Type Safety)
-
--   **TypeScript:** Semua kod *frontend* baharu mesti ditulis dalam TypeScript (`.tsx`).
--   **Definisi Props:** Gunakan `interface` atau `type` TypeScript untuk mendefinisikan *props* bagi setiap komponen.
--   **Jenis Dikongsi (Shared Types):** Inertia menyediakan cara untuk menjana definisi jenis TypeScript dari *props* yang dihantar oleh Laravel. Ini memastikan konsistensi jenis antara *backend* dan *frontend*. Fail `types/index.d.ts` boleh digunakan untuk jenis global.
-
-## 8. Amalan Terbaik
-
-1.  **TypeScript pages:** All 36 Inertia page components are `.tsx`. A small compatibility boundary remains only for reusable legacy `.jsx` components; new and modified application pages must stay strongly typed.
-2.  **Komponen Kecil & Fokus:** Pecahkan UI kepada komponen yang lebih kecil dan boleh diguna semula.
-3.  **Elakkan State Global:** Cuba elakkan penggunaan perpustakaan pengurusan *state* global (seperti Redux atau Zustand) melainkan jika benar-benar perlu. Seni bina Inertia mengurangkan keperluan untuknya.
-4.  **Aksesibiliti (a11y):** Pastikan komponen yang dibina adalah mudah diakses, menggunakan atribut ARIA yang betul dan elemen HTML semantik. Komponen `shadcn/ui` menyediakan asas yang baik untuk ini.
-
-## 9. Quality Gate
-
-
-`npm run typecheck` runs `tsc --noEmit` before the production build in CI. Shared Ziggy/Inertia declarations and explicit page payload types are maintained in `resources/js/types`; the Vite build is also protected by JavaScript and CSS bundle budgets.
-
-The authenticated shell and dashboard are role-aware. See `docs/design-system/navigation.md` for the policy-aligned menu matrix and `docs/design-system/dashboard.md` for role-specific landing behavior.
-# Build Quality Gates
-
-The project standardizes on Tailwind CSS 3. Dialog and sheet state animations are defined in `tailwind.config.js`; Tailwind 4-only stylesheets are not imported. This avoids mixed compiler semantics and produces a warning-free build.
-
-After `npm run build`, run `npm run build:budget`. Default uncompressed limits are 400 KB per JavaScript chunk and 100 KB per CSS asset; override them only through reviewed CI environment variables.
+Fontsource membundel font yang digunakan dan Blade tidak lagi memuat Bunny Fonts. Guest menerima manifest Ziggy terhad dan global Vite prefetch telah dibuang. Dark-mode CSS tersedia, tetapi theme-toggle pengguna tidak ditemui; dokumentasi tidak boleh mendakwa kawalan itu sudah dilaksanakan.

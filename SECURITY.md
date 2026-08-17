@@ -2,56 +2,24 @@
 
 ## Supported Versions
 
-STMS follows semantic versioning. Security updates will be provided for the following versions:
-
-| Version | Supported          |
-|---------|--------------------|
-| 0.1.x   | :white_check_mark: |
-| < 0.1.0 | :x:                |
+Pada 17 Ogos 2026 repositori belum mempunyai Git release tag. Tiada siri versi yang boleh didakwa sebagai supported sehingga release pertama diluluskan dan tag diterbitkan. Deployment semasa hendaklah dianggap pre-release/operational MVP.
 
 ## Reporting a Vulnerability
 
-We take the security of STMS seriously. If you discover a security vulnerability, please follow the guidelines below:
+Jangan buka isu awam atau masukkan exploit, credential, data peribadi atau URL bertoken dalam tiket umum. Laporkan secara private kepada pemilik sistem/ICT UTeM melalui saluran keselamatan institusi yang diluluskan. Alamat khusus belum dikonfigurasi dalam repositori; maintainer mesti menambah contact sebenar sebelum release.
 
-### How to Report
+Sertakan:
 
-- **Do not** create a public GitHub issue for security vulnerabilities.
-- Send an email to **security@stms.example.com** (to be updated with real contact).
-- Include as much detail as possible:
-  - Description of the vulnerability
-  - Steps to reproduce
-  - Potential impact
-  - Suggested fix (if any)
+- ringkasan dan impak;
+- langkah reproduksi minimum;
+- affected route/role/tenant tanpa data sensitif;
+- bukti yang telah disanitasi;
+- cadangan mitigasi jika ada.
 
-### Response Timeline
+Jangan menguji destructive exploit, mengeksfiltrasi data tenant atau menjalankan load test production tanpa kebenaran bertulis.
 
-- We will acknowledge receipt of your report within **48 hours**.
-- We will provide a more detailed response within **7 working days**.
-- We aim to release a fix as soon as possible depending on severity.
+## Current Security Status
 
-### Responsible Disclosure
+Dependency audits semasa bersih pada tahap yang diuji, tetapi release masih `NO-GO`. Audit 17 Ogos menemui jurang read authorization (`viewAny`), CSP production masih report-only, pemilihan favicon tetamu tidak explicit tenant, DB least privilege belum dibuktikan, dan email verification dimatikan dalam runtime yang diaudit.
 
-We appreciate responsible disclosure. If you report a valid security issue, we will:
-
-- Work with you to understand and resolve the issue.
-- Credit you in the release notes (unless you prefer to remain anonymous).
-- Not take legal action against you for responsibly reporting the vulnerability.
-
-## Security Best Practices
-
-When contributing to STMS, please follow these security practices:
-
-- Never commit sensitive information (API keys, passwords, `.env` files).
-- Always validate and sanitize user input.
-- Use Laravel’s built-in security features (CSRF, XSS protection, etc.).
-- Follow the Principle of Least Privilege when designing roles and permissions.
-- Keep dependencies up to date.
-
-## Known Security Considerations
-
-- Multi-tenant data isolation relies heavily on correct application of `organization_id` scoping.
-- Role and permission checks must be consistently applied across all modules.
-
----
-
-If you have any questions regarding security, feel free to contact the maintainers.
+Lihat [security overview](docs/security/overview.md) dan [audit penuh](docs/audits/2026-08-17-full-project-and-production-audit.md). Jangan menyalin vulnerability detail ke changelog awam sebelum mitigasi tersedia.

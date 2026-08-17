@@ -1,5 +1,7 @@
 # Backup and Restore Runbook
 
+> Mekanik restore pernah diuji pada dataset sanitized pada 5 Ogos 2026. Audit 17 Ogos tidak membuktikan jadual backup production, off-site custody atau restore drill production aktif; sahkan perkara tersebut sebelum release.
+
 ## Objectives
 
 - **RPO:** 24 hours with the default daily schedule. Reduce the interval if operations require lower data loss.

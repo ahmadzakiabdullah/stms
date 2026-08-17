@@ -1,40 +1,21 @@
 # Queue Architecture
 
-This document outlines the architecture for background job processing in the STMS application.
-
-## Overview
-
-Queues are used to defer the processing of time-consuming tasks, such as sending emails, generating reports, or processing file exports, to a background process. This allows the application to respond to user requests much faster.
-
 ## Current Implementation
 
--   **Driver**: Environment-controlled. Production examples and Docker use Redis; local/test environments may use database or synchronous queues.
--   **Worker**: A queue worker process is needed to pull jobs from the table and execute them. The `composer dev` script includes a `php artisan queue:listen` command for local development. For production, a more robust worker setup using Supervisor is required.
+- Notifications implement queue behavior with retry/backoff/timeout and after-commit expectations.
+- Tenant-aware queue middleware binds and clears organization context.
+- Driver is environment-controlled; Docker/production example use Redis.
+- Supervisor config runs queue workers and Laravel Scheduler.
 
-## Weaknesses & Risks
+The runtime workspace uses the **database** queue. The audited 32 database-notification jobs were processed on 17 August 2026; the post-run state was 0 pending / 0 failed and health passed. A continuously supervised production worker is still required—one successful drain is not dead-man evidence.
 
-Similar to the caching driver, using the `database` for queues is a performance risk.
+## Production Requirements
 
--   **Database Load**: It adds constant read/write pressure to the database as workers poll for new jobs.
--   **Reliability**: While functional, it is not as robust or high-throughput as dedicated queueing systems.
+- `QUEUE_CONNECTION=redis`
+- supervised workers restarted after deploy
+- failed-job and backlog alerting
+- health/dead-man monitoring for worker and scheduler
+- job payloads carry explicit tenant context
+- idempotent handling where retries can duplicate side effects
 
-## Recommended Strategy
-
-For production environments, a dedicated queueing service should be used.
-
--   **Recommended Driver**: **Redis** (`redis`)
--   **Configuration**:
-    -   Set `QUEUE_CONNECTION=redis` in the `.env` file.
-    -   Ensure a Redis server is available. The project's `docker-compose.yml` already includes a Redis service.
--   **Production Worker**:
-    -   Use a process manager like **Supervisor** to run `php artisan queue:work redis --sleep=3 --tries=3 --timeout=90`. The included Docker configuration runs this worker and Laravel Scheduler.
-    -   For higher availability, consider running multiple workers.
-
-## Types of Jobs
-
-The following tasks are good candidates for being moved to a queued job:
-
--   All email notifications.
--   Generating and exporting PDF or Excel files (`FixtureExport`, `ResultExport`, etc.).
--   Any long-running data processing tasks.
--   Webhook dispatching.
+PDF/Excel generation remains synchronous/query-based in current MVP; queue long-running exports before supporting larger datasets.

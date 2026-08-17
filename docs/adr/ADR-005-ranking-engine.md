@@ -60,5 +60,6 @@ We will create a dedicated **Ranking Engine** that is configurable and extensibl
 - CLAUDE.md - Development Principles
 - ADR-004: Sports Engine
 
-## Implementation Status
-Implemented as of June 2026. `RankingService` supports Points, Win Rate, and Medal Tally strategies. See `CURRENT_STATE.md` for details.
+## Implementation Status (audited 2026-08-17)
+
+Partially implemented. `RankingService` supports `points`, `win_rate` and `medal_tally`, selected from session/tournament configuration. Strategies are private service methods rather than an extensible registry/interface; points are hardcoded to 3 for a win and 1 for a draw, and manual adjustments/rule records are not implemented. The current code therefore does not yet satisfy the full configurability decision.

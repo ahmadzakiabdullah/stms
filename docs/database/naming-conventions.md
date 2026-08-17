@@ -1,73 +1,33 @@
-# Naming Conventions
+# Database Naming Conventions
 
-## Table Names
+## Standard Baharu
 
-Use **snake_case plural** for table names:
+- Jadual: plural `snake_case` (`event_sessions`, `sport_categories`).
+- Kolum: `snake_case`; FK: singular `{model}_id`.
+- Primary key domain: UUID `id` kecuali kontrak model sedia ada yang didokumentasikan.
+- Timestamp: `created_at`, `updated_at`; soft delete: `deleted_at` apabila retention diperlukan.
+- Indeks/unique mesti mencerminkan tenant dan natural key, contohnya `[organization_id, slug]`.
+- Pivot sebenar: `tournament_sport` dan `sport_user`.
 
-```php
-Schema::create('organizations', ...);
-Schema::create('event_sessions', ...);
-Schema::create('sport_categories', ...);
-```
+## Model ke Jadual
 
-Pivot tables combine both table names in snake_case, singular:
-
-```php
-Schema::create('tournament_sport', ...);
-```
-
-## Column Names
-
-All columns use **snake_case**:
-
-| Type | Format | Example |
-|------|--------|---------|
-| Primary key | `id` (UUID) | `$table->uuid('id')->primary();` |
-| Foreign key | `{model}_id` | `organization_id`, `tournament_id` |
-| Timestamps | `{verb}_at` | `created_at`, `deleted_at` |
-| Boolean flags | `is_` or `has_` | `is_active`, `has_played` |
-| Status enums | `status` | `$table->string('status');` |
-
-## Foreign Key Columns
-
-Always name FK columns as the **singular snake_case model name** followed by `_id`:
-
-```php
-$table->foreignUuid('organization_id')->constrained();
-$table->foreignUuid('session_id')->constrained('event_sessions');
-$table->foreignUuid('sport_category_id')->constrained();
-```
-
-## Standard Columns
-
-Every table should include:
-
-```php
-$table->uuid('id')->primary();
-$table->timestamps();
-$table->softDeletes();  // where applicable
-```
-
-## Model/Table Mapping
-
-| Model | Table |
-|-------|-------|
+| Model | Jadual |
+|---|---|
 | `Organization` | `organizations` |
-| `User` | `users` |
+| `User` | `users` (PK `uuid`) |
+| `EventSession` | `event_sessions` |
 | `Sport` | `sports` |
 | `SportCategory` | `sport_categories` |
-| `EventSession` | `event_sessions` |
 | `Tournament` | `tournaments` |
 | `Event` | `events` |
 | `Participant` | `participants` |
 | `Registration` | `registrations` |
 | `EventParticipant` | `event_participants` |
-| `Match` | `matches` |
+| `Fixture` | `matches` |
 | `Result` | `results` |
 | `SquadMember` | `squad_members` |
+| `Pool` | `pools` |
+| `DrawVersion` | `draw_versions` |
+| `Setting` | `settings` (integer PK legacy) |
 
-### Pivot Tables (no model)
-
-| Pivot Table | Purpose |
-|-------------|---------|
-| `tournament_sport` | Links tournaments to sports (many-to-many) |
+Jangan mencipta model `Match`. Jangan menamakan pivot baharu `sport_tournament` kerana skema kanonik menggunakan `tournament_sport`.

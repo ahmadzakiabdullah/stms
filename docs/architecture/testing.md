@@ -1,17 +1,32 @@
-# Testing Strategy
+# Testing Architecture
 
-## Current baseline
+## Quality Gates
 
-As of 7 August 2026, the repository contains 87 PHP test files. The local suite covers 394 tests and 1,555 assertions across Feature and Unit layers. The final release gate also includes Pint, `tsc --noEmit`, the Vite production build, dependency audits, bundle budgets, Playwright journeys, axe checks, and performance thresholds.
+The release baseline must be regenerated from the current working tree. Historical connected-CI evidence is supporting evidence only and must not be presented as proof for newer code.
 
-## Test layers
+| Gate | Purpose |
+|---|---|
+| PHPUnit | Feature, policy, tenancy, request and unit regression coverage |
+| Pint | PHP formatting |
+| TypeScript | Static frontend checks |
+| Inventory check | Documentation inventory drift |
+| Tenant bypass check | Review of explicit tenant-scope bypasses |
+| Vite + bundle budget | Production asset compilation and size limits |
+| Composer/npm audit | Dependency vulnerabilities and abandoned packages |
+| Playwright/axe | Browser journeys and accessibility smoke checks |
 
-- **Feature tests** exercise authentication, policies, tenant isolation, requests, controllers, Inertia props, redirects, notifications, exports, commands, backups, health checks, and role-specific workflows.
-- **Unit tests** cover service logic such as rankings, draws, league/knockout progression, quota rules, assets, and domain CRUD services.
-- **Browser tests** cover super-admin, faculty representative, and dean critical journeys on desktop/mobile Chromium with axe checks.
-- **Performance tests** enforce a dashboard query budget and provide k6 health/authenticated scenarios.
+## Mandatory Access Tests
 
-`RefreshDatabase`, model factories, and `Tests\Traits\CreatesTenantUsers` are the primary reusable test infrastructure. Cross-tenant tests generally expect scoped resources to return 404 and explicit authorization failures to return 403.
+For every protected route test:
+
+1. allowed role;
+2. denied role using the URL directly;
+3. same-role cross-tenant record;
+4. guest;
+5. mutation validation and policy;
+6. index/list payload isolation.
+
+Do not count a test as tenant isolation if it only compares two IDs. Assert response status and returned Inertia or response data.
 
 ## Commands
 
@@ -19,13 +34,15 @@ As of 7 August 2026, the repository contains 87 PHP test files. The local suite 
 php artisan test
 vendor/bin/pint --test
 npm run typecheck
+npm run check:inventory
+npm run check:tenant-bypasses
 npm run build
 npm run build:budget
 npm run test:e2e
+composer audit --locked --no-interaction --abandoned=fail
+npm audit --audit-level=high
 ```
 
-Use a mapped local drive on Windows because PHP subprocesses cannot reliably execute from a UNC working directory.
+Use a mapped drive or `cmd.exe /d /c 'pushd "\\server\share\saf" && ...'` for Node commands on Windows UNC workspaces.
 
-## CI and evidence
-
-CI publishes PCOV Clover artifacts and Playwright failure artifacts. Connected-CI Playwright/axe passed all six journeys on commit `ae42a50`; the first connected coverage percentage is still required before setting a ratcheting threshold. A sanitized production-sized MySQL restore passed on 5 August 2026. Multi-worker authenticated staging performance, actual production/off-site recovery, and real external alert receipt remain environment-dependent tasks in `TODOS.md`.
+Final pass counts and dated evidence belong in `CURRENT_STATE.md` and the dated audit report, not in this architecture document.

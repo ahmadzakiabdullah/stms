@@ -59,5 +59,6 @@ All sports, categories, and events will be created through the admin interface a
 - ADR-001: Session-Based Architecture
 - ADR-005: Ranking Engine
 
-## Implementation Status
-Implemented as of June 2026 with `Sport`, `SportCategory`, and `Event`. There is no `EventCategory` model; events reference `sport_category_id`. See `CURRENT_STATE.md` for details.
+## Implementation Status (audited 2026-08-17)
+
+The generic data model exists through `Sport`, `SportCategory`, `Tournament`, `tournament_sport` and `Event`; there is no `EventCategory` model. Creating named sports/categories is data-driven. A complete pluggable rules engine is not implemented, and ranking/fixture rules remain constrained to current services. Treat “highly configurable” as the target decision, not a claim that arbitrary sport rules are already supported.

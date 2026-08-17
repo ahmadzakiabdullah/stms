@@ -17,17 +17,17 @@ Always use a timestamp that preserves migration order. Group related migrations 
 
 ## Primary Keys
 
-All tables **must** use UUIDs as primary keys:
+Semua jadual domain baharu **mesti** menggunakan UUID sebagai primary key:
 
 ```php
 $table->uuid('id')->primary();
 ```
 
-Avoid auto-increment integer IDs. UUIDs prevent enumeration attacks, simplify multi-tenant data merging, and support distributed ID generation.
+Elakkan auto-increment integer ID. `settings.id` ialah pengecualian legacy yang telah deployed; ubah hanya melalui pelan migration kompatibel, bukan dengan mengedit migration asal. Jadual framework/vendor boleh mengikut skema package masing-masing.
 
 ## Soft Deletes
 
-Apply `SoftDeletes` to most tables:
+Apply `SoftDeletes` apabila retention/restoration domain diperlukan:
 
 ```php
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -35,7 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 $table->softDeletes();
 ```
 
-Exceptions may include bare pivot tables (e.g. `tournament_sport`) where cascade cleanup is preferred over soft deletion.
+Pengecualian termasuk pivot, jadual framework/vendor dan snapshot immutable seperti `draw_versions`. Model semasa `Setting` dan `SquadMember` juga tidak mempunyai soft delete; jangan dokumentasikan sebaliknya.
 
 ## Timestamps
 

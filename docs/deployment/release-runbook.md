@@ -1,212 +1,64 @@
 # Release Runbook
 
-> STMS — Versioned release procedure for production deployment.
+> Pada 17 Ogos 2026 belum ada Git tag. Working tree dan quality gate semasa belum layak release (`NO-GO`).
 
----
+## 1. Syarat Sebelum Release
 
-## Pre-Release Checklist
+- Working tree difahami dan hanya mengandungi perubahan yang diluluskan.
+- Semua migration telah diuji pada salinan pangkalan data yang sesuai.
+- Pint, PHPUnit, inventory, tenant-bypass, typecheck, build, bundle budget serta audit Composer/npm lulus pada commit yang sama.
+- Semua endpoint authenticated mempunyai authorization capability yang sesuai, termasuk read/list.
+- Production config melepasi `ProductionConfiguration` dan semakan manual untuk timezone, session, queue/cache, email verification, CSP, mail dan trusted proxies.
+- Backup terenkripsi dan restore drill berjaya; rollback aplikasi disediakan tanpa menganggap migration boleh diundur secara automatik.
+- `CHANGELOG.md` dan `CURRENT_STATE.md` merekodkan SHA, masa, keputusan gate dan pemilik kelulusan.
 
-- [ ] Working tree clean (`git status` shows no changes)
-- [ ] All CI gates pass (Pint, PHPUnit, npm build, typecheck, dependency audits)
-- [ ] `php artisan route:list --except-vendor` — no unexpected routes
-- [ ] `php artisan test` — all tests pass
-- [ ] `php vendor/bin/pint --test` — no lint violations
-- [ ] `npm run build` — production build succeeds
-- [ ] `npm run typecheck` — no TypeScript errors
-- [ ] `composer audit --locked --abandoned=fail` — no advisories
-- [ ] `npm audit --audit-level=high` — no vulnerabilities
-- [ ] `CHANGELOG.md` updated with release entry
-- [ ] `CURRENT_STATE.md` updated with release SHA and evidence
+## 2. Versioning
 
----
-
-## Versioning
-
-STMS follows [Semantic Versioning](https://semver.org/):
-
-- **MAJOR**: Breaking changes to API, data model, or tenant isolation
-- **MINOR**: New features, new modules, non-breaking schema changes
-- **PATCH**: Bug fixes, hardening, documentation
-
-Current baseline: `v0.1.0` (MVP complete, hardening in progress).
-
----
-
-## Release Procedure
-
-### 1. Prepare the Release Branch
+Gunakan Semantic Versioning selepas baseline pertama benar-benar diluluskan. Jangan mendakwa `v0.1.0` sehingga annotated tag itu wujud dan menunjuk kepada commit yang telah lulus CI.
 
 ```bash
-git checkout master
-git pull origin master
-git checkout -b release/vX.Y.Z
+git status --short
+git rev-parse HEAD
+git tag --list
 ```
 
-### 2. Update Version References
-
-Update `CHANGELOG.md`:
-```markdown
-## [X.Y.Z] — YYYY-MM-DD
-
-### Added
-- ...
-
-### Fixed
-- ...
-
-### Security
-- ...
-```
-
-### 3. Commit and Tag
+## 3. Build dan Validation
 
 ```bash
-git add -A
-git commit -m "release: vX.Y.Z"
-git tag -a vX.Y.Z -m "Release vX.Y.Z — <summary>"
-git push origin release/vX.Y.Z
-git push origin vX.Y.Z
+composer install --no-interaction --prefer-dist
+npm ci
+php vendor/bin/pint --test
+php artisan test
+npm run check:inventory
+npm run check:tenant-bypasses
+npm run typecheck
+npm run build
+npm run build:budget
+composer audit --locked --no-interaction
+npm audit --audit-level=high
+php artisan route:list --except-vendor
 ```
 
-### 4. Record Evidence
+## 4. Deployment
 
-In `CURRENT_STATE.md`:
-```
-**Release vX.Y.Z** — SHA: `<commit-sha>`
-- CI: Pint ✅, PHPUnit ✅, npm build ✅, typecheck ✅
-- Tests: N tests / M assertions
-- Security: dependency audits clean
-```
+1. Deploy commit/tag yang diluluskan, bukan working tree ad hoc.
+2. Pasang dependency production dan bina aset yang sepadan dengan commit.
+3. Aktifkan maintenance mode jika perubahan skema memerlukannya.
+4. Jalankan `php artisan migrate --force` hanya selepas backup dan semakan migration.
+5. Bersihkan/rebuild cache Laravel; restart queue worker dan scheduler.
+6. Keluar maintenance mode dan jalankan smoke test.
 
----
+## 5. Smoke Test
 
-## Deployment Procedure
+- `GET /` memulangkan portal awam Inertia yang sah.
+- `GET /contact-us`, `/login` dan `/up` memberi respons yang dijangka.
+- `/health` diuji dengan token melalui saluran selamat; respons tanpa token sepatutnya 404.
+- Laluan tidak wujud seperti `/medal-tally`, `/sports-programme` dan `/schedules` kekal 404 sehingga dilaksanakan dengan sengaja.
+- Login, satu aliran read, satu mutasi terkawal, queue, cache, storage dan audit log diperiksa.
+- Tiada exception baharu, CSP violation kritikal atau job gagal.
 
-### Pre-Deploy
+## 6. Rollback
 
-```bash
-# On production server
-php artisan down --secret="MAINTENANCE_SECRET"
-php artisan stms:backup
-```
+Rollback aplikasi kepada artefak/tag terdahulu yang diketahui baik. Pulihkan pangkalan data daripada backup yang disahkan jika migration tidak backward-compatible; jangan jalankan `migrate:rollback` secara membuta tuli. Rekod insiden dan hasil rollback dalam changelog/operational record.
 
-### Deploy
-
-```bash
-git fetch origin
-git checkout vX.Y.Z
-composer install --no-dev --optimize-autoloader --no-interaction
-npm ci && npm run build
-php artisan migrate --force
-php artisan optimize:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan queue:restart
-php artisan up
-```
-
-### Post-Deploy Verification
-
-- [ ] `GET /health` returns `{"status":"ok"}`
-- [ ] Public portal loads at `/portal/`
-- [ ] Login works (username or email)
-- [ ] Dashboard loads for each role (super-admin, faculty-rep, dean)
-- [ ] Tenant isolation verified (Org A cannot see Org B data)
-- [ ] Export functions work (PDF, Excel)
-- [ ] Notifications deliver
-
----
-
-## Rollback Procedure
-
-### Code Rollback
-
-```bash
-php artisan down --secret="MAINTENANCE_SECRET"
-git checkout vX.Y.Z-previous
-composer install --no-dev --optimize-autoloader --no-interaction
-php artisan optimize:clear
-php artisan queue:restart
-php artisan up
-```
-
-### Database Rollback
-
-> **WARNING**: Only if migrations are backward-compatible. Do not rollback after production data has been processed.
-
-```bash
-php artisan stms:backup  # Take a fresh backup first
-php artisan migrate:rollback --step=N
-```
-
-If data restoration is required, use the authorized restore procedure in `backup-restore.md`.
-
----
-
-## Expand/Contract Migration Pattern
-
-For zero-downtime deployments, use the expand/contract pattern:
-
-1. **Expand** (deploy first): Add new columns/tables without removing old ones
-2. **Dual-write**: Application writes to both old and new structures
-3. **Backfill**: Migrate existing data to new structure
-4. **Contract** (deploy later): Remove old columns/tables after verification
-
-Never remove a column in the same release that adds it.
-
----
-
-## Environment Configuration
-
-Required production `.env` values:
-
-| Variable | Value | Notes |
-|----------|-------|-------|
-| `APP_ENV` | `production` | |
-| `APP_DEBUG` | `false` | Never `true` in production |
-| `APP_URL` | `https://your-domain.com/portal` | |
-| `SESSION_PATH` | `/portal` | |
-| `SESSION_DRIVER` | `redis` | Multi-instance safe |
-| `CACHE_STORE` | `redis` | |
-| `QUEUE_CONNECTION` | `redis` | |
-| `REDIS_HOST` | `127.0.0.1` | |
-| `PUBLIC_REGISTRATION_ENABLED` | `false` | |
-| `SEED_DEMO_DATA` | `false` | |
-| `ALLOW_DEMO_SEEDING` | `false` | |
-| `TRUSTED_PROXIES` | Comma-separated IP/CIDR | Never `*` |
-| `CSP_REPORT_ONLY` | `false` | Set `true` initially if unsure |
-| `BACKUP_ENABLED` | `true` | |
-| `BACKUP_PATH` | Persistent path | Outside ephemeral container |
-| `BACKUP_ENCRYPTION_KEY` | 32+ char secret | Outside repository |
-| `MAIL_MAILER` | `smtp` | Or `ses`, `postmark` |
-| `MAIL_FROM_ADDRESS` | `noreply@your-domain.com` | |
-| `LOG_LEVEL` | `warning` | |
-| `LOG_CHANNEL` | `daily` | Or `syslog`, `errorlog` |
-
----
-
-## Post-Release Monitoring
-
-Monitor for 24-48 hours after release:
-
-- [ ] Error logs (`storage/logs/laravel.log`)
-- [ ] Queue worker health (`php artisan queue:monitor`)
-- [ ] Failed job count (`php artisan queue:failed`)
-- [ ] Health endpoint (`/health`)
-- [ ] Backup job success
-- [ ] External uptime monitor alerts
-
----
-
-## Emergency Contacts
-
-| Role | Contact | Responsibility |
-|------|---------|----------------|
-| On-call | (configure) | First responder |
-| DBA | (configure) | Database issues |
-| Infrastructure | (configure) | Server/network |
-
----
-
-**Last Updated:** 10 August 2026
+Rujuk [deployment architecture](../architecture/deployment.md), [backup/restore](backup-restore.md) dan [audit 17 Ogos](../audits/2026-08-17-full-project-and-production-audit.md).

@@ -2,7 +2,7 @@
 
 ## Approach
 
-Colors are defined using **CSS custom properties** in `resources/css/app.css`. Tailwind CSS references these variables, enabling seamless dark mode switching and centralized color management. The color space uses **OKLCH** with a **neutral** base (zero chroma for most surfaces), following the **radix-nova** shadcn/ui style.
+Colors are defined using **CSS custom properties** in `resources/css/app.css`. Tailwind CSS references these variables and dark-mode variants, tetapi audit tidak menemui theme-toggle pengguna. Public portal juga menerima enam warna tema daripada setting tenant; nilai tersebut perlu disahkan sebelum digunakan sebagai CSS.
 
 ## Theme Variables
 
@@ -21,7 +21,7 @@ Colors are defined using **CSS custom properties** in `resources/css/app.css`. T
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: oklch(0.5 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);

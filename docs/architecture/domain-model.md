@@ -1,29 +1,66 @@
 # Domain Model
 
-The STMS domain follows a strict hierarchical structure. Every entity belongs to exactly one parent, forming a single root-to-leaf chain: **Organization → Session → Tournament → Sport → Event → Match → Result**.
+## Ownership and Catalogs
 
-## Core Entities
+STMS uses `Organization` as the tenant root. The implemented schema combines tenant ownership with reusable organization-level catalogs:
 
-- **Organization** — the top-level tenant. Every tenant-aware model carries an `organization_id`. Self-referencing `parent_id` for hierarchy.
-- **Session** (table: `event_sessions`) — a named time-bounded instance (e.g., "SUKMA 2026"). Belongs to one Organization.
-- **Tournament** — a competition within a session (e.g., "Men's Football"). Belongs to one Session. Links to Sports via many-to-many pivot `tournament_sport`.
-- **Sport** — a generic sport definition (e.g., "Basketball"). Has many `SportCategory` children.
-- **SportCategory** — sub-classification within a sport (e.g., "Men's Open", "U-18"). Contains quota fields for gender-based and total-based rosters (`quota_mode`, `max_athletes_total`, `max_male_athletes`, `max_female_athletes`, `min_male_athletes`, `min_female_athletes`, `max_officials`).
-- **Event** — a specific competition linking a Tournament + Sport + SportCategory (e.g., "Football - Men's Open - Group Stage"). Belongs to Tournament, Sport, and SportCategory.
-- **Match** (table: `matches`, implemented by `Fixture` model class because `Match` is a PHP reserved keyword) — a single contest between participants. Belongs to Event.
-- **Result** — the outcome of a match (scores + winner). One-to-one with Match.
+```text
+Organization
+├─ EventSession
+│  ├─ Tournament
+│  │  └─ Event ─ Fixture (matches) ─ Result
+│  └─ Participant
+├─ Sport ─ SportCategory
+└─ Users / Settings
 
-## Supporting Entities
+Tournament <-> Sport through tournament_sport
+Event -> Tournament + Sport + SportCategory
+```
 
-- **User** — system users with Spatie roles/permissions. Belongs to Organization. May link to a Participant.
-- **Participant** — individual or team competing in tournaments. May have linked User accounts. Belongs to Organization + Session.
-- **Registration** — links Participant to Tournament. Status tracked (pending/confirmed/rejected/cancelled).
-- **EventParticipant** — links Participant to specific Event within a tournament. Used for event-level registration and squad management.
-- **SquadMember** — roster members within an EventParticipant (athletes, coaches, managers). Role-based and total-athlete quota validation is centralized in `SquadQuotaService`.
-- **Venue / Schedule / Accreditation** — future/deferred milestones.
+Every tenant-aware domain row carries `organization_id`, even where the organization can also be inferred through relations.
 
-## Key Relationships
+## Core Models
 
-- All entities in the hierarchy cascade via `belongsTo` from Result upward to Organization.
-- Every tenant-scoped model uses UUID primary keys and `organization_id` FK constraint.
-- Slug uniqueness enforced per-organization via composite unique indexes.
+| Model | Table/key | Notes |
+|---|---|---|
+| Organization | `organizations.id` UUID | Root tenant; parent hierarchy |
+| User | `users.uuid` UUID | One organization; roles/permissions |
+| Session | `event_sessions.id` UUID | Competition edition/cycle; ranking configuration |
+| Tournament | `tournaments.id` UUID | Belongs to session; many-to-many sports; ranking configuration |
+| Sport | `sports.id` UUID | Organization catalog |
+| SportCategory | `sport_categories.id` UUID | Quota-bearing category under sport |
+| Event | `events.id` UUID | Tournament + sport + category |
+| Participant | `participants.id` UUID | Session participant/faculty/team |
+| Registration | `registrations.id` UUID | Participant to tournament |
+| EventParticipant | `event_participants.id` UUID | Participant to event; pool/status |
+| Pool | `pools.id` UUID | Draw group |
+| Fixture | `matches.id` UUID | PHP model name avoids reserved `Match` |
+| Result | `results.id` UUID | One result per `match_id` |
+| SquadMember | `squad_members.id` UUID | Deliberate no-soft-delete exception |
+| DrawVersion | `draw_versions.id` UUID | Immutable draw snapshot; deliberate no-soft-delete exception |
+| Setting | `settings.id` integer | Organization key/value; deliberate UUID/soft-delete exception |
+
+## Important Relationships
+
+- `results.match_id` references `matches.id`; `matches` does not contain `result_id`.
+- Participant belongs directly to Organization + Session.
+- Sport is organization-scoped and reusable across sessions and tournaments.
+- Event joins tournament, sport and category.
+- User sport assignment uses tenant-aware `sport_user`.
+- Draw versions snapshot pool allocations and fixtures for rollback.
+- Session and Tournament store validated JSON `ranking_rules`; a tournament overrides its session defaults.
+
+## Deletion and Key Exceptions
+
+Most core entities use UUID keys and soft deletes. The accepted MVP exceptions are:
+
+- `settings`: compact organization-scoped key/value rows use an integer key and physical replacement/deletion semantics.
+- `squad_members`: subordinate roster rows are physically deleted and protected through their parent workflow.
+- `draw_versions`: immutable audit snapshots are retained without soft-delete semantics.
+- Pivot and Laravel framework tables follow their framework-specific key/deletion conventions.
+
+Any change to these exceptions requires an ADR and a data migration plan.
+
+## Deferred Domain Areas
+
+Accreditation, Venue and dedicated Schedule models are not implemented in the current milestone.

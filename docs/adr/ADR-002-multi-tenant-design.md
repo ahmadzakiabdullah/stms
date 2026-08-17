@@ -53,5 +53,6 @@ We will implement **column-based multi-tenancy** using an `organization_id` fore
 - ADR-001: Session-Based Architecture
 - ADR-003: Organization Structure
 
-## Implementation Status
-Implemented as of June 2026 via `BelongsToOrganization` trait + Global Scope. See `CURRENT_STATE.md` for details.
+## Implementation Status (audited 2026-08-17)
+
+Implemented for most domain models via `TenantContext`, `BelongsToOrganization`, policies and tenant-aware services. `Organization` is the unscoped tenant root and `User` uses explicit handling. The audit found missing `viewAny` authorization on several list endpoints and a guest favicon query without explicit tenant selection; the decision remains accepted, but enforcement is not yet complete enough for release. See `CURRENT_STATE.md`.

@@ -1,17 +1,15 @@
 # Monitoring
 
-STMS provides an application health endpoint and a scheduled internal health command. `GET /health` checks database connectivity, cache read/write, queue backlog/failed jobs, and free disk space. It returns HTTP 503 when degraded and exposes status/latency without returning exception messages.
+## Endpoint dan Command
 
-When implemented, Sentry will capture all unhandled exceptions and log channels will be configured to forward `error` and above levels to Sentry. Performance tracing will monitor slow database queries, N+1 problems, and Inertia page render times. The Sentry Laravel SDK (`sentry/sentry-laravel`) is listed as a suggested dependency in `composer.json`.
+- `GET /up` ialah liveness Laravel asas.
+- `GET /health` memeriksa database, cache, queue dan ruang disk. Endpoint ini dilindungi token dan sengaja memberi 404 tanpa token.
+- `php artisan stms:health-check` menyediakan semakan operasi yang sama untuk scheduler/CLI.
 
-Beyond Sentry, the following monitoring pillars should be addressed as the platform matures:
-- **Uptime monitoring** (e.g., Pingdom, Health checks via `spatie/laravel-health`)
-- **Database performance** (slow query log, `EXPLAIN` analysis)
-- **Server metrics** (CPU, memory, disk via New Relic or similar)
-- **Alerting** (Slack, email notifications for critical errors)
+Semasa audit 17 Ogos, health command berstatus `ok`: DB/cache/queue/disk boleh dicapai, 32 queued jobs dan 0 failed jobs. Ambang backlog 100 menyebabkan status kekal `ok`; angka ini bukan bukti worker memproses job pada kadar yang mencukupi.
 
-`php artisan stms:health-check` performs the same checks, exits non-zero when degraded, and writes a critical log entry. With `HEALTH_MONITOR_ENABLED=true`, Laravel Scheduler runs it every five minutes. Production must run `schedule:work` or invoke `schedule:run` every minute; Docker runs `schedule:work` under Supervisor.
+## Belum Dibuktikan
 
-Environment thresholds are `HEALTH_MAX_PENDING_JOBS`, `HEALTH_MAX_FAILED_JOBS`, and `HEALTH_MIN_DISK_FREE_MB`.
+Sentry/APM, alert routing, external uptime monitor, dashboard latency, slow-query alert, queue-age alert dan on-call response tidak dibuktikan aktif. Dokumen atau dependency cadangan bukan bukti operasi.
 
-An external uptime/alerting provider must poll `/health` and notify operators on HTTP 503. Critical logs should also be shipped to an external destination. On 5 August 2026, controlled degraded health exited non-zero and delivered the expected critical Slack-format POST to a localhost receiver, validating the application transport path. No real external destination or operator receipt has yet been demonstrated. A hosted dashboard/APM product remains deployment-specific and is not bundled.
+Minimum production monitoring hendaklah merangkumi availability, error rate, request latency, DB/cache latency, queue depth dan oldest-job age, failed jobs, disk, backup freshness, certificate expiry dan CSP reports. Setiap alert mesti mempunyai pemilik dan runbook.

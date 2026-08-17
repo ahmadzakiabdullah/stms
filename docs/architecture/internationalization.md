@@ -1,31 +1,21 @@
 # Internationalization (i18n)
 
-Internationalization is implemented for the SAF portal with **English (`en`) as default** and **Bahasa Malaysia (`ms`) as the selectable alternate locale**.
+STMS supports English (`en`) and Bahasa Malaysia (`ms`), with English as the configured default/fallback.
 
-## Current Implementation
+## Implementation
 
-- Backend locale defaults and supported locales are configured in `config/app.php`.
-- Locale selection is persisted in session through `POST /locale`.
-- Request-time locale application is handled by `App\Http\Middleware\SetLocale` (loaded conditionally to stay safe during partial deployments).
-- Locale metadata is shared to Inertia via `HandleInertiaRequests` (`locale`, `locales`).
-- Frontend translation lookup is centralized in `resources/js/lib/i18n.ts`.
-- Locale switching remounts the active Inertia page so all mounted components consume the new shared locale immediately.
-- Shared ormatDate, ormatDateTime, ormatNumber, and localeTag helpers keep display formatting aligned with n-MY and ms-MY.
-- Static 	('...') references are audited against both dictionaries; user-authored names and event-specific content are not machine-translated.
-- A reusable switcher exists in `resources/js/components/LocaleSwitcher.tsx` and is surfaced in guest/authenticated layouts.
+- Supported locales and defaults: `config/app.php`.
+- Request locale: `SetLocale` middleware.
+- Persistence: session plus root-path `app_locale` cookie through `POST /locale`.
+- Shared props: `locale` and `locales`.
+- Frontend dictionary/helpers: `resources/js/lib/i18n.ts`.
+- Locale switcher: guest, public and authenticated layouts.
+- Formatters use Malaysian locale tags `en-MY` / `ms-MY`.
 
-## Coverage
+Translation coverage is strongest on authentication, shared navigation, dashboard, settings, events, matches, results and the public portal. User-authored domain names/content are intentionally not machine-translated.
 
-The current EN/BM coverage includes:
+## Limitations
 
-- Authentication screens (login, register, password, verification).
-- Shared navigation/layout labels.
-- Dashboard, Settings, Notifications.
-- Events, Matches, Results (key headings/actions/filter text).
-
-Coverage for all remaining pages is incremental and should continue page-by-page.
-
-## Notes
-
-- CSP remains report-only in production by default; translation-related requests are same-origin and covered by current policy.
-- RTL language support is not implemented and would require dedicated Tailwind/CSS updates.
+- Coverage is not complete on every administrative sentence/error.
+- RTL is not implemented.
+- Locale endpoint is intentionally CSRF-exempt to recover legacy subfolder cookie-path deployments; it accepts only the configured locale allowlist and changes a non-sensitive preference.

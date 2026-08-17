@@ -1,7 +1,7 @@
 # Error Handling
 
-Error handling in STMS follows a layered approach. In the **Service Layer**, all business logic that interacts with external systems or performs complex operations is wrapped in `try/catch` blocks. Caught exceptions are logged via `Log::error()` and re-thrown as custom domain exceptions (e.g., `TournamentRegistrationException`) so that controllers can respond with meaningful HTTP status codes.
+Laravel validation, model binding dan exception rendering menyediakan baseline. Form Requests mengembalikan error input; Service/Action boleh membaling domain/validation exception; controller mengubah hasil itu kepada redirect, Inertia errors atau status HTTP yang sesuai.
 
-Controllers use defensive querying patterns to prevent 500 errors. Before accessing a model's relations or attributes, nullable checks (`?->`) and `findOrFail()` / `find()` are employed. In Inertia response rendering, optional chaining prevents "Call to a member function on null" errors when optional relationships are missing. Form Request validation handles input errors before they reach the controller, returning 422 responses with field-level messages.
+Kod semasa tidak mempunyai satu hierarki custom exception yang meliputi semua domain dan tidak semua service dibalut `try/catch`. Jangan tangkap exception hanya untuk log dan rethrow tanpa nilai tambahan—biarkan handler pusat merekod unhandled exception dan elakkan duplicate logs.
 
-Laravel's exception handler in `bootstrap/app.php` maps domain exceptions to appropriate HTTP codes. Unhandled exceptions render a generic error page in production; debug mode is never enabled outside local development. The goal is to surface actionable errors to users without exposing internal state.
+Production mesti menggunakan `APP_DEBUG=false`, respons generik tanpa stack trace/SQL/secret, dan structured logging dengan request/tenant context. Conflict draw/fixture perlu mempunyai kontrak status serta mesej stabil; dua ujian semasa gagal kerana kontrak `DrawService` dan controller tidak lagi sepadan.

@@ -53,5 +53,6 @@ We will introduce **Session** as a first-class entity in the system hierarchy:
 - CLAUDE.md - Core Architecture section
 - ROADMAP.md - Phase 1 & 2
 
-## Implementation Status
-Implemented as of June 2026. See `CURRENT_STATE.md` for details.
+## Implementation Status (audited 2026-08-17)
+
+Partially aligned. `EventSession` is first-class and tournaments/participants reference a session. Sports remain an organization-scoped catalogue connected to tournaments through `tournament_sport`; events bind tournament, sport and category. Matches/results inherit session context indirectly through event/tournament rather than holding `session_id`. See `CURRENT_STATE.md` for the authoritative implemented graph.

@@ -1,72 +1,59 @@
 # Implementation Status
 
-## Milestone 1: Foundation ✅
-- [x] Laravel 13 + Breeze Inertia + shadcn/ui
-- [x] Organization model + CRUD + multi-tenancy (BelongsToOrganization trait)
-- [x] User CRUD + Spatie RBAC (roles: super-admin, org-admin, admin-sport, staff, faculty-representative, dean)
-- [x] Role & Permission seeding
-- [x] UUID primary keys on all models
-- [x] Soft deletes on all domain models
+> Updated 17 Ogos 2026. “Implemented” bermaksud kod/capability wujud; ia tidak menggantikan release-gate evidence.
 
-## Milestone 2: Core Domain ✅
-- [x] Sport + SportCategory (full CRUD, per-sport categories)
-- [x] Session (event_sessions table)
-- [x] Tournament (CRUD under session, sport many-to-many)
-- [x] Event (CRUD under tournament, FK to sport + category)
-- [x] Core hierarchy: Organization → Session → Tournament → Sport → Event
+## Implemented
 
-## Milestone 3: Participant & Registration ✅
-- [x] Participant model (UUID, org scoping, soft deletes, full CRUD)
-- [x] Registration model (UUID, org scoping, soft deletes, links Participant → Tournament)
-- [x] Full CRUD UI + Service + Actions + FormRequests + Policy + Tests
+| Area | Status | Notes |
+|---|---|---|
+| Laravel/Inertia/React foundation | Implemented | Laravel 13.23, React 18.3, TypeScript, Tailwind 3 |
+| Organization + hierarchy | Implemented | Root tenant; registry management super-admin only |
+| Users + RBAC | Implemented | 6 active roles, 42 permissions pada workspace |
+| Tenant context/scopes | Implemented | User list scoping manual; six-role URL matrix tersedia |
+| Session/Tournament/Sport/Category/Event | Implemented | 30 active categories/events pada workspace |
+| Participant/Registration | Implemented | Standard + inverse logos |
+| Squad/Faculty/Dean workflow | Implemented | Quota, import, approval, printable forms |
+| Draw/Pools/Fixtures | Implemented | Version history/rollback; scheduled-fixture regeneration diuji |
+| Results/Rankings | Implemented | Contract/registry strategies + validated session/tournament rules |
+| Exports/Reports | Implemented | PDF, Excel, match sheet, reports |
+| Notifications | Implemented | Queueable database notifications |
+| Settings/Activity logs | Implemented | Operational audit trail, bukan immutable compliance ledger |
+| Public portal | Implemented | Homepage sections + Contact; legacy public subpages absent |
+| Docker/CI/Health/Backup | Implemented in repository | Runtime/operational evidence belum lengkap |
 
-## Milestone 4: Match Scheduling & Result Entry ✅
-- [x] Fixture model (renamed from `Match` due to PHP 8 reserved keyword)
-- [x] Result model (UUID, org scoping, soft deletes, links Match → scores + winner)
-- [x] Full CRUD UI + Service + Actions + FormRequests + Policy + Tests
+## Explicit Exceptions to Project Defaults
 
-## Milestone 5: Basic Ranking Engine ✅
-- [x] RankingService with three strategies (points, win_rate, medal_tally)
-- [x] On-the-fly computation from match results
-- [x] Frontend Rankings page with tournament selector + strategy switcher
+- `settings.id` menggunakan integer auto-increment, bukan UUID.
+- `Setting`, `SquadMember` dan `DrawVersion` tidak menggunakan soft deletes.
+- `DrawVersion` ialah immutable snapshot by design.
+- `User` mempunyai UUID primary key bernama `uuid`; tenant scoping untuk user management dibuat manual.
+- REST API belum wujud; `docs/api/` ialah future design notes.
 
-## Milestone 6: Export, Reporting & Print ✅
-- [x] PDF exports (Fixtures, Results, Rankings)
-- [x] Excel exports (Fixtures, Results, Rankings)
-- [x] Printable match sheet
-- [x] Reporting dashboard
-- [x] Role-aware operational dashboard and policy-aligned sidebar navigation
-- [x] Faculty participation confirmation and per-event printable team registration forms
+## Current Release Gate
 
-## Post-Audit Hardening ✅
-- [x] Policy assertion fixes
-- [x] Cross-org 404 behaviour (global scopes hide cross-org resources)
-- [x] Double authorization removed from Match/Result Actions
-- [x] Dashboard route migrated to controller
-- [x] Logging added to all 12 service files
-- [x] Documentation populated (architecture, database, design-system)
-- [x] In-app notifications (database notifications, bell dropdown, full page, dean workflow notifications)
-- [x] Test drift fixed for event participant pending status and sport-category slug generation
+| Gate | Result |
+|---|---|
+| Inventory / tenant bypass / TypeScript | Pass |
+| Vite build + bundle budget | Pass |
+| Composer/npm audit | Pass |
+| PHPUnit | Pass — 430/430, 1,860 assertions |
+| Pint | Pass |
+| Playwright/axe | Pass — 8/8 desktop/mobile, isolated SQLite |
+| Clean working tree/tag | Fail — no release tag |
+| Current connected CI | Not evidenced |
 
-## Infrastructure (Completed)
-- [x] **Docker Setup** — Dockerfile (PHP 8.4 FPM + Nginx), docker-compose.yml (app + MySQL 8 + Redis)
-- [x] **CI/CD Pipeline** — GitHub Actions: Pint lint → PHPUnit → npm build
-- [x] **Health Check Endpoint** — GET /health returns {status, database, cache, timestamp}
-- [x] **Production env config** — .env.production.example with secure defaults
-- [x] **Test config sanitized** — `phpunit.xml` uses non-secret local defaults; override DB credentials via environment variables
-- [ ] **Sentry Error Tracking** — Dialih keluar 29 Jun 2026 (vendor missing on production)
+## Production Snapshot
 
-## Future (Deferred)
-- [ ] Accreditation System
-- [ ] Live Scoring & Real-time Updates
-- [ ] Mobile App (Flutter)
-- [ ] REST API Layer (/api/v1)
-- [ ] Advanced notification channels (email/realtime/webhooks)
+Production <https://saf.utem.edu.my/> menyediakan `/`, `/contact-us` dan `/login`. Homepage memaparkan 1–31 Oktober 2026, 23 sports with events, 30 events, 8 faculties, 12 matches dan 0 completed results pada 17 Ogos 2026.
 
-## Current UI/Portal Additions (12 August 2026)
+Public registration ialah 404. Legacy `/sports-programme`, `/medal-tally` dan `/schedules` ialah 404; `GET /results` ialah 405.
 
-- [x] Administrator multi-event registration workspace with active/unregistered faculty filtering.
-- [x] Draw pool move persistence refresh and explicit fixture creation action.
-- [x] Results pending-match workflow and quick result-entry action.
-- [x] Public medal tally dashboard with podium, progress summary, search, and logo fallback.
-- [x] Public Sports programme at `/sports-programme`; authenticated sports administration remains `/sports`.
+## Deferred
+
+- Accreditation
+- Live scoring/realtime
+- Mobile app
+- REST API `/api/v1`
+- Advanced analytics/AI
+
+Rujuk [audit penuh](audits/2026-08-17-full-project-and-production-audit.md) dan [`../TODOS.md`](../TODOS.md).

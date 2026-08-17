@@ -1,38 +1,34 @@
 # Authentication Architecture
 
-Authentication is provided by Laravel Breeze with Inertia.js scaffolding, which gives a complete, secure authentication system out of the box. The frontend handles UI rendering while all auth logic runs server-side via Laravel's built-in authentication controllers.
+## Flows
 
-## Scaffolded Flows
+- Case-insensitive username-or-email login through `AuthenticatedSessionController`; session is regenerated after success and login is throttled.
+- Password reset and confirmation use Laravel's standard broker/controllers.
+- Public registration routes remain registered, but `PUBLIC_REGISTRATION_ENABLED=false` makes `/register` return 404. When enabled, `DEFAULT_ORG_SLUG` must resolve or registration fails closed.
+- Users belong to one organization; no tenant switcher or multi-membership exists.
 
-- **Login** — Case-insensitive username-or-email/password authentication via `AuthenticatedSessionController`. Rate-limited to 5 attempts per minute. Successful login regenerates the session and redirects to the dashboard.
-- **Registration** — Public registration is controlled by `PUBLIC_REGISTRATION_ENABLED` and defaults to disabled in production. When enabled, it requires a valid `DEFAULT_ORG_SLUG`; missing or invalid tenant configuration fails closed. It does not create an organization or assign an admin role. Invitation-based onboarding remains recommended for multi-tenant production use.
-- **Password Reset** — `PasswordResetLinkController` sends a reset link via email. `NewPasswordController` handles the token verification and password update.
-- **Email Verification** — `EmailVerificationPromptController` and `VerifyEmailController` enforce verified emails before accessing sensitive routes. Verification is optional but recommended; configurable via `fortify.php`.
+## Email Verification
+
+Operational route groups use:
+
+```php
+config('app.email_verification_required') ? ['auth', 'verified'] : ['auth']
+```
+
+The choice is made when routes boot. Profile routes remain auth-only so a user can correct an email. Therefore verification is **conditional**, not universally enforced.
+
+Audit state:
+
+- `.env.production.example` sets `EMAIL_VERIFICATION_REQUIRED=true`.
+- Runtime workspace marked production reports it as `false`.
+- Production external behavior cannot prove a user's verification requirement without an authorized test account.
 
 ## Session Management
 
-All authentication state is managed server-side. Inertia receives the authenticated user via the `HandleInertiaRequests` middleware's `share()` method, which exposes `auth.user` globally to the frontend. Logout destroys the session and clears all tenant-scoped cache keys.
+Authentication state is server-side and shared to Inertia through `HandleInertiaRequests`. Logout invalidates the session.
 
-## Post-Authentication Setup
+Target production driver is Redis. The audited production workspace uses file sessions, which is not multi-instance safe and is tracked as P0.
 
-Each user currently has one `organization_id`. Tenant-aware models use the authenticated user's organization through `BelongsToOrganization`; there is no organization switcher or multi-membership session context.
+## Authorization Boundary
 
-## Route Protection
-
-Authentication middleware is applied to all route groups except the auth pages themselves. Route grouping:
-
-```php
-Route::middleware('auth')->group(function () {
-    // Protected application routes
-});
-Route::middleware('guest')->group(function () {
-    // Login, Register, Forgot Password
-});
-```
-
-Only `/dashboard` currently includes the `verified` middleware; the broader authenticated route group does not require verified email.
-
-
-## Username Identity
-
-Usernames are globally unique, lowercase identifiers containing letters, numbers, underscores, or dashes. Existing accounts are backfilled from the local part of their email with a numeric suffix on collision. The User model also generates a unique username for legacy account-creation paths that omit it. Login failures and lockouts use the submitted identifier plus client IP as the throttle key and return the same generic authentication error for usernames and emails.
+Authentication only proves identity. Controllers/middleware must still call Policies/Gates. Several sensitive index actions currently omit `viewAny`; see the 17 August audit and `TODOS.md`.

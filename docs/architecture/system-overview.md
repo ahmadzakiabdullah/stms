@@ -1,106 +1,90 @@
 # System Overview
 
-> **Current status (12 August 2026):** The SAF 2026 web MVP is operational in maintenance/production-hardening mode. It includes role-aware dashboards/navigation, batch event registration, squad/team forms, versioned draw history, result entry, and a public home portal at `/`. There is still no REST API; deferred modules remain listed in `CURRENT_STATE.md`.
+> Current architecture as audited on 17 Ogos 2026.
 
-Dokumen ini memberikan gambaran keseluruhan peringkat tinggi mengenai seni bina aplikasi Sistem Pengurusan Kejohanan Sukan (STMS). Ia bertujuan untuk menjadi titik permulaan bagi pembangun baharu untuk memahami komponen utama, corak reka bentuk, dan aliran data dalam sistem.
+## Architecture Style
 
-## 1. Pengenalan
+STMS ialah **modern monolith**:
 
-STMS adalah aplikasi web yang direka untuk menguruskan kejohanan sukan. Ia menyokong pelbagai organisasi (multi-tenancy) dan menyediakan fungsi untuk menguruskan sukan, kejohanan, acara, peserta, pendaftaran, jadual perlawanan, dan keputusan.
-
-Aplikasi ini dibina sebagai "Modern Monolith" menggunakan framework Laravel untuk backend dan React (melalui Inertia.js) untuk frontend.
-
-## 2. Timbunan Teknologi (Tech Stack)
-
-- **Backend:** PHP 8.4, Laravel 13
-- **Frontend:** React, TypeScript, Inertia.js, Tailwind CSS, shadcn/ui
-- **Pangkalan Data:** MySQL 8
-- **Cache:** Pangkalan Data (sedia untuk Redis)
-- **Queue:** Pangkalan Data (sedia untuk Redis)
-- **Server:** Nginx + PHP-FPM
-- **Pakej Utama Laravel:**
-  - `spatie/laravel-permission`: Untuk pengurusan peranan (roles) dan kebenaran (permissions).
-  - `barryvdh/laravel-dompdf`: Untuk penjanaan eksport PDF.
-  - `maatwebsite/excel`: Untuk penjanaan eksport Excel.
-
-## 3. Gaya Seni Bina
-
-Aplikasi ini mengikut seni bina **Monolitik Berasaskan Servis** dengan antaramuka pengguna yang diganding rapat (tightly-coupled SPA).
-
-- **Backend (Laravel):** Bertanggungjawab untuk semua logik bisnes, pengesahan (authentication), kebenaran (authorization), dan interaksi pangkalan data.
-- **Frontend (Inertia.js + React):** Bertanggungjawab untuk memaparkan antaramuka pengguna. Inertia.js bertindak sebagai "gam" yang membolehkan kita membina SPA menggunakan komponen React tanpa perlu membina dan mengurus API yang berasingan. Controller Laravel merender komponen React secara terus.
-
-## 4. Corak Reka Bentuk Utama
-
-Aplikasi ini sangat bergantung pada beberapa corak reka bentuk untuk memastikan kod yang bersih, teratur, dan boleh diselenggara.
-
-1.  **Model-View-Controller (MVC):** Corak asas yang disediakan oleh Laravel.
-    - **Model:** Definisi data dan logik Eloquent (`app/Models`).
-    - **View:** Komponen React (`resources/js/Pages`).
-    - **Controller:** Mengendalikan permintaan HTTP dan merender 'view' (`app/Http/Controllers`).
-
-2.  **Service Layer Pattern:** Logik bisnes yang kompleks dan interaksi pangkalan data dienkapsulasi dalam kelas `Service` (`app/Services`). Ini memastikan `Controller` dan `Action` kekal ringkas.
-
-3.  **Action Pattern:** Untuk operasi yang mempunyai satu tanggungjawab (single-responsibility), kelas `Action` digunakan (`app/Actions`). Ia sering dipanggil dari `Controller` dan bertindak sebagai penyelaras antara `FormRequest` dan `Service`.
-
-4.  **Form Request Classes:** Digunakan untuk pengesahan data permintaan (validation) dan kebenaran (authorization). Ini memisahkan logik pengesahan daripada `Controller`.
-
-5.  **Policy Classes:** Digunakan untuk logik kebenaran yang lebih terperinci pada peringkat model (`app/Policies`).
-
-6.  **Multi-Tenancy (Single Database):** Aplikasi ini menggunakan pendekatan multi-tenancy dengan satu pangkalan data. Setiap rekod utama (seperti `tournaments`, `participants`, dll.) mempunyai lajur `organization_id`. Data diasingkan menggunakan *global scopes* atau *query scopes* (`BelongsToOrganization` trait) untuk memastikan satu organisasi tidak dapat melihat data organisasi lain.
-
-## 4.1 Portal Awam SAF 2026
-
-`PublicPortalController` ialah pengawal nipis bagi `/` dan `/index.php`. Public portal kini dimulakan semula dengan fokus homepage `/`; halaman maklumat awam lain dikeluarkan sementara untuk dibina semula satu per satu. `PublicPortalService` memilih sesi public (atau `PUBLIC_SESSION_SLUG` yang ditetapkan semasa deployment), menapis semua kueri secara eksplisit dengan `organization_id`, dan membentuk payload awam untuk homepage.
-## 5. Aliran Permintaan (Request Flow)
-
-Aliran permintaan HTTP yang tipikal adalah seperti berikut:
-
-1.  **Browser** menghantar permintaan (cth: POST ke `/tournaments`).
-2.  **Web Server (Nginx)** menghantar permintaan ke `public/index.php`.
-3.  **Router Laravel (`routes/web.php`)** memadankan URL dengan kaedah `Controller` (cth: `TournamentController@store`).
-4.  **Middleware** dijalankan (cth: `auth`, `verified`).
-5.  **Form Request (`StoreTournamentRequest`)** diselesaikan oleh *service container*:
-    - Kaedah `authorize()` dijalankan untuk menyemak kebenaran.
-    - Kaedah `rules()` dijalankan untuk mengesahkan data.
-6.  **Controller (`TournamentController@store`)** menerima `FormRequest` yang sah.
-7.  **Controller** memanggil kelas **Action (`CreateTournament`)**.
-8.  **Action** memanggil kaedah pada kelas **Service (`TournamentService@createWithSports`)**.
-9.  **Service** melaksanakan logik bisnes, berinteraksi dengan **Model Eloquent** untuk menyimpan data ke pangkalan data dalam satu transaksi.
-10. **Service** merekodkan log (`Log::info`).
-11. **Controller** menerima respons dan mengembalikan paparan Inertia (`Inertia::render(...)` atau `Redirect`).
-12. **Inertia** menghantar respons JSON kepada frontend.
-13. **Frontend (React)** menerima props dan merender komponen halaman yang sepadan.
-
-## 6. Struktur Direktori Utama
-
+```text
+Browser
+  -> Laravel web routes + middleware
+  -> Form Request / Policy / Controller
+  -> Action / Service
+  -> Eloquent + MySQL
+  -> Inertia response
+  -> React + TypeScript UI
 ```
-/
-├── app/
-│   ├── Actions/        # Kelas tindakan sekali guna
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   └── Requests/   # Kelas Form Request
-│   ├── Models/         # Model Eloquent
-│   ├── Policies/       # Kelas polisi kebenaran
-│   ├── Providers/
-│   └── Services/       # Kelas servis logik bisnes
-├── database/
-│   ├── factories/
-│   └── migrations/
-├── docs/               # Semua dokumentasi projek
-│   ├── architecture/
-│   ├── database/
-│   └── design-system/
-├── resources/
-│   ├── js/
-│   │   ├── Components/ # Komponen React boleh guna semula
-│   │   ├── Layouts/    # Komponen susun atur utama
-│   │   └── Pages/      # Komponen halaman penuh (dirender oleh Inertia)
-│   └── css/
-├── routes/
-│   └── web.php         # Definisi laluan web
-└── tests/
-    ├── Feature/        # Ujian integrasi
-    └── Unit/           # Ujian unit
+
+Tiada REST API aktif. Laravel merender nama Inertia page dan props; React mengurus UI tanpa API layer berasingan.
+
+## Technology
+
+- PHP `^8.4`, Laravel `13.23.0`
+- React `18.3.1`, Inertia React `2.3.25`, TypeScript `5.9.3`
+- Tailwind CSS `3.4.19`, local shadcn/Radix components, Lucide
+- Vite `8.0.16`
+- MySQL, Spatie Permission dan Spatie Activity Log
+- Cache/queue/session adalah environment-controlled; audited workspace currently uses database/database/file, while production target is Redis/Redis/Redis
+
+## Domain Shape
+
+Canonical ownership:
+
+```text
+Organization
+├─ Session
+│  ├─ Tournament
+│  │  ├─ Event ─ Match/Fixture ─ Result
+│  │  └─ tournament_sport ─ Sport
+│  └─ Participant
+└─ Sport ─ SportCategory
 ```
+
+`Event` menghubungkan Tournament + Sport + SportCategory. Ia bukan strict single-parent chain pada schema. Tenant-aware rows turut menyimpan `organization_id` untuk isolation dan query efficiency.
+
+## Backend Patterns
+
+- **Policies/Gates** ialah authorization authority.
+- **Form Requests** mengurus validation dan sebahagian request authorization.
+- **Actions** menyelaras single-purpose mutations.
+- **Services** mengandungi business rules/orchestration.
+- **TenantContext + BelongsToOrganization** menambah organization scope.
+- **Queued notifications** membawa tenant context melalui middleware.
+
+Pattern coverage belum seragam: beberapa index/read actions tidak memanggil `viewAny`, dan controller query assembly masih besar pada Dashboard/EventParticipant/Draw/Event modules. Rujuk `TODOS.md`.
+
+## Frontend
+
+- 38 Inertia pages, semuanya `.tsx`.
+- Shared layouts/components masih mempunyai compatibility `.jsx` files.
+- React Hook Form + Zod digunakan pada forms yang telah dimigrasi; auth dan beberapa pages menggunakan Inertia `useForm`.
+- TanStack Table terpasang tetapi tidak digunakan dalam source semasa.
+- Authenticated navigation ialah role-aware presentation layer; backend Policy mesti kekal authoritative.
+
+## Public Portal
+
+`PublicPortalController` merender:
+
+- `/` dan IIS compatibility route `/portal` -> `Public/Index`
+- `/contact-us` -> `Public/Contact`
+
+Homepage menggabungkan Sports, Schedule, Results dan Medal standings sebagai anchor sections. Standalone `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud.
+
+`PublicPortalService` memilih organization/session melalui `PUBLIC_ORG_SLUG` + `PUBLIC_SESSION_SLUG`, menggunakan explicit organization predicates, cache dua minit dan query fixture upcoming/completed berasingan.
+
+## Route and Runtime Summary
+
+- 126 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
+- Email verification ditentukan ketika route bootstrap melalui `EMAIL_VERIFICATION_REQUIRED`.
+- `/health` boleh dilindungi token dan menyamar sebagai 404; `/up` ialah Laravel liveness asas.
+- Runtime workspace audit: production env, debug off, database cache/queue, file session, email verification off, CSP report-only, enforcement off.
+
+## Current Risks
+
+1. Runtime production baseline tidak sama dengan secure example.
+2. DB least privilege dan contact/mail configuration belum dibuktikan.
+3. Connected CI, owner confirmation dan post-deploy evidence masih diperlukan.
+5. Workspace, public production dan historical seeder data tidak sama.
+
+Source: [full audit 17 August 2026](../audits/2026-08-17-full-project-and-production-audit.md).

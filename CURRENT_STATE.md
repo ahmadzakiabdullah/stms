@@ -1,110 +1,103 @@
 # CURRENT STATE
 
-> **Snapshot of the STMS project implementation status as of 12 August 2026.**
-> This document reflects the reality as of the latest full system review. It should be read together with `CLAUDE.md`, `AGENTS.md`, `TODOS.md`, and `ROADMAP.md`.
+> Snapshot jujur STMS/SAF pada **17 Ogos 2026** selepas remediation audit. Bukti asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
 
-**Overall Status:** The SAF 2026 web MVP is operational and in maintenance/production-hardening mode. Core flows cover Organization/User/RBAC → Sport/Category/Session/Tournament/Event → Participant/Registration → Squad Management and printable team forms → Dean Verification → Match/Result → Rankings → Exports/Reporting → Draw/Groups → Notifications → Settings and Activity Logs.
-**Code Maturity:** Operational MVP with production-hardening Sprints 1-3 implemented in the repository. CI covers lint, TypeScript, PHPUnit, dependency audits, PCOV coverage artifacts, build budgets, and Playwright desktop/mobile journeys with axe. Backend query and k6 thresholds are defined; encrypted backup/restore and internal health monitoring are implemented. Connected-CI Playwright/axe is now evidenced on commit `ae42a50`. An isolated encrypted MySQL restore drill also passed with a sanitized production-sized dataset. The corrected authenticated load path passed all functional checks but missed its latency target on a single-process development server; multi-worker staging performance, real external alert receipt, and actual production-backup/off-site recovery remain open.
+## Status Keseluruhan
 
-**Unreleased hardening work (12 August 2026):** The working tree contains scoped tenant lifecycle handling, tenant-aware queue middleware, explicit public organization/session selection, tenant-safe `User` route binding, org-admin tenant/role payload enforcement, guarded dummy seeders, report-only CSP hardening (enforcing-ready via `CSP_REPORT_ONLY=false`), a CI tenant-bypass allowlist, corrected per-VU k6 authentication, versioned draw rollback, consistent SVG sanitization, Redis-backed production sessions, consistent `verified` email middleware across all authenticated routes, and a release runbook. Local verification passes 407 PHPUnit tests / 1,635 assertions, Pint, TypeScript, production build, tenant-bypass validation, and both dependency audits. These changes are not yet a connected-CI, tagged or deployed release.
+**Produk:** MVP web beroperasi.
 
-**Administrator dashboard refresh (10 August 2026):** The administrator workspace now presents a whole-system operational overview with prioritized KPIs, readiness indicators, registration pipeline, competition progress and role-aware actions. Partial query fallback payloads are not cached and tenant context is included in cache keys so repeated refreshes retain consistent data.
+**Repository:** semua quality gate tempatan hijau. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail, pengesahan product owner dan connected CI pada commit bersih diselesaikan.
 
-**Recent operational UI updates (12 August 2026):** Event registration now supports administrator multi-event batch registration with active/unregistered faculty filtering. Draw result pages refresh pool state after participant moves and expose a Create Fixtures action. Results management exposes pending matches and a Record Next Result workflow. The public portal now includes a Sports programme page at `/sports-programme`, an improved medal-tally dashboard, and a tenant-safe public route name `public.sports`.
+**Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima working tree ini.
 
----
+Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Category/Event → Participant/Registration/Squad → Dean Verification → Draw/Match/Result → Rankings/Exports/Reports → Notifications/Settings/Activity Logs.
 
-## Actual Tech Stack Today
+## Inventori Repository
 
-| Layer          | Current Reality                              | Target (per CLAUDE.md)                       | Status      |
-|----------------|----------------------------------------------|----------------------------------------------|-------------|
-| Backend        | Laravel 13 + inertia-laravel                 | Laravel 13+                                  | Implemented |
-| Frontend       | React 18 + Inertia.js (`.tsx` — TypeScript)  | React + Inertia.js + TypeScript              | Implemented |
-| UI             | Full shadcn/ui + Lucide                      | shadcn/ui only                               | Implemented |
-| Auth           | Laravel Breeze username/email login + Spatie RBAC         | Breeze Inertia + Spatie RBAC + org scoping   | Implemented |
-| Database       | 30+ tables (domain + Spatie + Laravel). UUID PKs on all domain tables. Soft deletes on all models | UUID PKs, soft deletes, org_id on tenant tables | Implemented |
-| Multi-tenancy  | Column-based + BelongsToOrganization Global Scope trait | Column-based (organization_id) + Global Scopes | Implemented |
-| Authorization  | Spatie + 12 Policies + Gate in controllers   | Spatie Laravel Permission + Policies + Gates | Implemented |
-| Domain Models  | 16 model files, including tenant/domain models and Setting | Full hierarchy | Implemented |
-| API            | None (web/Inertia only)                      | RESTful `/api/v1` (future)                   | Future      |
-| Tests          | 92 PHP test files; the latest completed baseline covers 415 tests and 1,669 assertions, plus 6 Playwright/axe journeys | PHP + browser + accessibility | PHPUnit, Pint, type-check, dependency audits and production build pass from the local verification copy; connected-CI Playwright/axe passed on `ae42a50` |
+| Item | Nilai |
+|---|---:|
+| Laravel routes | 126 application routes |
+| Migrations | 61 migration files |
+| Controllers | 39 controller files |
+| Form Requests | 28 |
+| Policies | 21 fail |
+| Actions | 37 |
+| Services | 35 |
+| Models | 16 |
+| Inertia `.tsx` pages | 38 |
+| PHP tests | 93 PHP test files |
+| Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
----
+## Tech Stack
 
-## What Actually Exists Today
+| Layer | Keadaan semasa |
+|---|---|
+| Backend | PHP `^8.4`, Laravel 13 |
+| Frontend | React 18, Inertia React 2, TypeScript 5.9 |
+| UI | Tailwind 3, komponen shadcn/Radix tempatan, Lucide |
+| Auth/RBAC | Laravel auth controllers + Spatie Permission |
+| Audit | Spatie Activity Log + application logs |
+| Database | MySQL production; SQLite untuk ujian terasing |
+| API | Tiada REST API; web/Inertia sahaja |
 
-- **Full domain**: 14 models + RankingService + Export infrastructure. HasUuids + SoftDeletes + full relations chain.
-- **Multi-tenancy**: `BelongsToOrganization` trait + global scope on all tenant-aware models; per-org slug uniqueness.
-- **RBAC**: Spatie with roles: super-admin, org-admin, staff, faculty-representative, dean. 30+ granular permissions. 12 Policies.
-- **Actions + Form Requests**: Complete Create/Update/Delete Actions for every domain module.
-- **Controllers**: 39 controller files including authentication controllers.
-- **Frontend**: 38 TypeScript Inertia pages, shadcn/ui components, a global Error page, role-aware dashboards, and an explicit policy-aligned sidebar role matrix.
-- **Exports**: PDF (Dompdf) + Excel (Maatwebsite) for Fixtures, Results, Rankings. Printable match sheet.
-- **Reports**: Dashboard with stats, completion rate, recent results, quick export links.
-- **Faculty Dashboard**: Squad member management with role-based and total-athlete quota validation. Bulk Excel/CSV import uses the same quota rules. Each event registration links to a tenant-safe A4 Team Registration Form populated from the current roster.
-- **Dean Verification**: Event participant approval/rejection workflow + notifications.
-- **In-App Notifications**: Bell dropdown, personal inbox, super-admin Action Required queue, read/type/organization filters, severity badges, and dean/admin registration notifications. System Activity remains a separate tenant-safe audit view.
-- **Role Management UI**: Full CRUD at `/roles` with grouped permission checkboxes.
-- **Draw/Group Allocation**: Random balloting with round-robin fixture generation via Circle Method.
-- **Role-aware dashboard**: administrators receive an attention-first operational overview; admin-sport receives competition actions; faculty representatives receive registration/squad management; deans are routed to verification.
-- **Logo Upload**: Faculty crest/logo upload and display.
-- **Dashboard**: Real data with safe guards, Cache, try/catch (prevents 500s on partial prod DBs).
-- **Public portal**: Bahasa Malaysia SAF 2026 hub at `/` and `/index.php` with schedules, results, progress, sports, and medal standings; only participant display names/logos are exposed.
-- **Public routes**: `/medal-tally`, `/sports-programme`, `/schedules`, `/results`, and `/contact-us`; `/sports` remains the authenticated administration route.
-- **Routes**: 125 application routes (web + auth); no REST API routes.
-- **Migrations**: 59 migration files covering domain, framework, fixes, and later features.
-- **Seeding**: `DatabaseSeeder` seeds the 24-sport SAF master list, then `SAF2026DataSeeder` seeds SAF 2026 categories/events with quota fields. Reusable and idempotent.
-- **Tests**: 92 PHP test files; the latest completed local baseline covers 415 tests / 1,669 assertions. Six Playwright desktop/mobile journeys, including axe checks, passed in connected CI on commit `ae42a50`.
-- **Docker**: `Dockerfile` + `docker-compose.yml` + nginx/supervisor config.
-- **CI/CD**: `.github/workflows/ci.yml` (Pint lint → PHPUnit → npm build).
-- **Assurance**: PCOV/Clover reporting, Playwright critical journeys, axe WCAG checks, dashboard query budget, k6 thresholds, and frontend bundle budgets.
-- **Frontend quality**: Vite production build, bundle budget, and `npm run typecheck` are clean. Legacy JSX components are covered by explicit compatibility declarations while new and migrated application pages remain TypeScript.
-- **Operations**: encrypted backup/restore commands, daily retention schedule, supervised Redis queue worker and scheduler.
-- **Health check**: `GET /health` and `stms:health-check` cover database, cache, queue, and disk without exposing exception details.
-- **Operational evidence (5 August 2026)**: connected-CI browser/axe passed; an AES-256 MySQL restore of a sanitized 3.47 MB dataset completed in 2.977 seconds with matching counts and healthy checks; corrected authenticated k6 produced 190/190 successful checks but p95 4.24 seconds exceeded the 750 ms target on the single-process development server; local critical-webhook transport passed while real operator delivery remains unverified. See `docs/testing/2026-08-05-operational-drill.md`.
+## Remediation Yang Telah Siap
 
----
+- Semua index sensitif memanggil policy/gate `viewAny` atau gate khusus; Organizations hanya boleh diurus oleh super-admin.
+- Manual URL matrix menguji enam role, dan index tests membuat HTTP/Inertia payload assertions sebenar.
+- Admin-sport dibatasi kepada sukan yang ditugaskan pada Events, Matches dan Results.
+- Draw pool movement menjana semula fixture berstatus scheduled secara atomik tetapi menyekat fixture yang sudah bermula/selesai.
+- Ranking menggunakan `RankingStrategy` contract, registry, tiga strategy class dan validated session/tournament JSON rules.
+- Favicon guest memilih tenant public secara eksplisit; font adalah self-hosted.
+- Meta description, canonical, `/sitemap.xml`, public refresh status dan guest Ziggy filtering telah ditambah.
+- Initial global Vite prefetch dibuang untuk mengecilkan HTML/request awal.
+- Production configuration validator kini mewajibkan Redis session/cache/queue, Asia/Kuala_Lumpur, email verification, secure cookie, CSP enforcing dan mail bukan `log`.
+- Vendor dependencies diselaraskan kepada lockfile selamat (Guzzle 7.15.2, PSR-7 2.13.0) untuk menutup advisory semasa.
+- Axe/keyboard smoke tests meliputi login, dashboard, homepage dan Contact pada desktop/mobile; contrast dan ARIA findings semasa telah dibaiki.
 
-## Current SAF 2026 Data
+## Runtime Workspace
 
-| Item | Count |
-|------|-------|
-| Organization | 1 (UTeM) |
-| Session | 1 (SAF 2026 - 1-30 Sept) |
-| Tournaments | 2 (Fasa 1: 11-13 Sept, Fasa 2: 25-27 Sept) |
-| Sports | 24 |
-| Categories | 30 |
-| Events | 30 |
-| Faculties | 8 (FTKEK, FTKE, FTKM, FTKIP, FTMK, FPTT, FAIX, STEP) |
-| Users | 19 (1 super-admin + 8 reps + 8 deans + 2 test) |
-| Event Participants | 240 (8 faculties × 30 events) |
+Semakan baca-sahaja mendapati 17 pengguna aktif, 17 role assignments, satu super-admin, tiada pengguna tanpa role, tiada orphan role assignment, dan tiada participant/sport assignment silang organisasi. Credential tidak diputar kerana tiada anomali ditemui.
 
----
+Backlog 32 database-notification jobs telah diproses dengan `queue:work --stop-when-empty`. Selepas pemprosesan: **0 pending, 0 failed**; `stms:health-check` lulus.
 
-## What Is Missing / Known Gaps
+Runtime masih menggunakan nilai berikut sehingga deployment berjadual dibuat:
 
-- **REST API**: Not yet built — deferred for future phase.
-- **Internationalization**: Session-based locale switching is implemented with English default and Bahasa Malaysia support. Authentication, shared layouts, and core MVP administration/competition pages use the shared frontend dictionary; locale changes remount the page, shared date/number formatters use `en-MY`/`ms-MY`, and static translation-key coverage is verified. Event-specific public content and user-authored domain names remain in their source language by design.
-- **Accreditation, Live Scoring, Mobile App**: All deferred future features.
-- **UNC path limitation**: `\\10.1.2.22\e\others\saf\portal` cannot run CLI directly — use local drive or `u:;` mapping.
-- **Authenticated load evidence**: `tests/performance/smoke.js` still needs its validated CSRF/session-cookie correction committed, followed by a multi-worker staging run.
-- **External monitoring evidence**: the critical webhook transport is verified locally, but no real Slack/Papertrail destination or operator receipt has been demonstrated.
-- **Disaster-recovery evidence**: the isolated sanitized MySQL restore mechanics passed; an actual production backup, off-host copy, and isolated recovery drill are still required.
+- database cache dan queue;
+- file session;
+- timezone UTC;
+- email verification disabled;
+- mail `log`;
+- CSP report-only;
+- `PRODUCTION_CONFIG_ENFORCE=false`.
 
----
+Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada sistem hidup boleh melog keluar pengguna atau menutup akses tanpa mail transport yang sah. Perubahan runtime mesti dibuat melalui release runbook, bukan suntingan ad hoc.
 
-## Seeding
+## Quality Gates Semasa
 
-```bash
-php artisan migrate:fresh --seed # local/demo only when SEED_DEMO_DATA=true
-```
+| Gate | Keputusan 17 Ogos 2026 |
+|---|---|
+| PHPUnit | **Lulus — 430/430, 1,860 assertions** |
+| Pint | Lulus |
+| TypeScript | Lulus |
+| Tenant bypass allowlist | Lulus |
+| Vite production build | Lulus |
+| Bundle budget | Lulus |
+| Composer audit | Lulus — 0 advisory |
+| npm audit | Lulus — 0 vulnerability |
+| Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
+| Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 93` |
 
-This will drop all tables, re-run migrations, and seed with:
-1. Core bootstrap (org, roles, permissions)
-2. SAF 2026 data (session, tournaments, sports, categories with quotas, events, faculties, users, registrations)
+## Production Awam Yang Disahkan Semasa Audit Asal
 
-Production defaults to `SEED_DEMO_DATA=false`; `DatabaseSeeder` then creates only the tenant/RBAC bootstrap and no users or SAF operational data. `SAF2026DataSeeder` is blocked in production unless `ALLOW_DEMO_SEEDING=true` is deliberately approved. Demo accounts still use `password` and must never be loaded unchanged into production.
+Portal production ialah single-page homepage berseksyen plus `/contact-us`. Snapshot asal menunjukkan SAF 2026, 1–31 Oktober 2026, 30 events, 8 faculties dan belum ada result. Nilai ini masih memerlukan pengesahan product owner dan tidak membuktikan deployment working tree semasa.
 
----
+## Baki Sebelum Release Production
 
-**Last Updated:** 12 August 2026 — critical user-management privilege escalation is remediated with tenant-aware role/relation validation and regression coverage; dummy operational seeders are production-guarded; all 407 PHPUnit tests and local code/build gates pass. Production role/activity-log review, connected CI, multi-worker performance, actual production/off-site recovery, real external alert receipt, and a clean tagged release remain tracked in `TODOS.md`.
+1. Product owner mengesahkan tarikh, satu tournament, 30 events dan information architecture single-page.
+2. Operator menyediakan mail transport sebenar, menukar runtime kepada baseline production selamat dan melakukan smoke test selepas deploy.
+3. DBA menghadkan principal kepada schema STMS dan merekod grants.
+4. Contact email/phone/address production dilengkapkan.
+5. Perubahan dipecah kepada commit teratur, connected CI lulus dan release tag diwujudkan.
+6. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
+
+**Last updated:** 17 Ogos 2026.

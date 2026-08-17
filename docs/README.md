@@ -1,33 +1,46 @@
 # Documentation Index
 
-This directory contains architecture, operations, security, testing, and audit references for STMS.
+Dokumentasi STMS dibahagikan kepada sumber kanonik, keputusan seni bina, panduan operasi dan rekod sejarah.
 
-## Directory Map
+## Sumber Kanonik
 
-- `adr/`: Architecture Decision Records.
-- `architecture/`: System architecture, domain model, frontend/backend, runtime concerns.
-- `database/`: ERD, schema, and migration-oriented references.
-- `deployment/`: Deployment and recovery runbooks.
-- `design-system/`: UI system guidance and usage rules.
-- `security/`: Security notes, controls, and hardening references.
-- `testing/`: Testing guidance and test strategy references.
-- `audits/`: Point-in-time assessment reports.
-- `api/`: Deferred API planning notes (not active endpoint docs).
+1. [`../CURRENT_STATE.md`](../CURRENT_STATE.md) — keadaan produk/repository/runtime/production semasa.
+2. [`../TODOS.md`](../TODOS.md) — backlog aktif dan Current Focus.
+3. [`../ROADMAP.md`](../ROADMAP.md) — milestone produk dan release.
+4. [Audit 17 Ogos 2026](audits/2026-08-17-full-project-and-production-audit.md) — bukti audit semasa.
+5. Fail dalam [`architecture/`](architecture/) dan [`database/`](database/) — rujukan implementasi.
 
-## Root-Level Files
+Jika nombor atau status bercanggah, sumber bertarikh paling baharu menang; dakwaan production mesti disokong oleh production/runtime evidence, bukan contoh konfigurasi sahaja.
 
-- `FINDING.md`: Consolidated findings summary.
-- `IMPLEMENTATION_STATUS.md`: Milestone progress snapshot.
-- `PLAN.md`: Working plan and execution notes.
-- `MASTER_PROMPT.md`: Prompt/governance scaffold used for analysis tasks.
-- `testing.md`: Top-level testing notes.
+## Direktori
+
+- `adr/` — Architecture Decision Records. Keputusan kekal, implementation status boleh dikemas kini.
+- `architecture/` — current architecture dan jurang diketahui.
+- `database/` — schema, ERD, naming dan migration rules.
+- `deployment/` — release, backup dan restore runbooks.
+- `design-system/` — frontend/design usage semasa.
+- `security/` — controls dan production checklist.
+- `testing/` — current quality gates dan rekod drill.
+- `audits/` — point-in-time reports.
+- `api/` — future REST API placeholders; bukan endpoint aktif.
+
+## Dokumen Sejarah
+
+`FINDING.md`, `PLAN.md`, `AUDIT_REPORT_AND_RECOMMENDATIONS.md`, audit 31 Julai/12 Ogos dan operational drill ialah snapshots. Jangan menukar angka sejarah mereka kepada angka semasa; gunakan banner/status atau rujuk audit terkini.
+
+## Portal Awam Semasa
+
+- `/` — homepage dengan anchor sections Sports, Schedule, Results dan Medal standings.
+- `/contact-us` — halaman hubungan.
+- `/login` — login.
+
+`/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud pada production semasa. `GET /results` bukan public results page.
 
 ## Maintenance Rules
 
-- Keep architecture and implementation status aligned when behavior changes.
-- Mark deferred functionality explicitly to avoid false readiness signals.
-- Prefer adding a short update note instead of rewriting historical audit files.
-- Keep tenant and hierarchy terms consistent with project canon:
-  `Organization -> Session -> Tournament -> Sport -> Event -> Match -> Result`.
-- Treat documents containing a dated status header, audit date, commit hash, or operational evidence as point-in-time records. Update the canonical documents (`README.md`, `CURRENT_STATE.md`, `ROADMAP.md`, `TODOS.md`, and this index) when the implementation changes; preserve historical audit and ADR content unless the decision itself changes.
-- Current public page: `/`. Public information pages are being rebuilt incrementally; the authenticated administration route `/sports` remains separate.
+- Pisahkan repository capability, runtime workspace, production observation dan historical evidence.
+- Jangan tandakan item selesai hanya kerana ia wujud dalam `.env.*.example` atau runbook.
+- Perubahan architecture memerlukan ADR/architecture update.
+- Perubahan functionality memerlukan `CURRENT_STATE.md`, `TODOS.md` dan `CHANGELOG.md`.
+- Kekalkan istilah domain: Organization → Session → Tournament → Event, dengan Sport/Category sebagai catalog/relasi; Match → Result.
+- Semua tenant read/write paths perlu Policy, tenant scope dan regression tests yang sepadan.

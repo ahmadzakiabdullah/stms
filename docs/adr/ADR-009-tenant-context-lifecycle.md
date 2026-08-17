@@ -45,7 +45,7 @@ New explicit controls were added:
   tenant-required operation has no tenant available or is running under an
   explicit bypass.
 
-`isConsole()` / `isQueue()` now consult `the recorded context only instead of
+`isConsole()` / `isQueue()` now consult the recorded context only instead of
 guessing from `runningInConsole()`, so the console (and later, queue jobs) must
 explicitly receive their organization.
 
@@ -61,14 +61,16 @@ Positive:
 Negative:
 - The static facade hides the container access; callers must keep using the
   facade (all existing callers do — global scope + tests).
-- Queue jobs do not yet automatically inherit a tenant; they must bind the
-  organization explicitly (future work, tracked in `STMS_HARDENING_PLAN.md`).
+- Every tenant-aware HTTP/job/command path must continue to bind or explicitly
+  bypass the context; missing integration remains a fail-closed operational risk.
 
 ## Implementation Status
 
-Implemented 2026-08-07 as `P0` hardening item 1.1. Covered by
-`tests/Feature/TenantContextLifecycleTest.php`; existing
-`tests/Feature/TenantIsolationTest.php` still passes under the new semantics.
+Implemented 2026-08-07 and extended with a tenant-aware job contract/middleware.
+Lifecycle and queue behavior have tests, and the static tenant-bypass allowlist
+check passes as of 2026-08-17. The full PHPUnit suite is currently red for
+unrelated draw-contract failures, so do not describe the repository as fully
+green. Read-authorization gaps identified in the current audit also remain.
 
 ## References
 

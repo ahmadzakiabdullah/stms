@@ -1,5 +1,7 @@
 # PLAN
 
+> **Pelan sejarah — digantikan.** Dakwaan “semua fasa selesai” di bawah ialah snapshot lama dan bukan release status semasa. Gunakan [`TODOS.md`](../TODOS.md), [`ROADMAP.md`](../ROADMAP.md) dan [audit 17 Ogos](audits/2026-08-17-full-project-and-production-audit.md).
+
 > Cadangan penambahbaikan berdasarkan audit menyeluruh STMS.
 > **Baca bersama:** `FINDING.md`, `TODOS.md`, `CURRENT_STATE.md`
 

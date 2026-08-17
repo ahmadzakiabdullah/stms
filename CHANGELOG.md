@@ -1,7 +1,27 @@
 # Changelog
 
+## Unreleased — Audit remediation (17 August 2026)
+
+- Restored the complete quality gate: 430/430 PHPUnit tests (1,860 assertions), Pint, TypeScript, tenant guard, Vite build/budget, clean dependency audits and 8/8 isolated desktop/mobile Playwright/axe journeys.
+- Enforced policy-backed read authorization across sensitive indexes and added a six-role manual-URL matrix plus real tenant payload assertions.
+- Made draw participant movement regenerate scheduled fixtures atomically while protecting started/completed competition data.
+- Replaced hardcoded ranking orchestration with a strategy contract/registry and validated session/tournament rule storage.
+- Added tenant-explicit guest branding, self-hosted fonts, SEO metadata, sitemap, filtered guest routes, public refresh feedback and accessibility fixes.
+- Drained 32 queued database notifications to 0 pending/0 failed after confirming their local-only delivery channel.
+- Realigned installed dependencies with the safe lockfile (Guzzle 7.15.2 and PSR-7 2.13.0) to close newly reported security advisories.
+
+## Unreleased — Documentation and production audit baseline (17 August 2026)
+
+- Audited the repository, runtime workspace, database state and public production portal; recorded the evidence in `docs/audits/2026-08-17-full-project-and-production-audit.md`.
+- Reconciled canonical Markdown with the current 125-route / 60-migration / 39-controller / 38-page / 92-test-file inventory.
+- Corrected public-portal documentation: production currently exposes a single homepage with Sports/Schedule/Results/Medal sections plus `/contact-us`; previously documented standalone public routes are absent.
+- Recorded the current NO-GO release state: 420 of 422 PHPUnit tests pass, Pint reports six files, the working tree is not clean, and no version tag exists.
+- Documented runtime production-baseline drift, read-authorization gaps, ranking configurability debt, and UUID/soft-delete exceptions without changing application behavior.
+
 ## Unreleased — Cosmic-inspired public portal (14 August 2026)
 
+- Added an optional inverse logo for every participant, including sanitized SVG/raster upload, independent replace/remove controls, light/dark previews, public payload support, and a shared surface-aware renderer that falls back safely when one variant is missing.
+- Increased faculty logos from 36px to 48px in public fixture/result cards and from 48px to 56px in medal-standing cards; the faculty dashboard now shows the same logo at 48px on mobile and 56px on larger screens, while draw-result matchups use 48px logos and compact group rosters use 40px logos.
 - Tightened the Matches add/edit dialog to a more compact responsive width and constrained all form controls so long event or participant values no longer stretch the modal layout.
 - Simplified event labels throughout Matches to the contextual `Sport — Category` format while retaining the full official event and tournament names in stored data and secondary context.
 - Corrected the Matches event relation mapping from frontend camelCase to Laravel's serialized `sport_category` key so category names appear in concise event labels.

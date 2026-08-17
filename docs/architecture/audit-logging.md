@@ -1,9 +1,14 @@
 # Audit Logging
 
-Audit logging uses `spatie/laravel-activitylog` with the `activity_log` table, an authenticated activity-log UI, and explicit activity records for selected operations such as draws. Service-layer application logs and soft deletes provide additional operational history.
+STMS menggunakan `spatie/laravel-activitylog` melalui jadual `activity_log`, UI authenticated dan rekod eksplisit untuk sebahagian operasi seperti draw. Pangkalan data yang diaudit mempunyai 882 rekod activity log.
 
-Soft deletes are enabled on all core models (Organization, Tournament, Event, Match, Participant, User). When a record is "deleted", it is retained in the database with a `deleted_at` timestamp. This provides a basic audit trail — deleted records remain queryable and restorable. The `deleted_by` column (nullable UUID, referencing the user who performed the deletion) is included on models that require stronger accountability.
+Soft delete mengekalkan sejarah pada banyak model domain, tetapi bukan semuanya. `Setting`, `SquadMember` dan `DrawVersion` tidak menggunakan `SoftDeletes`; `DrawVersion` pula berfungsi sebagai snapshot versi draw. Jadual `settings` menggunakan primary key integer sebagai pengecualian sejarah kepada konvensyen UUID.
 
-Beyond soft deletes, the Service Layer uses `Log::info()` to record all CRUD operations (see [logging.md](logging.md)). These logs capture `who`, `what`, `when`, and `in which organization`. For sensitive operations (role changes, permission grants), additional context is logged.
+Application logging dan activity logging mempunyai tujuan berbeza:
 
-Coverage is not yet uniform across every mutation, and database immutability/retention controls are not enforced. Treat the current facility as an operational audit trail, not a compliance-grade immutable ledger.
+- application log: diagnosis runtime, exception dan operasi tertentu;
+- activity log: actor/subject/context untuk tindakan yang sengaja diaudit;
+- soft delete: retention rekod, bukan bukti actor atau ledger immutable;
+- draw version: snapshot domain untuk sejarah/rollback draw.
+
+Liputan tidak seragam pada semua CRUD, retention dan immutability pangkalan data tidak dikuatkuasakan, dan sebahagian log service mengandungi e-mel. Oleh itu kemudahan semasa ialah audit trail operasi, bukan ledger compliance. Tetapkan klasifikasi PII, retention, akses, redaction dan eksport sebelum menggunakannya untuk tujuan pematuhan.

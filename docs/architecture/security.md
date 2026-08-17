@@ -1,33 +1,37 @@
 # Security Architecture
 
-STMS uses a layered security model combining authentication, role-based access control, and tenant data isolation. Every request passes through authentication (Laravel Breeze), authorization (Spatie roles/permissions), and tenancy scoping before reaching business logic.
+## Layers
 
-## Authentication
+1. Laravel session authentication and login throttling.
+2. Conditional verified-email middleware.
+3. Request-scoped TenantContext + organization global scopes.
+4. Policies/Gates and tenant-aware validation.
+5. Rate limits on sensitive mutations/exports.
+6. Upload validation/SVG sanitization.
+7. Security response headers.
+8. Activity/application logs, backups and health monitoring.
 
-Laravel Breeze provides Inertia-based authentication scaffolding with login, registration, password reset, and email verification. Sessions are server-managed via Laravel's built-in session driver. Email verification is enforced for sensitive operations.
+## Confirmed Controls
 
-## Role-Based Access Control
+- Public registration is disabled on production (404).
+- `.env` is not tracked.
+- Tenant-bypass allowlist, dependency audits and TypeScript/build checks pass.
+- Production sends HSTS, nosniff, SAMEORIGIN, referrer and permissions policies.
+- Public portal uses explicit organization/session selection.
+- Sensitive index routes enforce policies/gates and have a six-role direct-URL matrix.
+- Guest favicon lookup is tenant-explicit; public fonts are self-hosted.
+- Locked Composer/npm audits are clean after the current Guzzle/PSR-7 update.
 
-Roles and permissions are managed via Spatie Laravel Permission v6. Seeded roles include `super-admin`, `org-admin`, `staff`, `faculty-representative`, and `dean`, with granular permissions per domain entity. Authorization is primarily enforced through controller `Gate::authorize()` calls and policies.
+## Current Release Risks
 
-1. **Authentication middleware** — protects the application route group.
-2. **Policy gates** — controller methods perform resource/action authorization before mutations and sensitive reads.
+- Runtime workspace has email verification off, CSP report-only, database cache/queue, file session and configuration enforcement off.
+- DB principal least privilege is not evidenced.
+- Security-reporting contact and real external alert delivery are not configured/evidenced.
 
-## Multi-Tenancy Scoping
+## CSP
 
-Beyond authentication and RBAC, tenant-aware model queries are filtered by `organization_id` via a global scope when an authenticated non-super-admin user exists. Super-admin users bypass that constraint. The trait also exposes explicit scope-removal helpers, so cross-tenant callers must authorize and scope their use carefully.
+Production currently sends `Content-Security-Policy-Report-Only`. Repository assets are now self-hosted and browser/axe smoke tests pass. Enable enforcing mode only through the release runbook with post-deploy CSP console/network verification.
 
-## Authorization Flow
+## Release Rule
 
-```
-Request → Auth (Breeze) → Controller → Policy/Gate → Service/Action
-```
-
-Policies handle resource-specific rules (e.g., "can update tournament only if tournament.organization_id matches user's organization"). Form Requests handle input validation separately from authorization.
-
-## Production Hardening Controls
-
-- Public registration defaults off in production and requires an explicit tenant slug when enabled.
-- Reverse-proxy trust is configured through a comma-separated `TRUSTED_PROXIES` allowlist; an empty value trusts no additional proxies.
-- Routine production seeding skips demo users and SAF operational data. Direct demo seeding requires an explicit override.
-- Docker Compose requires externally supplied application/database/Redis secrets and keeps MySQL/Redis on the internal Compose network.
+Navigation visibility never replaces backend authorization. A release requires direct-URL role tests, cross-tenant list tests, green PHPUnit/Pint and secure runtime validation.

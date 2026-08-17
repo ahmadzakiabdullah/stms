@@ -1,13 +1,35 @@
 # Ranking Engine
 
-The Ranking Engine provides on-the-fly calculation of participant or team rankings based on match results. It is implemented as a `RankingService` class in the Service Layer, supporting three interchangeable strategies:
+## Current Implementation
 
-| Strategy      | Description |
-|---------------|-------------|
-| **points**    | Rankings by total accumulated points (win=3, draw=1, loss=0). Points are configurable per tournament. |
-| **win_rate**  | Rankings by win/loss ratio (wins / total matches). Useful for tournaments with uneven match counts. |
-| **medal_tally** | Rankings by gold > silver > bronze medal counts. Used in multi-sport event contexts. |
+`App\Services\RankingService` calculates rankings on demand from completed, tenant-scoped results. `RankingStrategyRegistry` resolves implementations through the `RankingStrategy` contract.
 
-Rankings are **never stored** in the database. They are computed on-the-fly from the `results` table each time a ranking view is requested. The `RankingService` accepts a collection of matches, applies the selected strategy, and returns a sorted collection with rank, entity ID, and computed values. Caching of ranking results is optional and configurable.
+| Strategy | Configurable rules |
+|---|---|
+| `points` | Win/draw/loss points and ordered tiebreakers |
+| `win_rate` | Ordered tiebreakers across win rate, wins, points, goal difference, goals for and name |
+| `medal_tally` | Ordered gold/silver/bronze/total-medal/name tiebreakers |
 
-New ranking strategies can be added by implementing the `RankingStrategy` interface and registering it in the service. This keeps the engine extensible without modifying existing code.
+Defaults live in `config/ranking.php`. Validated JSON overrides can be saved on sessions and tournaments; tournament rules take precedence over session rules. No sport name or formula is hardcoded in controllers.
+
+Session rankings aggregate tournaments in a session. Tournament and event rankings query completed results and eager-load participants and winners. Rankings are calculated rather than stored in a materialized table.
+
+## Strategy Contract
+
+Each strategy receives a result collection and a normalized rule array, and returns deterministic ranked rows. The registry:
+
+1. validates that a configured strategy exists;
+2. merges stored rules with safe defaults;
+3. dispatches calculation to the matching strategy class;
+4. preserves shared-rank behavior where configured values are identical.
+
+## Remaining Limits
+
+- Medal allocation assumes explicit Final and Bronze fixture stages.
+- Event ranking inherits its tournament strategy; rule administration remains at session/tournament level.
+- Rankings are not cached independently; public portal caching covers the public aggregate response.
+- New sport formats require strategy fixtures and tests, but not sport-name conditionals in services.
+
+## Extension Rules
+
+Add a new class implementing `RankingStrategy`, register it in `config/ranking.php`, validate its rule schema at the request boundary, and add tenant-isolation plus deterministic-tiebreaker tests.

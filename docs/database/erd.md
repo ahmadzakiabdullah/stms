@@ -1,69 +1,35 @@
-# Entity Relationship Descriptions (ERD)
+# Entity Relationships
 
-Dokumen ini menerangkan hubungan antara entiti-entiti data utama dalam aplikasi STMS. Ia berfungsi sebagai pelengkap kepada `schema.md` dengan menjelaskan logik di sebalik kunci asing (foreign keys) dan kardinaliti (cardinality) hubungan.
+## Rantaian Operasi
 
-## Hubungan Teras (Core Relationships)
+```text
+Organization
+├─ EventSession ─ Tournament ─ Event ─ Match/Fixture ─ Result
+├─ Sport ─ SportCategory ───────────────┘
+├─ Participant ─ EventParticipant ─ SquadMember
+│              └─ Pool / draw allocation
+├─ User ─ roles/permissions and sport_user
+└─ Setting
+```
 
-### 1. Organization (Penyewa / Tenant)
+Rantaian ini ialah gambaran operasi, bukan satu siri FK tunggal. Hubungan penting ialah:
 
--   **Organization** adalah entiti akar untuk seni bina multi-tenancy.
--   Sebuah **Organization** mempunyai banyak **Users**.
--   Sebuah **Organization** mempunyai banyak **Tournaments**.
--   Sebuah **Organization** mempunyai banyak **Sports**.
--   Sebuah **Organization** mempunyai banyak **Participants**.
+- `event_sessions.organization_id` → `organizations.id`;
+- `tournaments.session_id` dan `tournaments.organization_id`;
+- `tournament_sport` menghubungkan tournament dan sport;
+- `events.tournament_id`, `events.sport_id`, `events.sport_category_id` serta `events.organization_id`;
+- `participants.session_id` dan `participants.organization_id`;
+- `registrations` menghubungkan participant–tournament;
+- `event_participants` menghubungkan participant–event dan boleh menunjuk pool;
+- `squad_members.event_participant_id` serta `organization_id`;
+- `matches.event_id`, home/away participant, optional pool, dan `organization_id`;
+- `results.match_id` → `matches.id` dengan unique constraint; **`matches` tidak mempunyai `result_id`**;
+- `draw_versions.event_id`, `actor_id` dan `organization_id`.
 
-### 2. User
+## Invariant Tenant
 
--   Seorang **User** tergolong dalam **satu** **Organization** sahaja.
-    -   `users.organization_id` → `organizations.id` (One-to-Many, Inversed)
+FK sahaja tidak membuktikan semua rekod dalam hubungan berasal daripada organisasi yang sama. Service/Action, scoped validation dan policy mesti memastikan organization bagi event, sport, category, participant, pool, fixture dan result sepadan. Ujian perlu mencuba ID sah daripada tenant lain.
 
-### 3. Tournament (Kejohanan)
+## Nama Model
 
--   Sebuah **Tournament** tergolong dalam **satu** **Organization** sahaja.
-    -   `tournaments.organization_id` → `organizations.id` (One-to-Many, Inversed)
--   Sebuah **Tournament** mempunyai banyak **Events**.
-    -   `events.tournament_id` → `tournaments.id` (Many-to-One)
--   Sebuah **Tournament** mempunyai dan tergolong dalam banyak **Sports**.
-    -   Hubungan ini diuruskan melalui jadual pivot `tournament_sport`.
-
-### 4. Sport (Sukan)
-
--   Sebuah **Sport** tergolong dalam **satu** **Organization** sahaja.
-    -   `sports.organization_id` → `organizations.id` (One-to-Many, Inversed)
--   Sebuah **Sport** mempunyai dan tergolong dalam banyak **Tournaments**.
-    -   Hubungan ini diuruskan melalui jadual pivot `tournament_sport`.
-
-### 5. Event (Acara)
-
--   **Event** mewakili satu pertandingan spesifik dalam sesebuah kejohanan (cth: "Perseorangan Lelaki Bawah 18 Tahun").
--   Sebuah **Event** tergolong dalam **satu** **Tournament**.
-    -   `events.tournament_id` → `tournaments.id` (Many-to-One)
--   Sebuah **Event** tergolong dalam **satu** **Sport**.
-    -   `events.sport_id` → `sports.id` (Many-to-One)
--   Sebuah **Event** mempunyai banyak **EventParticipants** (pendaftaran untuk acara ini).
--   Sebuah **Event** mempunyai banyak **Matches** (perlawanan).
-
-### 6. Participant (Peserta)
-
--   **Participant** boleh mewakili seorang individu atau satu pasukan.
--   Seorang **Participant** tergolong dalam **satu** **Organization** sahaja.
-    -   `participants.organization_id` → `organizations.id` (One-to-Many, Inversed)
--   Seorang **Participant** boleh menyertai banyak **Events**.
-    -   Hubungan ini diuruskan melalui jadual `event_participants`.
-
-### 7. EventParticipant (Pendaftaran)
-
--   Model ini bertindak sebagai penghubung antara **Event** dan **Participant**, mewakili satu pendaftaran.
--   Sebuah **EventParticipant** tergolong dalam **satu** **Event**.
-    -   `event_participants.event_id` → `events.id` (Many-to-One)
--   Sebuah **EventParticipant** tergolong dalam **satu** **Participant**.
-    -   `event_participants.participant_id` → `participants.id` (Many-to-One)
-
-### 8. Match (Perlawanan)
-
--   **Match** (jadual `matches`, model `Fixture`) mewakili satu perlawanan yang dijadualkan.
--   Sebuah **Match** tergolong dalam **satu** **Event**.
-    -   `matches.event_id` → `events.id` (Many-to-One)
--   Sebuah **Match** mempunyai **satu** **Result** (boleh jadi `null` jika belum dimainkan).
-    -   `matches.result_id` → `results.id` (One-to-One, Nullable)
--   Sebuah **Match** melibatkan dua **Participants** (`participant1_id` dan `participant2_id`).
+Jadual `matches` dipetakan kepada model `Fixture`, kerana `match` ialah keyword PHP. Dokumentasi dan API dalaman boleh menggunakan istilah fixture untuk mengelakkan kekeliruan, sambil mengekalkan nama jadual legacy.

@@ -1,67 +1,51 @@
 # ROADMAP
 
-> Status terkini STMS — semua fasa MVP telah selesai.
+> Roadmap semasa STMS/SAF. Status bukti: 17 Ogos 2026.
 
-## ✅ MVP Selesai (Phase 0 – 5)
+## MVP Produk
 
-| Phase | Focus Area                          | Status | Duration |
-|-------|-------------------------------------|--------|----------|
-| 0     | Project Setup & Foundation          | ✅ **Selesai** | 2 weeks  |
-| 1     | Organization + User + RBAC          | ✅ **Selesai** | 3 weeks  |
-| 2     | Session + Sport + Tournament        | ✅ **Selesai** | 4 weeks  |
-| 3     | Participant Registration            | ✅ **Selesai** | 3 weeks  |
-| 4     | Match Scheduling & Result Entry     | ✅ **Selesai** | 4 weeks  |
-| 5     | Basic Ranking Engine                | ✅ **Selesai** | 3 weeks  |
+| Milestone | Skop | Status produk |
+|---|---|---|
+| M0 | Foundation, Laravel/Inertia/TypeScript/shadcn | Selesai |
+| M1 | Organization, User, RBAC | Selesai; read-authorization matrix hijau |
+| M2 | Session, Tournament, Sport, Category, Event | Selesai |
+| M3 | Participant, Registration, Squad, Dean verification | Selesai |
+| M4 | Draw, Match scheduling, Result entry | Selesai; draw regeneration regression tests hijau |
+| M5 | Ranking | Selesai untuk MVP; contract/registry dan data-driven rules tersedia |
+| M6 | Export, Report, Print, Notifications | Selesai untuk MVP |
 
-**Tambahan selepas MVP:**
-| Feature | Status |
-|---------|--------|
-| M6: Export, Reporting & Print | ✅ |
-| Faculty Dashboard + Squad Management | ✅ |
-| Dean Verification Workflow | ✅ |
-| Post-Audit Hardening (Fasa 0-3) | ✅ |
-| Docker + CI/CD | ✅ |
-| Event Registration Cut-off Date | ✅ |
-| Role/Permission Management UI | ✅ |
-| In-App Notifications | ✅ |
-| Bulk Squad Import (Excel/CSV) | ✅ |
-| Participant Dashboard | ✅ |
-| Logo/Crest Upload | ✅ |
-| Draw/Group Allocation + Fixtures | ✅ |
-| SAF 2026 Complete Data Seeding | ✅ |
-| Role-aware Dashboard + Policy-aligned Navigation | ✅ |
-| Participation Confirmation + Team Registration Forms | ✅ |
-| Connected-CI Playwright + axe Evidence | ✅ |
-| Sanitized Production-sized MySQL Restore Drill | ✅ |
+“Selesai” di atas bermaksud capability produk wujud, bukan bermaksud release gate semasa hijau.
 
-## Current Production Data
+## Fokus Semasa — Release Hardening
 
-- **Organization:** Universiti Teknikal Malaysia Melaka (UTeM)
-- **Session:** SAF 2026 (1-30 September 2026)
-- **2 Tournaments:** Fasa 1 (11-13 Sept), Fasa 2 (25-27 Sept)
-- **8 Faculties:** FTKEK, FTKE, FTKM, FTKIP, FTMK, FPTT, FAIX, STEP
-- **19 seeded users:** 8 faculty reps + 8 deans + 1 named super-admin + 2 development/test accounts
-- **Credential warning:** current seeders use the shared development password `password`; do not run them unchanged in production.
+Repository ialah release candidate, tetapi deployment production kekal **NO-GO** sehingga:
 
-## Long-term Vision (Future Phases)
+1. Runtime production menggunakan baseline selamat: enforcement on, Redis cache/queue/session, real mail, verification on, timezone Malaysia dan CSP enforcement.
+2. Data/tarikh/navigation public disahkan oleh product owner.
+3. DB grants, contact details dan release backup disahkan operator.
+4. Clean commit lulus connected CI.
+5. Tag versi pertama dicipta selepas semua bukti tersedia.
 
-| Phase | Focus Area                  | Priority | Status |
-|-------|-----------------------------|----------|--------|
-| 6     | Accreditation System        | Low      | ⏳ Deferred |
-| 7     | Live Scoring & Real-time    | Low      | ⏳ Deferred |
-| 8     | Mobile App (Flutter)        | Low      | ⏳ Deferred |
-| 9     | Analytics & Reporting       | Low      | ⏳ Deferred |
-| 10    | AI Features                 | Low      | ⏳ Deferred |
-| 11    | REST API Layer              | Low      | ⏳ Deferred |
+## Portal Production Semasa
 
-**Fokus semasa:** Release readiness — complete operational evidence (k6 multi-worker, external alerting, actual DR drill) and create first versioned release tag. Recent maintenance work also refreshed registration, draw, results, and public portal UX without changing the deferred roadmap.
+Production <https://saf.utem.edu.my/> memaparkan satu homepage dengan anchor sections untuk Sports, Schedule, Results dan Medal standings, serta halaman `/contact-us`. Route lama `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud; `GET /results` bukan route awam.
 
-**Current public portal:** `/`, `/medal-tally`, `/sports-programme`, `/schedules`, `/results`, and `/contact-us`. The public Sports page is intentionally separate from the authenticated `/sports` administration route.
+Competition awam kini bertarikh **1–31 Oktober 2026**, dengan 23 sukan aktif, 30 event, 8 fakulti dan 12 match belum selesai pada masa audit.
 
-**Bukti operasi 5 Ogos 2026:** connected-CI Playwright/axe dan restore MySQL AES-256 terasing telah lulus. Baki sebelum tuntutan production-ready:
-1. k6 berautentikasi pada staging berbilang worker (p95 < 750ms)
-2. restore sebenar daripada backup produksi/off-site
-3. pengesahan penerimaan amaran oleh operator luar
-4. release tag `v0.1.0`
+## Selepas Release Stabil
 
-Rujuk `docs/testing/2026-08-05-operational-drill.md` dan `docs/deployment/release-runbook.md`.
+| Workstream | Keutamaan | Status |
+|---|---|---|
+| Policy/read-access matrix lengkap | Tinggi | Selesai dalam repository |
+| Ranking rules/tiebreakers configurable | Tinggi | Selesai untuk MVP |
+| External monitoring + operator alert | Tinggi | Belum dibuktikan |
+| Actual off-host backup restore drill | Tinggi | Belum dibuktikan |
+| Multi-worker staging load test | Tinggi | Belum dibuktikan |
+| SEO/sitemap | Sederhana | Selesai dalam repository; contact production belum lengkap |
+| REST API `/api/v1` | Masa depan | Deferred |
+| Accreditation | Masa depan | Deferred |
+| Live scoring/realtime | Masa depan | Deferred |
+| Mobile app | Masa depan | Deferred |
+| Advanced analytics/AI | Masa depan | Deferred |
+
+Rujuk [`TODOS.md`](TODOS.md) untuk checklist aktif dan [laporan audit 17 Ogos](docs/audits/2026-08-17-full-project-and-production-audit.md) untuk bukti.

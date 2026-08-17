@@ -1,70 +1,42 @@
 # Contributing to STMS
 
-Thank you for your interest in contributing to the Sports Tournament Management System (STMS). This document outlines the guidelines for contributing to the project.
+## Sebelum Mengubah Kod
 
-## Code of Conduct
+Baca dalam urutan: `CLAUDE.md`, `AGENTS.md`, `CURRENT_STATE.md`, `ROADMAP.md`, `TODOS.md`, ADR, architecture dan database docs. Ikut Current Focus dalam `TODOS.md`; jangan memulakan fasa masa hadapan tanpa kelulusan.
 
-All contributors are expected to follow the project's code of conduct. Be respectful, professional, and collaborative.
+## Workflow
 
-## Getting Started
+Branch lalai yang diperhatikan ialah `master`. Tiada bukti bahawa `main`/`develop` digunakan, jadi jangan cipta workflow berasaskan kedua-duanya tanpa keputusan maintainer. Gunakan branch fokus seperti `feature/...`, `fix/...` atau `docs/...`, kemudian PR ke branch yang ditetapkan oleh maintainer.
 
-Before contributing, please:
+Commit mesti kecil dan jelas, contohnya:
 
-1. Read `CLAUDE.md` thoroughly.
-2. Read `AGENTS.md`.
-3. Review the current `TODOS.md` to understand the active development focus.
-4. Review relevant Architecture Decision Records (ADRs) in `docs/adr/`.
+```text
+feat: add tenant-scoped event action
+fix: authorize participant index
+docs: reconcile ranking implementation status
+```
 
-## Development Workflow
+## Standard Wajib
 
-### 1. Planning
-- Do not start coding without understanding the requirements.
-- For significant changes, create a discussion or issue first.
-- Follow the current milestone defined in `TODOS.md`.
+- Laravel + Service/Action + Form Request + Policy/Gate.
+- Semua data tenant diskop `organization_id`; uji akses cross-tenant dan read/list.
+- UUID untuk entity domain baharu; soft delete apabila sesuai.
+- React + Inertia + TypeScript + Tailwind + shadcn/ui sahaja.
+- Jangan hardcode nama sukan atau rules/ranking baharu.
+- Kemas kini tests, `TODOS.md`, `CHANGELOG.md` dan dokumen seni bina yang berkaitan.
 
-### 2. Branching Strategy
+## Quality Gate
 
-- `main` — Production-ready code
-- `develop` — Integration branch for ongoing development
-- Feature branches: `feature/xxx` (e.g., `feature/organization-module`)
-- Bug fixes: `fix/xxx`
+```bash
+php vendor/bin/pint --test
+php artisan test
+npm run check:inventory
+npm run check:tenant-bypasses
+npm run typecheck
+npm run build
+npm run build:budget
+composer audit --locked --no-interaction
+npm audit --audit-level=high
+```
 
-### 3. Commit Messages
-
-Use clear and descriptive commit messages:
-
-
-feat: add organization creation endpoint
-fix: resolve multi-tenant scoping issue in Session model
-docs: update ADR-002 with implementation notes
-refactor: extract ranking logic into RankingService
-
-### 4. Pull Request Process
-
-- Ensure all tests pass before submitting a PR.
-- Update documentation (`docs/`) when making architectural or functional changes.
-- Request review from at least one maintainer.
-- Keep PRs focused and reasonably sized.
-
-## Coding Standards
-
-- Follow PSR-12 and Laravel best practices.
-- Use Service Layer + Action Classes pattern.
-- Write tests for every new feature (Feature + Unit tests).
-- Use Form Requests for validation.
-- Use Policies for authorization.
-- Never hardcode sport names, rules, or ranking formulas.
-
-## Documentation
-
-- When architecture changes, update `docs/adr/` and `docs/architecture/`.
-- When functionality changes, update `TODOS.md` and `CHANGELOG.md`.
-- Keep documentation up to date.
-
-## Questions?
-
-If you are unsure about anything, open an issue or discussion first before implementing.
-
----
-
-Thank you for contributing to STMS!
+Semua gate mesti lulus pada commit PR yang sama. Pada 17 Ogos 2026 baseline semasa masih mempunyai satu PHPUnit failure, satu PHPUnit error dan enam fail Pint, jadi jangan menggunakan keputusan lama sebagai bukti hijau.

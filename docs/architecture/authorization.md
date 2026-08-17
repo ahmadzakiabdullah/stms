@@ -1,43 +1,48 @@
 # Authorization Architecture
 
-## Current implementation
+## Model
 
-STMS uses Spatie Laravel Permission, Laravel Policies/Gates, Form Requests, tenant global scopes, and route-model binding. Authorization is deny-by-default at the backend; sidebar visibility is a usability layer and never replaces policy checks.
+STMS uses Spatie Permission, Laravel Policies/Gates, Form Requests, tenant scopes and route-model binding.
 
-## Operational roles
+Active workspace roles:
 
-| Role | Current responsibility |
+| Role | Intended responsibility |
 |---|---|
-| `super-admin` | Cross-organization administration, full setup, competition, reporting, roles and audit access |
-| `org-admin` | Tenant-scoped setup, registration, competition, users, settings, reports and audit access |
-| `admin-sport` | Matches and results for sports assigned through `sport_user` |
-| `staff` | Operational reporting and notifications according to granted permissions |
-| `faculty-representative` | Own-faculty event registration, squad management, printable forms and notifications |
-| `dean` | Own-faculty registration verification, confirmation forms and notifications |
+| `super-admin` | Cross-organization administration |
+| `org-admin` | Tenant administration |
+| `admin-sport` | Assigned-sport matches/results |
+| `staff` | Operational reads/reports according to permissions |
+| `faculty-representative` | Own-faculty registration/squad/forms |
+| `dean` | Own-faculty verification/forms |
 
-Legacy policy references to `sport-coordinator` or `tournament-manager` are compatibility hooks; they are not created by the current production bootstrap.
+42 permissions exist in the audited workspace. Spatie role/permission checks are combined with organization ownership and assigned-sport rules.
 
-## Permissions and policies
+## Intended Request Flow
 
-`database/seeders/DatabaseSeeder.php` creates the production bootstrap roles and granular permissions. `SAF2026DataSeeder.php` adds the dean role/permissions and guarded demo users only when demo seeding is explicitly allowed.
+```text
+auth/verified -> TenantContext/global scope -> Form Request -> Policy/Gate -> Action/Service
+```
 
-Policies are registered in `AppServiceProvider`. Tenant-aware model policies check organization ownership, with the super-admin exception where intended. `admin-sport` mutations additionally call `User::canManageSport()`.
+Tenant scope is not a substitute for authorization. Cross-tenant records should normally resolve to 404; same-tenant records lacking permission should return 403.
 
-## Request flow
+## Current Gap
 
-1. Authentication/verification middleware validates the session.
-2. Tenant global scopes constrain model queries.
-3. Form Requests validate mutation payloads and perform request-level authorization where configured.
-4. Controllers call `Gate::authorize()` or model policies.
-5. Policies enforce role/permission, organization ownership, and assigned-sport restrictions.
-6. Services/Actions execute the authorized mutation.
+Mutation actions usually call `Gate::authorize()`, but read/index coverage is not consistent. At audit time:
 
-Cross-tenant scoped records normally resolve as 404; visible same-tenant records without permission return 403.
+- `OrganizationController@index` does not call `OrganizationPolicy::viewAny` and Organization is a root model without tenant scope.
+- `UserController@index` manually tenant-scopes users but does not call `UserPolicy::viewAny`.
+- `ParticipantController@index` relies on tenant scope but does not call `ParticipantPolicy::viewAny`.
+- several other domain index pages rely on any authenticated same-tenant user being allowed to read them.
 
-## Navigation alignment
+The role-aware sidebar is presentation only and cannot close this gap. Manual-URL allowed/denied tests are a release blocker.
 
-The sidebar reads `auth.user.roles` and uses the explicit matrix in `AuthenticatedLayout.tsx`. The authoritative matrix is documented in `docs/design-system/navigation.md`. Every new menu item must name its allowed roles and link only to a policy-authorized route.
+## New Feature Requirement
 
-## Testing requirements
+Every protected feature must prove:
 
-Every protected feature requires allowed-role, denied-role, cross-tenant, and (where relevant) assigned-sport tests. Authorization regressions must be represented in Feature tests before release.
+- allowed role;
+- denied role through direct URL;
+- cross-tenant read/write denial;
+- assigned-sport restrictions where applicable;
+- guest denial;
+- index payload isolation.

@@ -4,7 +4,7 @@
 
 The authenticated shell uses a fixed desktop sidebar and a mobile sheet. Navigation is defined in `resources/js/Layouts/AuthenticatedLayout.tsx`, rendered with Inertia `Link`, Lucide icons, active-route highlighting, and tenant branding.
 
-Visibility is controlled by an explicit role matrix aligned with Laravel policies. It does not rely on mixed `requireSuper`, `adminOnly`, or faculty flags.
+Visibility is controlled by an explicit role matrix intended to align with Laravel policies. Ia ialah presentation rule sahaja dan audit 17 Ogos menemui beberapa index controller tanpa `viewAny`; matrix ini tidak membuktikan authorization backend.
 
 ## Role menu matrix
 
@@ -19,6 +19,8 @@ Visibility is controlled by an explicit role matrix aligned with Laravel policie
 | Organizations | Yes | No | No | No | No | No |
 | Users / Settings / Activity Logs | Yes | Yes | No | No | No | No |
 | Roles & Permissions | Yes | No | No | No | No | No |
+
+Baris Organizations menggambarkan menu yang dikehendaki. Policy semasa membenarkan beberapa capability organisasi kepada `org-admin`, jadi policy/controller/menu mesti diselaraskan sebelum release.
 
 `Notifications` is a global utility under Overview rather than a report. Role-specific home behavior is:
 

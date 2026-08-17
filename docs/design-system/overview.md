@@ -1,30 +1,9 @@
 # Design System Overview
 
-## Stack
+STMS menggunakan React 18, Inertia React 2, TypeScript, Tailwind CSS 3 serta komponen shadcn/ui berasaskan Radix. Projek tidak menggunakan MUI, Ant Design, Chakra atau Filament.
 
-The STMS frontend is built with **React 18 + Inertia.js + TypeScript** and styled using **Tailwind CSS v3** with the **shadcn/ui** component library. shadcn/ui is not a published package — it provides copy-paste-ready, accessible React components built on Radix UI primitives that are installed directly into the project's `Components/ui/` directory.
+Repositori mempunyai 38 Inertia pages dalam `resources/js/Pages/`, semuanya TSX. Beberapa komponen UI/layout bersama masih `.jsx`; TypeScript ialah standard baharu tetapi migrasi compatibility boundary belum lengkap.
 
-## Dark Mode
+Tema warna menggunakan CSS custom properties dan Tailwind dikonfigurasi dengan class-based dark mode. CSS dark theme wujud, tetapi audit tidak menemui theme-toggle pengguna; jangan dokumentasikan pertukaran tema sebagai feature tersedia sehingga control dan persistence dilaksanakan serta diuji.
 
-Dark mode is class-based (`darkMode: ['class']` in `tailwind.config.js`). A theme toggle switches between `light` and `dark` modes by toggling the `.dark` class on the root `<html>` element. All components use CSS variables defined in `app.css` to adapt to the active theme seamlessly.
-
-## Component Library Approach
-
-Rather than pulling in opinionated UI frameworks (MUI, Ant Design, Chakra), STMS follows the shadcn/ui philosophy: own your components. Each component in `resources/js/components/ui/` is a standalone, customizable, accessible React component. This gives full control over styling, behavior, and theming while avoiding version lock-in and bundle bloat.
-
-## File Structure
-
-```
-resources/js/components/ui/
-├── button.tsx
-├── card.tsx
-├── input.tsx
-├── label.tsx
-├── dialog.tsx
-├── select.tsx
-├── table.tsx
-├── badge.tsx
-└── ...
-```
-
-Pages in `resources/js/Pages/` compose these components into feature-specific views using Inertia's page system.
+`resources/js/Components/ui/` mengandungi komponen milik projek. Gunakan primitive sedia ada, focus state jelas, semantic HTML, minimum touch target 44×44 px dan axe/keyboard testing. Public landing mempunyai gaya visual tersendiri tetapi mesti terus menggunakan token/komponen yang boleh diaudit.

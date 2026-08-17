@@ -1,5 +1,7 @@
 # FINDING
 
+> **Rekod sejarah — digantikan.** Skor dan status Jun/Julai di bawah tidak menggambarkan working tree atau production 17 Ogos 2026. Rujuk [`CURRENT_STATE.md`](../CURRENT_STATE.md) dan [audit semasa](audits/2026-08-17-full-project-and-production-audit.md).
+
 > Laporan penemuan audit menyeluruh STMS.
 > **Tarikh audit asal:** 25 Jun 2026 | **Tarikh kemaskini:** 22 Julai 2026
 > **Baca bersama:** `CLAUDE.md`, `AGENTS.md`, `CURRENT_STATE.md`, `PLAN.md`, `TODOS.md`

@@ -1,55 +1,83 @@
-# STMS - Sports Tournament Management System
+# STMS — Sports Tournament Management System
 
-STMS is a multi-tenant sports tournament platform for organizations ranging from schools and universities to national and international event operators. This repository currently hosts the SAF 2026 / UTeM web implementation.
+STMS ialah platform pengurusan kejohanan sukan multi-tenant. Repository ini mengandungi implementasi web SAF UTeM 2026 menggunakan Laravel + React/Inertia.
 
-## Current status
+## Status Semasa
 
-The web MVP is operational and in production-hardening/maintenance mode. The current working tree includes:
+MVP produk beroperasi dan quality gate repository semasa hijau. Deployment production masih menunggu tindakan operator/owner:
 
-- Organization, users, RBAC, settings, and activity logs
-- Session, tournament, sport, category, and event setup
-- Faculty/event registration, dean verification, squad quotas, bulk import, and printable team forms
-- Draws, pools, fixtures, results, configurable rankings, exports, reports, and notifications
-- Tenant-safe SAF 2026 public portal with schedules, results, progress, medal tally, and a Sports programme page at `/sports-programme`
-- Public medal-tally dashboard with podium, progress summary, searchable standings, and logo fallbacks
-- Administrator registration workspace with multi-event batch registration and active/unregistered faculty filtering
-- Draw pool editing with persisted participant moves and explicit Create Fixtures action
-- Results workspace with pending-match workflow and quick Record Next Result action
-- Role-aware dashboards and sidebar navigation for super-admin, org-admin, admin-sport, staff, faculty representative, and dean
-- CI quality gates, connected-CI Playwright/axe evidence, encrypted backup/restore tooling, and internal health checks
+- 126 routes, 61 migrations, 39 controllers, 38 Inertia pages dan 93 PHP test files.
+- PHPUnit 430/430 (1,860 assertions), Pint, TypeScript, Vite build, bundle budget dan tenant-bypass check lulus.
+- Composer/npm audit bersih selepas Guzzle/PSR-7 security update.
+- Playwright/axe lulus 8/8 pada desktop/mobile menggunakan SQLite terasing.
+- Runtime workspace `production` tidak sepadan dengan baseline Redis/session/verification/CSP yang didokumenkan.
+- Tiada release tag.
 
-A sanitized production-sized MySQL restore has passed. Multi-worker authenticated performance, actual production/off-site recovery, and real external operator alert receipt remain open hardening evidence. REST APIs, accreditation, live scoring, mobile apps, advanced analytics, and AI remain deferred. Files under `docs/api/` describe future contracts and are not available endpoints.
+Rujuk [`CURRENT_STATE.md`](CURRENT_STATE.md) dan [audit penuh 17 Ogos 2026](docs/audits/2026-08-17-full-project-and-production-audit.md).
 
-The latest repository changes are pushed on `master` at commit `912b385`. Frontend changes require `npm run build`; Laravel route/config changes require `php artisan optimize:clear` in deployed environments.
+## Capability MVP
 
-## SAF 2026 data profile
+- Organization, users, RBAC, settings dan activity logs
+- Session, tournament, sports, categories dan events
+- Participant/faculty registration, squad quotas/import dan dean verification
+- Participation confirmation serta printable team-registration forms
+- Draw, pools, fixtures, results, rankings, exports dan reports
+- Queued in-app notifications dan role-aware dashboards
+- Standard/inverse participant logos dengan sanitized upload
+- Public SAF homepage, schedules/results/medal sections dan Contact page
+- Docker, GitHub Actions, health checks dan encrypted backup tooling
 
-The guarded SAF data seeder can provide one UTeM organization, one SAF 2026 session, two tournament phases, 24 sports, 30 category/events, eight faculties, representatives/deans, and event registrations. Demo accounts use a shared development password and must not be seeded unchanged in production.
+REST API, accreditation, live scoring, mobile app, advanced analytics dan AI kekal deferred.
+
+## Portal Production
+
+<https://saf.utem.edu.my/> ialah homepage single-page dengan anchor sections untuk Sports, Schedule, Results dan Medal standings. `/contact-us` ialah satu-satunya halaman maklumat awam berasingan.
+
+Route lama `/sports-programme`, `/medal-tally` dan `/schedules` kini 404; `GET /results` bukan route public. Snapshot production pada 17 Ogos menunjukkan pertandingan 1–31 Oktober 2026, 23 sukan aktif, 30 events, 8 fakulti, 12 matches dan 0 results.
 
 ## Technology
 
-- PHP 8.4 and Laravel 13
-- React 18, TypeScript, Inertia.js, Vite
-- Tailwind CSS and shadcn/ui; Lucide icons
-- React Hook Form and Zod where forms have been migrated
-- MySQL 8 in production; SQLite for isolated tests
-- UUID domain keys, soft deletes, Spatie RBAC
-- Column-based multi-tenancy using `organization_id` and model scopes
-- Database or Redis-backed cache/queues depending on environment
+- PHP `^8.4`, Laravel `13.23.0`
+- React `18.3.1`, Inertia React `2.3.25`, TypeScript `5.9.3`
+- Tailwind CSS `3.4.19`, local shadcn/Radix components, Lucide
+- Vite `8.0.16`
+- MySQL, Spatie Permission dan Spatie Activity Log
+- Column-based multi-tenancy menggunakan `organization_id` + `TenantContext`
 
-## Start here
+## Development
 
-1. [`CLAUDE.md`](./CLAUDE.md) — product and architecture rules
-2. [`AGENTS.md`](./AGENTS.md) — contributor/agent rules
-3. [`CURRENT_STATE.md`](./CURRENT_STATE.md) — honest implementation snapshot
-4. [`TODOS.md`](./TODOS.md) — current operational focus
-5. [`ROADMAP.md`](./ROADMAP.md) — completed and deferred phases
-6. [`docs/design-system/navigation.md`](./docs/design-system/navigation.md) — role menu matrix
+Workspace UNC perlu dijalankan melalui mapped drive atau `pushd`:
 
-## Development principles
+```powershell
+cmd.exe /d /c 'pushd "\\server\share\saf" && composer install'
+cmd.exe /d /c 'pushd "\\server\share\saf" && npm ci'
+```
 
-Keep tenant data isolated, prefer configuration over hardcoding, use policies and service/action patterns, reuse shadcn/ui components, and add proportionate automated tests for every change.
+Quality gates:
+
+```bash
+php artisan test
+vendor/bin/pint --test
+npm run typecheck
+npm run check:tenant-bypasses
+npm run check:inventory
+npm run build
+npm run build:budget
+composer audit --locked --no-interaction --abandoned=fail
+npm audit --audit-level=high
+```
+
+Jangan jalankan `migrate:fresh --seed` pada production. Demo seeding memerlukan opt-in dan menggunakan account data yang tidak sesuai untuk production.
+
+## Start Here
+
+1. [`CLAUDE.md`](CLAUDE.md)
+2. [`AGENTS.md`](AGENTS.md)
+3. [`CURRENT_STATE.md`](CURRENT_STATE.md)
+4. [`TODOS.md`](TODOS.md)
+5. [`ROADMAP.md`](ROADMAP.md)
+6. [Documentation index](docs/README.md)
 
 ## License
 
-MIT License
+MIT.

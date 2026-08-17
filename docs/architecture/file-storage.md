@@ -1,7 +1,14 @@
 # File Storage
 
-File storage in STMS is managed through Laravel's `Storage` facade and the `config/filesystems.php` configuration. The default disk is `local`, which stores files in `storage/app/`. Publicly accessible files (avatars, logos, tournament banners) use the `public` disk with a symbolic link from `public/storage`.
+Laravel filesystem digunakan untuk logo peserta, favicon/branding dan fail aplikasi lain. Pelaksanaan semasa menggunakan disk `public` tempatan dengan symlink/route penyampaian yang sesuai kepada deployment IIS.
 
-Currently, all file operations use the **local disk**. The `php artisan storage:link` command must be run after deployment to create the public symlink. File uploads are validated through Form Requests with size and MIME type constraints.
+## Peraturan
 
-The application is **cloud-ready**. Switching to `s3` (or MinIO for on-premise S3-compatible storage) requires only changing the `FILESYSTEM_DISK` environment variable and updating `config/filesystems.php` with S3 credentials. No application code changes are needed because all file interactions go through the `Storage` facade. File visibility (public vs. private) should be carefully reviewed when migrating to cloud storage to ensure sensitive documents remain access-controlled.
+- Simpan hanya path relatif dalam pangkalan data.
+- Sahkan MIME, extension dan saiz; jangan percaya nama fail pengguna.
+- Gunakan nama rawak/UUID dan semak authorization untuk upload, replace dan delete.
+- Logo peserta menyokong `logo_path` dan pilihan `inverse_logo_path` untuk permukaan gelap.
+- Aset tenant mesti dibaca dan diubah dalam konteks organisasi yang betul.
+- Jangan padam fail lama sehingga update DB berjaya; sediakan cleanup terukur untuk orphan.
+
+Konfigurasi `public` semasa adalah local, jadi “cloud-ready” belum dibuktikan hanya dengan menukar environment variable. Migrasi ke object storage memerlukan konfigurasi disk, URL/signing, CORS, lifecycle, backup dan ujian route penyampaian fail.

@@ -1,9 +1,12 @@
 # Sports Engine
 
-The Sports Engine is the core domain model that defines what sports the system can manage. It is built around two primary models: `Sport` and `SportCategory`.
+“Sports engine” semasa ialah model domain generik, bukannya plugin engine. `Sport` ialah katalog tenant; `SportCategory` menyimpan kategori/quota; `Tournament` memilih sports melalui `tournament_sport`; `Event` mengikat tournament, sport dan category sebelum participant, draw, fixture dan result.
 
-`Sport` represents a distinct athletic discipline (e.g., Soccer, Basketball, Swimming). Each sport can have multiple `SportCategory` records, which represent divisions or variations within that sport (e.g., Under-14 Boys, Women's Doubles). Categories are used for grouping participants and scheduling events within a tournament.
+Sistem tidak hardcode nama sukan tertentu dalam core workflow. Ranking MVP kini data-driven:
 
-The design is **generic by design** — no sport-specific rules, scoring logic, or ranking formulas are hardcoded into the model layer. All sports are defined as data rows seeded into the `sports` table. This ensures the platform can support any sport without code changes. Sport-specific behavior (scoring, rules, field dimensions, uniform requirements) should be implemented as configurable metadata stored in JSON columns or through a plugin system, not through conditional logic in the application code.
+- ranking hanya menyediakan `points`, `win_rate` dan `medal_tally`;
+- strategy menggunakan contract + registry;
+- win/draw/loss points dan ordered tiebreakers boleh disimpan pada session/tournament;
+- format fixture/draw bergantung pada service yang tersedia, bukan ruleset plugin lengkap.
 
-The `Sport` model exposes a `categories()` relationship (hasMany). The Sports Engine service provides methods for querying available sports, filtering by organization, and associating sports with tournaments and events.
+Jangan mendakwa sokongan semua jenis sukan atau ruleset plugin lengkap. Extension baharu mesti menyimpan rule/version secara data-driven, tenant-scoped, diuji dan tidak menambah conditional nama sukan dalam controller.

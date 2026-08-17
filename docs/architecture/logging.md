@@ -1,7 +1,15 @@
 # Logging
 
-STMS uses Laravel's built-in logging system, configured via `config/logging.php`. The default channel is `stack`, which writes to daily log files in `storage/logs/`. The `LOG_LEVEL` environment variable controls verbosity; `debug` is used in local development and `error` in production.
+STMS menggunakan saluran Laravel dalam `config/logging.php`. Saluran sebenar, tahap log dan retention ditentukan oleh environment; jangan menganggap semua deployment menggunakan daily file atau external aggregator.
 
-All CRUD operations in the Service Layer are recorded with `Log::info()` calls. Each log entry includes the authenticated user's ID, the organization context, the affected model type and ID, and a brief description of the action (e.g., `User {id} created tournament {id} in organization {org_id}`). This provides an audit trail for operational troubleshooting without requiring a dedicated audit table.
+Kod merekodkan exception dan beberapa operasi service/action, tetapi bukan setiap CRUD mempunyai struktur atau medan yang seragam. `spatie/laravel-activitylog` melengkapkan application log untuk tindakan terpilih.
 
-Exceptions are logged using `Log::error()` within `try/catch` blocks, capturing the exception message, stack trace, and relevant request context. The log channel is production-ready and can be swapped to external services (Papertrail, Logtail, etc.) by changing the `LOG_CHANNEL` environment variable. Logs are rotated daily to prevent disk exhaustion.
+## Standard Yang Diperlukan
+
+- Sertakan correlation/request ID, actor ID, `organization_id`, action dan subject ID apabila relevan.
+- Jangan log password, token, cookie, nombor pengenalan atau payload penuh.
+- E-mel dan nombor telefon ialah PII; redact/hash atau dokumentasikan tujuan dan retention.
+- Elakkan stack trace/exception mentah dalam respons pengguna.
+- Hadkan akses log, gunakan rotation/retention, dan uji penghantaran ke pemantauan luar sebelum release.
+
+Production audit 17 Ogos tidak menemui bukti Sentry/APM aktif. Integrasi luar kekal cadangan sehingga konfigurasi dan alert delivery dibuktikan.

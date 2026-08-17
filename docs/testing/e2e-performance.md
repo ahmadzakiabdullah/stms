@@ -19,9 +19,11 @@ The CI job uses `database/e2e.sqlite`, enables demo seeding only in the testing 
 - Dean login and verification dashboard.
 - Automated axe checks on login and the authenticated dashboard.
 
-The first connected CI run has confirmed the six current journeys. Mutation-heavy draw, import, result-entry, and export content assertions can now be added with stable accessible selectors and isolated test data.
+Satu connected CI run sejarah mengesahkan enam journey pada commit `ae42a50`. Bukti itu tidak meliputi HEAD/working tree 17 Ogos; draw, import, result-entry, export dan route public semasa masih memerlukan rerun dengan test data terasing.
 
-The six committed desktop/mobile Chromium journeys cover the role-aware dashboard shell, faculty workspace, dean verification and core super-admin pages. Connected CI passed all six journeys on commit `ae42a50` and remains the authoritative repeatable browser/accessibility environment. A 5 August Windows repeat passed 4/6; the faculty/dean journey requested post-login chunks under `/portal/build/...` and received 404 in the temporary root-hosted environment, so that local base-path mismatch does not supersede the connected-CI result.
+Suite kini mempunyai empat scenario merentas desktop/mobile (8 journeys): core super-admin, faculty/dean, login/dashboard axe, dan public Home/Contact keyboard+axe. Run terasing pada working tree 17 Ogos 2026 lulus **8/8** dalam 2.4 minit menggunakan SQLite. Connected CI dan post-deploy run masih diperlukan.
+
+Pada workstation yang `.env` menetapkan production `ASSET_URL`, Playwright memaksa test asset URL mengikuti test `APP_URL`; ini mengelakkan HTML local mengambil JavaScript production.
 
 ## Coverage Policy
 
@@ -40,7 +42,7 @@ PCOV generates a Clover artifact in CI. Record the first successful percentage i
 
 ## Authenticated k6 Scenario
 
-The default scenario checks `/health`. Supplying controlled, non-production load-test credentials also signs in and exercises `/dashboard`:
+Scenario perlu membekalkan token untuk `/health` atau menggunakan endpoint staging yang sesuai; production menyembunyikan `/health` sebagai 404 tanpa token. Dengan credentials bukan production yang terkawal, ia juga boleh sign in dan exercise `/dashboard`:
 
 ```bash
 k6 run -e BASE_URL=https://staging.example.test -e AUTH_LOGINS=loadtest1,loadtest2 -e AUTH_PASSWORDS=secret1,secret2 -e VUS=10 -e DURATION=30s -e K6_SUMMARY_PATH=test-results/k6-summary.json tests/performance/smoke.js

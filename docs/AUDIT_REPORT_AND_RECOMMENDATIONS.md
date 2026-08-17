@@ -1,5 +1,7 @@
 # STMS - Full System Audit Report
 
+> **Historical snapshot — superseded.** This report predates the verified 17 August 2026 audit and its “no critical vulnerabilities”/fully consistent claims are no longer current. Use [`docs/audits/2026-08-17-full-project-and-production-audit.md`](audits/2026-08-17-full-project-and-production-audit.md) for release decisions.
+
 ## 1. Security & Multi-Tenancy
 **Status:** Strong, but with minor areas for refinement.
 - **Tenant Context:** The `BelongsToOrganization` global scope and the `TenantContext` service correctly handle tenant lifecycle isolation across HTTP and Queue requests. The system reliably fails closed if an unbound context attempts a tenant-scoped operation.
