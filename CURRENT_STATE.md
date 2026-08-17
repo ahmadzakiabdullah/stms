@@ -6,7 +6,7 @@
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** semua quality gate tempatan hijau dan connected CI #101 lulus pada commit `35b9dac`. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail, backup dan pengesahan product owner diselesaikan.
+**Repository:** semua quality gate tempatan hijau dan connected CI #101 lulus pada commit `35b9dac`. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail dan backup diselesaikan.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
@@ -90,15 +90,14 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
-Portal production ialah single-page homepage berseksyen plus `/contact-us`. Snapshot asal menunjukkan SAF 2026, 1–31 Oktober 2026, 30 events, 8 faculties dan belum ada result. Nilai ini masih memerlukan pengesahan product owner dan tidak membuktikan deployment working tree semasa.
+Portal production ialah single-page homepage berseksyen plus `/contact-us`. Product owner mengesahkan SAF 2026 berlangsung 1–31 Oktober 2026 dengan satu tournament, 30 acara dan 8 kontinjen. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
 
 ## Baki Sebelum Release Production
 
-1. Product owner mengesahkan tarikh, satu tournament, 30 events dan information architecture single-page.
-2. Operator menyediakan mail transport sebenar, menukar runtime kepada baseline production selamat dan melakukan smoke test selepas deploy.
-3. DBA menghadkan principal kepada schema STMS dan merekod grants.
-4. Contact email/phone/address production dilengkapkan.
-5. Backup release diambil, deployment disahkan dan release tag diwujudkan; connected CI #101 sudah lulus pada `35b9dac`.
-6. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
+1. Operator menyediakan mail transport sebenar, menukar runtime kepada baseline production selamat dan melakukan smoke test selepas deploy.
+2. DBA menghadkan principal kepada schema STMS dan merekod grants.
+3. Contact email/phone/address production dilengkapkan.
+4. Backup release diambil, deployment disahkan dan release tag diwujudkan; connected CI #101 sudah lulus pada `35b9dac`.
+5. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
 
 **Last updated:** 17 Ogos 2026.

@@ -10,6 +10,7 @@
 - Drained 32 queued database notifications to 0 pending/0 failed after confirming their local-only delivery channel.
 - Realigned installed dependencies with the safe lockfile (Guzzle 7.15.2 and PSR-7 2.13.0) to close newly reported security advisories.
 - Confirmed connected CI run #101 on commit `35b9dac`: dependency audit, lint, test, coverage, build and browser E2E all passed.
+- Recorded product-owner confirmation for the 1–31 October 2026 dates, one tournament, 30 events, eight contingents and single-page public information architecture; operational records remain editable for later official changes.
 
 ## Unreleased — Documentation and production audit baseline (17 August 2026)
 

@@ -21,10 +21,10 @@
 Repository ialah release candidate, tetapi deployment production kekal **NO-GO** sehingga:
 
 1. Runtime production menggunakan baseline selamat: enforcement on, Redis cache/queue/session, real mail, verification on, timezone Malaysia dan CSP enforcement.
-2. Data/tarikh/navigation public disahkan oleh product owner.
-3. DB grants, contact details dan release backup disahkan operator.
-4. Clean commit lulus connected CI.
-5. Tag versi pertama dicipta selepas semua bukti tersedia.
+2. DB grants, contact details dan release backup disahkan operator.
+3. Smoke test deployment lulus dan tag versi pertama dicipta selepas semua bukti tersedia.
+
+Product owner telah mengesahkan tarikh 1–31 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan IA single-page. Remediation juga telah dikomit dan connected CI hijau; rekod pertandingan kekal boleh diedit jika maklumat rasmi berubah.
 
 ## Portal Production Semasa
 

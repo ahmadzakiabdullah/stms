@@ -15,10 +15,10 @@
 - [x] PHPUnit 430/430, Pint, TypeScript, build, budget, dependency audits dan Playwright/axe 8/8 hijau.
 - [x] Remediation dipecah kepada commit logik yang boleh disemak.
 - [x] Connected CI #101 lulus pada commit `35b9dac` untuk semua enam job.
+- [x] Product owner mengesahkan tarikh, satu tournament, 30 acara, 8 kontinjen dan single-page IA; data operasi kekal boleh dikemas kini.
 
 ## Baki Release Operations
 
-- [ ] Product owner mengesahkan tarikh, tournament/event count dan single-page IA.
 - [ ] Operator menyediakan real mail transport dan reset-password evidence.
 - [ ] Deploy Redis cache/queue/session, Malaysia timezone, verification dan CSP enforcement melalui release runbook.
 - [ ] DBA mengehadkan principal kepada schema STMS dan merekod grants.
