@@ -198,7 +198,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                         }
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
-                                        <Button variant="ghost" size="sm" onClick={() => setViewParticipant(participant)}>
+                                        <Button variant="ghost" size="sm" onClick={() => setViewParticipant(participant)} aria-label={t('View participant')}>
                                             <Eye className="size-3" />
                                         </Button>
                                         <Button variant="outline" size="sm" onClick={() => { setEditingParticipant(participant); setOpen(true); }}>
