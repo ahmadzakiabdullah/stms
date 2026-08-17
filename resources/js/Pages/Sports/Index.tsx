@@ -405,10 +405,10 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                                                     </div>
                                                                     {isSuperAdmin && (
                                                                     <div className="space-x-1">
-                                                                        <Button variant="ghost" size="sm" onClick={() => openCatEdit(cat)}>
+                                                                        <Button variant="ghost" size="sm" onClick={() => openCatEdit(cat)} aria-label={t('Edit category')}>
                                                                             <Pencil className="size-3" />
                                                                         </Button>
-                                                                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteCat(cat)}>
+                                                                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteCat(cat)} aria-label={t('Delete category')}>
                                                                             <Trash2 className="size-3" />
                                                                         </Button>
                                                                     </div>
