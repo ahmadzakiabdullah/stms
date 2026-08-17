@@ -30,7 +30,6 @@ use App\Http\Controllers\TeamRegistrationFormController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\HealthEndpointToken;
-use App\Services\PublicPortalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -52,7 +51,8 @@ Route::get('/portal/storage/{path}', PublicStorageController::class)
 // controller remains read-only and only renders the public portal.
 Route::any('/', PublicPortalController::class)->name('public.index');
 Route::get('/contact-us', [PublicPortalController::class, 'contact'])->name('public.contact');
-Route::any('/index.php', static fn () => redirect('/portal/', 301));
+Route::get('/sitemap.xml', [PublicPortalController::class, 'sitemap'])->name('public.sitemap');
+Route::any('/index.php', static fn () => redirect('/', 301));
 Route::post('/locale', function (Request $request) {
     $supportedLocales = config('app.supported_locales', []);
     if (! is_array($supportedLocales) || $supportedLocales === []) {
@@ -72,7 +72,6 @@ Route::post('/locale', function (Request $request) {
 // /portal and /portal/ to this route, so redirecting it to APP_URL (/portal)
 // creates a self-redirect in production.
 Route::any('/portal', PublicPortalController::class);
-
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(config('app.email_verification_required') ? ['auth', 'verified'] : ['auth'])

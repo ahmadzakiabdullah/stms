@@ -246,7 +246,7 @@ export default function Dashboard({
                             <div className="grid gap-4 xl:grid-cols-[1.5fr_.75fr]">
                                 <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-sm">
                                     <CardHeader className="border-b border-slate-100"><CardTitle>{t('Competition lifecycle')}</CardTitle><CardDescription>{t('End-to-end progress from platform setup to official results')}</CardDescription></CardHeader>
-                                    <CardContent className="p-0"><div className="grid md:grid-cols-5">{lifecycle.map((step, index) => { const Icon = step.icon; const progress = percentage(step.value, step.total); return <div key={step.label} className="relative border-b border-slate-100 p-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"><div className="mb-5 flex items-center justify-between"><div className={`flex size-10 items-center justify-center rounded-xl ${progress === 100 && step.total > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}><Icon className="size-5"/></div><span className="text-[10px] font-black uppercase tracking-wider text-slate-400">0{index + 1}</span></div><p className="text-sm font-bold text-slate-900">{t(step.label)}</p><p className="mt-1 text-xs tabular-nums text-slate-500">{step.value}/{step.total} · {progress}%</p><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${progress === 100 && step.total > 0 ? 'bg-emerald-500' : 'bg-slate-700'}`} style={{ width: `${progress}%` }}/></div></div>; })}</div></CardContent>
+                                    <CardContent className="p-0"><div className="grid md:grid-cols-5">{lifecycle.map((step, index) => { const Icon = step.icon; const progress = percentage(step.value, step.total); return <div key={step.label} className="relative border-b border-slate-100 p-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"><div className="mb-5 flex items-center justify-between"><div className={`flex size-10 items-center justify-center rounded-xl ${progress === 100 && step.total > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}><Icon className="size-5"/></div><span className="text-[10px] font-black uppercase tracking-wider text-slate-600">0{index + 1}</span></div><p className="text-sm font-bold text-slate-900">{t(step.label)}</p><p className="mt-1 text-xs tabular-nums text-slate-500">{step.value}/{step.total} · {progress}%</p><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${progress === 100 && step.total > 0 ? 'bg-emerald-500' : 'bg-slate-700'}`} style={{ width: `${progress}%` }}/></div></div>; })}</div></CardContent>
                                 </Card>
 
                                 <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm">
@@ -286,7 +286,7 @@ export default function Dashboard({
                         <Card className="rounded-2xl border-slate-200/80 bg-white shadow-sm">
                             <CardHeader><CardTitle>{t('Registration pipeline')}</CardTitle><CardDescription>{t('Current event-registration approval status')}</CardDescription></CardHeader>
                             <CardContent>
-                                <div className="flex h-3 overflow-hidden rounded-full bg-slate-100" aria-label={t('Registration pipeline')}>
+                                <div className="flex h-3 overflow-hidden rounded-full bg-slate-100" role="img" aria-label={t('Registration pipeline')}>
                                     <div className="bg-emerald-500" style={{ width: `${percentage(confirmed, registrationTotal)}%` }} />
                                     <div className="bg-amber-400" style={{ width: `${percentage(pending, registrationTotal)}%` }} />
                                     <div className="bg-rose-500" style={{ width: `${percentage(rejected, registrationTotal)}%` }} />
@@ -343,7 +343,7 @@ function MiniStat({ label, value }: { label: string; value: number }) {
 }
 
 function StatusStat({ label, value, tone }: { label: string; value: number; tone: string }) {
-    return <div className={`rounded-xl border p-3 ${tone}`}><p className="text-xs font-medium opacity-80">{label}</p><p className="mt-1 text-2xl font-bold tabular-nums">{value}</p></div>;
+    return <div className={`rounded-xl border p-3 ${tone}`}><p className="text-xs font-medium">{label}</p><p className="mt-1 text-2xl font-bold tabular-nums">{value}</p></div>;
 }
 
 function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: string }) {

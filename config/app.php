@@ -15,6 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'description' => env('APP_DESCRIPTION', 'Sports Tournament Management System for Sukan Antara Fakulti UTeM.'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -113,7 +115,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'UTC'),
 
     /*
     |--------------------------------------------------------------------------

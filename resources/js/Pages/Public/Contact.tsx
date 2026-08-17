@@ -32,10 +32,10 @@ export default function PublicContact({ app_name, contact }: Props) {
                     <div className="rounded-[2rem] border border-[#10251f]/10 bg-white p-7 shadow-[0_24px_70px_-48px_rgba(16,37,31,.9)] sm:p-10">
                         <div className="flex size-14 items-center justify-center rounded-2xl bg-[#edf5d5] text-[#23745f]"><MessageCircle aria-hidden="true" className="size-7" /></div>
                         <h2 className="mt-7 text-3xl font-black text-[#10251f]">{t('SAF UTeM Secretariat')}</h2>
-                        <p className="mt-4 max-w-xl leading-7 text-[#687b74]">{t('Official channels for competition, schedule and contingent management enquiries.')}</p>
+                        <p className="mt-4 max-w-xl leading-7 text-[#52655e]">{t('Official channels for competition, schedule and contingent management enquiries.')}</p>
                         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                            <div className="rounded-2xl border border-[#10251f]/5 bg-[#f6f8f2] p-5"><Mail aria-hidden="true" className="size-5 text-[#23745f]" /><p className="mt-3 text-xs font-black uppercase tracking-wider text-[#687b74]">{t('Email')}</p><p className="mt-1 break-all font-bold text-[#10251f]">{t('Contact the secretariat')}</p></div>
-                            <div className="rounded-2xl border border-[#10251f]/5 bg-[#f6f8f2] p-5"><MapPin aria-hidden="true" className="size-5 text-[#23745f]" /><p className="mt-3 text-xs font-black uppercase tracking-wider text-[#687b74]">{t('Correspondence address')}</p><p className="mt-1 leading-6 font-bold text-[#10251f]">{contact.address || t('The secretariat address will be updated.')}</p></div>
+                            <div className="rounded-2xl border border-[#10251f]/5 bg-[#f6f8f2] p-5"><Mail aria-hidden="true" className="size-5 text-[#23745f]" /><p className="mt-3 text-xs font-black uppercase tracking-wider text-[#52655e]">{t('Email')}</p><p className="mt-1 break-all font-bold text-[#10251f]">{t('Contact the secretariat')}</p></div>
+                            <div className="rounded-2xl border border-[#10251f]/5 bg-[#f6f8f2] p-5"><MapPin aria-hidden="true" className="size-5 text-[#23745f]" /><p className="mt-3 text-xs font-black uppercase tracking-wider text-[#52655e]">{t('Correspondence address')}</p><p className="mt-1 leading-6 font-bold text-[#10251f]">{contact.address || t('The secretariat address will be updated.')}</p></div>
                         </div>
                     </div>
                     <aside className="relative overflow-hidden rounded-[2rem] bg-[#10251f] p-7 text-white shadow-xl sm:p-10">

@@ -35,7 +35,7 @@ class PublicPortalTest extends TestCase
         config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
         $tournament = Tournament::factory()->forSession($session)->create();
         $event = Event::factory()->forTournament($tournament)->create();
-        $home = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Teknologi Maklumat', 'email' => 'rahsia@example.test', 'is_active' => true]);
+        $home = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Teknologi Maklumat', 'email' => 'rahsia@example.test', 'inverse_logo_path' => 'logos/ftmk-inverse.svg', 'is_active' => true]);
         $away = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Kejuruteraan', 'is_active' => true]);
         Fixture::factory()->scheduled()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id, 'scheduled_at' => now()->addDay()]);
 
@@ -43,13 +43,14 @@ class PublicPortalTest extends TestCase
             ->component('Public/Index')->where('competition.name', 'Sukan Antara Fakulti 2026')
             ->where('stats.faculties', 2)->has('upcoming', 1)
             ->where('upcoming.0.home.name', 'Fakulti Teknologi Maklumat')
+            ->where('upcoming.0.home.inverse_logo_url', $home->inverse_logo_url)
             ->where('weather.location', 'Durian Tunggal')
             ->where('weather.temperature', 30));
     }
 
     public function test_index_php_redirects_to_the_canonical_public_url(): void
     {
-        $this->get('/index.php')->assertRedirect('/portal/')->assertStatus(301);
+        $this->get('/index.php')->assertRedirect('/')->assertStatus(301);
     }
 
     public function test_iis_portal_mount_path_renders_without_a_self_redirect(): void
@@ -140,15 +141,15 @@ class PublicPortalTest extends TestCase
         $sessionA = Session::factory()->create(['organization_id' => $orgA->id, 'slug' => 'cache-session-a']);
         $sessionB = Session::factory()->create(['organization_id' => $orgB->id, 'slug' => 'cache-session-b']);
 
-        Cache::put('public-portal:v3:'.$sessionA->id.':12', ['stale' => true], 60);
-        Cache::put('public-portal:v3:'.$sessionA->id.':all', ['stale' => true], 60);
-        Cache::put('public-portal:v3:'.$sessionB->id.':12', ['keep' => true], 60);
+        Cache::put('public-portal:v4:'.$sessionA->id.':12', ['stale' => true], 60);
+        Cache::put('public-portal:v4:'.$sessionA->id.':all', ['stale' => true], 60);
+        Cache::put('public-portal:v4:'.$sessionB->id.':12', ['keep' => true], 60);
 
         config(['app.public_org_slug' => $orgA->slug, 'app.public_session_slug' => $sessionA->slug]);
         app(PublicPortalService::class)->forgetForOrganization($orgA->id);
 
-        $this->assertNull(Cache::get('public-portal:v3:'.$sessionA->id.':12'));
-        $this->assertNull(Cache::get('public-portal:v3:'.$sessionA->id.':all'));
-        $this->assertSame(['keep' => true], Cache::get('public-portal:v3:'.$sessionB->id.':12'));
+        $this->assertNull(Cache::get('public-portal:v4:'.$sessionA->id.':12'));
+        $this->assertNull(Cache::get('public-portal:v4:'.$sessionA->id.':all'));
+        $this->assertSame(['keep' => true], Cache::get('public-portal:v4:'.$sessionB->id.':12'));
     }
 }

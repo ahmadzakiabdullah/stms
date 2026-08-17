@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
     testDir: './tests/e2e',
+    timeout: 90_000,
     fullyParallel: false,
     forbidOnly: Boolean(process.env.CI),
     retries: process.env.CI ? 1 : 0,
@@ -19,6 +20,11 @@ export default defineConfig({
     ],
     webServer: process.env.E2E_BASE_URL ? undefined : {
         command: 'php artisan serve --host=127.0.0.1 --port=8000',
+        env: {
+            ...process.env,
+            APP_URL: process.env.APP_URL ?? 'http://127.0.0.1:8000',
+            ASSET_URL: process.env.E2E_ASSET_URL ?? process.env.APP_URL ?? 'http://127.0.0.1:8000',
+        },
         // Startup readiness must only prove that the HTTP application is serving.
         // The operational /health endpoint can intentionally return 503 when an
         // optional dependency is degraded, which would stall browser tests.

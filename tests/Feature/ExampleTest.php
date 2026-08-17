@@ -25,6 +25,7 @@ class ExampleTest extends TestCase
     public function test_the_public_page_receives_uploaded_branding(): void
     {
         $organization = Organization::factory()->create(['is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug]);
         Setting::create([
             'organization_id' => $organization->id,
             'key' => 'logo_url',
@@ -42,5 +43,36 @@ class ExampleTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Public/Index')
                 ->where('settings.logo_url', '/storage/settings/logo.svg'));
+    }
+
+    public function test_guest_favicon_is_selected_from_the_configured_public_organization_only(): void
+    {
+        $publicOrganization = Organization::factory()->create(['slug' => 'public-org', 'is_active' => true]);
+        $otherOrganization = Organization::factory()->create(['slug' => 'other-org', 'is_active' => true]);
+        Setting::create(['organization_id' => $publicOrganization->id, 'key' => 'favicon_url', 'value' => '/public-favicon.png']);
+        Setting::create(['organization_id' => $otherOrganization->id, 'key' => 'favicon_url', 'value' => '/other-favicon.png']);
+        config(['app.public_org_slug' => $publicOrganization->slug]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<link rel="icon" href="/public-favicon.png">', false)
+            ->assertDontSee('/other-favicon.png');
+    }
+
+    public function test_public_shell_is_self_hosted_and_has_basic_search_metadata(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<meta name="description"', false)
+            ->assertSee('<link rel="canonical"', false)
+            ->assertSee('public.contact')
+            ->assertDontSee('activity-logs.index')
+            ->assertDontSee('fonts.bunny.net');
+
+        $this->get('/sitemap.xml')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
+            ->assertSee(route('public.index'), false)
+            ->assertSee(route('public.contact'), false);
     }
 }

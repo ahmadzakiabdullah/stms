@@ -604,6 +604,14 @@ const en: Translations = {
     'e.g. UFTE Team': 'e.g. UFTE Team',
     'Logo / Crest': 'Logo / Crest',
     'No logo': 'No logo',
+    'Brand assets': 'Brand assets',
+    'Standard logo': 'Standard logo',
+    'Inverse logo': 'Inverse logo',
+    'For light backgrounds': 'For light backgrounds',
+    'For dark backgrounds': 'For dark backgrounds',
+    'Upload separate official variants for light and dark backgrounds.': 'Upload separate official variants for light and dark backgrounds.',
+    'Standard logo preview': 'Standard logo preview',
+    'Inverse logo preview': 'Inverse logo preview',
     'Change': 'Change',
     'Upload': 'Upload',
     'JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.': 'JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.',
@@ -1411,6 +1419,14 @@ const ms: Translations = {
     'e.g. UFTE Team': 'cth. Pasukan UFTE',
     'Logo / Crest': 'Logo / Lencana',
     'No logo': 'Tiada logo',
+    'Brand assets': 'Aset jenama',
+    'Standard logo': 'Logo standard',
+    'Inverse logo': 'Logo inverse',
+    'For light backgrounds': 'Untuk latar cerah',
+    'For dark backgrounds': 'Untuk latar gelap',
+    'Upload separate official variants for light and dark backgrounds.': 'Muat naik varian rasmi berasingan untuk latar cerah dan gelap.',
+    'Standard logo preview': 'Pratonton logo standard',
+    'Inverse logo preview': 'Pratonton logo inverse',
     'Change': 'Tukar',
     'Upload': 'Muat Naik',
     'JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.': 'JPEG, PNG, GIF, WebP atau SVG. Maksimum 2 MB.',
@@ -1635,7 +1651,7 @@ Object.assign(en, {
     Result: 'Result', Draw: 'Draw', Winner: 'Winner',
     'Official information hub': 'Official information hub', 'Updated': 'Updated', 'Competition progress': 'Competition progress', 'completed matches': 'completed matches',
     'Gold': 'Gold', 'Silver': 'Silver', 'Bronze': 'Bronze', Total: 'Total', Contingent: 'Contingent', 'Medals are calculated from completed finals and third-place matches.': 'Medals are calculated from completed finals and third-place matches.',
-    'Medal standings will be updated after the final events are completed.': 'Medal standings will be updated after the final events are completed.', Next: 'Next', 'Match schedule': 'Match schedule', Latest: 'Latest', 'Match results': 'Match results', 'Auto-refreshes every 30 seconds': 'Auto-refreshes every 30 seconds', Refresh: 'Refresh', Refreshing: 'Refreshing…', 'No official results recorded yet.': 'No official results recorded yet.', 'Location to be announced': 'Location to be announced', 'To be determined': 'To be determined',
+    'Medal standings will be updated after the final events are completed.': 'Medal standings will be updated after the final events are completed.', Next: 'Next', 'Match schedule': 'Match schedule', Latest: 'Latest', 'Match results': 'Match results', 'Auto-refreshes every 30 seconds': 'Auto-refreshes every 30 seconds', Refresh: 'Refresh', Refreshing: 'Refreshing…', 'Refresh complete': 'Refresh complete', 'Unable to refresh. Please try again.': 'Unable to refresh. Please try again.', 'No official results recorded yet.': 'No official results recorded yet.', 'Location to be announced': 'Location to be announced', 'To be determined': 'To be determined',
 });
 Object.assign(ms, {
     'Back to home': 'Kembali ke laman utama', 'Visit the official UTeM website for institutional information and contact channels.': 'Layari laman rasmi UTeM untuk maklumat institusi dan saluran hubungan.', 'Visit UTeM website': 'Layari laman UTeM',
@@ -1652,7 +1668,7 @@ Object.assign(ms, {
     Result: 'Keputusan', Draw: 'Seri', Winner: 'Pemenang',
     'Official information hub': 'Hab informasi rasmi', Updated: 'Dikemas kini', 'Competition progress': 'Kemajuan pertandingan', 'completed matches': 'perlawanan selesai',
     Gold: 'Emas', Silver: 'Perak', Bronze: 'Gangsa', Total: 'Jumlah', Contingent: 'Kontinjen', 'Medals are calculated from completed finals and third-place matches.': 'Pingat dikira daripada perlawanan akhir dan penentuan tempat ketiga.',
-    'Medal standings will be updated after the final events are completed.': 'Kedudukan pingat akan dikemas kini selepas acara akhir selesai.', Next: 'Seterusnya', 'Match schedule': 'Jadual perlawanan', Latest: 'Terkini', 'Match results': 'Keputusan perlawanan', 'Auto-refreshes every 30 seconds': 'Auto-segar setiap 30 saat', Refresh: 'Muat semula', Refreshing: 'Menyegarkan…', 'No official results recorded yet.': 'Belum ada keputusan rasmi direkodkan.', 'Location to be announced': 'Lokasi akan diumumkan', 'To be determined': 'Akan ditentukan',
+    'Medal standings will be updated after the final events are completed.': 'Kedudukan pingat akan dikemas kini selepas acara akhir selesai.', Next: 'Seterusnya', 'Match schedule': 'Jadual perlawanan', Latest: 'Terkini', 'Match results': 'Keputusan perlawanan', 'Auto-refreshes every 30 seconds': 'Auto-segar setiap 30 saat', Refresh: 'Muat semula', Refreshing: 'Menyegarkan…', 'Refresh complete': 'Muat semula selesai', 'Unable to refresh. Please try again.': 'Tidak dapat memuat semula. Sila cuba lagi.', 'No official results recorded yet.': 'Belum ada keputusan rasmi direkodkan.', 'Location to be announced': 'Lokasi akan diumumkan', 'To be determined': 'Akan ditentukan',
 });
 
 Object.assign(en, {

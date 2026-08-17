@@ -23,7 +23,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v3:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v4:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::remember($cacheKey, now()->addMinutes(2), function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -36,6 +36,7 @@ class PublicPortalService
             foreach ([12, 'all'] as $limit) {
                 Cache::forget('public-portal:v2:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v3:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v4:'.$sessionId.':'.$limit);
             }
 
             return;
@@ -64,7 +65,7 @@ class PublicPortalService
 
         $fixtureQuery = fn () => Fixture::query()->where('organization_id', $organizationId)
             ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds))
-            ->with(['event.sport', 'pool:id,name', 'homeParticipant:id,name,team_name,logo_path', 'awayParticipant:id,name,team_name,logo_path', 'result']);
+            ->with(['event.sport', 'pool:id,name', 'homeParticipant:id,name,team_name,logo_path,inverse_logo_path', 'awayParticipant:id,name,team_name,logo_path,inverse_logo_path', 'result']);
 
         $upcomingFixtures = $fixtureQuery()->whereIn('status', ['scheduled', 'in_progress'])
             ->orderByRaw('scheduled_at IS NULL, scheduled_at')
@@ -134,7 +135,11 @@ class PublicPortalService
 
     private function matchData(Fixture $fixture): array
     {
-        $participant = fn ($value) => $value ? ['name' => $value->name, 'logo_url' => $value->logo_url] : null;
+        $participant = fn ($value) => $value ? [
+            'name' => $value->name,
+            'logo_url' => $value->logo_url,
+            'inverse_logo_url' => $value->inverse_logo_url,
+        ] : null;
 
         return ['id' => $fixture->id, 'sport' => $fixture->event?->sport?->name, 'event' => $fixture->event?->name,
             'stage' => $fixture->stage, 'round' => $fixture->round, 'group' => $fixture->pool?->name,

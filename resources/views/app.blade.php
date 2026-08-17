@@ -3,20 +3,36 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="{{ config('app.description') }}">
+        <link rel="canonical" href="{{ url()->current() }}">
 
         @php
-            $favicon = \App\Models\Setting::where('key', 'favicon_url')->value('value');
+            $brandingOrganizationId = auth()->user()?->organization_id;
+
+            if (! $brandingOrganizationId && config('app.public_org_slug')) {
+                $brandingOrganizationId = \App\Models\Organization::query()
+                    ->where('slug', config('app.public_org_slug'))
+                    ->where('is_active', true)
+                    ->value('id');
+            }
+
+            $favicon = $brandingOrganizationId
+                ? \App\Models\Setting::query()
+                    ->where('organization_id', $brandingOrganizationId)
+                    ->where('key', 'favicon_url')
+                    ->value('value')
+                : null;
         @endphp
         <link rel="icon" href="{{ $favicon ?: asset('favicon.ico') }}">
 
         <title inertia>{{ config('app.name', 'STMS Portal') }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
         <!-- Scripts -->
-        @routes
+        @auth
+            @routes
+        @else
+            @routes('guest')
+        @endauth
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
         @inertiaHead
