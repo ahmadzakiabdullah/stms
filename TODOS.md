@@ -18,6 +18,7 @@
 - [x] Naik taraf Guzzle/PSR-7 dan sahkan Composer/npm audit bersih.
 - [x] Jalankan quality gate tempatan semasa: PHPUnit 430/430, Pint, TypeScript, build, budget, tenant guard dan Playwright/axe 8/8.
 - [x] Pecahkan remediation kepada empat commit logik bagi logo peserta, authorization/draw/ranking, portal/production hardening dan dokumentasi audit.
+- [x] Connected CI #101 lulus pada commit `35b9dac`: dependency audit, lint, test, coverage, build dan browser E2E.
 
 ### Memerlukan owner/production operator
 
@@ -25,7 +26,7 @@
 - [ ] Konfigurasi mail transport sebenar dan uji reset-password sebelum `EMAIL_VERIFICATION_REQUIRED=true` dihidupkan.
 - [ ] Deploy dengan `PRODUCTION_CONFIG_ENFORCE=true`, Redis cache/queue/session, `APP_TIMEZONE=Asia/Kuala_Lumpur`, secure cookie dan CSP enforcing; lakukan smoke test serta pelan session cutover.
 - [ ] Lengkapkan contact email, phone dan address production.
-- [ ] Jalankan connected CI pada HEAD yang bersih, backup, deploy dan cipta release tag.
+- [ ] Ambil backup off-host, deploy release candidate, sahkan smoke test dan cipta release tag.
 
 ## Hardening Seterusnya
 

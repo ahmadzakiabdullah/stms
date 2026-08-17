@@ -6,7 +6,7 @@
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** semua quality gate tempatan hijau. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail, pengesahan product owner dan connected CI pada commit bersih diselesaikan.
+**Repository:** semua quality gate tempatan hijau dan connected CI #101 lulus pada commit `35b9dac`. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail, backup dan pengesahan product owner diselesaikan.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
@@ -86,6 +86,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | npm audit | Lulus — 0 vulnerability |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
 | Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 93` |
+| Connected CI | **Lulus — [run #101](https://github.com/ahmadzakiabdullah/stms/actions/runs/31992389901)** pada `35b9dac`; enam job berjaya |
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
@@ -97,7 +98,7 @@ Portal production ialah single-page homepage berseksyen plus `/contact-us`. Snap
 2. Operator menyediakan mail transport sebenar, menukar runtime kepada baseline production selamat dan melakukan smoke test selepas deploy.
 3. DBA menghadkan principal kepada schema STMS dan merekod grants.
 4. Contact email/phone/address production dilengkapkan.
-5. Connected CI lulus pada HEAD yang bersih dan release tag diwujudkan; remediation telah dipecah kepada commit logik.
+5. Backup release diambil, deployment disahkan dan release tag diwujudkan; connected CI #101 sudah lulus pada `35b9dac`.
 6. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
 
 **Last updated:** 17 Ogos 2026.

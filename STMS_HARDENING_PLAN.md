@@ -14,6 +14,7 @@
 - [x] Guzzle/PSR-7 advisory ditutup.
 - [x] PHPUnit 430/430, Pint, TypeScript, build, budget, dependency audits dan Playwright/axe 8/8 hijau.
 - [x] Remediation dipecah kepada commit logik yang boleh disemak.
+- [x] Connected CI #101 lulus pada commit `35b9dac` untuk semua enam job.
 
 ## Baki Release Operations
 
@@ -22,7 +23,7 @@
 - [ ] Deploy Redis cache/queue/session, Malaysia timezone, verification dan CSP enforcement melalui release runbook.
 - [ ] DBA mengehadkan principal kepada schema STMS dan merekod grants.
 - [ ] Lengkapkan production contact details.
-- [ ] Connected CI pada HEAD yang bersih, off-host backup, deploy smoke dan release tag.
+- [ ] Off-host backup, deploy smoke dan release tag.
 
 ## Reliability Selepas Release
 
