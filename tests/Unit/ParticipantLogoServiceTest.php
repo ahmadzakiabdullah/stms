@@ -66,6 +66,21 @@ class ParticipantLogoServiceTest extends TestCase
         app(ParticipantLogoService::class)->store($logo);
     }
 
+    public function test_it_reports_an_invalid_inverse_logo_against_the_inverse_field(): void
+    {
+        Storage::fake('public');
+
+        $logo = UploadedFile::fake()->createWithContent('invalid.svg', '<script>alert(1)</script>');
+
+        try {
+            app(ParticipantLogoService::class)->store($logo, 'inverse_logo');
+            $this->fail('Expected inverse SVG validation to fail.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('inverse_logo', $exception->errors());
+            $this->assertArrayNotHasKey('logo', $exception->errors());
+        }
+    }
+
     public function test_laravel_validation_accepts_an_svg_logo(): void
     {
         $logo = UploadedFile::fake()->createWithContent(

@@ -21,6 +21,8 @@ class ParticipantController extends Controller
 {
     public function index(): Response
     {
+        Gate::authorize('viewAny', Participant::class);
+
         $dataLoadFailed = false;
 
         $participants = $this->safePaginatedQuery(function () {
@@ -53,12 +55,26 @@ class ParticipantController extends Controller
         Gate::authorize('create', Participant::class);
 
         $data = $request->validated();
+        $storedPaths = [];
 
-        if ($request->hasFile('logo')) {
-            $data['logo_path'] = $logoService->store($request->file('logo'));
+        try {
+            if ($request->hasFile('logo')) {
+                $data['logo_path'] = $logoService->store($request->file('logo'));
+                $storedPaths[] = $data['logo_path'];
+            }
+
+            if ($request->hasFile('inverse_logo')) {
+                $data['inverse_logo_path'] = $logoService->store($request->file('inverse_logo'), 'inverse_logo');
+                $storedPaths[] = $data['inverse_logo_path'];
+            }
+
+            unset($data['logo'], $data['inverse_logo']);
+            $action->handle($data);
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($storedPaths);
+
+            throw $exception;
         }
-
-        $action->handle($data);
 
         return redirect()->route('participants.index')
             ->with('success', 'Participant created successfully.');
@@ -69,19 +85,38 @@ class ParticipantController extends Controller
         Gate::authorize('update', $participant);
 
         $data = $request->validated();
+        $storedPaths = [];
+        $pathsToDelete = [];
 
-        $previousLogoPath = null;
+        try {
+            foreach ([
+                'logo' => ['path' => 'logo_path', 'remove' => 'remove_logo'],
+                'inverse_logo' => ['path' => 'inverse_logo_path', 'remove' => 'remove_inverse_logo'],
+            ] as $uploadField => $fields) {
+                $currentPath = $participant->getAttribute($fields['path']);
 
-        if ($request->hasFile('logo')) {
-            $previousLogoPath = $participant->logo_path;
-            $data['logo_path'] = $logoService->store($request->file('logo'));
+                if ($request->hasFile($uploadField)) {
+                    $data[$fields['path']] = $logoService->store($request->file($uploadField), $uploadField);
+                    $storedPaths[] = $data[$fields['path']];
+
+                    if ($currentPath) {
+                        $pathsToDelete[] = $currentPath;
+                    }
+                } elseif ($request->boolean($fields['remove']) && $currentPath) {
+                    $data[$fields['path']] = null;
+                    $pathsToDelete[] = $currentPath;
+                }
+            }
+
+            unset($data['logo'], $data['inverse_logo'], $data['remove_logo'], $data['remove_inverse_logo']);
+            $action->handle($participant, $data);
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($storedPaths);
+
+            throw $exception;
         }
 
-        $action->handle($participant, $data);
-
-        if ($previousLogoPath) {
-            Storage::disk('public')->delete($previousLogoPath);
-        }
+        Storage::disk('public')->delete(array_values(array_unique($pathsToDelete)));
 
         return redirect()->route('participants.index')
             ->with('success', 'Participant updated successfully.');

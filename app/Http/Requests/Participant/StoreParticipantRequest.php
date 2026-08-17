@@ -55,6 +55,7 @@ class StoreParticipantRequest extends FormRequest
             'status' => ['nullable', 'in:registered,confirmed,withdrawn,disqualified'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
+            'inverse_logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
             'is_active' => ['boolean'],
         ];
     }

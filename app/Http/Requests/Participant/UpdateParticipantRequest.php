@@ -15,10 +15,12 @@ class UpdateParticipantRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if (in_array($this->input('is_active'), ['true', 'false'], true)) {
-            $this->merge([
-                'is_active' => $this->input('is_active') === 'true',
-            ]);
+        foreach (['is_active', 'remove_logo', 'remove_inverse_logo'] as $field) {
+            if (in_array($this->input($field), ['true', 'false'], true)) {
+                $this->merge([
+                    $field => $this->input($field) === 'true',
+                ]);
+            }
         }
 
         if (empty($this->organization_id)) {
@@ -53,6 +55,9 @@ class UpdateParticipantRequest extends FormRequest
             'status' => ['nullable', 'in:registered,confirmed,withdrawn,disqualified'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
+            'inverse_logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
+            'remove_logo' => ['boolean'],
+            'remove_inverse_logo' => ['boolean'],
             'is_active' => ['boolean'],
         ];
     }

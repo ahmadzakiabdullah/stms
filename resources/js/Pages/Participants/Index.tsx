@@ -27,11 +27,12 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import Pagination from '@/components/Pagination';
+import ParticipantLogo from '@/components/ParticipantLogo';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Upload } from 'lucide-react';
 import { z } from 'zod';
 import { Eye, Pencil, Plus, Save, Trash2 } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import type { Participant, Session, Paginated, Flash } from '@/types';
 
@@ -57,31 +58,6 @@ interface ParticipantRow extends Participant {
 interface ParticipantsIndexProps {
     participants: Paginated<ParticipantRow> | ParticipantRow[];
     sessions?: Session[];
-}
-
-const avatarColors = [
-    'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500',
-    'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500',
-    'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500',
-    'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500',
-    'bg-rose-500',
-];
-
-function getInitials(name: string): string {
-    return name
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(p => p[0]?.toUpperCase() || '')
-        .join('');
-}
-
-function getAvatarColor(name: string): string {
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return avatarColors[Math.abs(hash) % avatarColors.length];
 }
 
 const statusColors: Record<string, string> = {
@@ -136,7 +112,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                 {t('Add Participant')}
                             </Button>
                         </DialogTrigger>
-                            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                            <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
                                 <ParticipantFormDialog
                                     key={editingParticipant?.id ?? 'create'}
                                     participant={editingParticipant}
@@ -192,14 +168,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                 <TableRow key={participant.id}>
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-3">
-                                            {(participant as any).logo_url ? (
-                                                <img src={(participant as any).logo_url} alt={participant.name}
-                                                    className="size-9 shrink-0 rounded-full object-cover border" />
-                                            ) : (
-                                                <div className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${getAvatarColor(participant.name)}`}>
-                                                    {getInitials(participant.name)}
-                                                </div>
-                                            )}
+                                            <ParticipantLogo participant={participant} size="sm" alt="" />
                                             <span className="truncate">{participant.name}</span>
                                         </div>
                                     </TableCell>
@@ -275,16 +244,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                 <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <div className="flex items-center gap-3">
-                            {viewParticipant && (
-                                (viewParticipant as any).logo_url ? (
-                                    <img src={(viewParticipant as any).logo_url} alt={viewParticipant.name}
-                                        className="size-12 shrink-0 rounded-full object-cover border" />
-                                ) : (
-                                    <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${getAvatarColor(viewParticipant.name)}`}>
-                                        {getInitials(viewParticipant.name)}
-                                    </div>
-                                )
-                            )}
+                            {viewParticipant && <ParticipantLogo participant={viewParticipant} size="lg" alt="" />}
                             <div>
                                 <DialogTitle>{viewParticipant?.name}</DialogTitle>
                                 <DialogDescription>{t('Full participant details')}</DialogDescription>
@@ -294,6 +254,20 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
 
                     {viewParticipant && (
                         <div className="grid gap-6 py-4 text-sm">
+                            <div>
+                                <h4 className="mb-2 font-semibold text-foreground">{t('Brand assets')}</h4>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="flex items-center gap-3 rounded-lg border bg-white p-3">
+                                        <ParticipantLogo participant={viewParticipant} size="xl" alt="" />
+                                        <div><p className="font-medium">{t('Standard logo')}</p><p className="text-xs text-muted-foreground">{t('For light backgrounds')}</p></div>
+                                    </div>
+                                    <div className="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
+                                        <ParticipantLogo participant={viewParticipant} surface="dark" size="xl" alt="" />
+                                        <div><p className="font-medium">{t('Inverse logo')}</p><p className="text-xs text-white/60">{t('For dark backgrounds')}</p></div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div>
                                 <h4 className="mb-2 font-semibold text-foreground">{t('Participant Information')}</h4>
                                 <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/30 p-3">
@@ -393,11 +367,21 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
         is_active: true,
     });
 
-    const [errors, setErrors] = useState<Partial<Record<keyof FormData | 'logo', string>>>({});
+    const [errors, setErrors] = useState<Partial<Record<keyof FormData | 'logo' | 'inverse_logo', string>>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [logoFile, setLogoFile] = useState<File | null>(null);
-    const [logoPreview, setLogoPreview] = useState<string | null>((participant as any)?.logo_url ?? null);
+    const [inverseLogoFile, setInverseLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(participant?.logo_url ?? null);
+    const [inverseLogoPreview, setInverseLogoPreview] = useState<string | null>(participant?.inverse_logo_url ?? null);
+    const [removeLogo, setRemoveLogo] = useState(false);
+    const [removeInverseLogo, setRemoveInverseLogo] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const inverseFileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => () => {
+        if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
+        if (inverseLogoPreview?.startsWith('blob:')) URL.revokeObjectURL(inverseLogoPreview);
+    }, [logoPreview, inverseLogoPreview]);
 
     const set = (field: keyof FormData, value: string | boolean) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -409,6 +393,31 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
         if (!file) return;
         setLogoFile(file);
         setLogoPreview(URL.createObjectURL(file));
+        setRemoveLogo(false);
+        setErrors(prev => ({ ...prev, logo: undefined }));
+    };
+
+    const handleInverseLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setInverseLogoFile(file);
+        setInverseLogoPreview(URL.createObjectURL(file));
+        setRemoveInverseLogo(false);
+        setErrors(prev => ({ ...prev, inverse_logo: undefined }));
+    };
+
+    const clearLogo = () => {
+        setLogoFile(null);
+        setLogoPreview(null);
+        setRemoveLogo(Boolean(participant?.logo_url));
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const clearInverseLogo = () => {
+        setInverseLogoFile(null);
+        setInverseLogoPreview(null);
+        setRemoveInverseLogo(Boolean(participant?.inverse_logo_url));
+        if (inverseFileInputRef.current) inverseFileInputRef.current.value = '';
     };
 
     const onSubmit = (e: React.FormEvent) => {
@@ -424,6 +433,13 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
         }
         if (logoFile) {
             fd.append('logo', logoFile);
+        }
+        if (inverseLogoFile) {
+            fd.append('inverse_logo', inverseLogoFile);
+        }
+        if (participant) {
+            fd.append('remove_logo', removeLogo ? '1' : '0');
+            fd.append('remove_inverse_logo', removeInverseLogo ? '1' : '0');
         }
         const options = {
             onSuccess: () => onClose(),
@@ -552,24 +568,38 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
                     />
                 </div>
 
-                <div className="grid gap-2">
-                    <Label>{t('Logo / Crest')}</Label>
-                    <div className="flex items-center gap-3">
-                        {logoPreview ? (
-                            <img src={logoPreview} alt="Logo preview" className="size-12 rounded-full object-cover border" />
-                        ) : (
-                            <div className="flex size-12 items-center justify-center rounded-full border bg-muted text-xs text-muted-foreground">{t('No logo')}</div>
-                        )}
-                        <div className="flex-1">
-                            <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                                <Upload className="mr-1 size-3" /> {logoPreview ? t('Change') : t('Upload')}
-                            </Button>
+                <div className="grid gap-3">
+                    <div><Label>{t('Logo / Crest')}</Label><p className="mt-1 text-xs text-muted-foreground">{t('Upload separate official variants for light and dark backgrounds.')}</p></div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-xl border bg-white p-3">
+                            <div className="flex min-h-24 items-center justify-center rounded-lg border border-dashed bg-slate-50 p-3">
+                                <ParticipantLogo participant={{ name: formData.name, logo_url: logoPreview }} size="xl" alt={t('Standard logo preview')} />
+                            </div>
+                            <div className="mt-3"><p className="text-sm font-semibold">{t('Standard logo')}</p><p className="text-xs text-muted-foreground">{t('For light backgrounds')}</p></div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}><Upload className="mr-1 size-3" />{logoPreview ? t('Change') : t('Upload')}</Button>
+                                {logoPreview && <Button type="button" variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={clearLogo}><Trash2 className="mr-1 size-3" />{t('Remove')}</Button>}
+                            </div>
                             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={handleLogoChange} />
-                            {logoFile && <p className="mt-1 text-[10px] text-muted-foreground">{logoFile.name}</p>}
-                            <p className="mt-1 text-[10px] text-muted-foreground">{t('JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.')}</p>
-                            {errors.logo && <p className="mt-1 text-sm text-destructive">{errors.logo}</p>}
+                            {logoFile && <p className="mt-2 truncate text-[10px] text-muted-foreground">{logoFile.name}</p>}
+                            {errors.logo && <p className="mt-2 text-sm text-destructive">{errors.logo}</p>}
+                        </div>
+
+                        <div className="rounded-xl border border-slate-700 bg-slate-950 p-3 text-white">
+                            <div className="flex min-h-24 items-center justify-center rounded-lg border border-dashed border-white/20 bg-white/5 p-3">
+                                <ParticipantLogo participant={{ name: formData.name, inverse_logo_url: inverseLogoPreview }} surface="dark" size="xl" alt={t('Inverse logo preview')} />
+                            </div>
+                            <div className="mt-3"><p className="text-sm font-semibold">{t('Inverse logo')}</p><p className="text-xs text-white/60">{t('For dark backgrounds')}</p></div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <Button type="button" variant="outline" size="sm" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={() => inverseFileInputRef.current?.click()}><Upload className="mr-1 size-3" />{inverseLogoPreview ? t('Change') : t('Upload')}</Button>
+                                {inverseLogoPreview && <Button type="button" variant="ghost" size="sm" className="text-rose-300 hover:bg-white/10 hover:text-rose-200" onClick={clearInverseLogo}><Trash2 className="mr-1 size-3" />{t('Remove')}</Button>}
+                            </div>
+                            <input ref={inverseFileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={handleInverseLogoChange} />
+                            {inverseLogoFile && <p className="mt-2 truncate text-[10px] text-white/60">{inverseLogoFile.name}</p>}
+                            {errors.inverse_logo && <p className="mt-2 text-sm text-rose-300">{errors.inverse_logo}</p>}
                         </div>
                     </div>
+                    <p className="text-[10px] text-muted-foreground">{t('JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.')}</p>
                 </div>
             </div>
 

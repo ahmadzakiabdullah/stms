@@ -8,6 +8,8 @@ use App\Models\Event;
 use App\Models\Organization;
 use App\Models\Participant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
@@ -23,10 +25,15 @@ class ParticipantTest extends TestCase
         Participant::factory()->create(['organization_id' => $orgA->id, 'name' => 'Participant A']);
         Participant::factory()->create(['organization_id' => $orgB->id, 'name' => 'Participant B']);
 
-        $userA = $this->createStaffUser($orgA);
+        $userA = $this->createOrgAdmin($orgA);
 
         $response = $this->actingAs($userA)->get(route('participants.index'));
         $response->assertOk();
+        $participants = $response->viewData('page')['props']['participants']['data'] ?? [];
+        $names = collect($participants)->pluck('name');
+
+        $this->assertTrue($names->contains('Participant A'));
+        $this->assertFalse($names->contains('Participant B'));
     }
 
     public function test_super_admin_can_create_participant(): void
@@ -42,6 +49,71 @@ class ParticipantTest extends TestCase
 
         $response->assertRedirect(route('participants.index'));
         $this->assertDatabaseHas('participants', ['name' => 'New Participant']);
+    }
+
+    public function test_org_admin_can_upload_standard_and_inverse_participant_logos(): void
+    {
+        Storage::fake('public');
+
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+
+        $response = $this->actingAs($admin)->post(route('participants.store'), [
+            'name' => 'Faculty Brand',
+            'participant_type' => 'team',
+            'logo' => UploadedFile::fake()->image('standard.png', 100, 100),
+            'inverse_logo' => UploadedFile::fake()->image('inverse.png', 100, 100),
+        ]);
+
+        $response->assertRedirect(route('participants.index'));
+
+        $participant = Participant::where('name', 'Faculty Brand')->firstOrFail();
+        $this->assertNotNull($participant->logo_path);
+        $this->assertNotNull($participant->inverse_logo_path);
+        $this->assertNotNull($participant->inverse_logo_url);
+        Storage::disk('public')->assertExists($participant->logo_path);
+        Storage::disk('public')->assertExists($participant->inverse_logo_path);
+    }
+
+    public function test_org_admin_can_replace_and_remove_an_inverse_participant_logo(): void
+    {
+        Storage::fake('public');
+
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $oldPath = 'logos/old-inverse.png';
+        Storage::disk('public')->put($oldPath, 'old');
+        $participant = Participant::factory()->create([
+            'organization_id' => $org->id,
+            'inverse_logo_path' => $oldPath,
+        ]);
+
+        $replaceResponse = $this->actingAs($admin)->put(route('participants.update', $participant), [
+            'name' => $participant->name,
+            'slug' => $participant->slug,
+            'participant_type' => $participant->participant_type,
+            'inverse_logo' => UploadedFile::fake()->image('replacement.png', 100, 100),
+        ]);
+
+        $replaceResponse->assertRedirect(route('participants.index'));
+        $participant->refresh();
+        $replacementPath = $participant->inverse_logo_path;
+        $this->assertNotNull($replacementPath);
+        $this->assertNotSame($oldPath, $replacementPath);
+        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('public')->assertExists($replacementPath);
+
+        $removeResponse = $this->actingAs($admin)->put(route('participants.update', $participant), [
+            'name' => $participant->name,
+            'slug' => $participant->slug,
+            'participant_type' => $participant->participant_type,
+            'remove_inverse_logo' => true,
+        ]);
+
+        $removeResponse->assertRedirect(route('participants.index'));
+        $participant->refresh();
+        $this->assertNull($participant->inverse_logo_path);
+        Storage::disk('public')->assertMissing($replacementPath);
     }
 
     public function test_org_admin_can_update_own_participant(): void

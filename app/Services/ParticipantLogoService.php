@@ -10,13 +10,13 @@ use Illuminate\Validation\ValidationException;
 
 class ParticipantLogoService
 {
-    public function store(UploadedFile $logo): string
+    public function store(UploadedFile $logo, string $field = 'logo'): string
     {
         $temporaryPath = $logo->getPathname();
 
         if ($temporaryPath === '' || ! is_readable($temporaryPath)) {
             throw ValidationException::withMessages([
-                'logo' => 'The uploaded logo could not be read. Please select the file again.',
+                $field => 'The uploaded logo could not be read. Please select the file again.',
             ]);
         }
 
@@ -36,7 +36,7 @@ class ParticipantLogoService
 
             if (! $stored) {
                 throw ValidationException::withMessages([
-                    'logo' => 'The logo could not be stored. Please try again.',
+                    $field => 'The logo could not be stored. Please try again.',
                 ]);
             }
 
@@ -53,7 +53,7 @@ class ParticipantLogoService
 
         if (! is_string($sanitized) || trim($sanitized) === '') {
             throw ValidationException::withMessages([
-                'logo' => 'The SVG logo contains unsafe or invalid content.',
+                $field => 'The SVG logo contains unsafe or invalid content.',
             ]);
         }
 
@@ -61,7 +61,7 @@ class ParticipantLogoService
 
         if (! Storage::disk('public')->put($path, $sanitized)) {
             throw ValidationException::withMessages([
-                'logo' => 'The logo could not be stored. Please try again.',
+                $field => 'The logo could not be stored. Please try again.',
             ]);
         }
 

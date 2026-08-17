@@ -31,4 +31,20 @@ class ParticipantRequestNormalizationTest extends TestCase
 
         $this->assertTrue($request->input('is_active'));
     }
+
+    public function test_update_request_normalizes_logo_removal_flags(): void
+    {
+        $request = UpdateParticipantRequest::create('/', 'POST', [
+            'organization_id' => '019fa709-0000-7000-8000-000000000000',
+            'remove_logo' => 'false',
+            'remove_inverse_logo' => 'true',
+        ]);
+
+        (function (): void {
+            $this->prepareForValidation();
+        })->call($request);
+
+        $this->assertFalse($request->input('remove_logo'));
+        $this->assertTrue($request->input('remove_inverse_logo'));
+    }
 }

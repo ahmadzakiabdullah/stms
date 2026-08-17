@@ -29,10 +29,11 @@ class Participant extends Model
         'status',
         'notes',
         'logo_path',
+        'inverse_logo_path',
         'is_active',
     ];
 
-    protected $appends = ['logo_url'];
+    protected $appends = ['logo_url', 'inverse_logo_url'];
 
     protected function casts(): array
     {
@@ -70,6 +71,13 @@ class Participant extends Model
     {
         return $this->logo_path
             ? Storage::disk('public')->url($this->logo_path)
+            : null;
+    }
+
+    public function getInverseLogoUrlAttribute(): ?string
+    {
+        return $this->inverse_logo_path
+            ? Storage::disk('public')->url($this->inverse_logo_path)
             : null;
     }
 
