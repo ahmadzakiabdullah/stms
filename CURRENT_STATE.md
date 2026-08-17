@@ -6,7 +6,7 @@
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** semua quality gate tempatan hijau dan connected CI #101 lulus pada commit `35b9dac`. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail dan backup diselesaikan.
+**Repository:** semua quality gate tempatan hijau dan connected CI #104 lulus pada commit `49aec84`. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail dan backup diselesaikan.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
@@ -86,7 +86,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | npm audit | Lulus — 0 vulnerability |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
 | Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 93` |
-| Connected CI | **Lulus — [run #101](https://github.com/ahmadzakiabdullah/stms/actions/runs/31992389901)** pada `35b9dac`; enam job berjaya |
+| Connected CI | **Lulus — [run #104](https://github.com/ahmadzakiabdullah/stms/actions/runs/32009762360)** pada `49aec84`; enam job berjaya, 0 amaran Node.js 20 |
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
@@ -97,7 +97,7 @@ Portal production ialah single-page homepage berseksyen plus `/contact-us`. Prod
 1. Operator menyediakan mail transport sebenar, menukar runtime kepada baseline production selamat dan melakukan smoke test selepas deploy.
 2. DBA menghadkan principal kepada schema STMS dan merekod grants.
 3. Contact email/phone/address production dilengkapkan.
-4. Backup release diambil, deployment disahkan dan release tag diwujudkan; connected CI #101 sudah lulus pada `35b9dac`.
+4. Backup release diambil, deployment disahkan dan release tag diwujudkan; connected CI #104 sudah lulus pada `49aec84`.
 5. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
 
 **Last updated:** 17 Ogos 2026.

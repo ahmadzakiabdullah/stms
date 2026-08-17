@@ -18,7 +18,7 @@
 - [x] Naik taraf Guzzle/PSR-7 dan sahkan Composer/npm audit bersih.
 - [x] Jalankan quality gate tempatan semasa: PHPUnit 430/430, Pint, TypeScript, build, budget, tenant guard dan Playwright/axe 8/8.
 - [x] Pecahkan remediation kepada empat commit logik bagi logo peserta, authorization/draw/ranking, portal/production hardening dan dokumentasi audit.
-- [x] Connected CI #101 lulus pada commit `35b9dac`: dependency audit, lint, test, coverage, build dan browser E2E.
+- [x] Connected CI #104 lulus pada commit `49aec84`: dependency audit, lint, test, coverage, build dan browser E2E; action v7 menggunakan runtime Node.js 24 tanpa amaran Node.js 20.
 - [x] Product owner mengesahkan SAF 2026 ialah 1–31 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan navigation single-page; rekod pertandingan boleh dikemas kini kemudian jika maklumat rasmi berubah.
 
 ### Memerlukan owner/production operator

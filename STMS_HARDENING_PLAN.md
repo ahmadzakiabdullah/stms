@@ -14,7 +14,7 @@
 - [x] Guzzle/PSR-7 advisory ditutup.
 - [x] PHPUnit 430/430, Pint, TypeScript, build, budget, dependency audits dan Playwright/axe 8/8 hijau.
 - [x] Remediation dipecah kepada commit logik yang boleh disemak.
-- [x] Connected CI #101 lulus pada commit `35b9dac` untuk semua enam job.
+- [x] Connected CI #104 lulus pada commit `49aec84` untuk semua enam job; action rasmi v7 menutup amaran runtime Node.js 20.
 - [x] Product owner mengesahkan tarikh, satu tournament, 30 acara, 8 kontinjen dan single-page IA; data operasi kekal boleh dikemas kini.
 
 ## Baki Release Operations

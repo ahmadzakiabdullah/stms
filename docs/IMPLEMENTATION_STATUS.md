@@ -41,7 +41,7 @@
 | Playwright/axe | Pass — 8/8 desktop/mobile, isolated SQLite |
 | Committed remediation | Pass — logical commits created |
 | Release tag | Fail — no release tag |
-| Current connected CI | Pass — run #101 on `35b9dac`, all six jobs successful |
+| Current connected CI | Pass — run #104 on `49aec84`, all six jobs successful, no Node.js 20 warning |
 
 ## Production Snapshot
 
