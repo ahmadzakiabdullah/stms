@@ -59,7 +59,13 @@ class TournamentService
     {
         $count = 0;
 
-        $sports = $tournament->sports()->get();
+        // ⚡ Bolt: Eager load categories constrained by the tournament's organization
+        // to prevent N+1 queries when iterating through sports to create events.
+        $sports = $tournament->sports()
+            ->with(['categories' => function ($query) use ($tournament) {
+                $query->where('organization_id', $tournament->organization_id);
+            }])
+            ->get();
 
         $existingEvents = Event::withoutOrganizationScope()
             ->withTrashed()
@@ -74,9 +80,7 @@ class TournamentService
 
         try {
             foreach ($sports as $sport) {
-                $categories = $sport->categories()
-                    ->where('organization_id', $tournament->organization_id)
-                    ->get();
+                $categories = $sport->categories;
 
                 foreach ($categories as $category) {
                     $key = $sport->id.'_'.$category->id;
