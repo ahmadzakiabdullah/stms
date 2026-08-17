@@ -38,6 +38,6 @@ Restart queue workers selepas deploy. Pastikan scheduler Laravel berjalan. Gunak
 
 ## Current Release Status
 
-Tiada Git tag pada 17 Ogos 2026. Working tree remediation kini lulus quality gate tempatan, tetapi belum menjadi clean commit atau connected-CI artifact. Hash aset production juga tidak sama dengan build working tree, maka production dan workspace tidak boleh dianggap identik.
+Tiada Git tag pada 17 Ogos 2026. Remediation telah dipecah kepada commit logik dan quality gate tempatan lulus, tetapi HEAD belum menjadi connected-CI artifact. Hash aset production juga tidak sama dengan build release candidate, maka production dan repository semasa tidak boleh dianggap identik.
 
 Prosedur kelulusan penuh berada dalam [release runbook](../deployment/release-runbook.md).

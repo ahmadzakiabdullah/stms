@@ -8,7 +8,7 @@
 
 **Repository:** semua quality gate tempatan hijau. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail, pengesahan product owner dan connected CI pada commit bersih diselesaikan.
 
-**Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima working tree ini.
+**Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
 Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Category/Event → Participant/Registration/Squad → Dean Verification → Draw/Match/Result → Rankings/Exports/Reports → Notifications/Settings/Activity Logs.
 
@@ -97,7 +97,7 @@ Portal production ialah single-page homepage berseksyen plus `/contact-us`. Snap
 2. Operator menyediakan mail transport sebenar, menukar runtime kepada baseline production selamat dan melakukan smoke test selepas deploy.
 3. DBA menghadkan principal kepada schema STMS dan merekod grants.
 4. Contact email/phone/address production dilengkapkan.
-5. Perubahan dipecah kepada commit teratur, connected CI lulus dan release tag diwujudkan.
+5. Connected CI lulus pada HEAD yang bersih dan release tag diwujudkan; remediation telah dipecah kepada commit logik.
 6. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
 
 **Last updated:** 17 Ogos 2026.

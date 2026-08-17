@@ -17,6 +17,7 @@
 - [x] Buang Bunny Fonts, self-host font dan sediakan CSP-enforcing code path.
 - [x] Naik taraf Guzzle/PSR-7 dan sahkan Composer/npm audit bersih.
 - [x] Jalankan quality gate tempatan semasa: PHPUnit 430/430, Pint, TypeScript, build, budget, tenant guard dan Playwright/axe 8/8.
+- [x] Pecahkan remediation kepada empat commit logik bagi logo peserta, authorization/draw/ranking, portal/production hardening dan dokumentasi audit.
 
 ### Memerlukan owner/production operator
 
@@ -24,7 +25,7 @@
 - [ ] Konfigurasi mail transport sebenar dan uji reset-password sebelum `EMAIL_VERIFICATION_REQUIRED=true` dihidupkan.
 - [ ] Deploy dengan `PRODUCTION_CONFIG_ENFORCE=true`, Redis cache/queue/session, `APP_TIMEZONE=Asia/Kuala_Lumpur`, secure cookie dan CSP enforcing; lakukan smoke test serta pelan session cutover.
 - [ ] Lengkapkan contact email, phone dan address production.
-- [ ] Pecahkan working tree kepada commit teratur, jalankan connected CI pada commit bersih, backup, deploy dan cipta release tag.
+- [ ] Jalankan connected CI pada HEAD yang bersih, backup, deploy dan cipta release tag.
 
 ## Hardening Seterusnya
 

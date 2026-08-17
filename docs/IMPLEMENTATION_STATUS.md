@@ -39,7 +39,8 @@
 | PHPUnit | Pass — 430/430, 1,860 assertions |
 | Pint | Pass |
 | Playwright/axe | Pass — 8/8 desktop/mobile, isolated SQLite |
-| Clean working tree/tag | Fail — no release tag |
+| Committed remediation | Pass — logical commits created |
+| Release tag | Fail — no release tag |
 | Current connected CI | Not evidenced |
 
 ## Production Snapshot

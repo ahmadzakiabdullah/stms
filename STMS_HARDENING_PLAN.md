@@ -13,6 +13,7 @@
 - [x] Queue backlog runtime dikosongkan kepada 0 pending/0 failed.
 - [x] Guzzle/PSR-7 advisory ditutup.
 - [x] PHPUnit 430/430, Pint, TypeScript, build, budget, dependency audits dan Playwright/axe 8/8 hijau.
+- [x] Remediation dipecah kepada commit logik yang boleh disemak.
 
 ## Baki Release Operations
 
@@ -21,7 +22,7 @@
 - [ ] Deploy Redis cache/queue/session, Malaysia timezone, verification dan CSP enforcement melalui release runbook.
 - [ ] DBA mengehadkan principal kepada schema STMS dan merekod grants.
 - [ ] Lengkapkan production contact details.
-- [ ] Connected CI pada clean commit, off-host backup, deploy smoke dan release tag.
+- [ ] Connected CI pada HEAD yang bersih, off-host backup, deploy smoke dan release tag.
 
 ## Reliability Selepas Release
 

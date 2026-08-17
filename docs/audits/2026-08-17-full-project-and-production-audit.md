@@ -5,7 +5,7 @@
 **Production awam:** <https://saf.utem.edu.my/>
 **Keputusan:** **MVP beroperasi, tetapi belum release-ready**
 
-> **Addendum remediation, 17 Ogos 2026:** Dapatan repository P0 telah dibaiki. PHPUnit kini 430/430, Pint dan semua build/audit gates hijau, Playwright/axe local 8/8, read authorization matrix tersedia, ranking rules telah diasingkan, font self-hosted/sitemap telah ditambah, dan queue workspace ialah 0 pending/0 failed. Jadual/dapatan di bawah kekal sebagai bukti keadaan pada masa audit asal. Deployment production masih menunggu runtime cutover, owner confirmation, connected CI dan operational evidence yang disenaraikan dalam `TODOS.md`.
+> **Addendum remediation, 17 Ogos 2026:** Dapatan repository P0 telah dibaiki dan dipecah kepada commit logik. PHPUnit kini 430/430, Pint dan semua build/audit gates hijau, Playwright/axe local 8/8, read authorization matrix tersedia, ranking rules telah diasingkan, font self-hosted/sitemap telah ditambah, dan queue workspace ialah 0 pending/0 failed. Jadual/dapatan di bawah kekal sebagai bukti keadaan pada masa audit asal. Deployment production masih menunggu runtime cutover, owner confirmation, connected CI dan operational evidence yang disenaraikan dalam `TODOS.md`.
 
 ## 1. Skop dan Kaedah
 
