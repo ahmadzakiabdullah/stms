@@ -40,6 +40,6 @@ Restart queue workers selepas deploy. Pastikan scheduler Laravel berjalan. Gunak
 
 ## Current Release Status
 
-Tiada Git tag pada 18 Ogos 2026. Refactor query orchestration dan release handoff telah dikomit sebagai `e535e4b`; CI #110 lulus pada SHA itu. Hash aset production masih tidak sama dengan build calon release, maka production dan repository semasa tidak boleh dianggap identik.
+Tiada Git tag pada 18 Ogos 2026. Release hardening terkini dikomit sebagai `4b04c46` dan CI #112 lulus pada SHA itu. Entry JS/CSS production sepadan dengan manifest build semasa, tetapi runtime cutover/preflight dan authenticated post-deploy evidence belum lengkap.
 
 Prosedur kelulusan penuh berada dalam [release runbook](../deployment/release-runbook.md).

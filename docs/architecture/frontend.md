@@ -18,6 +18,6 @@ Route `/` dan alias `/portal` merender `Public/Index`; `/contact-us` ialah page 
 
 ## Build dan Aksesibiliti
 
-Quality gate frontend: typecheck, Vite production build, bundle budget, Playwright smoke dan axe. Build semasa lulus dengan JS terbesar kira-kira 351 KB dan CSS kira-kira 92 KB di bawah budget 400/100 KB. Playwright/axe tempatan lulus 8/8 desktop/mobile dan CI #110 mengesahkan browser E2E serta build pada `e535e4b`.
+Quality gate frontend: typecheck, Vite production build, bundle budget, Playwright smoke dan axe. Build semasa lulus dengan JS terbesar kira-kira 351 KB dan CSS kira-kira 92 KB di bawah budget 400/100 KB. Playwright/axe tempatan lulus 8/8 desktop/mobile dan CI #112 mengesahkan browser E2E serta build pada `4b04c46`.
 
 Fontsource membundel font yang digunakan dan Blade tidak lagi memuat Bunny Fonts. Guest menerima manifest Ziggy terhad dan global Vite prefetch telah dibuang. Dark-mode CSS tersedia, tetapi theme-toggle pengguna tidak ditemui; dokumentasi tidak boleh mendakwa kawalan itu sudah dilaksanakan.

@@ -1,6 +1,6 @@
 # Release Runbook
 
-> Pada 18 Ogos 2026 belum ada Git tag. Commit calon `e535e4b` melepasi quality gate tempatan dan connected CI #110, tetapi bukti production/operasi masih belum lengkap (`NO-GO`).
+> Pada 18 Ogos 2026 belum ada Git tag. Commit calon `4b04c46` melepasi quality gate tempatan dan connected CI #112, tetapi runtime preflight, mail, DB grants dan final deployment evidence masih belum lengkap (`NO-GO`).
 
 ## 1. Syarat Sebelum Release
 
@@ -31,6 +31,8 @@ git tag --list
 ```
 
 ## 3. Build dan Validation
+
+> **Windows/IIS live-share guard:** production executes this application as `E:\others\saf`. Never run Composer against the live `vendor/` directory through another drive alias or UNC path; optimized classmaps may embed the wrong absolute path and cause HTTP 500. Build an immutable artifact, or validate `php -r "echo getcwd();"` returns exactly `E:\others\saf` before any live Composer command.
 
 ```bash
 composer install --no-interaction --prefer-dist

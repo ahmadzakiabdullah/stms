@@ -16,7 +16,7 @@ This record contains sanitized evidence only. Encryption keys, database password
 - Upload evidence after restore: 54 files.
 - Restored environment health check: database, cache, queue and disk all `ok`.
 - Measured restore time: 7.699 seconds, below the two-hour RTO target.
-- Cleanup: the isolated MySQL container was stopped and auto-removed. The disposable restored upload copy is not release evidence and should be removed separately; the encrypted archive is retained.
+- Cleanup: the isolated MySQL container was stopped and auto-removed. The disposable restored upload copy remains at `C:\STMS\RestoreDrill\a2db0a9` because automated recursive deletion was blocked by workstation policy; remove that exact validated directory manually after handoff. The encrypted archive is retained.
 
 This is a point-in-time off-host backup. A recurring production schedule and approved retention owner remain operational responsibilities.
 
@@ -42,3 +42,15 @@ The first diagnostic run exposed cookie reset between k6 iterations and a missin
 - Production Compose now requires secure runtime, off-host backup, Redis, SMTP and health-token settings.
 
 Repository CI and actual production cutover evidence are recorded separately. This drill does not prove a production deployment or real mail delivery.
+
+## External Uptime Alert Evidence
+
+- Monitor: GitHub Actions `Production uptime monitor`, scheduled every five minutes against `https://saf.utem.edu.my/up`.
+- Forced-failure run: `32097405502`; alert path intentionally returned non-zero after recording the alert.
+- Alert receipt: GitHub issue [#75](https://github.com/ahmadzakiabdullah/stms/issues/75) was opened and assigned to `ahmadzakiabdullah`.
+- Real failure observation: recovery attempt `32097440384` observed HTTP 500 and correctly kept the alert open.
+- Root cause: Composer autoload metadata was generated from workstation drive alias `S:\`, while IIS executes the same live share as `E:\others\saf`.
+- Recovery: optimized autoload was regenerated from the validated production path; `/up`, `/` and `/contact-us` returned HTTP 200.
+- Recovery run: `32097609744` added a recovery comment and closed issue #75.
+
+All future Composer operations against the live Windows share must run from `E:\others\saf` or from an immutable deployment artifact; generating live vendor metadata through an alternate mapped drive is prohibited.

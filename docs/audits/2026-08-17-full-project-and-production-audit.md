@@ -9,6 +9,8 @@
 
 > **Addendum 18 Ogos 2026:** Refactor query orchestration Dashboard/Event/Event Participant, ratchet coverage 74.5%, release blockers tersusun serta preflight/evidence template telah dikomit sebagai `e535e4b`. Semua gate tempatan lulus: PHPUnit 439/439 (1,948 assertions), Pint, TypeScript, inventory, tenant bypass, dependency audits, build/budget dan Playwright/axe 8/8. Connected CI [#110](https://github.com/ahmadzakiabdullah/stms/actions/runs/32093252159) pada SHA yang sama turut lulus keenam-enam job dan merekod PCOV 75.03% (4,676/6,232). Production kekal NO-GO sehingga bukti operator dalam `TODOS.md` lengkap.
 
+> **Addendum release drill, 18 Ogos 2026:** Commit `4b04c46` menambah Predis, Docker release hardening, isolated staging Compose, k6 check ratchet dan external uptime workflow; connected CI [#112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726) lulus keenam-enam job. Backup terenkripsi production-labelled workspace disalin off-host dan dipulihkan dalam MySQL 8 terasing dengan SHA-256/row/upload verification serta RTO 7.699 saat. Authenticated multi-worker k6 lulus 1,150/1,150 checks, 0% HTTP failures dan p95 81.543 ms. Forced uptime failure membuka/assign issue #75 dan recovery menutupnya. Satu insiden HTTP 500 singkat berlaku apabila live Composer classmap dijana melalui alias `S:` sedangkan IIS menggunakan `E:\others\saf`; autoload dijana semula pada path production dan `/up`, `/`, `/contact-us` kembali 200. Production kekal NO-GO kerana mail, least-privilege DB principal, persistent runtime secrets/Redis cutover, green preflight dan authenticated post-deploy evidence belum selesai.
+
 ## 1. Skop dan Kaedah
 
 Audit ini membezakan tiga sumber bukti yang sebelum ini bercampur dalam dokumentasi:

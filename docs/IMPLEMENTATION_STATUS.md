@@ -41,7 +41,7 @@
 | Playwright/axe | Pass — 8/8 desktop/mobile, isolated SQLite |
 | Committed remediation | Pass — logical commits created |
 | Release tag | Fail — no release tag |
-| Connected CI | Pass — run #110 on `e535e4b`; all six jobs including PCOV ratchet and browser E2E passed |
+| Connected CI | Pass — run #112 on `4b04c46`; all six jobs including PCOV ratchet and browser E2E passed |
 
 ## Production Snapshot
 
