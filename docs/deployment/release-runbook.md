@@ -1,6 +1,6 @@
 # Release Runbook
 
-> Pada 17 Ogos 2026 belum ada Git tag. Working tree dan quality gate semasa belum layak release (`NO-GO`).
+> Pada 18 Ogos 2026 belum ada Git tag. Working tree melepasi quality gate tempatan, tetapi perubahan semasa belum mempunyai connected CI dan bukti production/operasi masih belum lengkap (`NO-GO`).
 
 ## 1. Syarat Sebelum Release
 
@@ -11,6 +11,14 @@
 - Production config melepasi `ProductionConfiguration` dan semakan manual untuk timezone, session, queue/cache, email verification, CSP, mail dan trusted proxies.
 - Backup terenkripsi dan restore drill berjaya; rollback aplikasi disediakan tanpa menganggap migration boleh diundur secara automatik.
 - `CHANGELOG.md` dan `CURRENT_STATE.md` merekodkan SHA, masa, keputusan gate dan pemilik kelulusan.
+
+Salin dan lengkapkan [release evidence template](release-evidence-template.md). Jalankan preflight baca-sahaja sebelum kelulusan:
+
+```bash
+php artisan stms:release-preflight --json --max-backup-age-hours=24
+```
+
+Preflight tidak menggantikan reset-password delivery, external alert receipt, authenticated k6, isolated restore atau post-deploy smoke evidence.
 
 ## 2. Versioning
 

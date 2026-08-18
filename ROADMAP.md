@@ -21,8 +21,9 @@
 Repository ialah release candidate, tetapi deployment production kekal **NO-GO** sehingga:
 
 1. Runtime production menggunakan baseline selamat: enforcement on, Redis cache/queue/session, real mail, verification on, timezone Malaysia dan CSP enforcement.
-2. DB grants, contact details dan release backup disahkan operator.
-3. Smoke test deployment lulus dan tag versi pertama dicipta selepas semua bukti tersedia.
+2. DB grants disahkan; actual production backup disalin off-host dan isolated restore direkod dengan RPO/RTO.
+3. Authenticated staging load test, external alert receipt dan production reset-password delivery dibuktikan.
+4. Smoke test deployment serta Playwright/axe production lulus dan tag versi pertama dicipta selepas semua bukti tersedia.
 
 Product owner telah mengesahkan tarikh 1–31 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan IA single-page. Remediation juga telah dikomit dan connected CI hijau; rekod pertandingan kekal boleh diedit jika maklumat rasmi berubah.
 

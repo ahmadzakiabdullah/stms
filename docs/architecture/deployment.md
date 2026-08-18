@@ -19,7 +19,9 @@ Mulakan daripada `.env.production.example`, kemudian simpan secret di luar Git. 
 - mail provider sebenar, backup, scheduler, queue worker dan token health;
 - `CSP_REPORT_ONLY=false` hanya selepas policy/enforcement telah diuji.
 
-`ProductionConfiguration` ialah guard automatik minimum, bukan pengganti semakan manual. Ia tidak membuktikan timezone, Redis, email verification atau least privilege.
+`ProductionConfiguration` mengesahkan nilai konfigurasi minimum bagi timezone, Redis, email verification, secure session, CSP dan mailer bukan `log`. Ia tidak membuktikan Redis/mail benar-benar boleh dicapai, trusted proxy tepat, DB least privilege atau delivery e-mel end-to-end; semua itu memerlukan semakan operasi.
+
+`php artisan stms:release-preflight --json` menambah pemeriksaan baca-sahaja bagi DB, Redis PING, mailer, backup off-repository terkini, internal monitoring dan public tenant selectors. Outputnya perlu dilampirkan pada [release evidence record](../deployment/release-evidence-template.md), tetapi tidak menggantikan bukti operasi luaran.
 
 ## Deployment Sequence
 
@@ -38,6 +40,6 @@ Restart queue workers selepas deploy. Pastikan scheduler Laravel berjalan. Gunak
 
 ## Current Release Status
 
-Tiada Git tag pada 17 Ogos 2026. Remediation telah dipecah kepada commit logik dan quality gate tempatan lulus, tetapi HEAD belum menjadi connected-CI artifact. Hash aset production juga tidak sama dengan build release candidate, maka production dan repository semasa tidak boleh dianggap identik.
+Tiada Git tag pada 18 Ogos 2026. CI #106 lulus pada `a8df4dd`, dan working tree selepas refactor query orchestration melepasi semua gate tempatan tetapi belum dikomit/dibuktikan oleh connected CI. Hash aset production juga tidak sama dengan build working tree, maka production dan repository semasa tidak boleh dianggap identik.
 
 Prosedur kelulusan penuh berada dalam [release runbook](../deployment/release-runbook.md).

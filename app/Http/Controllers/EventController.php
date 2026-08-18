@@ -8,13 +8,9 @@ use App\Actions\Events\UpdateEvent;
 use App\Http\Requests\Event\StoreEventRequest;
 use App\Http\Requests\Event\UpdateEventRequest;
 use App\Models\Event;
-use App\Models\Participant;
-use App\Models\Sport;
-use App\Models\SportCategory;
-use App\Models\Tournament;
+use App\Services\EventIndexService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -24,117 +20,22 @@ use Inertia\Response;
 
 class EventController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request, EventIndexService $indexService): Response
     {
         Gate::authorize('viewAny', Event::class);
 
         $user = Auth::user();
-        $scopeToAdminSports = $user->hasRole('admin-sport') && ! $user->hasRole(['super-admin', 'org-admin']);
-        $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
+        abort_unless($user, 401);
 
-        // Defensive queries to prevent 500 errors on production when the database
-        // has not been fully migrated (common cause of /events 500).
-        // The global BelongsToOrganization scope is still respected for non-super users.
-        // See similar pattern in routes/web.php dashboard closure.
-        $dataLoadFailed = false;
-
-        $events = $this->safePaginatedQuery(function () use ($sportIds) {
-            $query = Event::with(['tournament', 'sport', 'sportCategory', 'organization'])
-                ->withCount('pools')
-                ->withCount([
-                    'matches as matches_count',
-                    'matches as completed_matches_count' => fn ($q) => $q->where('status', 'completed'),
-                    'eventParticipants as registrations_count',
-                    'eventParticipants as confirmed_participants_count' => fn ($q) => $q->where('status', 'confirmed'),
-                    'eventParticipants as pending_participants_count' => fn ($q) => $q->where('status', 'pending'),
-                ]);
-
-            if ($sportIds !== null) {
-                $query->whereIn('sport_id', $sportIds);
-            }
-
-            if ($tournamentId = request('tournament_id')) {
-                $query->where('tournament_id', $tournamentId);
-            }
-
-            if (request()->has('is_active')) {
-                $query->where('is_active', request('is_active'));
-            }
-
-            return $query->orderBy('start_date', 'desc')
-                ->paginate(15)
-                ->withQueryString();
-        }, function () use (&$dataLoadFailed) {
-            $dataLoadFailed = true;
-
-            return new LengthAwarePaginator([], 0, 15, 1, [
-                'path' => request()->url(),
-            ]);
-        });
-
-        $participantCounts = $this->safeCollectionQuery(function () use ($events) {
-            return Participant::query()
-                ->where('is_active', true)
-                ->whereIn('organization_id', collect($events->items())->pluck('organization_id')->unique()->filter())
-                ->selectRaw('organization_id, count(*) as participants_count')
-                ->groupBy('organization_id')
-                ->pluck('participants_count', 'organization_id');
-        }, fn () => collect());
-
-        foreach ($events as $event) {
-            $event->participants_count = $participantCounts[$event->organization_id] ?? 0;
-        }
-
-        $tournaments = $this->safeCollectionQuery(function () use ($sportIds) {
-            return Tournament::query()
-                ->with('sports:id,name')
-                ->when($sportIds !== null, fn ($query) => $query->whereHas('sports', fn ($sports) => $sports->whereIn('sports.id', $sportIds)))
-                ->orderBy('start_date', 'desc')
-                ->get(['id', 'name', 'slug', 'start_date', 'end_date']);
-        }, function () use (&$dataLoadFailed) {
-            $dataLoadFailed = true;
-
-            return collect();
-        });
-
-        $sports = $this->safeCollectionQuery(function () use ($sportIds) {
-            return Sport::query()
-                ->when($sportIds !== null, fn ($query) => $query->whereIn('id', $sportIds))
-                ->orderBy('name')
-                ->get(['id', 'name', 'slug']);
-        }, function () use (&$dataLoadFailed) {
-            $dataLoadFailed = true;
-
-            return collect();
-        });
-
-        $categories = $this->safeCollectionQuery(function () use ($sportIds) {
-            return SportCategory::query()
-                ->with('sport')
-                ->when($sportIds !== null, fn ($query) => $query->whereIn('sport_id', $sportIds))
-                ->orderBy('name')
-                ->get(['id', 'name', 'slug', 'sport_id']);
-        }, function () use (&$dataLoadFailed) {
-            $dataLoadFailed = true;
-
-            return collect();
-        });
-
-        $usedCategoryIds = Event::query()
-            ->when($sportIds !== null, fn ($query) => $query->whereIn('sport_id', $sportIds))
-            ->select('tournament_id', 'sport_id', 'sport_category_id')
-            ->get()
-            ->groupBy(fn ($e) => $e->tournament_id.':'.$e->sport_id)
-            ->map(fn ($group) => $group->pluck('sport_category_id')->values()->toArray())
-            ->toArray();
-
-        $response = Inertia::render('Events/Index', [
-            'events' => $events,
-            'tournaments' => $tournaments,
-            'sports' => $sports,
-            'categories' => $categories,
-            'usedCategoryIds' => $usedCategoryIds,
+        $data = $indexService->dataFor($user, [
+            'tournament_id' => $request->input('tournament_id'),
+            'has_is_active' => $request->has('is_active'),
+            'is_active' => $request->input('is_active'),
         ]);
+        $dataLoadFailed = $data['dataLoadFailed'];
+        unset($data['dataLoadFailed']);
+
+        $response = Inertia::render('Events/Index', $data);
 
         if ($dataLoadFailed) {
             // Surface the real problem to the user/admin.

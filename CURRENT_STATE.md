@@ -1,12 +1,12 @@
 # CURRENT STATE
 
-> Snapshot jujur STMS/SAF pada **17 Ogos 2026** selepas remediation audit. Bukti asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
+> Snapshot jujur STMS/SAF pada **18 Ogos 2026** selepas remediation audit dan refactor query orchestration. Bukti asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
 
 ## Status Keseluruhan
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** semua quality gate tempatan hijau dan connected CI #105 lulus pada commit `5bb86a8`. Kod ialah release candidate, tetapi **production deployment masih NO-GO** sehingga konfigurasi runtime, mail dan backup diselesaikan.
+**Repository:** working tree 18 Ogos melepasi semua quality gate tempatan. Connected CI terakhir ialah #106 pada parent commit `a8df4dd`; refactor/documentation semasa masih perlu direview, dikomit dan lulus connected CI pada SHA yang sama. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants, backup/restore dan operational evidence diselesaikan.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
@@ -22,7 +22,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Form Requests | 28 |
 | Policies | 21 fail |
 | Actions | 37 |
-| Services | 35 |
+| Services/concerns | 40 fail |
 | Models | 16 |
 | Inertia `.tsx` pages | 38 |
 | PHP tests | 94 PHP test files |
@@ -54,6 +54,8 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Vendor dependencies diselaraskan kepada lockfile selamat (Guzzle 7.15.2, PSR-7 2.13.0) untuk menutup advisory semasa.
 - Axe/keyboard smoke tests meliputi login, dashboard, homepage dan Contact pada desktop/mobile; contrast dan ARIA findings semasa telah dibaiki.
 - Butiran hubungan awam kini tenant-scoped dan boleh diedit melalui Settings: alamat, e-mel, telefon serta pautan Facebook, Instagram, TikTok dan YouTube divalidasi sebelum dipaparkan.
+- Query/payload assembly bagi Dashboard, Events dan Event Participants telah dipindahkan daripada controller kepada tiga service khusus; controller masing-masing kini fokus pada authorization, input, response dan mutation.
+- Artifact PCOV CI #106 merekod 74.99% statement coverage (4,551/6,069); workflow kini mempunyai ratchet minimum 74.5%.
 
 ## Runtime Workspace
 
@@ -62,6 +64,8 @@ Semakan baca-sahaja mendapati 17 pengguna aktif, 17 role assignments, satu super
 Backlog 32 database-notification jobs telah diproses dengan `queue:work --stop-when-empty`. Selepas pemprosesan: **0 pending, 0 failed**; `stms:health-check` lulus.
 
 Tujuh tetapan hubungan rasmi Pusat Sukan telah disimpan untuk organisasi `utem` dalam runtime workspace dan cache portal dibersihkan. Nilai ini boleh disunting kemudian melalui Settings tanpa perubahan kod. Paparan penuh pada production awam masih bergantung pada deployment release candidate.
+
+`stms:release-preflight --json` telah dijalankan secara tidak merosakkan pada 18 Ogos. DB `SELECT 1` dan public organization/session selectors lulus. Overall result kekal `error` kerana enforcement, CSP, verification, Malaysia timezone, secure/Redis session, Redis queue/cache, real mailer, scheduled off-repository backup dan internal health monitoring belum dikonfigurasi. Ini mengesahkan NO-GO tanpa mengubah runtime.
 
 Runtime masih menggunakan nilai berikut sehingga deployment berjadual dibuat:
 
@@ -77,9 +81,9 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Quality Gates Semasa
 
-| Gate | Keputusan 17 Ogos 2026 |
+| Gate | Keputusan working tree 18 Ogos 2026 |
 |---|---|
-| PHPUnit | **Lulus — 434/434, 1,937 assertions** |
+| PHPUnit | **Lulus — 439/439, 1,948 assertions** |
 | Pint | Lulus |
 | TypeScript | Lulus |
 | Tenant bypass allowlist | Lulus |
@@ -89,7 +93,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | npm audit | Lulus — 0 vulnerability |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
 | Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 94` |
-| Connected CI | **Lulus — [run #105](https://github.com/ahmadzakiabdullah/stms/actions/runs/32009988117)** pada `5bb86a8`; enam job berjaya, 0 amaran Node.js 20 |
+| Connected CI | **Baseline parent lulus — [run #106](https://github.com/ahmadzakiabdullah/stms/actions/runs/32012582828)** pada `a8df4dd`; perubahan working tree 18 Ogos masih memerlukan CI pada commit baharu |
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
@@ -99,7 +103,8 @@ Portal production ialah single-page homepage berseksyen plus `/contact-us`. Prod
 
 1. Operator menyediakan mail transport sebenar, menukar runtime kepada baseline production selamat dan melakukan smoke test selepas deploy.
 2. DBA menghadkan principal kepada schema STMS dan merekod grants.
-3. Backup release diambil, deployment disahkan dan release tag diwujudkan; connected CI #105 sudah lulus pada `5bb86a8`.
-4. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
+3. Refactor/documentation semasa direview, dikomit dan connected CI hijau pada SHA yang sama.
+4. Backup release diambil, deployment disahkan dan release tag diwujudkan.
+5. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
 
-**Last updated:** 17 Ogos 2026.
+**Last updated:** 18 Ogos 2026.

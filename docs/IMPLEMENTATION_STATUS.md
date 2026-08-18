@@ -1,6 +1,6 @@
 # Implementation Status
 
-> Updated 17 Ogos 2026. “Implemented” bermaksud kod/capability wujud; ia tidak menggantikan release-gate evidence.
+> Updated 18 Ogos 2026. “Implemented” bermaksud kod/capability wujud; ia tidak menggantikan release-gate evidence.
 
 ## Implemented
 
@@ -19,7 +19,7 @@
 | Notifications | Implemented | Queueable database notifications |
 | Settings/Activity logs | Implemented | Termasuk contact rasmi tenant-editable; operational audit trail bukan immutable compliance ledger |
 | Public portal | Implemented | Homepage sections + Contact dengan alamat/e-mel/telefon/media sosial tervalidasi; legacy public subpages absent |
-| Docker/CI/Health/Backup | Implemented in repository | Runtime/operational evidence belum lengkap |
+| Docker/CI/Health/Backup | Implemented in repository | Termasuk release preflight baca-sahaja; runtime/operational evidence belum lengkap |
 
 ## Explicit Exceptions to Project Defaults
 
@@ -36,12 +36,12 @@
 | Inventory / tenant bypass / TypeScript | Pass |
 | Vite build + bundle budget | Pass |
 | Composer/npm audit | Pass |
-| PHPUnit | Pass — 434/434, 1,937 assertions |
+| PHPUnit | Pass — 439/439, 1,948 assertions pada working tree 18 Ogos |
 | Pint | Pass |
 | Playwright/axe | Pass — 8/8 desktop/mobile, isolated SQLite |
 | Committed remediation | Pass — logical commits created |
 | Release tag | Fail — no release tag |
-| Current connected CI | Pass — run #105 on `5bb86a8`, all six jobs successful, no Node.js 20 warning |
+| Connected CI baseline | Pass — run #106 on `a8df4dd`; working tree 18 Ogos memerlukan CI baharu |
 
 ## Production Snapshot
 

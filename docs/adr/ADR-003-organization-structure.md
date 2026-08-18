@@ -60,4 +60,4 @@ We will create an `organizations` table with support for hierarchical structure 
 
 ## Implementation Status (audited 2026-08-17)
 
-The table, self-reference and organization types exist, and services validate hierarchy changes. The authorization semantics for listing and creating organizations still require review: the root model has no tenant global scope, `OrganizationController@index` omits `viewAny`, and current policy permits `org-admin` creation. See the current audit before extending delegated hierarchy administration.
+The table, self-reference and organization types exist, and services validate hierarchy changes. Because Organization is the unscoped tenant root, its list/create operations now enforce explicit policy checks; organization management is restricted to super-admin and covered by the six-role direct-URL matrix. Delegated hierarchy administration remains a future decision rather than an implicit org-admin capability.

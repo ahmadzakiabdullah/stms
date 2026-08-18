@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Release checklist and controller orchestration (18 August 2026)
+
+- Reorganized `TODOS.md` into atomic repository and production release gates, removing duplicate mail, backup, deployment and browser-evidence tasks.
+- Extracted Dashboard, Event Participant and Event index query/payload orchestration into dedicated services while preserving controller authorization and mutation boundaries.
+- Recorded the CI #106 PCOV baseline at 74.99% statement coverage (4,551/6,069) and added a 74.5% CI ratchet.
+- Added the non-destructive `stms:release-preflight` command for configuration, DB/Redis connectivity, mailer completeness, off-repository backup freshness/checksum, monitoring and public tenant selectors.
+- Added a reusable sanitized release-evidence template covering CI, mail, DB grants, backup/restore, load, alerts, deployment smoke checks and GO/NO-GO approval.
+- Revalidated the working tree locally: PHPUnit 439/439 (1,948 assertions), Pint, TypeScript, inventory, tenant bypass, dependency audits, Vite build/budget and Playwright/axe 8/8 all pass.
+
 ## Unreleased — Audit remediation (17 August 2026)
 
 - Restored the complete quality gate: 434/434 PHPUnit tests (1,937 assertions), Pint, TypeScript, tenant guard, Vite build/budget, clean dependency audits and 8/8 isolated desktop/mobile Playwright/axe journeys.

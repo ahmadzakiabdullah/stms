@@ -21,14 +21,13 @@ This is a lightweight observation, not a load test. The earlier single-process a
 ## Current Characteristics
 
 - Public portal queries upcoming/completed fixtures separately, limits result sets and caches for two minutes.
-- Public initial HTML is about 68 KB and includes Ziggy routes plus many Vite prefetch hints.
+- Guest Ziggy routes are filtered and global initial Vite prefetch has been removed.
 - Audited runtime uses database cache/queue instead of Redis.
-- Query assembly remains substantial in Dashboard/EventParticipant/Draw controllers.
+- Dashboard, EventParticipant and Event index query assembly now lives in dedicated services; DrawController remains the next large orchestration candidate only when release work permits.
 
 ## Priorities
 
 1. Move production cache/queue/session to Redis.
 2. Run authenticated multi-worker k6 with representative data.
 3. Add query budgets for public portal, results, registration and reports.
-4. Review Ziggy/prefetch payload and remove redundant external font requests.
-5. Monitor slow queries and index only from measured query plans.
+4. Monitor slow queries and index only from measured query plans.

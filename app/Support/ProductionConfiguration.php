@@ -6,9 +6,12 @@ use LogicException;
 
 final class ProductionConfiguration
 {
-    public static function validate(): void
+    /**
+     * @return array<string, bool>
+     */
+    public static function checks(): array
     {
-        $checks = [
+        return [
             'APP_DEBUG=false' => ! config('app.debug'),
             'PRODUCTION_CONFIG_ENFORCE=true' => config('app.production_config_enforce') === true,
             'CSP_REPORT_ONLY=false' => config('app.csp_report_only') === false,
@@ -20,8 +23,22 @@ final class ProductionConfiguration
             'CACHE_STORE=redis' => config('cache.default') === 'redis',
             'MAIL_MAILER is not log' => config('mail.default') !== 'log',
         ];
+    }
 
-        $invalid = array_keys(array_filter($checks, static fn (bool $valid): bool => ! $valid));
+    /**
+     * @return list<string>
+     */
+    public static function invalidChecks(): array
+    {
+        return array_keys(array_filter(
+            self::checks(),
+            static fn (bool $valid): bool => ! $valid,
+        ));
+    }
+
+    public static function validate(): void
+    {
+        $invalid = self::invalidChecks();
 
         if ($invalid !== []) {
             throw new LogicException(

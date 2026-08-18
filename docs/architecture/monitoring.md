@@ -5,8 +5,9 @@
 - `GET /up` ialah liveness Laravel asas.
 - `GET /health` memeriksa database, cache, queue dan ruang disk. Endpoint ini dilindungi token dan sengaja memberi 404 tanpa token.
 - `php artisan stms:health-check` menyediakan semakan operasi yang sama untuk scheduler/CLI.
+- `php artisan stms:release-preflight --json` memeriksa prerequisite release secara tidak merosakkan, termasuk DB/Redis connectivity, backup freshness dan konfigurasi monitoring.
 
-Semasa audit 17 Ogos, health command berstatus `ok`: DB/cache/queue/disk boleh dicapai, 32 queued jobs dan 0 failed jobs. Ambang backlog 100 menyebabkan status kekal `ok`; angka ini bukan bukti worker memproses job pada kadar yang mencukupi.
+Semasa audit asal 17 Ogos, health command berstatus `ok` walaupun mempunyai 32 queued jobs. Backlog itu kemudian diproses kepada 0 pending/0 failed dan health kekal lulus. Satu drain berjaya masih bukan bukti worker/scheduler diselia secara berterusan.
 
 ## Belum Dibuktikan
 

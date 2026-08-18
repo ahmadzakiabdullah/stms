@@ -55,4 +55,4 @@ We will implement **column-based multi-tenancy** using an `organization_id` fore
 
 ## Implementation Status (audited 2026-08-17)
 
-Implemented for most domain models via `TenantContext`, `BelongsToOrganization`, policies and tenant-aware services. `Organization` is the unscoped tenant root and `User` uses explicit handling. The audit found missing `viewAny` authorization on several list endpoints and a guest favicon query without explicit tenant selection; the decision remains accepted, but enforcement is not yet complete enough for release. See `CURRENT_STATE.md`.
+Implemented for domain models via `TenantContext`, `BelongsToOrganization`, policies and tenant-aware services. `Organization` is the unscoped tenant root and `User` uses explicit handling. The read/index authorization and guest favicon gaps found by the 17 August audit were remediated and covered by direct-URL plus HTTP/Inertia payload tests. Production runtime evidence remains a separate release concern; see `CURRENT_STATE.md`.

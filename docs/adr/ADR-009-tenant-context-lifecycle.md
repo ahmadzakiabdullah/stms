@@ -68,9 +68,9 @@ Negative:
 
 Implemented 2026-08-07 and extended with a tenant-aware job contract/middleware.
 Lifecycle and queue behavior have tests, and the static tenant-bypass allowlist
-check passes as of 2026-08-17. The full PHPUnit suite is currently red for
-unrelated draw-contract failures, so do not describe the repository as fully
-green. Read-authorization gaps identified in the current audit also remain.
+passes. The draw-contract and read-authorization gaps identified by the original
+audit were remediated; the 18 August 2026 working tree passes 434/434 PHPUnit
+tests plus the six-role direct-URL and cross-tenant payload coverage.
 
 ## References
 

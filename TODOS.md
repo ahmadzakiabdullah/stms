@@ -1,32 +1,33 @@
 # TODOS
 
-> Backlog aktif STMS/SAF selepas remediation audit 17 Ogos 2026. Kotak hanya ditanda apabila ada bukti; tindakan production/owner tidak dianggap selesai oleh perubahan kod semata-mata.
+> Backlog aktif STMS/SAF dikemas kini 18 Ogos 2026 selepas remediation audit. Kotak hanya ditanda apabila ada bukti; tindakan production/owner tidak dianggap selesai oleh perubahan kod semata-mata.
 
 ## Current Focus (MVP): Release Handoff
 
-### Selesai dalam repository/runtime workspace
+### Bukti repository/runtime workspace yang selesai
 
-- [x] Selaraskan draw move/regeneration behavior dan pulihkan PHPUnit penuh.
-- [x] Baiki semua isu Pint.
-- [x] Kuatkuasakan read authorization pada semua index sensitif.
-- [x] Ganti pseudo tenant tests dengan HTTP/Inertia payload assertions.
-- [x] Tambah manual URL access matrix bagi enam role aktif.
-- [x] Audit users, role assignments dan tenant relations: 17 users/17 assignments, satu super-admin, tiada orphan atau tenant mismatch; credential rotation tidak diperlukan berdasarkan bukti ini.
-- [x] Proses 32 queued database notifications; sahkan 0 pending dan 0 failed.
-- [x] Kukuhkan production configuration guard untuk Redis, verification, Malaysia timezone, secure session, CSP dan real mail transport.
-- [x] Buang Bunny Fonts, self-host font dan sediakan CSP-enforcing code path.
-- [x] Naik taraf Guzzle/PSR-7 dan sahkan Composer/npm audit bersih.
-- [x] Jalankan quality gate tempatan semasa: PHPUnit 434/434, Pint, TypeScript, build, budget, tenant guard dan Playwright/axe 8/8.
-- [x] Pecahkan remediation kepada empat commit logik bagi logo peserta, authorization/draw/ranking, portal/production hardening dan dokumentasi audit.
-- [x] Connected CI #105 lulus pada commit `5bb86a8`: dependency audit, lint, test, coverage, build dan browser E2E; action v7 menggunakan runtime Node.js 24 tanpa amaran Node.js 20.
+- [x] Tutup remediation P0 bagi draw, authorization read/index, tenant HTTP/Inertia assertions, ranking strategy, production guard, CSP/font, dependency advisory dan accessibility smoke coverage.
+- [x] Audit 17 users/17 role assignments dan tenant relations; proses 32 queued database notifications kepada 0 pending/0 failed.
+- [x] Quality gate tempatan 18 Ogos lulus: PHPUnit 439/439 (1,948 assertions), Pint, TypeScript, inventory, tenant guard, build/budget, dependency audits dan Playwright/axe 8/8.
+- [x] Connected CI baseline [#106](https://github.com/ahmadzakiabdullah/stms/actions/runs/32012582828) lulus pada `a8df4dd`: dependency audit, lint, PHPUnit/inventory, coverage, build dan browser E2E.
 - [x] Product owner mengesahkan SAF 2026 ialah 1–31 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan navigation single-page; rekod pertandingan boleh dikemas kini kemudian jika maklumat rasmi berubah.
 - [x] Lengkapkan alamat, e-mel, telefon dan empat pautan media sosial rasmi Pusat Sukan sebagai tetapan tenant yang boleh diedit; data workspace UTeM telah dikemas kini dan cache portal dibersihkan.
 
-### Memerlukan owner/production operator
+### Repository handoff yang masih diperlukan
 
-- [ ] Konfigurasi mail transport sebenar dan uji reset-password sebelum `EMAIL_VERIFICATION_REQUIRED=true` dihidupkan.
-- [ ] Deploy dengan `PRODUCTION_CONFIG_ENFORCE=true`, Redis cache/queue/session, `APP_TIMEZONE=Asia/Kuala_Lumpur`, secure cookie dan CSP enforcing; lakukan smoke test serta pelan session cutover.
-- [ ] Ambil backup off-host, deploy release candidate, sahkan smoke test dan cipta release tag.
+- [ ] Review dan commit refactor/documentation 18 Ogos, kemudian buktikan connected CI hijau pada SHA yang sama; CI #106 ialah baseline parent sebelum perubahan working tree ini.
+- [x] Sediakan `stms:release-preflight` baca-sahaja dan release evidence template bagi konfigurasi, DB/Redis, mailer, backup freshness, monitoring serta public tenant selectors.
+
+### Release blockers — memerlukan owner/production operator
+
+- [ ] Konfigurasi mail transport sebenar dan buktikan reset-password delivery end-to-end sebelum `EMAIL_VERIFICATION_REQUIRED=true` dihidupkan.
+- [ ] DBA hadkan production principal kepada schema STMS sahaja dan lampirkan grants yang diluluskan pada release evidence.
+- [ ] Ambil actual production backup, salin off-host dan lakukan isolated restore; rekod RPO/RTO serta checksum/archive yang diluluskan.
+- [ ] Jalankan authenticated k6 pada staging multi-worker dan capai threshold yang diluluskan.
+- [ ] Konfigurasi external uptime/log alert dan rekod bukti penerimaan operator sebenar.
+- [ ] Sediakan dan laksanakan session/runtime cutover: `PRODUCTION_CONFIG_ENFORCE=true`, Redis cache/queue/session, `EMAIL_VERIFICATION_REQUIRED=true`, `APP_TIMEZONE=Asia/Kuala_Lumpur`, secure cookie dan CSP enforcing.
+- [ ] Deploy commit yang diluluskan, restart worker/scheduler dan jalankan smoke test serta Playwright/axe terhadap deployment sebenar.
+- [ ] Cipta annotated release tag hanya selepas semua bukti di atas diluluskan dan direkodkan.
 
 ## Hardening Seterusnya
 
@@ -38,17 +39,8 @@
 - [x] Hadkan guest Ziggy manifest dan buang global initial prefetch.
 - [x] Lengkapkan public refresh success/error status.
 - [x] Tambah desktop/mobile keyboard + axe smoke coverage untuk `/`, `/contact-us`, login dan dashboard; feature tests meliputi empty/public data states.
-- [ ] Ekstrak baki query orchestration berat dalam `DashboardController`, `EventParticipantController` dan `EventController` secara berperingkat tanpa mengubah behavior.
-- [ ] DBA hadkan production principal kepada schema STMS sahaja dan lampirkan grants yang diluluskan pada release evidence.
-
-## Operational Evidence
-
-- [ ] Jalankan authenticated k6 pada staging multi-worker dan capai threshold yang diluluskan.
-- [ ] Konfigurasi external uptime/log alert dan bukti penerimaan operator sebenar.
-- [ ] Salin actual production backup off-host dan lakukan isolated restore dengan RPO/RTO direkod.
-- [ ] Uji reset-password dan mail delivery production end-to-end.
-- [ ] Rekod PCOV coverage baseline pada connected CI dan tetapkan ratcheting threshold.
-- [ ] Jalankan Playwright/axe terhadap deployment release sebenar selepas deploy; 8/8 local isolated pass ialah pre-deploy evidence sahaja.
+- [x] Ekstrak query orchestration daripada `DashboardController`, `EventParticipantController` dan `EventController` kepada service khusus tanpa mengubah behavior; 27 targeted tests dan suite penuh hijau.
+- [x] Rekod PCOV connected-CI baseline 74.99% statement coverage (4,551/6,069) dan kuatkuasakan ratchet minimum 74.5% pada CI seterusnya.
 
 ## Product/UX Bersyarat
 

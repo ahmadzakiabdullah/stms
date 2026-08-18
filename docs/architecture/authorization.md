@@ -25,16 +25,11 @@ auth/verified -> TenantContext/global scope -> Form Request -> Policy/Gate -> Ac
 
 Tenant scope is not a substitute for authorization. Cross-tenant records should normally resolve to 404; same-tenant records lacking permission should return 403.
 
-## Current Gap
+## Current Enforcement
 
-Mutation actions usually call `Gate::authorize()`, but read/index coverage is not consistent. At audit time:
+The read/index gaps found during the original 17 August audit have been remediated. Sensitive indexes call `viewAny` or a dedicated gate, Organization management is super-admin-only, and admin-sport access is constrained to assigned sports. A six-role direct-URL matrix and HTTP/Inertia payload assertions cover allowed, denied and cross-tenant reads.
 
-- `OrganizationController@index` does not call `OrganizationPolicy::viewAny` and Organization is a root model without tenant scope.
-- `UserController@index` manually tenant-scopes users but does not call `UserPolicy::viewAny`.
-- `ParticipantController@index` relies on tenant scope but does not call `ParticipantPolicy::viewAny`.
-- several other domain index pages rely on any authenticated same-tenant user being allowed to read them.
-
-The role-aware sidebar is presentation only and cannot close this gap. Manual-URL allowed/denied tests are a release blocker.
+The role-aware sidebar remains presentation only; backend Policy/Gate enforcement is authoritative.
 
 ## New Feature Requirement
 

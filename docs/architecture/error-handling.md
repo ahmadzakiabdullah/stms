@@ -4,4 +4,4 @@ Laravel validation, model binding dan exception rendering menyediakan baseline. 
 
 Kod semasa tidak mempunyai satu hierarki custom exception yang meliputi semua domain dan tidak semua service dibalut `try/catch`. Jangan tangkap exception hanya untuk log dan rethrow tanpa nilai tambahan—biarkan handler pusat merekod unhandled exception dan elakkan duplicate logs.
 
-Production mesti menggunakan `APP_DEBUG=false`, respons generik tanpa stack trace/SQL/secret, dan structured logging dengan request/tenant context. Conflict draw/fixture perlu mempunyai kontrak status serta mesej stabil; dua ujian semasa gagal kerana kontrak `DrawService` dan controller tidak lagi sepadan.
+Production mesti menggunakan `APP_DEBUG=false`, respons generik tanpa stack trace/SQL/secret, dan structured logging dengan request/tenant context. Conflict draw/fixture mempunyai kontrak status serta mesej stabil; regresi draw yang ditemui oleh audit telah dibaiki dan suite penuh kini hijau.

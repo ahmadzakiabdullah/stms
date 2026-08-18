@@ -59,4 +59,4 @@ We will use the **Spatie Laravel Permission** package to implement Role-Based Ac
 
 ## Implementation Status (audited 2026-08-17)
 
-Spatie Laravel Permission is installed. The audited database has 6 active role names (`super-admin`, `org-admin`, `staff`, `admin-sport`, `faculty-representative`, `dean`), 42 permissions and 17 role assignments; the repository has 20 policy files. Role names in the original proposal are illustrative, not the live set. Enforcement is incomplete because several controller index methods omit `viewAny`; UI visibility must not be treated as authorization.
+Spatie Laravel Permission is installed. The audited database has 6 active role names (`super-admin`, `org-admin`, `staff`, `admin-sport`, `faculty-representative`, `dean`), 42 permissions and 17 role assignments; the repository has 21 policy files. Role names in the original proposal are illustrative, not the live set. Sensitive index methods now enforce policies/gates and the six-role direct-URL matrix plus cross-tenant payload tests pass. UI visibility remains presentation only and never replaces backend authorization.

@@ -90,6 +90,8 @@ jobs:
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
+      - name: Enforce PCOV statement coverage ratchet
+        run: php scripts/check-coverage-threshold.php coverage.xml 74.5
       - uses: actions/upload-artifact@v7
         with:
           name: php-coverage

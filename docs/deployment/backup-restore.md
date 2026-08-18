@@ -25,6 +25,8 @@ php artisan stms:backup
 
 Copy completed archives to storage outside the application host/container. Local retention is not a substitute for off-site storage.
 
+Sebelum release, jalankan `php artisan stms:release-preflight --json`. Preflight mengesahkan archive `stms-*.zip` terkini berada di path yang resolve di luar repository, tidak kosong, belum melepasi umur diluluskan dan merekod SHA-256. Ia tidak membuka archive atau menggantikan isolated restore drill.
+
 ## Restore Drill
 
 1. Select a known backup and record its timestamp.

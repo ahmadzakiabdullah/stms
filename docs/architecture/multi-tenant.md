@@ -16,13 +16,11 @@ STMS menggunakan satu pangkalan data dengan skema dikongsi. `organization_id` ia
 
 `Organization` ialah akar tenant dan tidak menggunakan global scope. `User` juga mempunyai pengendalian skop tersendiri. Kedua-duanya memerlukan authorization dan query scoping eksplisit. Super-admin/batch/command hanya boleh bypass melalui API yang disengajakan serta diaudit.
 
-Portal awam tidak boleh bergantung pada “tenant pertama”. Ia memilih `PUBLIC_ORG_SLUG` dahulu, kemudian `PUBLIC_SESSION_SLUG` dalam organisasi itu. Query aset branding tetamu juga mesti menggunakan tenant yang sama; query favicon Blade semasa belum memenuhi syarat ini.
+Portal awam tidak bergantung pada “tenant pertama”. Ia memilih `PUBLIC_ORG_SLUG` dahulu, kemudian `PUBLIC_SESSION_SLUG` dalam organisasi itu. Query aset branding tetamu, termasuk favicon, menggunakan pemilihan tenant eksplisit yang sama.
 
-## Jurang Disahkan
+## Bukti Enforcement
 
-Global scope bukan pengganti `viewAny`. Beberapa index controller, termasuk organisasi, pengguna dan peserta, tidak memanggil capability read yang sepatutnya. Ini ialah blocker release walaupun sebahagian query masih mengehadkan organisasi.
-
-Ujian cross-tenant perlu membuat request sebenar dan memeriksa status serta payload. Ujian yang hanya mencipta dua organisasi dan membandingkan ID tidak membuktikan isolation.
+Global scope bukan pengganti `viewAny`. Index sensitif kini memanggil policy/gate yang sesuai, dan ujian cross-tenant membuat request sebenar serta memeriksa status dan payload Inertia. Ujian yang hanya membandingkan ID tidak dikira sebagai bukti isolation.
 
 ## Peraturan Pembangunan
 

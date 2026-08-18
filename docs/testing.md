@@ -1,15 +1,15 @@
 # Testing Strategy
 
-> Baseline terakhir disahkan: 17 Ogos 2026. Lihat [audit penuh](audits/2026-08-17-full-project-and-production-audit.md).
+> Baseline parent terakhir disahkan oleh connected CI pada 17 Ogos 2026; working tree 18 Ogos memerlukan CI baharu. Lihat [audit penuh](audits/2026-08-17-full-project-and-production-audit.md).
 
 ## Keadaan Semasa
 
 - Repositori mengandungi **94 fail ujian PHP**.
-- PHPUnit menjalankan **434 ujian / 1,937 assertions** dan semuanya lulus.
+- PHPUnit menjalankan **439 ujian / 1,948 assertions** pada working tree 18 Ogos dan semuanya lulus.
 - Pint, TypeScript, Vite build, bundle budget, inventory/tenant guards dan dependency audits lulus.
 - Playwright/axe menjalankan **8/8 journeys** pada desktop/mobile menggunakan SQLite terasing.
-- Connected [CI #105](https://github.com/ahmadzakiabdullah/stms/actions/runs/32009988117) pada commit `5bb86a8` mengesahkan dependency audit, lint, test, coverage, build dan browser E2E semuanya lulus; action rasmi v7 berjalan tanpa amaran Node.js 20.
-- Evidence ini melayakkan commit tersebut sebagai pre-deploy candidate; smoke test deployment sebenar masih wajib.
+- Connected [CI #106](https://github.com/ahmadzakiabdullah/stms/actions/runs/32012582828) pada commit `a8df4dd` mengesahkan dependency audit, lint, test, 74.99% PCOV statement coverage, build dan browser E2E semuanya lulus.
+- Evidence ini ialah baseline parent; working tree 18 Ogos perlu connected CI pada commit baharu dan smoke test deployment sebenar masih wajib.
 
 ## Strategi
 

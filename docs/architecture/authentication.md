@@ -31,4 +31,4 @@ Target production driver is Redis. The audited production workspace uses file se
 
 ## Authorization Boundary
 
-Authentication only proves identity. Controllers/middleware must still call Policies/Gates. Several sensitive index actions currently omit `viewAny`; see the 17 August audit and `TODOS.md`.
+Authentication only proves identity. Controllers/middleware still call Policies/Gates; sensitive index actions now enforce read capabilities and are covered by the direct-URL role matrix plus cross-tenant payload assertions.

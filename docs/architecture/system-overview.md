@@ -52,7 +52,7 @@ Organization
 - **TenantContext + BelongsToOrganization** menambah organization scope.
 - **Queued notifications** membawa tenant context melalui middleware.
 
-Pattern coverage belum seragam: beberapa index/read actions tidak memanggil `viewAny`, dan controller query assembly masih besar pada Dashboard/EventParticipant/Draw/Event modules. Rujuk `TODOS.md`.
+Sensitive index/read actions kini memanggil policy/gate yang sesuai. Dashboard, EventParticipant dan Event index query/payload assembly telah dipindahkan kepada service khusus; DrawController masih mengandungi orchestration yang besar tetapi bukan release blocker semasa. Rujuk `TODOS.md`.
 
 ## Frontend
 
@@ -83,8 +83,8 @@ Homepage menggabungkan Sports, Schedule, Results dan Medal standings sebagai anc
 ## Current Risks
 
 1. Runtime production baseline tidak sama dengan secure example.
-2. DB least privilege dan contact/mail configuration belum dibuktikan.
-3. Connected CI, owner confirmation dan post-deploy evidence masih diperlukan.
+2. DB least privilege dan mail configuration belum dibuktikan.
+3. Working tree 18 Ogos memerlukan commit/connected CI; post-deploy evidence masih belum tersedia.
 5. Workspace, public production dan historical seeder data tidak sama.
 
 Source: [full audit 17 August 2026](../audits/2026-08-17-full-project-and-production-audit.md).

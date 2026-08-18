@@ -14,6 +14,7 @@ The release baseline must be regenerated from the current working tree. Historic
 | Vite + bundle budget | Production asset compilation and size limits |
 | Composer/npm audit | Dependency vulnerabilities and abandoned packages |
 | Playwright/axe | Browser journeys and accessibility smoke checks |
+| PCOV ratchet | Connected-CI statement coverage must remain at or above 74.5% |
 
 ## Mandatory Access Tests
 
@@ -41,8 +42,9 @@ npm run build:budget
 npm run test:e2e
 composer audit --locked --no-interaction --abandoned=fail
 npm audit --audit-level=high
+php scripts/check-coverage-threshold.php coverage.xml 74.5
 ```
 
 Use a mapped drive or `cmd.exe /d /c 'pushd "\\server\share\saf" && ...'` for Node commands on Windows UNC workspaces.
 
-Final pass counts and dated evidence belong in `CURRENT_STATE.md` and the dated audit report, not in this architecture document.
+CI #106 established the baseline at 74.99% statement coverage (4,551/6,069). Raise the 74.5% ratchet only after a newer connected-CI artifact proves a sustainable higher floor. Final pass counts and dated evidence belong in `CURRENT_STATE.md` and the dated audit report, not in this architecture document.
