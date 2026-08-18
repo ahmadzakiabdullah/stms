@@ -1,0 +1,73 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:18080:80"
+    environment:
+      APP_ENV: staging
+      APP_DEBUG: "false"
+      APP_URL: http://127.0.0.1:18080
+      APP_KEY: ${STMS_STAGING_APP_KEY:?Set STMS_STAGING_APP_KEY}
+      PUBLIC_ORG_SLUG: utem
+      PUBLIC_SESSION_SLUG: saf-2026
+      PUBLIC_REGISTRATION_ENABLED: "false"
+      PRODUCTION_CONFIG_ENFORCE: "false"
+      EMAIL_VERIFICATION_REQUIRED: "false"
+      SEED_DEMO_DATA: "true"
+      ALLOW_DEMO_SEEDING: "true"
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: stms_staging
+      DB_USERNAME: stms_staging
+      DB_PASSWORD: ${STMS_STAGING_DB_PASSWORD:?Set STMS_STAGING_DB_PASSWORD}
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${STMS_STAGING_REDIS_PASSWORD:?Set STMS_STAGING_REDIS_PASSWORD}
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      SESSION_SECURE_COOKIE: "false"
+      MAIL_MAILER: array
+      BACKUP_ENABLED: "false"
+      HEALTH_MONITOR_ENABLED: "true"
+      HEALTH_ENDPOINT_TOKEN: ${STMS_STAGING_HEALTH_TOKEN:?Set STMS_STAGING_HEALTH_TOKEN}
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: warning
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${STMS_STAGING_MYSQL_ROOT_PASSWORD:?Set STMS_STAGING_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: stms_staging
+      MYSQL_USER: stms_staging
+      MYSQL_PASSWORD: ${STMS_STAGING_DB_PASSWORD:?Set STMS_STAGING_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "no", "--requirepass", "${STMS_STAGING_REDIS_PASSWORD:?Set STMS_STAGING_REDIS_PASSWORD}"]
+    environment:
+      REDIS_PASSWORD: ${STMS_STAGING_REDIS_PASSWORD:?Set STMS_STAGING_REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 12

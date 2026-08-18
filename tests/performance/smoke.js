@@ -4,13 +4,16 @@ import { check, fail, sleep } from 'k6';
 export const options = {
     vus: Number(__ENV.VUS || 10),
     duration: __ENV.DURATION || '30s',
+    noCookiesReset: true,
     thresholds: {
+        checks: ['rate==1'],
         http_req_failed: ['rate<0.01'],
         http_req_duration: ['p(95)<750'],
     },
 };
 
 const baseUrl = (__ENV.BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
+const healthToken = (__ENV.HEALTH_TOKEN || '').trim();
 const authLogins = (__ENV.AUTH_LOGINS || __ENV.AUTH_LOGIN || __ENV.AUTH_EMAIL || '')
     .split(',').map((value) => value.trim()).filter(Boolean);
 const authPasswords = (__ENV.AUTH_PASSWORDS || __ENV.AUTH_PASSWORD || '')
@@ -58,7 +61,9 @@ function authenticate() {
 }
 
 export default function () {
-    const health = http.get(`${baseUrl}/health`);
+    const health = http.get(`${baseUrl}/health`, {
+        headers: healthToken ? { 'X-Health-Token': healthToken } : {},
+    });
     check(health, {
         'health returns 200': (response) => response.status === 200,
         'health reports ok': (response) => response.json('status') === 'ok',

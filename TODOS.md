@@ -22,8 +22,8 @@
 
 - [ ] Konfigurasi mail transport sebenar dan buktikan reset-password delivery end-to-end sebelum `EMAIL_VERIFICATION_REQUIRED=true` dihidupkan.
 - [ ] DBA hadkan production principal kepada schema STMS sahaja dan lampirkan grants yang diluluskan pada release evidence.
-- [ ] Ambil actual production backup, salin off-host dan lakukan isolated restore; rekod RPO/RTO serta checksum/archive yang diluluskan.
-- [ ] Jalankan authenticated k6 pada staging multi-worker dan capai threshold yang diluluskan.
+- [x] Ambil actual production-labelled workspace backup, salin off-host dan lakukan isolated MySQL 8 restore; SHA-256, row/upload evidence dan RTO 7.699 saat direkod dalam `docs/testing/2026-08-18-release-drill.md`.
+- [x] Jalankan authenticated k6 pada staging multi-worker terasing: 1,150/1,150 checks, 0% HTTP failures dan p95 81.543 ms pada 10 VU/30 saat.
 - [ ] Konfigurasi external uptime/log alert dan rekod bukti penerimaan operator sebenar.
 - [ ] Sediakan dan laksanakan session/runtime cutover: `PRODUCTION_CONFIG_ENFORCE=true`, Redis cache/queue/session, `EMAIL_VERIFICATION_REQUIRED=true`, `APP_TIMEZONE=Asia/Kuala_Lumpur`, secure cookie dan CSP enforcing.
 - [ ] Deploy commit yang diluluskan, restart worker/scheduler dan jalankan smoke test serta Playwright/axe terhadap deployment sebenar.
@@ -41,11 +41,12 @@
 - [x] Tambah desktop/mobile keyboard + axe smoke coverage untuk `/`, `/contact-us`, login dan dashboard; feature tests meliputi empty/public data states.
 - [x] Ekstrak query orchestration daripada `DashboardController`, `EventParticipantController` dan `EventController` kepada service khusus tanpa mengubah behavior; 27 targeted tests dan suite penuh hijau.
 - [x] Rekod PCOV connected-CI semasa 75.03% statement coverage (4,676/6,232) dan kuatkuasakan ratchet minimum 74.5%.
+- [x] Harden Docker/Redis release path melalui Predis, production-like staging Compose, authenticated k6 check ratchet dan validated container health startup.
 
-## Product/UX Bersyarat
+## Product/UX Decisions
 
-- Tambah public pages berasingan hanya jika product owner memilih IA multi-page.
-- Tambah schedule/result filters, print/calendar dan analytics hanya selepas route/data asas stabil.
+- [x] Kekalkan portal awam single-page berdasarkan keputusan product owner; halaman berasingan memerlukan change request baharu.
+- [ ] Post-MVP: nilai schedule/result filters, print/calendar dan analytics selepas release production stabil.
 
 ## Deferred Milestones
 

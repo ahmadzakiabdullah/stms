@@ -8,18 +8,26 @@ services:
     volumes:
       - ./storage:/var/www/html/storage
       - ./public/build:/var/www/html/public/build
+      - ${BACKUP_PATH:?Set an off-host BACKUP_PATH}:/var/backups/stms
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-https://saf.utem.edu.my}
       APP_KEY: ${APP_KEY:?Set APP_KEY in the Compose environment}
+      APP_TIMEZONE: Asia/Kuala_Lumpur
+      CSP_REPORT_ONLY: "false"
+      PRODUCTION_CONFIG_ENFORCE: "true"
+      EMAIL_VERIFICATION_REQUIRED: "true"
       PUBLIC_REGISTRATION_ENABLED: "false"
       SEED_DEMO_DATA: "false"
       ALLOW_DEMO_SEEDING: "false"
       TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
       BACKUP_ENABLED: "true"
+      BACKUP_PATH: /var/backups/stms
       BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY in the Compose environment}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
       HEALTH_MONITOR_ENABLED: "true"
+      HEALTH_ENDPOINT_TOKEN: ${HEALTH_ENDPOINT_TOKEN:?Set HEALTH_ENDPOINT_TOKEN in the Compose environment}
       HEALTH_MAX_PENDING_JOBS: ${HEALTH_MAX_PENDING_JOBS:-100}
       HEALTH_MAX_FAILED_JOBS: ${HEALTH_MAX_FAILED_JOBS:-0}
       HEALTH_MIN_DISK_FREE_MB: ${HEALTH_MIN_DISK_FREE_MB:-1024}
@@ -29,16 +37,25 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the Compose environment}
       REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in the Compose environment}
+      REDIS_CLIENT: predis
       CACHE_STORE: redis
       QUEUE_CONNECTION: redis
       SESSION_DRIVER: redis
+      SESSION_SECURE_COOKIE: "true"
+      MAIL_MAILER: smtp
+      MAIL_HOST: ${MAIL_HOST:?Set MAIL_HOST in the Compose environment}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:?Set MAIL_USERNAME in the Compose environment}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:?Set MAIL_PASSWORD in the Compose environment}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?Set MAIL_FROM_ADDRESS in the Compose environment}
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://127.0.0.1/health"]
+      test: ["CMD-SHELL", "curl --fail --header \"X-Health-Token: $$HEALTH_ENDPOINT_TOKEN\" http://127.0.0.1/health"]
       interval: 30s
       timeout: 5s
       retries: 3

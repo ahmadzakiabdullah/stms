@@ -15,9 +15,7 @@ FROM php:8.4-fpm-alpine
 RUN apk add --no-cache nginx supervisor curl git unzip mariadb-client libzip-dev \
     libpng-dev libjpeg-turbo-dev freetype-dev libwebp-dev \
     oniguruma-dev libxml2-dev \
-    && docker-php-ext-install pdo_mysql mbstring gd xml bcmath zip \
-    && pecl install redis \
-    && docker-php-ext-enable redis
+    && docker-php-ext-install pdo_mysql mbstring gd xml bcmath zip
 
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 
@@ -26,6 +24,7 @@ WORKDIR /var/www/html
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
+    && mkdir -p /var/log/supervisor \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 

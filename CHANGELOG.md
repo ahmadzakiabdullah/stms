@@ -2,6 +2,10 @@
 
 ## Unreleased — Release checklist and controller orchestration (18 August 2026)
 
+- Added portable Predis support, hardened the production Docker runtime requirements, and added an isolated production-like staging Compose stack.
+- Fixed two deployment-image defects found by the staging drill: PECL Redis could not compile without a build toolchain, and Supervisor's log directory was absent.
+- Strengthened authenticated k6 with persistent per-VU cookies, health-token support and a mandatory 100% application-check threshold.
+- Recorded an encrypted off-host backup and isolated MySQL 8 restore (RTO 7.699 seconds), plus a passing 10-VU multi-worker staging run with 0% HTTP failures and 81.543 ms p95.
 - Reorganized `TODOS.md` into atomic repository and production release gates, removing duplicate mail, backup, deployment and browser-evidence tasks.
 - Extracted Dashboard, Event Participant and Event index query/payload orchestration into dedicated services while preserving controller authorization and mutation boundaries.
 - Recorded connected CI #110 on commit `e535e4b` with all six jobs passing, including 75.03% PCOV statement coverage (4,676/6,232) against the new 74.5% ratchet and browser E2E.

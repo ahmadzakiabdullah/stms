@@ -9,5 +9,9 @@ storage/framework/cache/data/*
 storage/framework/sessions/*
 storage/framework/views/*
 storage/logs/*
+storage/app/public/*
+storage/app/backups/*
+storage/app/backup-work-*
+storage/app/restore-work-*
 docker-compose.yml
 Dockerfile

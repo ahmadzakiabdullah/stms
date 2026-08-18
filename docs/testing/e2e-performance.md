@@ -42,20 +42,29 @@ PCOV generates a Clover artifact in CI. Record the first successful percentage i
 
 ## Authenticated k6 Scenario
 
-Scenario perlu membekalkan token untuk `/health` atau menggunakan endpoint staging yang sesuai; production menyembunyikan `/health` sebagai 404 tanpa token. Dengan credentials bukan production yang terkawal, ia juga boleh sign in dan exercise `/dashboard`:
+Scenario menerima `HEALTH_TOKEN` dan menghantarnya sebagai `X-Health-Token`; production menyembunyikan `/health` sebagai 404 tanpa token. Dengan credentials bukan production yang terkawal, ia juga boleh sign in dan exercise `/dashboard`:
 
 ```bash
-k6 run -e BASE_URL=https://staging.example.test -e AUTH_LOGINS=loadtest1,loadtest2 -e AUTH_PASSWORDS=secret1,secret2 -e VUS=10 -e DURATION=30s -e K6_SUMMARY_PATH=test-results/k6-summary.json tests/performance/smoke.js
+k6 run -e BASE_URL=https://staging.example.test -e HEALTH_TOKEN=secret-health-token -e AUTH_LOGINS=loadtest1,loadtest2 -e AUTH_PASSWORDS=secret1,secret2 -e VUS=10 -e DURATION=30s -e K6_SUMMARY_PATH=test-results/k6-summary.json tests/performance/smoke.js
 ```
 
 Use dedicated least-privilege staging accounts and inject passwords through the CI secret store. Each VU owns its own cookie jar and is mapped to a supplied account; provide at least as many accounts as VUs to avoid shared sessions and login throttling. Never commit credentials or point mutation/load tests at production without explicit approval.
 Publish `test-results/k6-summary.json` as the release artifact after every approved staging run.
+
+The scenario retains each VU's cookie jar between iterations and requires `checks: rate==1`; HTTP-level thresholds alone are insufficient because a redirect or validation response can still be a successful HTTP transaction while failing the intended application journey.
 
 ## Evidence Recorded on 5 August 2026
 
 - Connected-CI Playwright/axe: all six journeys passed on commit `ae42a50`.
 - Sanitized MySQL restore: 3.47 MB AES-256 archive restored in 2.977 seconds with healthy checks and matching counts.
 - Corrected authenticated k6 behavior: 190/190 checks and 0% HTTP errors; p95 4.24 seconds failed the 750 ms target on the single-process development server.
-- The CSRF/dynamic-cookie correction is committed in the working tree. A multi-worker staging load run is still required before the latency gate can be marked complete.
+- The CSRF/dynamic-cookie correction was committed, but at that date a multi-worker staging load run was still required; the 18 August evidence below closes that historical gap.
+
+## Evidence Recorded on 18 August 2026
+
+- Isolated Nginx/PHP-FPM multi-worker staging with MySQL 8 and Redis 7.
+- 10 dedicated staging accounts, 10 VUs for 30 seconds.
+- 1,150/1,150 application checks, 0% HTTP failures and p95 81.543 ms.
+- See [release drill evidence](2026-08-18-release-drill.md).
 
 See `2026-08-05-operational-drill.md` for the complete record.

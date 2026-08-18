@@ -1,0 +1,94 @@
+name: Production uptime monitor
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      force_failure:
+        description: Exercise the alert path with an intentional 404
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: production-uptime-monitor
+  cancel-in-progress: false
+
+jobs:
+  uptime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TARGET_URL: https://saf.utem.edu.my/up
+      ALERT_LABEL: production-uptime
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Probe production liveness
+        id: probe
+        shell: bash
+        env:
+          FORCE_FAILURE: ${{ inputs.force_failure || 'false' }}
+        run: |
+          probe_url="$TARGET_URL"
+          if [[ "$FORCE_FAILURE" == "true" ]]; then
+            probe_url="${TARGET_URL%/}/forced-failure-${GITHUB_RUN_ID}"
+          fi
+
+          set +e
+          response_code=$(curl --silent --show-error --location \
+            --connect-timeout 10 --max-time 20 \
+            --output /dev/null --write-out '%{http_code}' "$probe_url")
+          curl_exit=$?
+          set -e
+
+          healthy=false
+          if [[ "$curl_exit" -eq 0 && "$response_code" == "200" ]]; then
+            healthy=true
+          fi
+
+          echo "healthy=$healthy" >> "$GITHUB_OUTPUT"
+          echo "response_code=${response_code:-000}" >> "$GITHUB_OUTPUT"
+          echo "curl_exit=$curl_exit" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update uptime alert
+        if: steps.probe.outputs.healthy != 'true'
+        shell: bash
+        env:
+          RESPONSE_CODE: ${{ steps.probe.outputs.response_code }}
+          CURL_EXIT: ${{ steps.probe.outputs.curl_exit }}
+        run: |
+          gh label create "$ALERT_LABEL" --repo "$GITHUB_REPOSITORY" \
+            --color B60205 --description "Production liveness alert" --force
+
+          issue_number=$(gh issue list --repo "$GITHUB_REPOSITORY" \
+            --label "$ALERT_LABEL" --state open --json number --jq '.[0].number')
+          message="Production liveness probe failed. URL: ${TARGET_URL}; HTTP: ${RESPONSE_CODE}; curl exit: ${CURL_EXIT}; run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          if [[ -z "$issue_number" ]]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "Production uptime alert" --body "$message" \
+              --label "$ALERT_LABEL" --assignee "$GITHUB_REPOSITORY_OWNER"
+          else
+            gh issue comment "$issue_number" --repo "$GITHUB_REPOSITORY" --body "$message"
+          fi
+
+      - name: Close recovered uptime alert
+        if: steps.probe.outputs.healthy == 'true'
+        shell: bash
+        run: |
+          issue_number=$(gh issue list --repo "$GITHUB_REPOSITORY" \
+            --label "$ALERT_LABEL" --state open --json number --jq '.[0].number')
+          if [[ -n "$issue_number" ]]; then
+            gh issue comment "$issue_number" --repo "$GITHUB_REPOSITORY" \
+              --body "Production liveness recovered in ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."
+            gh issue close "$issue_number" --repo "$GITHUB_REPOSITORY" --reason completed
+          fi
+
+      - name: Fail after recording alert
+        if: steps.probe.outputs.healthy != 'true'
+        run: exit 1
