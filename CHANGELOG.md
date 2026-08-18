@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Results page: pending matches no longer include fixtures belonging to soft-deleted events, so the Pending Matches count and the Add Result list now match what the Matches page displays (regression test added).
+
+- Matches page: added sortable table columns (match #, matchup, pool/stage, venue/time, status), search and status filters inside the event view, clickable status stat cards that filter the list, dark-mode-safe status badges and flash messages, a compact date/time format, and Home/Away selects that are limited to participants drawn into the selected event (with an explanatory hint) plus a tooltip on the disabled Add Match button.
+
 - Live Scores: added a public `/live` page (no login required) showing completed match results with scores and winners plus per-pool league standings, filterable by sport and event, with automatic 20-second refresh. New `LiveScoreController`, `Live/Index` page, sidebar "Live Scores" link, and 7 feature tests. Data is scoped to the first active organization.
 
 - CI: aligned all runners and the container runtime with the PHP 8.4 dependency baseline, enabled CI on the default `master` branch, and retained Laravel bootstrap/runtime directories in clean checkouts so Composer, tests, coverage, and browser E2E can start reliably.

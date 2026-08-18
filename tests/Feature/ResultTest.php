@@ -121,6 +121,36 @@ class ResultTest extends TestCase
         $this->assertSoftDeleted('results', ['id' => $result->id]);
     }
 
+    public function test_pending_matches_exclude_fixtures_of_soft_deleted_events(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+
+        $liveEvent = Event::factory()->create(['organization_id' => $org->id]);
+        $liveMatch = Fixture::factory()->create([
+            'organization_id' => $org->id,
+            'event_id' => $liveEvent->id,
+            'home_participant_id' => Participant::factory()->create(['organization_id' => $org->id])->id,
+            'away_participant_id' => Participant::factory()->create(['organization_id' => $org->id])->id,
+        ]);
+
+        $deletedEvent = Event::factory()->create(['organization_id' => $org->id]);
+        Fixture::factory()->create([
+            'organization_id' => $org->id,
+            'event_id' => $deletedEvent->id,
+            'home_participant_id' => Participant::factory()->create(['organization_id' => $org->id])->id,
+            'away_participant_id' => Participant::factory()->create(['organization_id' => $org->id])->id,
+        ]);
+        $deletedEvent->delete();
+
+        $response = $this->actingAs($admin)->get(route('results.index'));
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('Results/Index')
+            ->has('matches', 1)
+            ->where('matches.0.id', $liveMatch->id));
+    }
+
     private function seedMatchWithParticipantUsers(): array
     {
         $org = Organization::factory()->create();
