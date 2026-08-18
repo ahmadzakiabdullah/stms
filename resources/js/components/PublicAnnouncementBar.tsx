@@ -3,7 +3,12 @@ import { type PageProps } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { CloudSun, MapPin } from 'lucide-react';
 
-type Weather = { location: string; temperature: number } | null;
+type Weather = {
+    location: string;
+    temperature: number;
+    observed_at?: string | null;
+    is_stale?: boolean;
+} | null;
 
 export default function PublicAnnouncementBar() {
     const { locale, t } = useI18n();
@@ -11,6 +16,11 @@ export default function PublicAnnouncementBar() {
     const date = new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     }).format(new Date());
+    const weatherLastUpdated = weather?.observed_at
+        ? new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', {
+            hour: '2-digit', minute: '2-digit',
+        }).format(new Date(weather.observed_at))
+        : null;
 
     return (
         <div className="bg-[var(--public-dark)] text-white/75">
@@ -22,6 +32,9 @@ export default function PublicAnnouncementBar() {
                     <span aria-hidden="true" className="h-4 w-px bg-white/15" />
                     <CloudSun aria-hidden="true" className="size-4 text-[var(--public-highlight)]" />
                     <span>{weather ? `${weather.temperature}°C` : t('Weather unavailable')}</span>
+                    {weather?.is_stale ? <span className="rounded bg-amber-300/15 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-200">
+                        {t('Using recent weather')}{weatherLastUpdated ? ` · ${t('Last updated')} ${weatherLastUpdated}` : ''}
+                    </span> : null}
                 </div>
             </div>
         </div>

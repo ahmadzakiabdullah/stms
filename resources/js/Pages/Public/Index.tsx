@@ -45,7 +45,7 @@ export default function PublicIndex({ app_name, competition, stats, upcoming, re
         setRefreshing(true);
         setRefreshStatus('idle');
         router.reload({
-            only: ['stats', 'upcoming', 'results', 'medals', 'updated_at'],
+            only: ['stats', 'upcoming', 'results', 'medals', 'updated_at', 'weather'],
             preserveScroll: true,
             onSuccess: () => setRefreshStatus(announceSuccess ? 'success' : 'idle'),
             onError: () => setRefreshStatus('error'),
