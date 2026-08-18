@@ -2,7 +2,7 @@
 
 ## Quality Gates
 
-The release baseline must be regenerated from the current working tree. Historical connected-CI evidence is supporting evidence only and must not be presented as proof for newer code.
+The release baseline must be generated from the exact candidate commit. Historical connected-CI evidence is supporting evidence only and must not be presented as proof for newer code.
 
 | Gate | Purpose |
 |---|---|
@@ -47,4 +47,4 @@ php scripts/check-coverage-threshold.php coverage.xml 74.5
 
 Use a mapped drive or `cmd.exe /d /c 'pushd "\\server\share\saf" && ...'` for Node commands on Windows UNC workspaces.
 
-CI #106 established the baseline at 74.99% statement coverage (4,551/6,069). Raise the 74.5% ratchet only after a newer connected-CI artifact proves a sustainable higher floor. Final pass counts and dated evidence belong in `CURRENT_STATE.md` and the dated audit report, not in this architecture document.
+CI #110 measured 75.03% statement coverage (4,676/6,232) on `e535e4b` and passed the 74.5% ratchet. Raise that floor only after a newer connected-CI artifact proves a sustainable higher threshold. Final pass counts and dated evidence belong in `CURRENT_STATE.md` and the dated audit report, not in this architecture document.

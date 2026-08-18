@@ -6,7 +6,7 @@
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** working tree 18 Ogos melepasi semua quality gate tempatan. Connected CI terakhir ialah #106 pada parent commit `a8df4dd`; refactor/documentation semasa masih perlu direview, dikomit dan lulus connected CI pada SHA yang sama. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants, backup/restore dan operational evidence diselesaikan.
+**Repository:** refactor dan release handoff telah dikomit sebagai `e535e4b`; semua quality gate tempatan serta connected CI #110 lulus pada commit yang sama. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants, backup/restore dan operational evidence diselesaikan.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
@@ -55,7 +55,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Axe/keyboard smoke tests meliputi login, dashboard, homepage dan Contact pada desktop/mobile; contrast dan ARIA findings semasa telah dibaiki.
 - Butiran hubungan awam kini tenant-scoped dan boleh diedit melalui Settings: alamat, e-mel, telefon serta pautan Facebook, Instagram, TikTok dan YouTube divalidasi sebelum dipaparkan.
 - Query/payload assembly bagi Dashboard, Events dan Event Participants telah dipindahkan daripada controller kepada tiga service khusus; controller masing-masing kini fokus pada authorization, input, response dan mutation.
-- Artifact PCOV CI #106 merekod 74.99% statement coverage (4,551/6,069); workflow kini mempunyai ratchet minimum 74.5%.
+- Artifact PCOV CI #110 merekod 75.03% statement coverage (4,676/6,232); workflow mempunyai ratchet minimum 74.5% yang lulus pada commit `e535e4b`.
 
 ## Runtime Workspace
 
@@ -93,7 +93,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | npm audit | Lulus — 0 vulnerability |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
 | Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 94` |
-| Connected CI | **Baseline parent lulus — [run #106](https://github.com/ahmadzakiabdullah/stms/actions/runs/32012582828)** pada `a8df4dd`; perubahan working tree 18 Ogos masih memerlukan CI pada commit baharu |
+| Connected CI | **Lulus — [run #110](https://github.com/ahmadzakiabdullah/stms/actions/runs/32093252159)** pada `e535e4b`; keenam-enam job hijau termasuk browser E2E dan ratchet PCOV |
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
@@ -103,8 +103,7 @@ Portal production ialah single-page homepage berseksyen plus `/contact-us`. Prod
 
 1. Operator menyediakan mail transport sebenar, menukar runtime kepada baseline production selamat dan melakukan smoke test selepas deploy.
 2. DBA menghadkan principal kepada schema STMS dan merekod grants.
-3. Refactor/documentation semasa direview, dikomit dan connected CI hijau pada SHA yang sama.
-4. Backup release diambil, deployment disahkan dan release tag diwujudkan.
-5. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
+3. Backup release diambil, deployment disahkan dan release tag diwujudkan.
+4. Evidence operasi luaran—staging k6, alert receipt, off-host restore dan reset-password mail—direkod.
 
 **Last updated:** 18 Ogos 2026.

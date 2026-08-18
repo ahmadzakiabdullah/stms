@@ -84,7 +84,7 @@ Homepage menggabungkan Sports, Schedule, Results dan Medal standings sebagai anc
 
 1. Runtime production baseline tidak sama dengan secure example.
 2. DB least privilege dan mail configuration belum dibuktikan.
-3. Working tree 18 Ogos memerlukan commit/connected CI; post-deploy evidence masih belum tersedia.
-5. Workspace, public production dan historical seeder data tidak sama.
+3. Commit `e535e4b` lulus connected CI, tetapi post-deploy evidence masih belum tersedia.
+4. Workspace, public production dan historical seeder data tidak sama.
 
 Source: [full audit 17 August 2026](../audits/2026-08-17-full-project-and-production-audit.md).

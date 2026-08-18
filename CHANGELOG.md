@@ -4,7 +4,7 @@
 
 - Reorganized `TODOS.md` into atomic repository and production release gates, removing duplicate mail, backup, deployment and browser-evidence tasks.
 - Extracted Dashboard, Event Participant and Event index query/payload orchestration into dedicated services while preserving controller authorization and mutation boundaries.
-- Recorded the CI #106 PCOV baseline at 74.99% statement coverage (4,551/6,069) and added a 74.5% CI ratchet.
+- Recorded connected CI #110 on commit `e535e4b` with all six jobs passing, including 75.03% PCOV statement coverage (4,676/6,232) against the new 74.5% ratchet and browser E2E.
 - Added the non-destructive `stms:release-preflight` command for configuration, DB/Redis connectivity, mailer completeness, off-repository backup freshness/checksum, monitoring and public tenant selectors.
 - Added a reusable sanitized release-evidence template covering CI, mail, DB grants, backup/restore, load, alerts, deployment smoke checks and GO/NO-GO approval.
 - Revalidated the working tree locally: PHPUnit 439/439 (1,948 assertions), Pint, TypeScript, inventory, tenant bypass, dependency audits, Vite build/budget and Playwright/axe 8/8 all pass.

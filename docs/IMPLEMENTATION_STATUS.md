@@ -41,7 +41,7 @@
 | Playwright/axe | Pass — 8/8 desktop/mobile, isolated SQLite |
 | Committed remediation | Pass — logical commits created |
 | Release tag | Fail — no release tag |
-| Connected CI baseline | Pass — run #106 on `a8df4dd`; working tree 18 Ogos memerlukan CI baharu |
+| Connected CI | Pass — run #110 on `e535e4b`; all six jobs including PCOV ratchet and browser E2E passed |
 
 ## Production Snapshot
 

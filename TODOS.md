@@ -9,13 +9,13 @@
 - [x] Tutup remediation P0 bagi draw, authorization read/index, tenant HTTP/Inertia assertions, ranking strategy, production guard, CSP/font, dependency advisory dan accessibility smoke coverage.
 - [x] Audit 17 users/17 role assignments dan tenant relations; proses 32 queued database notifications kepada 0 pending/0 failed.
 - [x] Quality gate tempatan 18 Ogos lulus: PHPUnit 439/439 (1,948 assertions), Pint, TypeScript, inventory, tenant guard, build/budget, dependency audits dan Playwright/axe 8/8.
-- [x] Connected CI baseline [#106](https://github.com/ahmadzakiabdullah/stms/actions/runs/32012582828) lulus pada `a8df4dd`: dependency audit, lint, PHPUnit/inventory, coverage, build dan browser E2E.
+- [x] Connected CI [#110](https://github.com/ahmadzakiabdullah/stms/actions/runs/32093252159) lulus pada `e535e4b`: dependency audit, lint, PHPUnit/inventory, 75.03% PCOV coverage, build dan browser E2E.
 - [x] Product owner mengesahkan SAF 2026 ialah 1–31 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan navigation single-page; rekod pertandingan boleh dikemas kini kemudian jika maklumat rasmi berubah.
 - [x] Lengkapkan alamat, e-mel, telefon dan empat pautan media sosial rasmi Pusat Sukan sebagai tetapan tenant yang boleh diedit; data workspace UTeM telah dikemas kini dan cache portal dibersihkan.
 
-### Repository handoff yang masih diperlukan
+### Repository handoff yang selesai
 
-- [ ] Review dan commit refactor/documentation 18 Ogos, kemudian buktikan connected CI hijau pada SHA yang sama; CI #106 ialah baseline parent sebelum perubahan working tree ini.
+- [x] Review dan commit refactor/documentation 18 Ogos sebagai `e535e4b`; connected CI #110 hijau pada SHA yang sama.
 - [x] Sediakan `stms:release-preflight` baca-sahaja dan release evidence template bagi konfigurasi, DB/Redis, mailer, backup freshness, monitoring serta public tenant selectors.
 
 ### Release blockers — memerlukan owner/production operator
@@ -40,7 +40,7 @@
 - [x] Lengkapkan public refresh success/error status.
 - [x] Tambah desktop/mobile keyboard + axe smoke coverage untuk `/`, `/contact-us`, login dan dashboard; feature tests meliputi empty/public data states.
 - [x] Ekstrak query orchestration daripada `DashboardController`, `EventParticipantController` dan `EventController` kepada service khusus tanpa mengubah behavior; 27 targeted tests dan suite penuh hijau.
-- [x] Rekod PCOV connected-CI baseline 74.99% statement coverage (4,551/6,069) dan kuatkuasakan ratchet minimum 74.5% pada CI seterusnya.
+- [x] Rekod PCOV connected-CI semasa 75.03% statement coverage (4,676/6,232) dan kuatkuasakan ratchet minimum 74.5%.
 
 ## Product/UX Bersyarat
 

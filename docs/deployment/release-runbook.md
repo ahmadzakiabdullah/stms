@@ -1,6 +1,6 @@
 # Release Runbook
 
-> Pada 18 Ogos 2026 belum ada Git tag. Working tree melepasi quality gate tempatan, tetapi perubahan semasa belum mempunyai connected CI dan bukti production/operasi masih belum lengkap (`NO-GO`).
+> Pada 18 Ogos 2026 belum ada Git tag. Commit calon `e535e4b` melepasi quality gate tempatan dan connected CI #110, tetapi bukti production/operasi masih belum lengkap (`NO-GO`).
 
 ## 1. Syarat Sebelum Release
 

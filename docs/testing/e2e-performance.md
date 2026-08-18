@@ -21,7 +21,7 @@ The CI job uses `database/e2e.sqlite`, enables demo seeding only in the testing 
 
 Satu connected CI run sejarah mengesahkan enam journey pada commit `ae42a50`. Bukti itu tidak meliputi HEAD/working tree 17 Ogos; draw, import, result-entry, export dan route public semasa masih memerlukan rerun dengan test data terasing.
 
-Suite kini mempunyai empat scenario merentas desktop/mobile (8 journeys): core super-admin, faculty/dean, login/dashboard axe, dan public Home/Contact keyboard+axe. Run terasing pada working tree 17 Ogos 2026 lulus **8/8** dalam 2.4 minit menggunakan SQLite. Connected CI dan post-deploy run masih diperlukan.
+Suite kini mempunyai empat scenario merentas desktop/mobile (8 journeys): core super-admin, faculty/dean, login/dashboard axe, dan public Home/Contact keyboard+axe. Run terasing pada 18 Ogos 2026 lulus **8/8** dalam 2.3 minit menggunakan SQLite; connected CI #110 turut lulus pada `e535e4b`. Post-deploy run terhadap deployment sebenar masih diperlukan.
 
 Pada workstation yang `.env` menetapkan production `ASSET_URL`, Playwright memaksa test asset URL mengikuti test `APP_URL`; ini mengelakkan HTML local mengambil JavaScript production.
 
