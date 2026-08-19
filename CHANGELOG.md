@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Sport icons switched to Icons8 PNG (19 August 2026)
+
+- Replaced the Flaticon Uicons sport icons with self-hosted Icons8 PNGs (512px, iOS style) rendered via CSS mask + `currentColor`, so glyphs inherit the accent colour and adapt to dark mode automatically.
+- All 24 sport chips, sports directory cards, match cards and next-fixture hero now show real sport glyphs; unmapped sports fall back to a trophy icon.
+- Removed the Uicons stylesheet link, the `uicons-bold-rounded` @font-face/field-hockey rule and the self-hosted `public/uicons/` directory (no longer referenced anywhere).
+- Added `icons8` to the IIS `web.config` static-file allow-list; PNGs are stored under `public/icons8/` together with the required Icons8 attribution.
+
 ## Unreleased — Single current temperature weather (19 August 2026)
 
 - Replaced the data.gov.my daily min/max forecast with a single Open-Meteo current temperature for the public announcement bar, keeping the stale/last-good fallback and the broken-CA-bundle retry.

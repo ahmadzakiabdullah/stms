@@ -1,0 +1,8 @@
+Icons in this directory are provided by Icons8 (https://icons8.com).
+
+License: Icons8 provides free icons for commercial use under the terms of the
+Icons8 License. Attribution to Icons8 is required. You can attribute this way:
+
+    Icon: "Sports icons by Icons8" https://icons8.com
+
+Source style: "iOS 27 Outlined" / Icons8, downloaded at 512x512.

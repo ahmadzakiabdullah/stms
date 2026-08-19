@@ -24,8 +24,6 @@
                 : null;
         @endphp
         <link rel="icon" href="{{ $favicon ?: asset('favicon.ico') }}">
-        <link rel="stylesheet" href="{{ asset('uicons/css/uicons-regular-rounded.css') }}">
-
         <title inertia>{{ config('app.name', 'STMS Portal') }}</title>
 
         <!-- Scripts -->

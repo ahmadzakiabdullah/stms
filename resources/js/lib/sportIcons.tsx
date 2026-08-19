@@ -1,31 +1,39 @@
-const CLASSES: Record<string, string> = {
-    aerobics: 'fi fi-rr-ballet-dance',
-    archery: 'fi fi-rr-bow-arrow',
-    badminton: 'fi fi-rr-badminton',
-    basketball: 'fi fi-rr-basketball',
-    bowling: 'fi fi-rr-bowling-ball',
-    chess: 'fi fi-rr-chess-knight',
-    cycling: 'fi fi-rr-cycling',
-    'e-sport (mobile legends)': 'fi fi-rr-gamepad',
-    'e-sport (valorant)': 'fi fi-rr-target',
-    football: 'fi fi-rr-football',
-    futsal: 'fi fi-rr-goal-net',
-    handball: 'fi fi-rr-hand-fist',
-    hockey: 'fi fi-field-hockey',
-    'indoor rowing': 'fi fi-rr-kayak',
-    'lawn bowls': 'fi fi-rr-target',
-    netball: 'fi fi-rr-basketball',
-    petanque: 'fi fi-rr-bowling-ball',
-    rugby: 'fi fi-rr-rugby',
-    'sepak takraw': 'fi fi-rr-volleyball-player',
-    softball: 'fi fi-rr-baseball-alt',
-    'table tennis': 'fi fi-rr-ping-pong',
-    tennis: 'fi fi-rr-tennis',
-    'tenpin bowling': 'fi fi-rr-bowling-pins',
-    volleyball: 'fi fi-rr-volleyball',
+const IMAGES: Record<string, string> = {
+    aerobics: '/icons8/dumbbell.png',
+    archery: '/icons8/archer.png',
+    badminton: '/icons8/badminton.png',
+    basketball: '/icons8/basketball.png',
+    bowling: '/icons8/bowling-ball.png',
+    chess: '/icons8/knight.png',
+    cycling: '/icons8/bicycle.png',
+    'e-sport (mobile legends)': '/icons8/controller.png',
+    'e-sport (valorant)': '/icons8/target.png',
+    football: '/icons8/football.png',
+    futsal: '/icons8/football2.png',
+    handball: '/icons8/handball.png',
+    hockey: '/icons8/hockey-2.png',
+    'indoor rowing': '/icons8/rowing.png',
+    'lawn bowls': '/icons8/bocce.png',
+    netball: '/icons8/basketball-field.png',
+    petanque: '/icons8/petanque.png',
+    rugby: '/icons8/rugby.png',
+    'sepak takraw': '/icons8/takraw-balls.png',
+    softball: '/icons8/softball-mitt.png',
+    'table tennis': '/icons8/ping-pong.png',
+    tennis: '/icons8/tennis.png',
+    'tenpin bowling': '/icons8/bowling-pins.png',
+    volleyball: '/icons8/volleyball.png',
 };
 
+const FALLBACK = '/icons8/trophy.png';
+
 export function SportIcon({ name, className = 'text-base leading-none' }: { name: string; className?: string }) {
-    const cls = CLASSES[name.trim().toLowerCase()] ?? 'fi fi-rr-trophy';
-    return <i className={[cls, className].join(' ')} aria-hidden="true" />;
+    const src = IMAGES[name.trim().toLowerCase()] ?? FALLBACK;
+    return (
+        <span
+            className={['sport-icon', className].join(' ')}
+            style={{ WebkitMaskImage: `url("${src}")`, maskImage: `url("${src}")` }}
+            aria-hidden="true"
+        />
+    );
 }
