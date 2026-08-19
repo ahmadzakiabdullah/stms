@@ -1,4 +1,5 @@
 import PublicTeamRow from '@/components/PublicTeamRow';
+import { SportIcon } from '@/lib/sportIcons';
 import { useI18n } from '@/lib/i18n';
 import { MapPin } from 'lucide-react';
 
@@ -43,7 +44,7 @@ export default function PublicMatchCard({ match, variant = 'upcoming' }: { match
     return (
         <article className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 shadow-sm transition hover:border-[var(--public-primary-border)] hover:shadow-md">
             <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-black uppercase tracking-[.14em] text-[var(--public-primary)]">
-                <span>{match.sport || t('Competition')}{match.event ? ` · ${match.event}` : ''}</span>
+                <span className="inline-flex items-center gap-1.5"><SportIcon name={match.sport || ''} className="size-3.5" />{match.sport || t('Competition')}{match.event ? ` · ${match.event}` : ''}</span>
                 <span className="normal-case tracking-normal text-[var(--public-dark-faint)]">
                     {isLive
                         ? <span className="inline-flex items-center gap-1.5 font-black uppercase text-red-600"><span className="size-1.5 animate-pulse rounded-full bg-current" />{t('Live')}</span>

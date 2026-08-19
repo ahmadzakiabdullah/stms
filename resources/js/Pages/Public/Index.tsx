@@ -4,6 +4,7 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import PublicMatchCard, { type PublicMatch } from '@/components/PublicMatchCard';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
 import PublicTeamRow from '@/components/PublicTeamRow';
+import { SportIcon } from '@/lib/sportIcons';
 import { useI18n } from '@/lib/i18n';
 import { Head, Link, router } from '@inertiajs/react';
 import { Activity, ArrowRight, CalendarDays, CheckCircle2, Clock3, Medal, RefreshCw, Trophy, Users } from 'lucide-react';
@@ -118,7 +119,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
                                 <div className="mt-5 border-t border-white/10 pt-5">
                                     <div className="flex items-center justify-between gap-3"><p className="text-[10px] font-black uppercase tracking-[.18em] text-white/75">{t('Next fixture')}</p><Clock3 className="size-4 text-[var(--public-accent)]" /></div>
-                                    {nextMatch ? <div className="mt-4"><p className="truncate text-xs font-bold text-[var(--public-accent)]">{nextMatch.sport} · {nextMatch.event}</p><div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3"><PublicTeamRow team={nextMatch.home} surface="dark" size="lg" /><span className="rounded-lg bg-white/10 px-2.5 py-1.5 text-[10px] font-black">VS</span><PublicTeamRow team={nextMatch.away} surface="dark" size="lg" right /></div><p className="mt-3 flex items-center gap-1.5 text-xs text-white/75"><CalendarDays className="size-3.5" />{nextMatch.scheduled_at ? formatDate(nextMatch.scheduled_at, locale, true) : nextMeta || t('To be determined')}</p></div> : <p className="mt-3 text-sm text-white/75">{t('Schedule will be shown after publication.')}</p>}
+                                    {nextMatch ? <div className="mt-4"><p className="truncate text-xs font-bold text-[var(--public-accent)]"><span className="inline-flex items-center gap-1.5"><SportIcon name={nextMatch.sport || ''} className="size-3.5" />{nextMatch.sport} · {nextMatch.event}</span></p><div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3"><PublicTeamRow team={nextMatch.home} surface="dark" size="lg" /><span className="rounded-lg bg-white/10 px-2.5 py-1.5 text-[10px] font-black">VS</span><PublicTeamRow team={nextMatch.away} surface="dark" size="lg" right /></div><p className="mt-3 flex items-center gap-1.5 text-xs text-white/75"><CalendarDays className="size-3.5" />{nextMatch.scheduled_at ? formatDate(nextMatch.scheduled_at, locale, true) : nextMeta || t('To be determined')}</p></div> : <p className="mt-3 text-sm text-white/75">{t('Schedule will be shown after publication.')}</p>}
                                 </div>
                             </div>
                         </aside>
@@ -132,7 +133,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
                 <section id="sports" className="relative scroll-mt-24 border-y border-[var(--public-dark-border)] bg-[var(--public-dark-soft)] py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><PublicSectionHeading eyebrow={t('Sports programme')} title={t('Explore the sports')} description={t('Every official sport and event in the competition.')} /><Link href={route('public.sports')} className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] sm:self-auto">{t('View all sports')}<ArrowRight className="size-4" /></Link></div>
-                    <div className="mt-12 flex flex-wrap gap-2.5">{sports.map(sport => <Link key={sport} href={route('public.sports')} className="inline-flex min-h-10 items-center rounded-full border border-[var(--public-dark-border)] bg-white px-4 text-sm font-bold transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]">{sport}</Link>)}</div>
+                    <div className="mt-12 flex flex-wrap gap-2.5">{sports.map(sport => <Link key={sport} href={route('public.sports')} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--public-dark-border)] bg-white py-1 pl-1.5 pr-4 text-sm font-bold transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]"><span className="flex size-7 items-center justify-center rounded-full bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><SportIcon name={sport} className="size-4" /></span>{sport}</Link>)}</div>
                 </div></section>
 
                 <section className="border-y border-[var(--public-dark-border)] bg-white py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
