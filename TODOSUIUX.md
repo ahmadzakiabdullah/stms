@@ -1,5 +1,7 @@
 # TODO UI/UX — Public Portal SAF UTeM
 
+> **Baseline sejarah — digantikan.** Snapshot 17 Ogos 2026 sebelum halaman awam berasingan ditambah. Keputusan route standalone diselesaikan pada 19 Ogos 2026: `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq` dan `/about` kini wujud sebagai halaman awam, dengan pengurusan dalaman di `/manage/matches` dan `/manage/sports`. Keadaan semasa: [`CURRENT_STATE.md`](CURRENT_STATE.md), [`TODOS.md`](TODOS.md) dan [`docs/README.md`](docs/README.md).
+
 > Baseline 17 Ogos 2026 untuk `https://saf.utem.edu.my/`.
 
 ## Skop Semasa

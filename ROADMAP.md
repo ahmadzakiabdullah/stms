@@ -29,7 +29,7 @@ Product owner telah mengesahkan tarikh 1–31 Oktober 2026, satu tournament, 30 
 
 ## Portal Production Semasa
 
-Production <https://saf.utem.edu.my/> memaparkan satu homepage dengan anchor sections untuk Sports, Schedule, Results dan Medal standings, serta halaman `/contact-us`. Route lama `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud; `GET /results` bukan route awam.
+Production <https://saf.utem.edu.my/> memaparkan satu homepage dengan anchor sections untuk Sports, Schedule, Results dan Medal standings, halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues` dan `/live`, serta halaman maklumat `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us`. Route lama `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud.
 
 Competition awam kini bertarikh **1–31 Oktober 2026**, dengan 23 sukan aktif, 30 event, 8 fakulti dan 12 match belum selesai pada masa audit.
 

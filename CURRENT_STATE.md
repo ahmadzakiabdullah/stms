@@ -16,7 +16,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 126 application routes |
+| Laravel routes | 137 application routes |
 | Migrations | 61 migration files |
 | Controllers | 39 controller files |
 | Form Requests | 28 |
@@ -24,7 +24,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Actions | 37 |
 | Services/concerns | 40 fail |
 | Models | 16 |
-| Inertia `.tsx` pages | 38 |
+| Inertia `.tsx` pages | 41 |
 | PHP tests | 94 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
@@ -89,7 +89,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 | Gate | Keputusan working tree 18 Ogos 2026 |
 |---|---|
-| PHPUnit | **Lulus — 439/439, 1,948 assertions** |
+| PHPUnit | **Lulus — 441/441, 2,040 assertions (working tree 19 Ogos)** |
 | Pint | Lulus |
 | TypeScript | Lulus |
 | Tenant bypass allowlist | Lulus |
@@ -103,7 +103,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
-Portal production ialah single-page homepage berseksyen plus `/contact-us`. Product owner mengesahkan SAF 2026 berlangsung 1–31 Oktober 2026 dengan satu tournament, 30 acara dan 8 kontinjen. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
+Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us`. Product owner mengesahkan SAF 2026 berlangsung 1–31 Oktober 2026 dengan satu tournament, 30 acara dan 8 kontinjen. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
 
 ## Baki Sebelum Release Production
 

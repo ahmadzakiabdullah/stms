@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased — Single current temperature weather (19 August 2026)
+
+- Replaced the data.gov.my daily min/max forecast with a single Open-Meteo current temperature for the public announcement bar, keeping the stale/last-good fallback and the broken-CA-bundle retry.
+
+## Unreleased — Documentation sync (19 August 2026)
+
+- Synced documentation with the current working tree: updated `system-overview.md` (41 pages, 137 routes, split public portal), the public portal description in `CURRENT_STATE.md` and the product decision in `TODOS.md`.
+- Marked `TODOSUIUX.md` as a superseded 17 August baseline following the standalone public page decision.
+- Refreshed the workspace data snapshot in `docs/database/schema.md` from a read-only 19 August query (3 tournaments, 1 result, 4 queued jobs, 898 activity logs).
+
+## Unreleased — Public portal page expansion (19 August 2026)
+
+- Added public Sports, Schedule, Results, Faculties, Venues and Live pages backed by the configured public session.
+- Added public News, Downloads, FAQ and About information pages, shared Cosmic navigation/footer, sitemap entries and public route tests.
+
+## Unreleased — Public matches page (19 August 2026)
+
+- Added the tenant-scoped public `/matches` page for all official fixtures and latest results; moved authenticated match management to `/manage/matches` while retaining its route names and permissions.
+
 ## Unreleased — Release checklist and controller orchestration (18 August 2026)
 
 - Added portable Predis support, hardened the production Docker runtime requirements, and added an isolated production-like staging Compose stack.

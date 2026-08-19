@@ -17,6 +17,7 @@
 
 - [x] Review dan commit refactor/documentation 18 Ogos sebagai `e535e4b`; connected CI #110 hijau pada SHA yang sama.
 - [x] Sediakan `stms:release-preflight` baca-sahaja dan release evidence template bagi konfigurasi, DB/Redis, mailer, backup freshness, monitoring serta public tenant selectors.
+- [x] Tambah halaman awam semua jadual perlawanan dan keputusan di `/matches`; fungsi pengurusan dalaman dipindahkan ke `/manage/matches` dengan navigasi portal, sitemap dan ujian tenant/session scope.
 
 ### Release blockers — memerlukan owner/production operator
 
@@ -45,7 +46,7 @@
 
 ## Product/UX Decisions
 
-- [x] Kekalkan portal awam single-page berdasarkan keputusan product owner; halaman berasingan memerlukan change request baharu.
+- [x] Kekalkan portal awam homepage single-page sebagai landasan; halaman berasingan (`/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about`, `/matches`) ditambah dan memerlukan penilaian change request jika mahu dikembangkan lagi.
 - [ ] Post-MVP: nilai schedule/result filters, print/calendar dan analytics selepas release production stabil.
 
 ## Deferred Milestones

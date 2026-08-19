@@ -14,7 +14,7 @@ Form baharu/yang dimigrasi menggunakan React Hook Form dan Zod; form lama masih 
 
 ## Public Portal
 
-Route `/` dan alias `/portal` merender `Public/Index`; `/contact-us` ialah page awam tambahan. Medal tally, programme, schedule dan ringkasan result berada sebagai seksyen/data pada landing page, bukan route standalone. Portal menggunakan cache server-side jangka pendek dan refresh Inertia. Alamat, e-mel, telefon serta pautan media sosial pada Contact dibaca daripada tetapan tenant yang boleh disunting; backend hanya mendedahkan e-mel, nombor telefon dan URL HTTP(S) yang sah.
+Route `/` dan alias `/portal` merender `Public/Index`; public directory pages merangkumi `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues` dan `/live`, manakala `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us` ialah halaman maklumat tambahan. Fungsi pengurusan dalaman Matches dan Sports berada di `/manage/matches` dan `/manage/sports`. Portal menggunakan cache server-side jangka pendek dan refresh Inertia. Alamat, e-mel, telefon serta pautan media sosial pada Contact dibaca daripada tetapan tenant yang boleh disunting; backend hanya mendedahkan e-mel, nombor telefon dan URL HTTP(S) yang sah.
 
 ## Build dan Aksesibiliti
 

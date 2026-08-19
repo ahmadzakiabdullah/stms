@@ -31,6 +31,9 @@ Jika nombor atau status bercanggah, sumber bertarikh paling baharu menang; dakwa
 ## Portal Awam Semasa
 
 - `/` — homepage dengan anchor sections Sports, Schedule, Results dan Medal standings.
+- `/matches` — halaman awam semua jadual perlawanan dan keputusan terkini.
+- `/sports`, `/schedule`, `/results`, `/faculties`, `/venues` dan `/live` — halaman kandungan pertandingan awam.
+- `/news`, `/downloads`, `/faq` dan `/about` — halaman maklumat awam tambahan.
 - `/contact-us` — halaman hubungan.
 - `/login` — login.
 

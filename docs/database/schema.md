@@ -46,6 +46,6 @@ Jadual ke-33 ialah `migrations`.
 
 ## Data Workspace Yang Diaudit
 
-Baris aktif: 1 organization, 1 session, 1 tournament, 24 sports, 30 categories, 30 events, 8 participants, 248 event participants, 24 matches, 0 results dan 17 users. Database juga mempunyai 32 queued jobs, 0 failed jobs dan 882 activity logs. Angka ini ialah snapshot workspace 17 Ogos, bukan kontrak seed atau production guarantee.
+Baris aktif: 1 organization, 1 session, 3 tournaments (Sukan Antara Fakulti 2026, SAF 2026 Fasa 1, SAF 2026 Fasa 2), 24 sports, 30 categories, 30 events, 8 participants, 248 event participants, 24 matches, 1 result dan 17 users. Database juga mempunyai 4 queued jobs, 0 failed jobs dan 898 activity logs. Angka ini ialah snapshot baca-sahaja 19 Ogos 2026 daripada pangkalan data yang disambungkan, bukan kontrak seed atau production guarantee. Snapshot asal 17 Ogos 2026: 1 tournament, 30 categories, 30 events, 0 results, 32 queued jobs dan 882 activity logs.
 
 Lihat [ERD](erd.md), [migration guidelines](migration-guidelines.md) dan [audit penuh](../audits/2026-08-17-full-project-and-production-audit.md).

@@ -1,6 +1,6 @@
 # System Overview
 
-> Current architecture as audited on 17 Ogos 2026.
+> Current architecture, diselaraskan dengan working tree pada 19 Ogos 2026.
 
 ## Architecture Style
 
@@ -56,7 +56,7 @@ Sensitive index/read actions kini memanggil policy/gate yang sesuai. Dashboard, 
 
 ## Frontend
 
-- 38 Inertia pages, semuanya `.tsx`.
+- 41 Inertia pages, semuanya `.tsx`.
 - Shared layouts/components masih mempunyai compatibility `.jsx` files.
 - React Hook Form + Zod digunakan pada forms yang telah dimigrasi; auth dan beberapa pages menggunakan Inertia `useForm`.
 - TanStack Table terpasang tetapi tidak digunakan dalam source semasa.
@@ -66,16 +66,20 @@ Sensitive index/read actions kini memanggil policy/gate yang sesuai. Dashboard, 
 
 `PublicPortalController` merender:
 
-- `/` dan IIS compatibility route `/portal` -> `Public/Index`
-- `/contact-us` -> `Public/Contact`
+- `/` dan alias `/portal` -> `Public/Index` (homepage dengan anchor sections Sports, Schedule, Results dan Medal standings).
+- `/matches` -> `Public/Matches` — semua jadual perlawanan dan keputusan terkini.
+- `/sports`, `/schedule`, `/results`, `/faculties`, `/venues` dan `/live` -> `Public/Directory` (seksyen disahkan di controller).
+- `/news`, `/downloads`, `/faq` dan `/about` -> `Public/Info`.
+- `/contact-us` -> `Public/Contact`.
+- `/sitemap.xml` -> sitemap public.
 
-Homepage menggabungkan Sports, Schedule, Results dan Medal standings sebagai anchor sections. Standalone `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud.
+Navigator dan footer kongsi disediakan oleh `PublicHeader`/`PublicFooter`. `/manage/matches` dan `/manage/sports` ialah halaman pengurusan dalaman yang dilindungi auth; `/matches` dan `/sports` kekal awam. `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud.
 
 `PublicPortalService` memilih organization/session melalui `PUBLIC_ORG_SLUG` + `PUBLIC_SESSION_SLUG`, menggunakan explicit organization predicates, cache dua minit dan query fixture upcoming/completed berasingan.
 
 ## Route and Runtime Summary
 
-- 126 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
+- 137 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
 - Email verification ditentukan ketika route bootstrap melalui `EMAIL_VERIFICATION_REQUIRED`.
 - `/health` boleh dilindungi token dan menyamar sebagai 404; `/up` ialah Laravel liveness asas.
 - Runtime workspace audit: production env, debug off, database cache/queue, file session, email verification off, CSP report-only, enforcement off.
