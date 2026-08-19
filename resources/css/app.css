@@ -212,3 +212,13 @@
   .public-portal h1,
   .public-portal h2 { font-style: italic; font-weight: 800; letter-spacing: -0.04em; }
 }
+
+@font-face {
+  font-family: "uicons-bold-rounded";
+  src: url("/uicons/webfonts/uicons-bold-rounded.woff2") format("woff2");
+  font-display: swap;
+}
+i.fi-field-hockey:before {
+  font-family: "uicons-bold-rounded" !important;
+  content: "\e836";
+}

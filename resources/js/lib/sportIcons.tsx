@@ -11,7 +11,7 @@ const CLASSES: Record<string, string> = {
     football: 'fi fi-rr-football',
     futsal: 'fi fi-rr-soccer-boots',
     handball: 'fi fi-rr-hand',
-    hockey: 'fi fi-rr-hockey-sticks',
+    hockey: 'fi fi-field-hockey',
     'indoor rowing': 'fi fi-rr-ship-side',
     'lawn bowls': 'fi fi-rr-bowling-ball',
     netball: 'fi fi-rr-basketball',
