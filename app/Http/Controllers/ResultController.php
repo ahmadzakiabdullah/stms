@@ -159,10 +159,16 @@ class ResultController extends Controller
             return;
         }
 
-        $users = collect([$match->home_participant_id, $match->away_participant_id])
+        $participantIds = collect([$match->home_participant_id, $match->away_participant_id])
             ->filter()
             ->unique()
-            ->flatMap(fn ($participantId) => Participant::find($participantId)?->users ?? collect())
+            ->toArray();
+
+        // Fix hidden N+1 query inside loop: eager-load users outside first
+        $users = Participant::whereIn('id', $participantIds)
+            ->with('users')
+            ->get()
+            ->flatMap->users
             ->unique(fn ($user) => $user->getKey());
 
         foreach ($users as $user) {
