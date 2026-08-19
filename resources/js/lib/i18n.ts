@@ -1922,6 +1922,21 @@ Object.assign(ms, {
     'Please refer to the official portal sections or contact the secretariat for the latest confirmed information.': 'Sila rujuk bahagian portal rasmi atau hubungi urus setia untuk maklumat terkini yang disahkan.',
 });
 
+Object.assign(en, {
+    'Starts in': 'Starts in',
+    'Explore the sports': 'Explore the sports',
+    'Every official sport and event in the competition.': 'Every official sport and event in the competition.',
+    'View all sports': 'View all sports',
+    Contingents: 'Contingents',
+});
+Object.assign(ms, {
+    'Starts in': 'Bermula dalam',
+    'Explore the sports': 'Terokai sukan',
+    'Every official sport and event in the competition.': 'Setiap sukan dan acara rasmi dalam pertandingan ini.',
+    'View all sports': 'Lihat semua sukan',
+    Contingents: 'Kontinjen',
+});
+
 const dictionaries: Record<string, Translations> = { en, ms };
 
 export function translate(locale: string, key: string): string {
