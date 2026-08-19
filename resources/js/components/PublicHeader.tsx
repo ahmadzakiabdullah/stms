@@ -21,9 +21,9 @@ export default function PublicHeader({ appName, settings, current }: Props) {
         { href: route('public.contact'), label: t('Contact'), current: current === 'contact' },
     ];
 
-    return <>
+    return <div className="absolute inset-x-0 top-0 z-50">
         <PublicAnnouncementBar />
-        <header className="relative z-50 px-3 pt-3 sm:px-6 sm:pt-5">
+        <header className="px-3 pt-3 sm:px-6 sm:pt-5">
             <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-4 rounded-2xl border border-white/15 bg-[color:var(--public-dark)] px-4 py-2.5 text-white shadow-2xl sm:px-5 xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
                 <Link href={route('public.index')} className="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-highlight)]">
                     {settings.logo_url && <img src={settings.logo_url} alt={t('Official portal')} className="h-11 w-auto shrink-0 object-contain" />}
@@ -34,5 +34,5 @@ export default function PublicHeader({ appName, settings, current }: Props) {
                 <div className="hidden items-center justify-end gap-2 xl:flex"><span className="mr-1 h-7 w-px bg-white/10" /><LocaleSwitcher compact showLabel={false} /><PublicLoginButton /></div>
             </div>
         </header>
-    </>;
+    </div>;
 }

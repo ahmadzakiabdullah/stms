@@ -63,7 +63,7 @@ export default function PublicIndex({ app_name, competition, stats, upcoming, re
         <PublicLayout title={competition?.name || app_name} appName={app_name} current="home">
             <Head><link rel="canonical" href={route('public.index')} /></Head>
             <main>
-                <section className="relative isolate overflow-hidden bg-[var(--public-dark)] pb-16 pt-16 text-white sm:pb-20 sm:pt-20">
+                <section className="relative isolate overflow-hidden bg-[var(--public-dark)] pb-16 pt-32 text-white sm:pb-20 sm:pt-40">
                     <CosmicBackground />
                     <div className="mx-auto grid min-h-[520px] max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.08fr_.92fr] xl:gap-20">
                         <div className="relative z-10 max-w-3xl">

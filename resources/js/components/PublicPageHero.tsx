@@ -14,7 +14,7 @@ export default function PublicPageHero({ eyebrow, title, intro, icon, children }
             <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-br from-[var(--public-dark)] via-[var(--public-primary)] to-[var(--public-dark)]" />
             <div aria-hidden="true" className="public-cosmic-grid absolute inset-0 -z-10 opacity-20" />
             <div aria-hidden="true" className="public-cosmic-orbit absolute -right-28 top-24 -z-10 size-[28rem] rounded-full border border-white/10" />
-            <div className="mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 sm:pt-20 lg:pb-20">
+            <div className="mx-auto max-w-7xl px-4 pb-16 pt-32 sm:px-6 sm:pt-40 lg:pb-20">
                 {icon ? (
                     <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[.24em] text-[var(--public-accent)]">
                         {icon}{eyebrow}

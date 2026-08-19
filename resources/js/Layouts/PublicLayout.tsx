@@ -12,7 +12,7 @@ export default function PublicLayout({ children, title, appName, current }: Prop
 
     return <>
         <Head title={title} />
-        <div className="public-cosmic min-h-screen overflow-hidden bg-[var(--public-background)] text-[var(--public-text)]" style={publicThemeStyle(settings)}>
+        <div className="public-cosmic relative min-h-screen overflow-hidden bg-[var(--public-background)] text-[var(--public-text)]" style={publicThemeStyle(settings)}>
             <PublicHeader appName={appName} settings={settings} current={current} />
             {children}
             <PublicFooter appName={appName} settings={settings} />
