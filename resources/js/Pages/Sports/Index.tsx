@@ -33,6 +33,7 @@ import { z } from 'zod';
 import { ChevronDown, ChevronRight, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import Pagination from '@/components/Pagination';
+import { SportIcon } from '@/lib/sportIcons';
 import type { Paginated, Flash, Sport, SportCategory } from '@/types';
 import { useI18n } from '@/lib/i18n';
 
@@ -337,13 +338,17 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                         </TableCell>
                                         <TableCell className="font-medium">
                                             <span className="flex items-center gap-2">
-                                                {sport.icon && (
+                                                {sport.icon ? (
                                                     <img
                                                         src={sport.icon}
                                                         alt=""
                                                         className="size-5 rounded object-contain"
                                                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                                     />
+                                                ) : (
+                                                    <span className="flex size-6 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                                        <SportIcon name={sport.name} className="text-sm leading-none" />
+                                                    </span>
                                                 )}
                                                 {sport.name}
                                             </span>
