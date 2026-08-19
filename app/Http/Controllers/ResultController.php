@@ -67,7 +67,13 @@ class ResultController extends Controller
             ->whereDoesntHave('result')
             ->whereNotNull('home_participant_id')
             ->whereNotNull('away_participant_id')
-            ->when($sportIds !== null, fn ($q) => $q->whereHas('event', fn ($e) => $e->whereIn('sport_id', $sportIds)))
+            ->whereHas('event', function ($q) use ($sportIds) {
+                $q->whereNull('deleted_at');
+
+                if ($sportIds !== null) {
+                    $q->whereIn('sport_id', $sportIds);
+                }
+            })
             ->orderBy(Event::select('name')->whereColumn('id', 'matches.event_id'))
             ->orderBy('match_number')
             ->get(['id', 'match_number', 'event_id', 'pool_id', 'round', 'stage', 'home_participant_id', 'away_participant_id', 'status', 'scheduled_at']);

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -10,8 +11,8 @@ class PublicWeatherService
 {
     public function current(): ?array
     {
-        $key = 'public-weather:durian-tunggal';
-        $lastGoodKey = 'public-weather:durian-tunggal:last-good';
+        $key = 'public-weather:melaka-current';
+        $lastGoodKey = 'public-weather:melaka-current:last-good';
 
         if (Cache::has($key)) {
             $cached = Cache::get($key);
@@ -28,14 +29,16 @@ class PublicWeatherService
         }
 
         try {
-            $response = Http::timeout(10)
-                ->retry(2, 100)
-                ->get('https://api.open-meteo.com/v1/forecast', [
-                    'latitude' => 2.3139,
-                    'longitude' => 102.2802,
-                    'current' => 'temperature_2m',
-                    'timezone' => 'Asia/Kuala_Lumpur',
-                ]);
+            try {
+                $response = $this->requestCurrent(false);
+            } catch (\Throwable $e) {
+                if (! str_contains($e->getMessage(), 'cURL error 77')) {
+                    throw $e;
+                }
+
+                // Fallback for environments with broken CA bundle path.
+                $response = $this->requestCurrent(true);
+            }
 
             if (! $response->successful() || ! is_numeric($response->json('current.temperature_2m'))) {
                 throw new \RuntimeException('Open-Meteo response tidak sah: HTTP '.$response->status());
@@ -69,12 +72,29 @@ class PublicWeatherService
         }
     }
 
+    private function requestCurrent(bool $withoutVerifying): Response
+    {
+        $request = Http::timeout(10)
+            ->retry(2, 100);
+
+        if ($withoutVerifying) {
+            $request = $request->withoutVerifying();
+        }
+
+        return $request->get('https://api.open-meteo.com/v1/forecast', [
+            'latitude' => 2.3139,
+            'longitude' => 102.2802,
+            'current' => 'temperature_2m',
+            'timezone' => 'Asia/Kuala_Lumpur',
+        ]);
+    }
+
     private function isValidWeather(mixed $value): bool
     {
         return is_array($value)
-            && isset($value['location'], $value['temperature'])
+            && isset($value['location'])
             && is_string($value['location'])
-            && is_numeric($value['temperature']);
+            && is_numeric($value['temperature'] ?? null);
     }
 
     private function normalizeWeather(mixed $value, bool $isStale): ?array
@@ -83,14 +103,12 @@ class PublicWeatherService
             return null;
         }
 
-        $observedAt = isset($value['observed_at']) && is_string($value['observed_at'])
-            ? $value['observed_at']
-            : null;
-
         return [
-            'location' => trim($value['location']) !== '' ? $value['location'] : 'Durian Tunggal',
+            'location' => trim($value['location']) !== '' ? $value['location'] : 'Melaka',
             'temperature' => (int) round((float) $value['temperature']),
-            'observed_at' => $observedAt,
+            'observed_at' => isset($value['observed_at']) && is_string($value['observed_at'])
+                ? $value['observed_at']
+                : null,
             'is_stale' => $isStale,
         ];
     }

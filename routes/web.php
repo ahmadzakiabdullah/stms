@@ -50,6 +50,17 @@ Route::get('/portal/storage/{path}', PublicStorageController::class)
 // directory default document. Keep the clean root URL available while the
 // controller remains read-only and only renders the public portal.
 Route::any('/', PublicPortalController::class)->name('public.index');
+Route::get('/matches', [PublicPortalController::class, 'matches'])->name('public.matches');
+Route::get('/sports', [PublicPortalController::class, 'directory'])->defaults('section', 'sports')->name('public.sports');
+Route::get('/schedule', [PublicPortalController::class, 'directory'])->defaults('section', 'schedule')->name('public.schedule');
+Route::get('/results', [PublicPortalController::class, 'directory'])->defaults('section', 'results')->name('public.results');
+Route::get('/faculties', [PublicPortalController::class, 'directory'])->defaults('section', 'faculties')->name('public.faculties');
+Route::get('/venues', [PublicPortalController::class, 'directory'])->defaults('section', 'venues')->name('public.venues');
+Route::get('/live', [PublicPortalController::class, 'directory'])->defaults('section', 'live')->name('public.live');
+Route::get('/news', [PublicPortalController::class, 'info'])->defaults('section', 'news')->name('public.news');
+Route::get('/downloads', [PublicPortalController::class, 'info'])->defaults('section', 'downloads')->name('public.downloads');
+Route::get('/faq', [PublicPortalController::class, 'info'])->defaults('section', 'faq')->name('public.faq');
+Route::get('/about', [PublicPortalController::class, 'info'])->defaults('section', 'about')->name('public.about');
 Route::get('/contact-us', [PublicPortalController::class, 'contact'])->name('public.contact');
 Route::get('/sitemap.xml', [PublicPortalController::class, 'sitemap'])->name('public.sitemap');
 Route::any('/index.php', static fn () => redirect('/', 301));
@@ -123,10 +134,10 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
 
     // M2: Sport (core, complete CRUD)
-    Route::get('/sports', [SportController::class, 'index'])->name('sports.index');
-    Route::post('/sports', [SportController::class, 'store'])->name('sports.store');
-    Route::put('/sports/{sport}', [SportController::class, 'update'])->name('sports.update');
-    Route::delete('/sports/{sport}', [SportController::class, 'destroy'])->name('sports.destroy');
+    Route::get('/manage/sports', [SportController::class, 'index'])->name('sports.index');
+    Route::post('/manage/sports', [SportController::class, 'store'])->name('sports.store');
+    Route::put('/manage/sports/{sport}', [SportController::class, 'update'])->name('sports.update');
+    Route::delete('/manage/sports/{sport}', [SportController::class, 'destroy'])->name('sports.destroy');
 
     // M2: SportCategory (basic per-sport management)
     Route::get('/sport-categories', [SportCategoryController::class, 'index'])->name('sport-categories.index');
@@ -190,12 +201,12 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     });
 
     // M4: Match Scheduling (rate limited for mutations)
-    Route::get('/matches', [MatchController::class, 'index'])->name('matches.index');
+    Route::get('/manage/matches', [MatchController::class, 'index'])->name('matches.index');
     Route::middleware('throttle:30,1')->group(function () {
-        Route::post('/matches', [MatchController::class, 'store'])->name('matches.store');
-        Route::put('/matches/{match}', [MatchController::class, 'update'])->name('matches.update');
-        Route::delete('/matches/{match}', [MatchController::class, 'destroy'])->name('matches.destroy');
-        Route::post('/matches/{event}/generate-knockout', [MatchController::class, 'generateKnockout'])->name('matches.generate-knockout');
+        Route::post('/manage/matches', [MatchController::class, 'store'])->name('matches.store');
+        Route::put('/manage/matches/{match}', [MatchController::class, 'update'])->name('matches.update');
+        Route::delete('/manage/matches/{match}', [MatchController::class, 'destroy'])->name('matches.destroy');
+        Route::post('/manage/matches/{event}/generate-knockout', [MatchController::class, 'generateKnockout'])->name('matches.generate-knockout');
     });
 
     // M4: Result Entry (rate limited for mutations)

@@ -54,6 +54,33 @@ class PublicPortalTest extends TestCase
         $this->get('/index.php')->assertRedirect('/')->assertStatus(301);
     }
 
+    public function test_public_matches_page_displays_configured_session_fixtures(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $event = Event::factory()->forTournament($tournament)->create();
+        $home = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti A']);
+        $away = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti B']);
+        Fixture::factory()->scheduled()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id]);
+
+        $this->get(route('public.matches'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Matches')->has('upcoming', 1)->where('upcoming.0.home.name', 'Fakulti A')->where('upcoming.0.away.name', 'Fakulti B'));
+    }
+
+    public function test_public_directory_pages_render_without_authentication(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+
+        foreach (['public.sports' => 'sports', 'public.schedule' => 'schedule', 'public.results' => 'results', 'public.faculties' => 'faculties', 'public.venues' => 'venues', 'public.live' => 'live'] as $routeName => $section) {
+            $this->get(route($routeName))->assertOk()->assertInertia(fn (Assert $page) => $page
+                ->component('Public/Directory')->where('section', $section));
+        }
+    }
+
     public function test_iis_portal_mount_path_renders_without_a_self_redirect(): void
     {
         $this->get('/portal')->assertOk()->assertInertia(fn (Assert $page) => $page
@@ -199,6 +226,8 @@ class PublicPortalTest extends TestCase
 
         Cache::put('public-portal:v4:'.$sessionA->id.':12', ['stale' => true], 60);
         Cache::put('public-portal:v4:'.$sessionA->id.':all', ['stale' => true], 60);
+        Cache::put('public-portal:v6:'.$sessionA->id.':12', ['stale' => true], 60);
+        Cache::put('public-portal:v6:'.$sessionA->id.':all', ['stale' => true], 60);
         Cache::put('public-portal:v4:'.$sessionB->id.':12', ['keep' => true], 60);
 
         config(['app.public_org_slug' => $orgA->slug, 'app.public_session_slug' => $sessionA->slug]);
@@ -206,6 +235,8 @@ class PublicPortalTest extends TestCase
 
         $this->assertNull(Cache::get('public-portal:v4:'.$sessionA->id.':12'));
         $this->assertNull(Cache::get('public-portal:v4:'.$sessionA->id.':all'));
+        $this->assertNull(Cache::get('public-portal:v6:'.$sessionA->id.':12'));
+        $this->assertNull(Cache::get('public-portal:v6:'.$sessionA->id.':all'));
         $this->assertSame(['keep' => true], Cache::get('public-portal:v4:'.$sessionB->id.':12'));
     }
 }

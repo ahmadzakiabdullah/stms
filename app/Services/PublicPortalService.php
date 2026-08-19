@@ -23,7 +23,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v5:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v6:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::remember($cacheKey, now()->addMinutes(2), function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -38,6 +38,7 @@ class PublicPortalService
                 Cache::forget('public-portal:v3:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v4:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v5:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v6:'.$sessionId.':'.$limit);
             }
 
             return;
@@ -112,6 +113,11 @@ class PublicPortalService
                     'events' => $events->map(fn ($event) => $event->name)->sort()->values()->all(),
                 ])->filter(fn ($sport) => filled($sport['name']))->sortBy('name')->values()->all(),
             'sports' => (clone $eventQuery)->with('sport:id,name')->get()->pluck('sport.name')->filter()->unique()->sort()->values()->all(),
+            'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()
+                ->orderBy('name')->get(['id', 'name', 'logo_path', 'inverse_logo_path'])->map(fn (Participant $participant) => [
+                    'name' => $participant->name, 'logo_url' => $participant->logo_url, 'inverse_logo_url' => $participant->inverse_logo_url,
+                ])->values()->all(),
+            'venues' => $fixtureQuery()->whereNotNull('venue')->where('venue', '!=', '')->get(['venue'])->pluck('venue')->unique()->sort()->values()->all(),
             'upcoming' => $upcoming->all(),
             'results' => $completed->all(),
             'medals' => ($limit === null
@@ -163,7 +169,7 @@ class PublicPortalService
     private function emptyData(): array
     {
         return ['app_name' => config('app.name'), 'competition' => null, 'stats' => ['sports' => 0, 'events' => 0, 'faculties' => 0, 'completed_matches' => 0, 'total_matches' => 0],
-            'sports' => [], 'sports_catalog' => [], 'upcoming' => [], 'results' => [], 'medals' => [],
+            'sports' => [], 'sports_catalog' => [], 'faculties' => [], 'venues' => [], 'upcoming' => [], 'results' => [], 'medals' => [],
             'contact' => $this->contactData([]), 'updated_at' => now()->toIso8601String(),
             'weather' => $this->weatherService->current()];
     }
