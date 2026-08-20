@@ -34,6 +34,8 @@ class EventService
             $event = Event::create($data);
             Log::info('Event created', ['id' => $event->id, 'name' => $event->name, 'org_id' => $event->organization_id]);
 
+            $this->applyDefaultVenueToMatches($event);
+
             app(PublicPortalService::class)->forgetForOrganization($event->organization_id);
 
             return $event;
@@ -66,6 +68,8 @@ class EventService
             $event->update($data);
             Log::info('Event updated', ['id' => $event->id, 'name' => $event->name]);
 
+            $this->applyDefaultVenueToMatches($event);
+
             app(PublicPortalService::class)->forgetForOrganization($event->organization_id);
 
             return $event;
@@ -91,5 +95,22 @@ class EventService
         $event->delete();
         Log::info('Event deleted', ['id' => $event->id, 'name' => $event->name]);
         app(PublicPortalService::class)->forgetForOrganization($event->organization_id);
+    }
+
+    /**
+     * Backfill the event's default venue onto existing matches that have no
+     * venue assigned yet, so already-created matches use the event venue.
+     */
+    private function applyDefaultVenueToMatches(Event $event): void
+    {
+        $defaultVenue = $event->venues[0] ?? null;
+
+        if ($defaultVenue === null) {
+            return;
+        }
+
+        $event->matches()
+            ->where(fn ($query) => $query->whereNull('venue')->orWhere('venue', ''))
+            ->update(['venue' => $defaultVenue]);
     }
 }

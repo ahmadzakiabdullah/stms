@@ -19,6 +19,12 @@ class StoreEventRequest extends FormRequest
                 'organization_id' => $this->user()->organization_id,
             ]);
         }
+
+        if (is_array($this->venues)) {
+            $this->merge([
+                'venues' => array_values(array_filter(array_map('trim', $this->venues), fn ($venue) => $venue !== '')),
+            ]);
+        }
     }
 
     public function rules(): array
@@ -69,6 +75,8 @@ class StoreEventRequest extends FormRequest
                 Rule::unique('events', 'slug')->where('organization_id', $user?->organization_id)->whereNull('deleted_at'),
             ],
             'description' => ['nullable', 'string', 'max:1000'],
+            'venues' => ['nullable', 'array', 'max:20'],
+            'venues.*' => ['required', 'string', 'max:255', 'distinct'],
             'start_date' => ['required', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'registration_deadline' => ['nullable', 'date', 'after:now'],

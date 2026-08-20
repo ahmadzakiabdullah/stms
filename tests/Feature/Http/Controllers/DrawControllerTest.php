@@ -7,7 +7,9 @@ use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Fixture;
 use App\Models\Organization;
+use App\Models\Participant;
 use App\Models\Pool;
+use App\Models\Result;
 use App\Services\DrawService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
@@ -222,6 +224,41 @@ class DrawControllerTest extends TestCase
             ->has('pools')
             ->has('canEdit')
         );
+    }
+
+    public function test_completed_fixtures_expose_their_result_scores_on_the_draw_result_page(): void
+    {
+        $org = Organization::factory()->create();
+        $staff = $this->createStaffUser($org);
+
+        $event = Event::factory()->create(['organization_id' => $org->id]);
+        $pool = Pool::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id]);
+        $home = Participant::factory()->create(['organization_id' => $org->id, 'name' => 'Fakulti A']);
+        $away = Participant::factory()->create(['organization_id' => $org->id, 'name' => 'Fakulti B']);
+        $fixture = Fixture::factory()->completed()->create([
+            'organization_id' => $org->id,
+            'event_id' => $event->id,
+            'pool_id' => $pool->id,
+            'home_participant_id' => $home->id,
+            'away_participant_id' => $away->id,
+            'match_number' => 1,
+        ]);
+        Result::factory()->create([
+            'organization_id' => $org->id,
+            'match_id' => $fixture->id,
+            'score_home' => 3,
+            'score_away' => 1,
+            'winner_participant_id' => $home->id,
+        ]);
+
+        $response = $this->actingAs($staff)->get(route('events.draw-result', $event));
+
+        $response->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('DrawResult/Index')
+            ->has('pools.0.fixtures', 1)
+            ->where('pools.0.fixtures.0.status', 'completed')
+            ->where('pools.0.fixtures.0.result.score_home', 3)
+            ->where('pools.0.fixtures.0.result.score_away', 1));
     }
 
     public function test_can_edit_is_true_when_no_matches_have_started(): void

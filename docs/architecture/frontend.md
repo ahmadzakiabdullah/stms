@@ -14,7 +14,7 @@ Form baharu/yang dimigrasi menggunakan React Hook Form dan Zod; form lama masih 
 
 ## Public Portal
 
-Route `/` dan alias `/portal` merender `Public/Index`; public directory pages merangkumi `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues` dan `/live`, manakala `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us` ialah halaman maklumat tambahan. Fungsi pengurusan dalaman Matches dan Sports berada di `/manage/matches` dan `/manage/sports`. Portal menggunakan cache server-side jangka pendek dan refresh Inertia. Alamat, e-mel, telefon serta pautan media sosial pada Contact dibaca daripada tetapan tenant yang boleh disunting; backend hanya mendedahkan e-mel, nombor telefon dan URL HTTP(S) yang sah.
+Route `/` dan alias `/portal` merender `Public/Index`; public directory pages merangkumi `/sports`, `/faculties` dan `/venues`, manakala `/schedule` ialah satu-satunya halaman jadual/keputusan (tab All/Live/Upcoming/Completed + filter). `/matches`, `/results` dan `/live` redirect 301 ke `/schedule`. `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us` ialah halaman maklumat tambahan. Fungsi pengurusan dalaman Matches dan Sports berada di `/manage/matches` dan `/manage/sports`. Portal menggunakan cache server-side jangka pendek dan refresh Inertia. Alamat, e-mel, telefon serta pautan media sosial pada Contact dibaca daripada tetapan tenant yang boleh disunting; backend hanya mendedahkan e-mel, nombor telefon dan URL HTTP(S) yang sah.
 
 ## Build dan Aksesibiliti
 

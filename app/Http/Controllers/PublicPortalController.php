@@ -19,16 +19,19 @@ class PublicPortalController extends Controller
         return Inertia::render('Public/Contact', $service->data());
     }
 
-    public function matches(PublicPortalService $service): Response
-    {
-        return Inertia::render('Public/Matches', $service->data(null));
-    }
-
     public function directory(string $section, PublicPortalService $service): Response
     {
-        abort_unless(in_array($section, ['sports', 'schedule', 'results', 'faculties', 'venues', 'live'], true), 404);
+        abort_unless(in_array($section, ['sports', 'faculties', 'venues'], true), 404);
 
         return Inertia::render('Public/Directory', [...$service->data(null), 'section' => $section]);
+    }
+
+    public function schedule(PublicPortalService $service): Response
+    {
+        $data = $service->data(null);
+        $data['completed'] = $data['results'];
+
+        return Inertia::render('Public/Schedule', $data);
     }
 
     public function info(string $section, PublicPortalService $service): Response
@@ -42,10 +45,8 @@ class PublicPortalController extends Controller
     {
         $urls = [
             ['location' => route('public.index'), 'priority' => '1.0'],
-            ['location' => route('public.matches'), 'priority' => '0.8'],
             ['location' => route('public.sports'), 'priority' => '0.7'],
             ['location' => route('public.schedule'), 'priority' => '0.7'],
-            ['location' => route('public.results'), 'priority' => '0.7'],
             ['location' => route('public.faculties'), 'priority' => '0.6'],
             ['location' => route('public.venues'), 'priority' => '0.5'],
             ['location' => route('public.about'), 'priority' => '0.4'],

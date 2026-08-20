@@ -125,6 +125,7 @@ export interface Event {
     name: string;
     slug: string;
     description: string | null;
+    venues: string[] | null;
     start_date: string;
     end_date: string;
     registration_deadline: string | null;

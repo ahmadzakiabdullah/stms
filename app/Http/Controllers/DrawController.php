@@ -143,7 +143,7 @@ class DrawController extends Controller
                         ->orderBy('created_at');
                 },
                 'fixtures' => function ($q) {
-                    $q->with(['homeParticipant', 'awayParticipant'])
+                    $q->with(['homeParticipant', 'awayParticipant', 'result'])
                         ->orderBy('round')
                         ->orderBy('match_number');
                 },

@@ -38,7 +38,7 @@ class MatchController extends Controller
             ->withCount('pools')
             ->when($sportIds !== null, fn ($q) => $q->whereIn('sport_id', $sportIds))
             ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'tournament_id', 'sport_id', 'sport_category_id']);
+            ->get(['id', 'name', 'slug', 'tournament_id', 'sport_id', 'sport_category_id', 'start_date', 'end_date']);
 
         $drawnEventIds = $events->filter(fn ($e) => $e->pools_count > 0)->pluck('id')->values()->toArray();
         $selectedEvent = $events->firstWhere('slug', $request->string('event')->toString());

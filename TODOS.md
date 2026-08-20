@@ -43,10 +43,13 @@
 - [x] Ekstrak query orchestration daripada `DashboardController`, `EventParticipantController` dan `EventController` kepada service khusus tanpa mengubah behavior; 27 targeted tests dan suite penuh hijau.
 - [x] Rekod PCOV connected-CI semasa 75.03% statement coverage (4,676/6,232) dan kuatkuasakan ratchet minimum 74.5%.
 - [x] Harden Docker/Redis release path melalui Predis, production-like staging Compose, authenticated k6 check ratchet dan validated container health startup.
+- [x] Tambah venue di aras Event (boleh disunting di `/events`); perlawanan awam mewarisi venue event apabila tiada venue per-match, dan senarai venue awam menggabungkan sumber event + match.
+- [x] Sokong pelbagai venue bagi satu event (`events.venues` JSON, migration `2026_08_20_000002`): dialog Event boleh tambah/buang senarai venue, dialog match menawarkan dropdown venue event (default venue pertama) atau teks bebas, dan portal awam mewarisi venue pertama serta menggabungkan semua venue event dalam senarai awam.
 
 ## Product/UX Decisions
 
 - [x] Kekalkan portal awam homepage single-page sebagai landasan; halaman berasingan (`/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about`, `/matches`) ditambah dan memerlukan penilaian change request jika mahu dikembangkan lagi.
+- [x] Gabungkan halaman perlawanan awam yang bertindih menjadi satu: `/schedule` ialah satu-satunya halaman jadual/keputusan (tab All/Live/Upcoming/Completed + filter); `/matches`, `/results` dan `/live` redirect 301 ke `/schedule`; nav portal diringkaskan kepada Home/Sports/Schedule/Contact.
 - [ ] Post-MVP: nilai schedule/result filters, print/calendar dan analytics selepas release production stabil.
 
 ## Deferred Milestones

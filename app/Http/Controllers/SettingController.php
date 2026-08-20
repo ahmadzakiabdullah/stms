@@ -25,6 +25,7 @@ class SettingController extends Controller
             'settings' => [
                 'app_name' => $settings['app_name'] ?? config('app.name', 'STMS Portal'),
                 'logo_url' => $settings['logo_url'] ?? null,
+                'inverse_logo_url' => $settings['inverse_logo_url'] ?? null,
                 'favicon_url' => $settings['favicon_url'] ?? null,
                 'tournament_logo_url' => $settings['tournament_logo_url'] ?? null,
                 'secretariat_address' => $settings['secretariat_address'] ?? '',
@@ -84,6 +85,14 @@ class SettingController extends Controller
             Setting::updateOrCreate(
                 ['organization_id' => $orgId, 'key' => $key],
                 ['value' => strtoupper($request->string($key)->toString())]
+            );
+        }
+
+        if ($request->hasFile('inverse_logo')) {
+            $url = $assetService->store($request->file('inverse_logo'));
+            Setting::updateOrCreate(
+                ['organization_id' => $orgId, 'key' => 'inverse_logo_url'],
+                ['value' => $url]
             );
         }
 

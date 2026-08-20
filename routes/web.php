@@ -50,13 +50,14 @@ Route::get('/portal/storage/{path}', PublicStorageController::class)
 // directory default document. Keep the clean root URL available while the
 // controller remains read-only and only renders the public portal.
 Route::any('/', PublicPortalController::class)->name('public.index');
-Route::get('/matches', [PublicPortalController::class, 'matches'])->name('public.matches');
+Route::get('/schedule', [PublicPortalController::class, 'schedule'])->name('public.schedule');
 Route::get('/sports', [PublicPortalController::class, 'directory'])->defaults('section', 'sports')->name('public.sports');
-Route::get('/schedule', [PublicPortalController::class, 'directory'])->defaults('section', 'schedule')->name('public.schedule');
-Route::get('/results', [PublicPortalController::class, 'directory'])->defaults('section', 'results')->name('public.results');
 Route::get('/faculties', [PublicPortalController::class, 'directory'])->defaults('section', 'faculties')->name('public.faculties');
 Route::get('/venues', [PublicPortalController::class, 'directory'])->defaults('section', 'venues')->name('public.venues');
-Route::get('/live', [PublicPortalController::class, 'directory'])->defaults('section', 'live')->name('public.live');
+// Matches, results and live all share the same data as the consolidated schedule page.
+Route::redirect('/matches', '/schedule', 301)->name('public.matches');
+Route::redirect('/results', '/schedule', 301)->name('public.results');
+Route::redirect('/live', '/schedule', 301)->name('public.live');
 Route::get('/news', [PublicPortalController::class, 'info'])->defaults('section', 'news')->name('public.news');
 Route::get('/downloads', [PublicPortalController::class, 'info'])->defaults('section', 'downloads')->name('public.downloads');
 Route::get('/faq', [PublicPortalController::class, 'info'])->defaults('section', 'faq')->name('public.faq');

@@ -27,10 +27,10 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, Pencil, Plus, RefreshCw, RotateCcw, Save, Target, Trash2, Trash } from 'lucide-react';
+import { Eye, Pencil, Plus, RefreshCw, RotateCcw, Save, Target, Trash2, Trash, X } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
 import { matchProgress } from '@/lib/matchProgress';
@@ -44,6 +44,7 @@ const eventSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     slug: z.string().optional().default(''),
     description: z.string().optional().default(''),
+    venues: z.array(z.object({ value: z.string() })).optional().default([]),
     start_date: z.string().min(1, 'Start date is required'),
     end_date: z.string().optional().default(''),
     registration_deadline: z.string().optional().default(''),
@@ -86,7 +87,7 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     const sports = Array.isArray(sportsProp) ? sportsProp : (sportsProp ?? []);
     const categories = Array.isArray(categoriesProp) ? categoriesProp : (categoriesProp ?? []);
 
-    const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<EventForm>({
+    const { register, handleSubmit, reset, watch, setValue, control, formState: { errors, isSubmitting } } = useForm<EventForm>({
         resolver: zodResolver(eventSchema),
         defaultValues: {
             tournament_id: '',
@@ -95,12 +96,15 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
             name: '',
             slug: '',
             description: '',
+            venues: [],
             start_date: '',
             end_date: '',
             registration_deadline: '',
             is_active: true,
         },
     });
+
+    const { fields: venueFields, append: appendVenue, remove: removeVenue } = useFieldArray<EventForm>({ control, name: 'venues' });
 
     const selectedTournamentId = watch('tournament_id');
     const selectedSportId = watch('sport_id');
@@ -155,6 +159,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             name: '',
             slug: '',
             description: '',
+            venues: [],
             start_date: '',
             end_date: '',
             registration_deadline: '',
@@ -175,6 +180,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             name: event.name,
             slug: event.slug,
             description: event.description || '',
+            venues: (event.venues ?? []).map((value) => ({ value })),
             start_date: formatForDateInput(event.start_date),
             end_date: formatForDateInput(event.end_date),
             registration_deadline: formatForDateInput((event as any).registration_deadline),
@@ -192,12 +198,13 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
     };
 
     const onSubmit = (formData: EventForm) => {
+        const payload = { ...formData, venues: formData.venues.map((item) => item.value) };
         if (editingEvent) {
-            router.put(route('events.update', editingEvent.slug), formData, {
+            router.put(route('events.update', editingEvent.slug), payload, {
                 onSuccess: () => closeDialog(),
             });
         } else {
-            router.post(route('events.store'), formData, {
+            router.post(route('events.store'), payload, {
                 onSuccess: () => closeDialog(),
             });
         }
@@ -377,6 +384,24 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                             {...register('description')}
                                         />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label>{t('Venues')}</Label>
+                                        <div className="space-y-2">
+                                            {venueFields.map((field, index) => (
+                                                <div key={field.id} className="flex items-center gap-2">
+                                                    <Input placeholder={index === 0 ? t('Main Stadium') : t('Alternative venue')} {...register(`venues.${index}.value`)} />
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeVenue(index)} aria-label={t('Remove venue')}>
+                                                        <X className="size-4" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <Button type="button" variant="outline" onClick={() => appendVenue({ value: '' })} className="w-fit">
+                                            <Plus className="mr-2 size-4" />
+                                            {t('Add venue')}
+                                        </Button>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">

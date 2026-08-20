@@ -23,7 +23,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v6:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v8:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::remember($cacheKey, now()->addMinutes(2), function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -39,6 +39,8 @@ class PublicPortalService
                 Cache::forget('public-portal:v4:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v5:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v6:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v7:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v8:'.$sessionId.':'.$limit);
             }
 
             return;
@@ -81,14 +83,17 @@ class PublicPortalService
 
         $fixtureQuery = fn () => Fixture::query()->where('organization_id', $organizationId)
             ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds))
-            ->with(['event.sport', 'pool:id,name', 'homeParticipant:id,name,team_name,logo_path,inverse_logo_path', 'awayParticipant:id,name,team_name,logo_path,inverse_logo_path', 'result']);
+            ->with(['event.sport', 'event.sportCategory', 'pool:id,name', 'homeParticipant:id,name,team_name,logo_path,inverse_logo_path', 'awayParticipant:id,name,team_name,logo_path,inverse_logo_path', 'result']);
 
         $upcomingFixtures = $fixtureQuery()->whereIn('status', ['scheduled', 'in_progress'])
-            ->orderByRaw('scheduled_at IS NULL, scheduled_at')
+            ->orderByRaw('scheduled_at IS NULL')
+            ->orderBy('scheduled_at')
+            ->orderBy('match_number')
             ->when($limit !== null, fn ($query) => $query->limit($limit))
             ->get();
         $completedFixtures = $fixtureQuery()->where('status', 'completed')
             ->orderByDesc('scheduled_at')
+            ->orderBy('match_number')
             ->when($limit !== null, fn ($query) => $query->limit($limit))
             ->get();
         $upcoming = $upcomingFixtures->map(fn (Fixture $fixture) => $this->matchData($fixture))->values();
@@ -110,14 +115,21 @@ class PublicPortalService
             'sports_catalog' => (clone $eventQuery)->with(['sport:id,name', 'sportCategory:id,name'])->get()
                 ->groupBy('sport_id')->map(fn ($events) => [
                     'name' => $events->first()->sport?->name,
-                    'events' => $events->map(fn ($event) => $event->name)->sort()->values()->all(),
+                    'categories' => $events->map(fn ($event) => $event->sportCategory?->name)->filter()->unique()->sort()->values()->all(),
+                    'events' => $events->map(fn ($event) => [
+                        'name' => $event->name,
+                        'category' => $event->sportCategory?->name,
+                    ])->sortBy('name')->values()->all(),
                 ])->filter(fn ($sport) => filled($sport['name']))->sortBy('name')->values()->all(),
             'sports' => (clone $eventQuery)->with('sport:id,name')->get()->pluck('sport.name')->filter()->unique()->sort()->values()->all(),
             'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()
                 ->orderBy('name')->get(['id', 'name', 'logo_path', 'inverse_logo_path'])->map(fn (Participant $participant) => [
                     'name' => $participant->name, 'logo_url' => $participant->logo_url, 'inverse_logo_url' => $participant->inverse_logo_url,
                 ])->values()->all(),
-            'venues' => $fixtureQuery()->whereNotNull('venue')->where('venue', '!=', '')->get(['venue'])->pluck('venue')->unique()->sort()->values()->all(),
+            'venues' => collect([
+                ...(clone $eventQuery)->pluck('venues')->flatten()->filter()->all(),
+                ...$fixtureQuery()->whereNotNull('venue')->where('venue', '!=', '')->get(['venue'])->pluck('venue')->all(),
+            ])->unique()->sort()->values()->all(),
             'upcoming' => $upcoming->all(),
             'results' => $completed->all(),
             'medals' => ($limit === null
@@ -158,11 +170,12 @@ class PublicPortalService
             'logo_url' => $value->logo_url,
             'inverse_logo_url' => $value->inverse_logo_url,
         ] : null;
+        $eventVenues = $fixture->event?->venues ?? [];
 
         return ['id' => $fixture->id, 'sport' => $fixture->event?->sport?->name, 'event' => $fixture->event?->name,
-            'stage' => $fixture->stage, 'round' => $fixture->round, 'group' => $fixture->pool?->name,
+            'category' => $fixture->event?->sportCategory?->name, 'stage' => $fixture->stage, 'round' => $fixture->round, 'group' => $fixture->pool?->name,
             'match_number' => $fixture->match_number, 'scheduled_at' => $fixture->scheduled_at?->toIso8601String(),
-            'venue' => $fixture->venue, 'status' => $fixture->status, 'home' => $participant($fixture->homeParticipant),
+            'venue' => $fixture->venue ?: ($eventVenues[0] ?? null), 'status' => $fixture->status, 'home' => $participant($fixture->homeParticipant),
             'away' => $participant($fixture->awayParticipant), 'score_home' => $fixture->result?->score_home, 'score_away' => $fixture->result?->score_away];
     }
 

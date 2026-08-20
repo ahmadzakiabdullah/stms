@@ -300,6 +300,13 @@ function KnockoutStageSection({ knockout, canManage = true }: { knockout: Knocko
 
 const toDateTimeInput = (value: string | null) => (value ? value.slice(0, 16) : '');
 
+const toDateInput = (value: string | null | undefined) => {
+    if (!value) return '';
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+
+    return match ? `${match[1]}-${match[2]}-${match[3]}` : '';
+};
+
 interface MatchRowViewProps {
     match: MatchRow;
     onEdit: () => void;
@@ -478,7 +485,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
             match_number: nextMatchNumber,
             home_participant_id: '',
             away_participant_id: '',
-            venue: '',
+            venue: events.find((item) => item.id === eventId)?.venues?.[0] || '',
             scheduled_at: '',
             status: 'scheduled',
             notes: '',
@@ -496,7 +503,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
             match_number: match.match_number,
             home_participant_id: match.home_participant_id || '',
             away_participant_id: match.away_participant_id || '',
-            venue: match.venue || '',
+            venue: match.venue || events.find((item) => item.id === match.event_id)?.venues?.[0] || '',
             scheduled_at: toDateTimeInput(match.scheduled_at),
             status: match.status,
             notes: match.notes || '',
@@ -906,7 +913,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         <div className="grid min-w-0 gap-4 py-5 sm:grid-cols-2 [&>div]:min-w-0 [&_input]:w-full [&_select]:w-full">
                             <div className="grid min-w-0 gap-2 sm:col-span-2">
                                 <Label htmlFor="event_id">{t('Event')}</Label>
-                                <select id="event_id" value={data.event_id} onChange={(event) => setData('event_id', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm" required>
+                                <select id="event_id" value={data.event_id} onChange={(event) => {
+                                    setData('event_id', event.target.value);
+                                    const next = events.find((item) => item.id === event.target.value);
+                                    if (next?.venues?.length) setData('venue', next.venues[0]);
+                                }} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm" required>
                                     <option value="">-- Select Event --</option>
                                     {events.map((event) => <option key={event.id} value={event.id}>{eventDisplayName(event)}</option>)}
                                 </select>
@@ -933,8 +944,26 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 <select id="away_participant_id" value={data.away_participant_id} onChange={(event) => setData('away_participant_id', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
                                 {errors.away_participant_id && <p className="text-sm text-destructive">{errors.away_participant_id}</p>}
                             </div>
-                            <div className="grid gap-2"><Label htmlFor="venue">Venue</Label><Input id="venue" value={data.venue} onChange={(event) => setData('venue', event.target.value)} /></div>
-                            <div className="grid gap-2"><Label htmlFor="scheduled_at">Scheduled At</Label><Input id="scheduled_at" type="datetime-local" value={data.scheduled_at} onChange={(event) => setData('scheduled_at', event.target.value)} /></div>
+                            <div className="grid gap-2"><Label htmlFor="venue">Venue</Label>{(() => {
+                                const formEvent = events.find((item) => item.id === data.event_id);
+                                const venues = formEvent?.venues ?? [];
+                                if (venues.length === 0) {
+                                    return <Input id="venue" value={data.venue} onChange={(event) => setData('venue', event.target.value)} />;
+                                }
+                                return (
+                                    <select id="venue" value={data.venue} onChange={(event) => setData('venue', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm">
+                                        <option value="">-- Venue TBD --</option>
+                                        {venues.map((venue) => <option key={venue} value={venue}>{venue}</option>)}
+                                    </select>
+                                );
+                            })()}</div>
+                            <div className="grid gap-2"><Label htmlFor="scheduled_at">Scheduled At</Label>{(() => {
+                                const formEvent = events.find((item) => item.id === data.event_id);
+                                const start = formEvent?.start_date ? `${toDateInput(formEvent.start_date)}T00:00` : undefined;
+                                const end = formEvent?.end_date ? `${toDateInput(formEvent.end_date)}T23:59` : undefined;
+
+                                return <Input id="scheduled_at" type="datetime-local" value={data.scheduled_at} min={start} max={end} onChange={(event) => setData('scheduled_at', event.target.value)} />;
+                            })()}</div>
                             <div className="grid gap-2"><Label htmlFor="status">{t('Status')}</Label><select id="status" value={data.status} onChange={(event) => setData('status', event.target.value as Fixture['status'])} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm"><option value="scheduled">{t('Scheduled')}</option><option value="in_progress">{t('In Progress')}</option><option value="completed">{t('Completed')}</option><option value="cancelled">{t('Cancelled')}</option></select></div>
                             <div className="grid gap-2"><Label htmlFor="notes">Notes</Label><Input id="notes" value={data.notes} onChange={(event) => setData('notes', event.target.value)} /></div>
                         </div>

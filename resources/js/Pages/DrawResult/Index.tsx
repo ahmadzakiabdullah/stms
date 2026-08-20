@@ -25,7 +25,7 @@ import {
     X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { Event, Pool, Fixture, Participant, EventParticipant, Flash } from '@/types';
+import type { Event, Pool, Fixture, Participant, EventParticipant, Result, Flash } from '@/types';
 import { formatDateTime, useI18n } from '@/lib/i18n';
 
 interface PoolWithRelations extends Pool {
@@ -78,19 +78,30 @@ const ParticipantAvatar = ({ participant, variant = 'roster' }: { participant?: 
     <ParticipantLogo participant={participant} size={variant === 'matchup' ? 'lg' : 'md'} alt="" />
 );
 
-const Matchup = ({ home, away }: { home?: Participant; away?: Participant }) => (
-    <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
-        <div className="flex min-w-0 items-center justify-end gap-2 text-right">
-            <span className="truncate text-sm font-semibold" title={participantFullName(home)}>{participantName(home)}</span>
-            <ParticipantAvatar participant={home} variant="matchup" />
+const Matchup = ({ home, away, result }: { home?: Participant; away?: Participant; result?: Result | null }) => {
+    const hasScore = Boolean(result && (result.score_home !== null || result.score_away !== null));
+    const isWinner = (id?: string) => hasScore && Boolean(id) && result?.winner_participant_id === id;
+
+    return (
+        <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
+            <div className="flex min-w-0 items-center justify-end gap-2 text-right">
+                <span className={`truncate text-sm font-semibold ${isWinner(home?.id) ? 'font-black text-emerald-700' : 'text-slate-800'}`} title={participantFullName(home)}>{participantName(home)}</span>
+                <ParticipantAvatar participant={home} variant="matchup" />
+            </div>
+            {hasScore ? (
+                <span className="rounded-lg bg-slate-900 px-2.5 py-1 text-sm font-black tabular-nums text-white">
+                    {result.score_home ?? '-'} - {result.score_away ?? '-'}
+                </span>
+            ) : (
+                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">VS</span>
+            )}
+            <div className="flex min-w-0 items-center gap-2 text-left">
+                <ParticipantAvatar participant={away} variant="matchup" />
+                <span className={`truncate text-sm font-semibold ${isWinner(away?.id) ? 'font-black text-emerald-700' : 'text-slate-800'}`} title={participantFullName(away)}>{participantName(away)}</span>
+            </div>
         </div>
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">VS</span>
-        <div className="flex min-w-0 items-center gap-2 text-left">
-            <ParticipantAvatar participant={away} variant="matchup" />
-            <span className="truncate text-sm font-semibold" title={participantFullName(away)}>{participantName(away)}</span>
-        </div>
-    </div>
-);
+    );
+};
 
 interface StatTileProps {
     icon: typeof Users;
@@ -402,7 +413,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                         </div>
 
                                         <div className="rounded-xl border border-slate-100 bg-white px-2 py-3 sm:px-4">
-                                            <Matchup home={fixture.home_participant} away={fixture.away_participant} />
+                                            <Matchup home={fixture.home_participant} away={fixture.away_participant} result={fixture.result} />
                                         </div>
 
                                         <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground lg:block lg:text-right">

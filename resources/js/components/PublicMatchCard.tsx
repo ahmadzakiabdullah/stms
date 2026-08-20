@@ -52,9 +52,9 @@ export default function PublicMatchCard({ match, variant = 'upcoming' }: { match
                 </span>
             </div>
             <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                <PublicTeamRow team={match.home} />
+                <PublicTeamRow team={match.home} reverse center />
                 <div className="rounded-xl bg-[var(--public-dark)] px-3 py-2 text-center text-xs font-black text-white">{score}</div>
-                <PublicTeamRow team={match.away} right />
+                <PublicTeamRow team={match.away} center />
             </div>
             {match.venue ? (
                 <p className="mt-4 flex items-center gap-1.5 border-t border-[var(--public-dark-border)] pt-3 text-xs text-[var(--public-dark-faint)]">

@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use App\Models\Organization;
 use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
@@ -57,6 +60,35 @@ class SettingContactTest extends TestCase
                 ->where('settings.secretariat_instagram_url', 'https://www.instagram.com/pusatsukanutem')
                 ->where('settings.secretariat_tiktok_url', 'https://www.tiktok.com/pusatsukanutem')
                 ->where('settings.secretariat_youtube_url', 'https://www.youtube.com/pusatsukanutem'));
+    }
+
+    public function test_org_admin_can_upload_dark_mode_inverse_logo(): void
+    {
+        $organization = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($organization);
+
+        $this->actingAs($admin)
+            ->post(route('settings.update'), array_merge($this->validPayload(), [
+                'inverse_logo' => UploadedFile::fake()->image('inverse-logo.png', 200, 80),
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $url = Setting::where('organization_id', $organization->id)
+            ->where('key', 'inverse_logo_url')
+            ->value('value');
+
+        $this->assertNotNull($url);
+        $storageBasePath = parse_url((string) config('filesystems.disks.public.url'), PHP_URL_PATH);
+        $relativePath = (string) Str::after((string) parse_url($url, PHP_URL_PATH), $storageBasePath.'/');
+        Storage::disk('public')->assertExists($relativePath);
+
+        $this->actingAs($admin)
+            ->get(route('settings.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Settings/Index')
+                ->where('settings.inverse_logo_url', $url));
     }
 
     public function test_public_contact_settings_reject_unsafe_urls_and_invalid_contact_values(): void

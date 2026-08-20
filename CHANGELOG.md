@@ -1,5 +1,59 @@
 # Changelog
 
+## Unreleased — Tighter matchup cards on the public schedule (20 August 2026)
+
+- The match cards on `/schedule` now center the whole home–score–away matchup with a compact gap, bringing each team's logo and name close to the score instead of stretching them to the card edges.
+
+## Unreleased — Draw Result shows match scores (20 August 2026)
+
+- The "Full match schedule" section on the Draw Result page now loads and displays each fixture's result: the center VS pill becomes the score for completed matches, and the winning team is highlighted.
+- Added a feature test asserting completed fixtures expose their result scores on the Draw Result page.
+
+## Unreleased — Schedule date limited to the event window (20 August 2026)
+
+- The "Scheduled At" picker in `/manage/matches` now restricts selectable dates to the selected event's `start_date`–`end_date` range (`min`/`max` on the datetime input).
+- The events payload for the match page now includes `start_date` and `end_date`.
+
+## Unreleased — Sport category filter on the schedule (20 August 2026)
+
+- The `/schedule` page now has a "Category" filter alongside Sport and Venue; selecting a sport narrows the category list to that sport's categories, and counts are shown per category.
+- Public match data now carries the event's sport category (`category`), used by the new filter; portal cache bumped to `v8`.
+- Added a feature test covering category presence in match data and the sports catalog.
+
+## Unreleased — Multiple venues per event (20 August 2026)
+
+- Replaced the single event `venue` with a JSON list of venues (`events.venues`, migration `2026_08_20_000002`) so an event can offer several locations; the first venue is the default used when creating matches.
+- The Event dialog now lets organisers add/remove any number of venues; blank entries are discarded on save.
+- The match dialog in `/manage/matches` offers a venue dropdown from the selected event's venues (defaulting to the first) while still allowing a free-text venue per match.
+- Public fixtures inherit the first event venue when the match has none, and the public venue list combines all event venues with match-assigned venues (schedule filter, venue directory, match cards).
+- Existing matches without a venue are backfilled with the event's default (first) venue whenever the event venues are saved, so already-created matches use the venue entered on the event.
+- Updated store/update validation and feature tests for multi-venue events, backfill and public venue inheritance.
+
+## Unreleased — Event-level venue (20 August 2026)
+
+- Added a tenant-scoped `venue` field on Events (via `events.venue`, migration `2026_08_20_000001`), editable from the Event dialog in `/events`.
+- Public fixtures now inherit the event venue when the match has none, and the public venue list combines event venues with match-assigned venues (schedule filter, venue directory, match cards).
+- The match dialog in `/manage/matches` pre-fills the venue from the selected event when creating/editing a match, and can still be overridden per match.
+- Added validation on store/update Event requests plus feature tests for event venue persistence and public venue inheritance.
+
+## Unreleased — Public schedule ordering fix (20 August 2026)
+
+- Public fixtures now order by `match_number` within the same `scheduled_at`, so knockout matches display in play order (group → semi-final 1 → semi-final 2 → bronze → final) instead of insertion order. Applies to the homepage "Live competition updates" columns and the `/schedule` page (upcoming and completed lists).
+
+## Unreleased — Consolidated public match pages (20 August 2026)
+
+- `/schedule` is now the single public page for all fixtures and results, with All / Live / Upcoming / Completed tabs, filters and search.
+- `/matches`, `/results` and `/live` redirect (301) to `/schedule`; removed the duplicate `Public/Matches` and `Public/Results` pages and their controller methods.
+- The public header/footer navigation now shows Home, Sports, Schedule and Contact only, and the homepage "Matches" and "Results" cards link to the schedule.
+- Trimmed the Sports directory to the sports, faculties and venues sections, and removed the matches/results/live sitemap entries (redirects avoid duplicate content).
+- Added a feature test covering the 301 redirects and updated the schedule/directory public route tests.
+
+## Unreleased — Dark mode organisation logo (20 August 2026)
+
+- Added a tenant-scoped `inverse_logo_url` setting uploadable from Settings ("Dark Mode Logo"), stored through the existing safe asset pipeline (SVG sanitized, PNG/JPG/SVG/WebP up to 2MB).
+- The public portal header and footer now prefer the inverse (dark-mode) logo on their dark surfaces, falling back to the standard organisation logo.
+- Added validation, a feature test for the inverse logo upload and English/Malay UI translations.
+
 ## Unreleased — Sport icons switched to Icons8 PNG (19 August 2026)
 
 - Replaced the Flaticon Uicons sport icons with self-hosted Icons8 PNGs (512px, iOS style) rendered via CSS mask + `currentColor`, so glyphs inherit the accent colour and adapt to dark mode automatically.

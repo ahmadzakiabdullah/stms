@@ -16,6 +16,7 @@ class UpdateSettingsRequest extends FormRequest
         return [
             'app_name' => 'nullable|string|max:255',
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
+            'inverse_logo' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
             'favicon' => 'nullable|image|mimes:png,ico,svg|max:1024',
             'tournament_logo' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp|max:2048',
             'secretariat_address' => 'nullable|string|max:1000',

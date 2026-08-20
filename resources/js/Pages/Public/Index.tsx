@@ -81,7 +81,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
         { value: stats.sports, label: t('Sports'), description: t('Sports programme'), icon: Trophy, href: route('public.sports') },
         { value: stats.events, label: t('Events'), description: t('Official events'), icon: Medal, href: route('public.sports') },
         { value: stats.faculties, label: t('Faculties'), description: t('Participating faculties'), icon: Users, href: route('public.faculties') },
-        { value: stats.total_matches, label: t('Matches'), description: t('Fixtures scheduled'), icon: CalendarDays, href: route('public.matches') },
+        { value: stats.total_matches, label: t('Matches'), description: t('Fixtures scheduled'), icon: CalendarDays, href: route('public.schedule') },
     ] as const;
 
     return (
@@ -138,7 +138,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
                 <section className="border-y border-[var(--public-dark-border)] bg-white py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><PublicSectionHeading eyebrow={t('Latest')} title={t('Live competition updates')} description={`${t('Updated')} ${formatDate(updated_at, locale, true)}`} /><div className="flex flex-col items-start gap-2 sm:items-end"><button type="button" onClick={() => refresh(true)} disabled={refreshing} className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] disabled:opacity-50 sm:self-auto"><RefreshCw className={`size-4 ${refreshing ? 'animate-spin' : ''}`} />{t(refreshing ? 'Refreshing' : 'Refresh')}</button><p role="status" aria-live="polite" className={`min-h-5 text-xs font-semibold ${refreshStatus === 'error' ? 'text-red-700' : 'text-[var(--public-primary)]'}`}>{refreshStatus === 'success' ? t('Refresh complete') : refreshStatus === 'error' ? t('Unable to refresh. Please try again.') : ''}</p></div></div>
-                    <div className="mt-12 grid gap-14 lg:grid-cols-2"><MatchColumn id="schedule" title={t('Schedule')} href={route('public.schedule')} matches={upcoming.slice(0, 5)} variant="upcoming" t={t} /><MatchColumn id="results" title={t('Results')} href={route('public.results')} matches={results.slice(0, 5)} variant="result" t={t} /></div>
+                    <div className="mt-12 grid gap-14 lg:grid-cols-2"><MatchColumn id="schedule" title={t('Schedule')} href={route('public.schedule')} matches={upcoming.slice(0, 5)} variant="upcoming" t={t} /><MatchColumn id="results" title={t('Results')} href={route('public.schedule')} matches={results.slice(0, 5)} variant="result" t={t} /></div>
                 </div></section>
 
                 <section className="border-y border-[var(--public-dark-border)] bg-[var(--public-background)] py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">

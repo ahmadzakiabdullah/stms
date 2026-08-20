@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
+use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Sport;
 use App\Models\SportCategory;
@@ -83,5 +84,81 @@ class EventTest extends TestCase
 
         $response->assertRedirect(route('events.index'));
         $this->assertDatabaseHas('events', ['name' => 'Test Event']);
+    }
+
+    public function test_authorized_user_can_set_venues_on_an_event(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createStaffUser($org);
+        $manager->assignRole('tournament-manager');
+
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+        $sport = Sport::factory()->create(['organization_id' => $org->id]);
+        $cat = SportCategory::factory()->forSport($sport)->create();
+
+        $response = $this->actingAs($manager)->post(route('events.store'), [
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $cat->id,
+            'name' => 'Test Event',
+            'venues' => ['Stadium Mini UTeM', 'Padang B'],
+            'start_date' => now()->toDateString(),
+        ]);
+
+        $response->assertRedirect(route('events.index'));
+        $event = Event::where('name', 'Test Event')->firstOrFail();
+        $this->assertSame(['Stadium Mini UTeM', 'Padang B'], $event->venues);
+    }
+
+    public function test_blank_venue_entries_are_discarded_when_storing_an_event(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createStaffUser($org);
+        $manager->assignRole('tournament-manager');
+
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+        $sport = Sport::factory()->create(['organization_id' => $org->id]);
+        $cat = SportCategory::factory()->forSport($sport)->create();
+
+        $response = $this->actingAs($manager)->post(route('events.store'), [
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $cat->id,
+            'name' => 'Test Event',
+            'venues' => ['Stadium Mini UTeM', '   ', ''],
+            'start_date' => now()->toDateString(),
+        ]);
+
+        $response->assertRedirect(route('events.index'));
+        $event = Event::where('name', 'Test Event')->firstOrFail();
+        $this->assertSame(['Stadium Mini UTeM'], $event->venues);
+    }
+
+    public function test_updating_event_venues_backfills_existing_matches_without_a_venue(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createOrgAdmin($org);
+
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+        $sport = Sport::factory()->create(['organization_id' => $org->id]);
+        $cat = SportCategory::factory()->forSport($sport)->create();
+        $event = Event::factory()->forTournament($tournament)->create(['sport_id' => $sport->id, 'sport_category_id' => $cat->id, 'venues' => []]);
+        $noVenue = Fixture::factory()->scheduled()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'venue' => null]);
+        $blankVenue = Fixture::factory()->scheduled()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'venue' => '']);
+        $alreadySet = Fixture::factory()->scheduled()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'venue' => 'Existing Stadium']);
+
+        $response = $this->actingAs($manager)->put(route('events.update', $event->slug), [
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $cat->id,
+            'name' => $event->name,
+            'venues' => ['Stadium Mini UTeM', 'Padang B'],
+            'start_date' => now()->toDateString(),
+        ]);
+
+        $response->assertRedirect(route('events.index'));
+        $this->assertDatabaseHas('matches', ['id' => $noVenue->id, 'venue' => 'Stadium Mini UTeM']);
+        $this->assertDatabaseHas('matches', ['id' => $blankVenue->id, 'venue' => 'Stadium Mini UTeM']);
+        $this->assertDatabaseHas('matches', ['id' => $alreadySet->id, 'venue' => 'Existing Stadium']);
     }
 }

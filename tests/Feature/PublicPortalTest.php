@@ -8,6 +8,8 @@ use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
 use App\Models\Setting;
+use App\Models\Sport;
+use App\Models\SportCategory;
 use App\Models\Tournament;
 use App\Services\PublicPortalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,7 +56,7 @@ class PublicPortalTest extends TestCase
         $this->get('/index.php')->assertRedirect('/')->assertStatus(301);
     }
 
-    public function test_public_matches_page_displays_configured_session_fixtures(): void
+    public function test_public_schedule_page_displays_configured_session_fixtures(): void
     {
         $organization = Organization::factory()->create(['is_active' => true]);
         $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
@@ -65,8 +67,85 @@ class PublicPortalTest extends TestCase
         $away = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti B']);
         Fixture::factory()->scheduled()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id]);
 
-        $this->get(route('public.matches'))->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Public/Matches')->has('upcoming', 1)->where('upcoming.0.home.name', 'Fakulti A')->where('upcoming.0.away.name', 'Fakulti B'));
+        $this->get(route('public.schedule'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Schedule')->has('upcoming', 1)->where('upcoming.0.home.name', 'Fakulti A')->where('upcoming.0.away.name', 'Fakulti B'));
+    }
+
+    public function test_public_schedule_includes_sport_categories_for_filtering(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $sport = Sport::factory()->create(['organization_id' => $organization->id]);
+        $category = SportCategory::factory()->forSport($sport)->create(['name' => 'Lelaki']);
+        $event = Event::factory()->forTournament($tournament)->create(['sport_id' => $sport->id, 'sport_category_id' => $category->id]);
+        $home = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti A']);
+        $away = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti B']);
+        Fixture::factory()->scheduled()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id]);
+
+        $this->get(route('public.schedule'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Schedule')
+            ->where('upcoming.0.sport', $sport->name)
+            ->where('upcoming.0.category', 'Lelaki')
+            ->has('sports_catalog', 1)
+            ->where('sports_catalog.0.name', $sport->name)
+            ->where('sports_catalog.0.categories.0', 'Lelaki'));
+    }
+
+    public function test_knockout_fixtures_on_the_same_date_appear_in_play_order(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $event = Event::factory()->forTournament($tournament)->create();
+        $home = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti A']);
+        $away = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti B']);
+        $third = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti C']);
+        $fourth = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti D']);
+        $scheduledAt = now()->addDay()->startOfDay();
+
+        foreach ([
+            ['stage' => 'semi_final', 'round' => 1, 'match_number' => 5, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id],
+            ['stage' => 'semi_final', 'round' => 2, 'match_number' => 6, 'home_participant_id' => $third->id, 'away_participant_id' => $fourth->id],
+            ['stage' => 'bronze', 'round' => 3, 'match_number' => 7],
+            ['stage' => 'final', 'round' => 4, 'match_number' => 8],
+        ] as $fixture) {
+            Fixture::factory()->scheduled()->create(array_merge([
+                'organization_id' => $organization->id,
+                'event_id' => $event->id,
+                'scheduled_at' => $scheduledAt,
+            ], $fixture));
+        }
+
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Index')
+            ->has('upcoming', 4)
+            ->where('upcoming.0.stage', 'semi_final')->where('upcoming.0.round', 1)
+            ->where('upcoming.1.stage', 'semi_final')->where('upcoming.1.round', 2)
+            ->where('upcoming.2.stage', 'bronze')
+            ->where('upcoming.3.stage', 'final'));
+    }
+
+    public function test_public_matches_inherit_the_event_venue_and_venues_list_combines_sources(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $event = Event::factory()->forTournament($tournament)->create(['venues' => ['Stadium Mini UTeM', 'Padang B']]);
+        $home = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'is_active' => true]);
+        $away = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'is_active' => true]);
+        Fixture::factory()->scheduled()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id, 'venue' => null]);
+
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Index')
+            ->has('upcoming', 1)
+            ->where('upcoming.0.venue', 'Stadium Mini UTeM')
+            ->has('venues', 2)
+            ->where('venues.0', 'Padang B')
+            ->where('venues.1', 'Stadium Mini UTeM'));
     }
 
     public function test_public_directory_pages_render_without_authentication(): void
@@ -75,9 +154,16 @@ class PublicPortalTest extends TestCase
         $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
         config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
 
-        foreach (['public.sports' => 'sports', 'public.schedule' => 'schedule', 'public.results' => 'results', 'public.faculties' => 'faculties', 'public.venues' => 'venues', 'public.live' => 'live'] as $routeName => $section) {
+        foreach (['public.sports' => 'sports', 'public.faculties' => 'faculties', 'public.venues' => 'venues'] as $routeName => $section) {
             $this->get(route($routeName))->assertOk()->assertInertia(fn (Assert $page) => $page
                 ->component('Public/Directory')->where('section', $section));
+        }
+    }
+
+    public function test_legacy_match_pages_redirect_to_the_consolidated_schedule(): void
+    {
+        foreach (['public.matches', 'public.results', 'public.live'] as $routeName) {
+            $this->get(route($routeName))->assertRedirect('/schedule')->assertStatus(301);
         }
     }
 

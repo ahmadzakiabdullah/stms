@@ -11,6 +11,7 @@ interface Props {
     settings: {
         app_name: string;
         logo_url: string | null;
+        inverse_logo_url: string | null;
         favicon_url: string | null;
         tournament_logo_url: string | null;
         secretariat_address: string;
@@ -34,6 +35,7 @@ export default function SettingsIndex({ settings }: Props) {
     const { flash } = usePage().props;
     const [appName, setAppName] = useState(settings.app_name);
     const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [inverseLogoFile, setInverseLogoFile] = useState<File | null>(null);
     const [faviconFile, setFaviconFile] = useState<File | null>(null);
     const [tournamentLogoFile, setTournamentLogoFile] = useState<File | null>(null);
     const [contact, setContact] = useState({
@@ -59,6 +61,7 @@ export default function SettingsIndex({ settings }: Props) {
         const fd = new FormData();
         fd.append('app_name', appName);
         if (logoFile) fd.append('logo', logoFile);
+        if (inverseLogoFile) fd.append('inverse_logo', inverseLogoFile);
         if (faviconFile) fd.append('favicon', faviconFile);
         if (tournamentLogoFile) fd.append('tournament_logo', tournamentLogoFile);
         Object.entries(contact).forEach(([key, value]) => fd.append(key, value));
@@ -132,6 +135,26 @@ export default function SettingsIndex({ settings }: Props) {
                         <div className="space-y-2">
                             <Label htmlFor="logo">{t('Upload New Logo')}</Label>
                             <Input id="logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Dark Mode Logo')}</CardTitle>
+                        <CardDescription>{t('Upload an inverse variant of your organization logo for dark backgrounds (PNG, JPG, SVG, WebP - max 2MB). Shown on the public portal header and footer.')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {settings.inverse_logo_url && (
+                            <div className="mb-4">
+                                <Label>{t('Current Dark Mode Logo')}</Label>
+                                <div className="mt-2 flex items-center justify-center rounded-xl border p-5" style={{ backgroundColor: theme.dark }}>
+                                    <img src={settings.inverse_logo_url} alt="Dark mode logo" className="h-20 w-auto rounded object-contain" />
+                                </div>
+                            </div>
+                        )}
+                        <div className="space-y-2">
+                            <Label htmlFor="inverse_logo">{t('Upload Dark Mode Logo')}</Label>
+                            <Input id="inverse_logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={(e) => setInverseLogoFile(e.target.files?.[0] || null)} />
                         </div>
                     </CardContent>
                 </Card>

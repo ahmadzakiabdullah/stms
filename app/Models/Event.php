@@ -23,6 +23,7 @@ class Event extends Model
         'name',
         'slug',
         'description',
+        'venues',
         'start_date',
         'end_date',
         'registration_deadline',
@@ -39,6 +40,7 @@ class Event extends Model
         'is_active' => 'boolean',
         'pool_size' => 'integer',
         'qualifiers_per_pool' => 'integer',
+        'venues' => 'array',
     ];
 
     public function organization()
