@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — Public portal accessibility fixes (20 August 2026)
+
+- Section eyebrows on light backgrounds now use the primary colour instead of the light accent, which failed WCAG AA colour contrast (2.15:1) with the default theme.
+- The derived `--public-dark-faint` muted text colour is darkened (alpha 0.55 → 0.7) so body and caption text reaches ≥ 4.5:1 contrast on light backgrounds.
+- Faculty logo tiles on the public home page now carry an `aria-label` per faculty, giving the image-only links a discernible accessible name.
+
 ## Unreleased — Tighter matchup cards on the public schedule (20 August 2026)
 
 - The match cards on `/schedule` now center the whole home–score–away matchup with a compact gap, bringing each team's logo and name close to the score instead of stretching them to the card edges.

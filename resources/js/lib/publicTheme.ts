@@ -53,7 +53,7 @@ export const publicThemeStyle = (s: PublicThemeSettings): CSSProperties => {
         '--public-primary-border': hexToRgba(primary, 0.3),
         '--public-dark-soft': hexToRgba(dark, 0.05),
         '--public-dark-border': hexToRgba(dark, 0.12),
-        '--public-dark-faint': hexToRgba(dark, 0.55),
+        '--public-dark-faint': hexToRgba(dark, 0.7),
         '--public-highlight-soft': hexToRgba(highlight, 0.2),
         '--public-accent-soft': hexToRgba(accent, 0.14),
     } as CSSProperties;
