@@ -19,6 +19,7 @@ class Sport extends Model
         'name',
         'slug',
         'icon',
+        'scoring_mode',
         'is_active',
     ];
 

@@ -4,7 +4,7 @@ import PublicPageHero from '@/components/PublicPageHero';
 import PublicScheduleMatchCard, { type ScheduleMatch } from '@/components/PublicScheduleMatchCard';
 import { useI18n } from '@/lib/i18n';
 import { Head } from '@inertiajs/react';
-import { CalendarDays, Clock3, Radio, Trophy, Search, X } from 'lucide-react';
+import { CalendarDays, Clock3, Radio, SlidersHorizontal, Trophy, Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 type Props = {
@@ -160,6 +160,28 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                 </PublicPageHero>
 
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+                    <div className="lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8">
+                        <aside className="mb-8 hidden lg:sticky lg:top-24 lg:block">
+                            <FilterPanel
+                                t={t}
+                                searchQuery={searchQuery}
+                                setSearchQuery={setSearchQuery}
+                                sportFilter={sportFilter}
+                                setSportFilter={setSportFilter}
+                                setCategoryFilter={setCategoryFilter}
+                                categoryFilter={categoryFilter}
+                                setVenueFilter={setVenueFilter}
+                                venueFilter={venueFilter}
+                                sportsCatalog={sports_catalog}
+                                sportCounts={sportCounts}
+                                categoryOptions={categoryOptions}
+                                categoryCounts={categoryCounts}
+                                venues={venues}
+                                hasActiveFilters={Boolean(hasActiveFilters)}
+                                clearFilters={clearFilters}
+                            />
+                        </aside>
+                        <div className="min-w-0">
                     <div className="mb-8 space-y-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex flex-wrap items-center gap-2">
@@ -196,7 +218,7 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                             </div>
                         </div>
 
-                        <div className="flex flex-col gap-4 lg:flex-row">
+                        <div className="flex flex-col gap-4 lg:hidden">
                             <div className="relative flex-1">
                                 <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                                 <input
@@ -317,9 +339,70 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                     <p className="mt-10 text-right text-xs text-slate-400">
                         {t('Updated')} {formatDateTime(updated_at, locale)}
                     </p>
+                        </div>
+                </div>
                 </div>
             </main>
         </PublicLayout>
+    );
+}
+
+type FilterPanelProps = {
+    t: (key: string) => string;
+    searchQuery: string;
+    setSearchQuery: (value: string) => void;
+    sportFilter: string;
+    setSportFilter: (value: string) => void;
+    categoryFilter: string;
+    setCategoryFilter: (value: string) => void;
+    venueFilter: string;
+    setVenueFilter: (value: string) => void;
+    sportsCatalog: Props['sports_catalog'];
+    sportCounts: Map<string, number>;
+    categoryOptions: string[];
+    categoryCounts: Map<string, number>;
+    venues: string[];
+    hasActiveFilters: boolean;
+    clearFilters: () => void;
+};
+
+function FilterPanel({
+    t, searchQuery, setSearchQuery, sportFilter, setSportFilter, categoryFilter, setCategoryFilter,
+    venueFilter, setVenueFilter, sportsCatalog, sportCounts, categoryOptions, categoryCounts,
+    venues, hasActiveFilters, clearFilters,
+}: FilterPanelProps) {
+    const selectClass = 'w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold outline-none transition focus:border-[var(--public-primary)] focus:ring-2 focus:ring-[var(--public-primary)]/15';
+
+    return (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                    <h2 className="text-sm font-black text-slate-900">{t('Filters')}</h2>
+                    <p className="mt-1 text-xs font-medium text-slate-500">{t('Refine the schedule')}</p>
+                </div>
+                <SlidersHorizontal className="size-4 text-[var(--public-primary)]" />
+            </div>
+            <div className="space-y-3">
+                <div className="relative">
+                    <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                    <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('Search team, venue, match #...')} aria-label={t('Search team, venue, match #...')} className={`${selectClass} pl-10 pr-9`} />
+                    {searchQuery && <button type="button" onClick={() => setSearchQuery('')} aria-label={t('Clear search')} className="absolute right-2.5 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"><X className="size-3.5" /></button>}
+                </div>
+                <select value={sportFilter} onChange={(e) => { setSportFilter(e.target.value); setCategoryFilter(''); }} aria-label={t('Filter by sport')} className={selectClass}>
+                    <option value="">{t('All Sports')}</option>
+                    {sportsCatalog.map(sport => <option key={sport.name} value={sport.name}>{sport.name} ({sportCounts.get(sport.name) ?? 0})</option>)}
+                </select>
+                <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label={t('Filter by category')} className={selectClass}>
+                    <option value="">{t('All Categories')}</option>
+                    {categoryOptions.map(category => <option key={category} value={category}>{category} ({categoryCounts.get(category) ?? 0})</option>)}
+                </select>
+                <select value={venueFilter} onChange={(e) => setVenueFilter(e.target.value)} aria-label={t('Filter by venue')} className={selectClass}>
+                    <option value="">{t('All Venues')}</option>
+                    {venues.map(venue => <option key={venue} value={venue}>{venue}</option>)}
+                </select>
+                {hasActiveFilters && <button type="button" onClick={clearFilters} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:border-red-200 hover:text-red-600"><X className="size-4" />{t('Clear')}</button>}
+            </div>
+        </div>
     );
 }
 

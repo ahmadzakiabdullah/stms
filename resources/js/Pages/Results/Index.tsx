@@ -29,10 +29,10 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CalendarDays, CheckCircle2, Pencil, Plus, Save, Search, Swords, Trash2, Trophy } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Minus, Pencil, Plus, Save, Search, Swords, Trash2, Trophy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { matchNumberLabel } from '@/lib/matchNumber';
 import { useI18n } from '@/lib/i18n';
@@ -44,6 +44,15 @@ const resultSchema = z.object({
     score_away: z.number().nullable().optional().default(null),
     winner_participant_id: z.string().nullable().optional().default(''),
     notes: z.string().optional().default(''),
+    scoring_events: z.array(z.object({
+        participant_id: z.string().min(1),
+        squad_member_id: z.string().min(1),
+        event_type: z.string().default('goal'),
+        period: z.number().nullable().optional(),
+        minute: z.number().nullable().optional(),
+        second: z.number().nullable().optional(),
+        notes: z.string().optional().default(''),
+    })).default([]),
 });
 
 type ResultForm = z.infer<typeof resultSchema>;
@@ -54,6 +63,7 @@ interface MatchOption extends Fixture {
     event?: Event & { sport?: { id: string; name: string } };
     home_participant?: Participant;
     away_participant?: Participant;
+    scoring_members?: Array<{ id: string; name: string; participant_id: string }>;
 }
 
 interface ResultsIndexProps {
@@ -274,7 +284,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
     const participants = useMemo(() => (Array.isArray(participantsProp) ? participantsProp : []), [participantsProp]);
     const events = useMemo(() => (Array.isArray(eventsProp) ? eventsProp : []), [eventsProp]);
 
-    const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<ResultForm>({
+    const { register, handleSubmit, reset, watch, setValue, control, formState: { errors, isSubmitting } } = useForm<ResultForm>({
         resolver: zodResolver(resultSchema),
         defaultValues: {
             match_id: '',
@@ -282,15 +292,25 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             score_away: null,
             winner_participant_id: '',
             notes: '',
+            scoring_events: [],
         },
     });
+    const { fields: scoringFields, append: appendScoringEvent, remove: removeScoringEvent } = useFieldArray({
+        control,
+        name: 'scoring_events',
+    });
+    const scoringValues = watch('scoring_events') || [];
 
     const matchId = watch('match_id');
     const scoreHome = watch('score_home');
     const scoreAway = watch('score_away');
+    const adjustScore = (field: 'score_home' | 'score_away', amount: number) => {
+        const current = watch(field);
+        setValue(field, Math.max(0, (current ?? 0) + amount), { shouldDirty: true, shouldValidate: true });
+    };
     const selectedMatch = useMemo(
-        () => matches.find((m) => m.id === matchId),
-        [matches, matchId]
+        () => matches.find((m) => m.id === matchId) ?? (editingResult?.match as MatchOption | undefined),
+        [matches, matchId, editingResult]
     );
 
     // Auto-set winner from scores whenever they change (manual override still possible).
@@ -371,6 +391,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             score_away: null,
             winner_participant_id: '',
             notes: '',
+            scoring_events: [],
         });
         setOpen(true);
     };
@@ -383,6 +404,15 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             score_away: result.score_away ?? null,
             winner_participant_id: result.winner_participant_id || '',
             notes: result.notes || '',
+            scoring_events: (result.scoring_events || []).map((event) => ({
+                participant_id: event.participant_id,
+                squad_member_id: event.squad_member_id,
+                event_type: event.event_type || 'goal',
+                period: event.period ?? null,
+                minute: event.minute ?? null,
+                second: event.second ?? null,
+                notes: event.notes || '',
+            })),
         });
         setOpen(true);
     };
@@ -394,6 +424,12 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
     };
 
     const onSubmit = (formData: ResultForm) => {
+        const scoreByParticipant = new Map<string, number>([
+            [selectedMatch?.home_participant_id || '', scoreHome ?? 0],
+            [selectedMatch?.away_participant_id || '', scoreAway ?? 0],
+        ]);
+        formData.scoring_events = (formData.scoring_events || []).filter((event) => (scoreByParticipant.get(event.participant_id) || 0) > 0);
+
         if (editingResult) {
             router.put(route('results.update', editingResult.id), formData, {
                 onSuccess: () => closeDialog(),
@@ -491,30 +527,82 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
 
                                     <MatchupPreview match={selectedMatch} t={t} />
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="score_home">{participantName(selectedMatch?.home_participant)} (Home) Score</Label>
-                                            <Input
-                                                id="score_home"
-                                                type="number"
-                                                min="0"
-                                                {...register('score_home', { valueAsNumber: true })}
-                                                placeholder="0"
-                                            />
+                                    <div className="grid gap-3 rounded-xl border bg-muted/20 p-3">
+                                        <div className="flex items-center justify-between">
+                                            <Label>{t('Final score')}</Label>
+                                            <span className="text-xs text-muted-foreground">{t('Use the buttons or type a score')}</span>
                                         </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="score_away">{participantName(selectedMatch?.away_participant)} (Away) Score</Label>
-                                            <Input
-                                                id="score_away"
-                                                type="number"
-                                                min="0"
-                                                {...register('score_away', { valueAsNumber: true })}
-                                                placeholder="0"
-                                            />
+                                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+                                            <div className="grid min-w-0 justify-items-center gap-2 text-center">
+                                                <TeamMark participant={selectedMatch?.home_participant} size="md" />
+                                                <span className="line-clamp-2 text-xs font-bold sm:text-sm">{participantName(selectedMatch?.home_participant)}</span>
+                                                <div className="flex items-center gap-1">
+                                                    <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('score_home', -1)} aria-label={t('Decrease home score')}><Minus className="size-4" /></Button>
+                                                    <Input id="score_home" type="number" min="0" inputMode="numeric" className="h-12 w-16 text-center text-2xl font-black tabular-nums" {...register('score_home', { valueAsNumber: true })} placeholder="0" aria-label={`${participantName(selectedMatch?.home_participant)} ${t('Score')}`} />
+                                                    <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('score_home', 1)} aria-label={t('Increase home score')}><Plus className="size-4" /></Button>
+                                                </div>
+                                            </div>
+                                            <span className="text-sm font-black text-muted-foreground">–</span>
+                                            <div className="grid min-w-0 justify-items-center gap-2 text-center">
+                                                <TeamMark participant={selectedMatch?.away_participant} size="md" />
+                                                <span className="line-clamp-2 text-xs font-bold sm:text-sm">{participantName(selectedMatch?.away_participant)}</span>
+                                                <div className="flex items-center gap-1">
+                                                    <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('score_away', -1)} aria-label={t('Decrease away score')}><Minus className="size-4" /></Button>
+                                                    <Input id="score_away" type="number" min="0" inputMode="numeric" className="h-12 w-16 text-center text-2xl font-black tabular-nums" {...register('score_away', { valueAsNumber: true })} placeholder="0" aria-label={`${participantName(selectedMatch?.away_participant)} ${t('Score')}`} />
+                                                    <Button type="button" variant="outline" size="icon" onClick={() => adjustScore('score_away', 1)} aria-label={t('Increase away score')}><Plus className="size-4" /></Button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <WinnerHint match={selectedMatch} scoreHome={scoreHome} scoreAway={scoreAway} t={t} />
+
+                                    {selectedMatch?.event?.sport?.scoring_mode === 'individual' && (
+                                        <div className="grid gap-3 rounded-lg border bg-muted/20 p-3">
+                                            <div>
+                                                <Label>{t('Scoring events')}</Label>
+                                                <p className="text-xs text-muted-foreground">{t('Only teams with a score need scorers.')}</p>
+                                            </div>
+
+                                            {[
+                                                { participant: selectedMatch.home_participant, score: scoreHome ?? 0 },
+                                                { participant: selectedMatch.away_participant, score: scoreAway ?? 0 },
+                                            ].filter(({ participant, score }) => participant && score > 0).map(({ participant, score }) => {
+                                                const participantId = participant!.id;
+                                                const eventIndexes = scoringValues.map((event, index) => event.participant_id === participantId ? index : -1).filter((index) => index >= 0);
+                                                const members = (selectedMatch.scoring_members || []).filter((member) => member.participant_id === participantId);
+                                                const canAdd = eventIndexes.length < score;
+
+                                                return (
+                                                    <div key={participantId} className="grid gap-2 rounded-lg border bg-background p-3">
+                                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                                            <div className="flex items-center gap-2"><TeamMark participant={participant} size="sm" /><span className="text-sm font-bold">{participantName(participant)}</span></div>
+                                                            <span className="text-xs font-semibold text-muted-foreground">{eventIndexes.length} / {score} {t('scorers')}</span>
+                                                        </div>
+
+                                                        {eventIndexes.length === 0 && <p className="rounded-md border border-dashed p-2 text-xs text-muted-foreground">{t('No scorers added yet.')}</p>}
+                                                        {eventIndexes.map((index) => (
+                                                            <div key={scoringFields[index].id} className="grid gap-2 sm:grid-cols-[1fr_72px_72px_auto]">
+                                                                <select className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" {...register(`scoring_events.${index}.squad_member_id`)} required>
+                                                                    <option value="">{members.length ? t('Select athlete') : t('No confirmed athletes')}</option>
+                                                                    {members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
+                                                                </select>
+                                                                <Input type="number" min="0" max="120" placeholder="Min" {...register(`scoring_events.${index}.minute`, { valueAsNumber: true })} />
+                                                                <Input type="number" min="0" max="59" placeholder="Sec" {...register(`scoring_events.${index}.second`, { valueAsNumber: true })} />
+                                                                <Button type="button" variant="ghost" size="icon" onClick={() => removeScoringEvent(index)} aria-label={t('Remove scorer')}><Trash2 className="size-4 text-destructive" /></Button>
+                                                            </div>
+                                                        ))}
+                                                        <Button type="button" variant="outline" size="sm" className="w-fit" disabled={!canAdd} onClick={() => appendScoringEvent({ participant_id: participantId, squad_member_id: '', event_type: 'goal', period: null, minute: null, second: null, notes: '' })}>
+                                                            <Plus className="mr-1 size-3.5" /> {canAdd ? t('Add scorer') : t('Score limit reached')}
+                                                        </Button>
+                                                    </div>
+                                                );
+                                            })}
+
+                                            {scoringFields.length === 0 && scoreHome === 0 && scoreAway === 0 && <p className="rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground">{t('Enter a score before adding scorers.')}</p>}
+                                            {errors.scoring_events && <p className="text-sm text-destructive">{t('Check the scorer entries and ensure their total matches the scores.')}</p>}
+                                        </div>
+                                    )}
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="winner_participant_id">Winner</Label>

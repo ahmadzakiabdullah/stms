@@ -8,7 +8,7 @@ import { type ReactNode } from 'react';
 type Props = { children: ReactNode; title: string; appName: string; current?: PublicHeaderCurrent };
 
 export default function PublicLayout({ children, title, appName, current }: Props) {
-    const { settings = {} } = usePage<PageProps & { settings?: { logo_url?: string | null } & PublicThemeSettings }>().props;
+    const { settings = {} } = usePage<PageProps & { settings?: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings }>().props;
 
     return <>
         <Head title={title} />

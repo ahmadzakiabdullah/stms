@@ -3,13 +3,17 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
+use App\Models\EventParticipant;
 use App\Models\Fixture;
+use App\Models\MatchScoringEvent;
 use App\Models\Organization;
 use App\Models\Participant;
+use App\Models\Result;
 use App\Models\Session;
 use App\Models\Setting;
 use App\Models\Sport;
 use App\Models\SportCategory;
+use App\Models\SquadMember;
 use App\Models\Tournament;
 use App\Services\PublicPortalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,6 +73,65 @@ class PublicPortalTest extends TestCase
 
         $this->get(route('public.schedule'))->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Public/Schedule')->has('upcoming', 1)->where('upcoming.0.home.name', 'Fakulti A')->where('upcoming.0.away.name', 'Fakulti B'));
+    }
+
+    public function test_public_schedule_exposes_scorers_grouped_by_match_participant(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $sport = Sport::factory()->create(['organization_id' => $organization->id, 'scoring_mode' => 'individual', 'name' => 'Hockey']);
+        $event = Event::factory()->forTournament($tournament)->create(['sport_id' => $sport->id]);
+        $home = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'FTKM']);
+        $away = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'STEP']);
+        $homeEntry = EventParticipant::factory()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'participant_id' => $home->id, 'status' => 'confirmed']);
+        $homeAthlete = SquadMember::factory()->create(['organization_id' => $organization->id, 'event_participant_id' => $homeEntry->id, 'name' => 'Ali Penjaring', 'role' => 'athlete_male']);
+        $fixture = Fixture::factory()->completed()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id]);
+        $result = Result::factory()->forOrganization($organization)->create(['match_id' => $fixture->id, 'score_home' => 1, 'score_away' => 0]);
+        MatchScoringEvent::create(['organization_id' => $organization->id, 'result_id' => $result->id, 'match_id' => $fixture->id, 'participant_id' => $home->id, 'squad_member_id' => $homeAthlete->id, 'event_type' => 'goal', 'minute' => 18, 'points' => 1]);
+
+        $this->get(route('public.schedule'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Schedule')
+            ->where('completed.0.scoring_events.0.participant_id', $home->id)
+            ->where('completed.0.scoring_events.0.name', 'Ali Penjaring')
+            ->where('completed.0.scoring_events.0.minute', 18));
+    }
+
+    public function test_public_athletes_page_exposes_only_confirmed_active_rosters_without_sensitive_fields(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $event = Event::factory()->forTournament($tournament)->create();
+        $faculty = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Sukan', 'is_active' => true]);
+        $registration = EventParticipant::factory()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'participant_id' => $faculty->id, 'status' => 'confirmed']);
+        SquadMember::factory()->create(['organization_id' => $organization->id, 'event_participant_id' => $registration->id, 'name' => 'Atlet Awam', 'role' => 'athlete_male', 'identification_no' => 'RAHSIA-123', 'phone' => '0129999999', 'is_active' => true]);
+        SquadMember::factory()->create(['organization_id' => $organization->id, 'event_participant_id' => $registration->id, 'name' => 'Atlet Tidak Aktif', 'role' => 'athlete_female', 'is_active' => false]);
+        $opponent = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Lawan', 'is_active' => true]);
+        $fixture = Fixture::factory()->completed()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'home_participant_id' => $faculty->id, 'away_participant_id' => $opponent->id]);
+        Result::factory()->forOrganization($organization)->create(['match_id' => $fixture->id, 'score_home' => 3, 'score_away' => 1, 'winner_participant_id' => $faculty->id]);
+
+        $this->get(route('public.athletes'))->assertOk()->assertDontSee('RAHSIA-123')->assertDontSee('0129999999')->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Athletes')
+            ->where('stats.teams', 1)
+            ->where('stats.athletes', 1)
+            ->where('rosters.0.name', 'Fakulti Sukan')
+            ->where('rosters.0.members.0.name', 'Atlet Awam')
+            ->where('athletes.0.name', 'Atlet Awam')
+            ->where('athletes.0.faculty', 'Fakulti Sukan')
+            ->missing('upcoming')
+            ->missing('medals'));
+
+        $this->get(route('public.athletes.show', $registration->squadMembers()->where('name', 'Atlet Awam')->value('id')))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Public/Athlete')
+                ->where('athlete.name', 'Atlet Awam')
+                ->where('stats.matches', 1)
+                ->where('stats.wins', 1)
+                ->where('matches.0.opponent', 'Fakulti Lawan'));
     }
 
     public function test_public_schedule_includes_sport_categories_for_filtering(): void

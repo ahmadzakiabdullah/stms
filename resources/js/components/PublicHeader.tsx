@@ -7,7 +7,7 @@ import { useI18n } from '@/lib/i18n';
 import { type PublicThemeSettings } from '@/lib/publicTheme';
 import { Link } from '@inertiajs/react';
 
-export type PublicHeaderCurrent = 'home' | 'sports' | 'schedule' | 'contact';
+export type PublicHeaderCurrent = 'home' | 'sports' | 'schedule' | 'athletes' | 'contact';
 type Props = { appName: string; settings: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings; current?: PublicHeaderCurrent };
 
 export default function PublicHeader({ appName, settings, current }: Props) {
@@ -17,6 +17,7 @@ export default function PublicHeader({ appName, settings, current }: Props) {
         { href: route('public.index'), label: t('Home'), current: current === 'home' },
         { href: route('public.sports'), label: t('Sports'), current: current === 'sports' },
         { href: route('public.schedule'), label: t('Schedule'), current: current === 'schedule' },
+        { href: route('public.athletes'), label: t('Athletes'), current: current === 'athletes' },
         { href: route('public.contact'), label: t('Contact'), current: current === 'contact' },
     ];
 

@@ -13,6 +13,7 @@ use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class EventParticipantFilteringTest extends TestCase
@@ -132,5 +133,39 @@ class EventParticipantFilteringTest extends TestCase
             $data = $page->toArray()['props']['participants']['data'];
             $this->assertCount(1, $data);
         });
+    }
+
+    public function test_faculty_representative_status_counts_are_limited_to_their_faculty(): void
+    {
+        Role::firstOrCreate(['name' => 'faculty-representative', 'guard_name' => 'web']);
+        $d = $this->seedData();
+        $user = User::factory()->create([
+            'organization_id' => $d['facA']->organization_id,
+            'participant_id' => $d['facA']->id,
+        ]);
+        $user->assignRole('faculty-representative');
+        $user->givePermissionTo(Permission::firstOrCreate(['name' => 'view event participants', 'guard_name' => 'web']));
+
+        $this->actingAs($user)->get(route('event-participants.index'))
+            ->assertInertia(fn ($page) => $page
+                ->where('statusCounts.confirmed', 1)
+                ->where('statusCounts.pending', 1)
+                ->where('participants.total', 1)
+                ->where('participants.data.0.id', $d['facA']->id));
+    }
+
+    public function test_unmapped_faculty_representative_fails_closed_instead_of_showing_global_counts(): void
+    {
+        Role::firstOrCreate(['name' => 'faculty-representative', 'guard_name' => 'web']);
+        $d = $this->seedData();
+        $user = User::factory()->create(['organization_id' => $d['facA']->organization_id, 'participant_id' => null]);
+        $user->assignRole('faculty-representative');
+        $user->givePermissionTo(Permission::firstOrCreate(['name' => 'view event participants', 'guard_name' => 'web']));
+
+        $this->actingAs($user)->get(route('event-participants.index'))
+            ->assertInertia(fn ($page) => $page
+                ->where('statusCounts.confirmed', 0)
+                ->where('statusCounts.pending', 0)
+                ->where('participants.total', 0));
     }
 }

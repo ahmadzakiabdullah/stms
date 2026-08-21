@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\File;
 
 class UpdateSettingsRequest extends FormRequest
 {
@@ -15,10 +16,10 @@ class UpdateSettingsRequest extends FormRequest
     {
         return [
             'app_name' => 'nullable|string|max:255',
-            'logo' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
-            'inverse_logo' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:2048',
-            'favicon' => 'nullable|image|mimes:png,ico,svg|max:1024',
-            'tournament_logo' => 'nullable|file|mimes:png,jpg,jpeg,svg,webp|max:2048',
+            'logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
+            'inverse_logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
+            'favicon' => ['nullable', File::image(allowSvg: true)->max('1mb')],
+            'tournament_logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
             'secretariat_address' => 'nullable|string|max:1000',
             'secretariat_email' => ['nullable', 'email:rfc', 'max:255'],
             'secretariat_phone' => ['nullable', 'string', 'max:50', 'regex:/^\+?[0-9\s().-]{7,50}$/'],

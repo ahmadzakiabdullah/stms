@@ -51,6 +51,8 @@ Route::get('/portal/storage/{path}', PublicStorageController::class)
 // controller remains read-only and only renders the public portal.
 Route::any('/', PublicPortalController::class)->name('public.index');
 Route::get('/schedule', [PublicPortalController::class, 'schedule'])->name('public.schedule');
+Route::get('/athletes', [PublicPortalController::class, 'athletes'])->name('public.athletes');
+Route::get('/athletes/{squadMember}', [PublicPortalController::class, 'athlete'])->name('public.athletes.show');
 Route::get('/sports', [PublicPortalController::class, 'directory'])->defaults('section', 'sports')->name('public.sports');
 Route::get('/faculties', [PublicPortalController::class, 'directory'])->defaults('section', 'faculties')->name('public.faculties');
 Route::get('/venues', [PublicPortalController::class, 'directory'])->defaults('section', 'venues')->name('public.venues');

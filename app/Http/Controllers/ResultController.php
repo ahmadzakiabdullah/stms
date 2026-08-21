@@ -11,6 +11,7 @@ use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Participant;
 use App\Models\Result;
+use App\Models\SquadMember;
 use App\Notifications\MatchResultNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -37,10 +38,12 @@ class ResultController extends Controller
                     ->whereNull('events.deleted_at'))
                 ->with([
                     'match.event',
+                    'match.event.sport:id,name,scoring_mode',
                     'match.pool:id,name',
                     'match.homeParticipant:id,name,team_name,logo_path,inverse_logo_path',
                     'match.awayParticipant:id,name,team_name,logo_path,inverse_logo_path',
                     'winner:id,name,team_name',
+                    'scoringEvents.squadMember:id,name',
                 ])
                 ->select('results.*')
                 ->orderBy('events.name')
@@ -63,6 +66,7 @@ class ResultController extends Controller
                 'pool:id,name',
                 'homeParticipant:id,name,team_name,logo_path,inverse_logo_path',
                 'awayParticipant:id,name,team_name,logo_path,inverse_logo_path',
+                'event.sport:id,name,scoring_mode',
             ])
             ->whereDoesntHave('result')
             ->whereNotNull('home_participant_id')
@@ -77,6 +81,35 @@ class ResultController extends Controller
             ->orderBy(Event::select('name')->whereColumn('id', 'matches.event_id'))
             ->orderBy('match_number')
             ->get(['id', 'match_number', 'event_id', 'pool_id', 'round', 'stage', 'home_participant_id', 'away_participant_id', 'status', 'scheduled_at']);
+
+        $scoringMembers = SquadMember::query()
+            ->with('eventParticipant:id,event_id,participant_id')
+            ->where('is_active', true)
+            ->whereIn('role', SquadMember::ATHLETE_ROLES)
+            ->whereHas('eventParticipant', fn ($query) => $query->where('status', 'confirmed'))
+            ->get(['id', 'name', 'event_participant_id'])
+            ->groupBy(fn ($member) => $member->eventParticipant?->event_id.'|'.$member->eventParticipant?->participant_id);
+
+        $attachScoringMembers = function ($match) use ($scoringMembers) {
+            if (($match->event?->sport?->scoring_mode ?? 'none') !== 'individual') {
+                return $match;
+            }
+
+            $match->setAttribute('scoring_members', collect([$match->home_participant_id, $match->away_participant_id])
+                ->filter()
+                ->flatMap(fn ($participantId) => $scoringMembers->get($match->event_id.'|'.$participantId, collect()))
+                ->map(fn ($member) => [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'participant_id' => $member->eventParticipant?->participant_id,
+                ])
+                ->values());
+
+            return $match;
+        };
+
+        $matches = $matches->map($attachScoringMembers)->values();
+        $results->each(fn ($result) => $result->match && $attachScoringMembers($result->match));
 
         $events = Event::query()
             ->with('sport:id,name')

@@ -144,6 +144,41 @@ class RankingServiceTest extends TestCase
         $this->assertCount(0, $rankings);
     }
 
+    public function test_calculate_for_tournament_falls_back_to_session_organization_for_legacy_rows(): void
+    {
+        $org = Organization::factory()->create();
+        $session = Session::factory()->create(['organization_id' => $org->id]);
+        $tournament = Tournament::factory()->forSession($session)->create([
+            'ranking_strategy' => 'points',
+        ]);
+        // Simulate a legacy production row whose tenant column is missing.
+        $tournament->setAttribute('organization_id', null);
+        $event = Event::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $tournament->id,
+        ]);
+        $winner = Participant::factory()->create(['organization_id' => $org->id]);
+        $loser = Participant::factory()->create(['organization_id' => $org->id]);
+        $match = Fixture::factory()->completed()->create([
+            'organization_id' => $org->id,
+            'event_id' => $event->id,
+            'home_participant_id' => $winner->id,
+            'away_participant_id' => $loser->id,
+        ]);
+        Result::factory()->create([
+            'organization_id' => $org->id,
+            'match_id' => $match->id,
+            'score_home' => 1,
+            'score_away' => 0,
+            'winner_participant_id' => $winner->id,
+        ]);
+
+        $rankings = $this->service->calculateForTournament($tournament);
+
+        $this->assertSame(2, $rankings->count());
+        $this->assertSame($winner->id, $rankings->first()['participant_id']);
+    }
+
     public function test_medal_tally_awards_gold_silver_bronze_from_knockout_stage(): void
     {
         $org = Organization::factory()->create();

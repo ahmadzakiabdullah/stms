@@ -5,12 +5,16 @@ namespace Tests\Unit;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Fixture;
+use App\Models\MatchScoringEvent;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Pool;
 use App\Models\Result;
+use App\Models\Sport;
+use App\Models\SquadMember;
 use App\Services\ResultService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class ResultServiceTest extends TestCase
@@ -117,6 +121,49 @@ class ResultServiceTest extends TestCase
         ]);
 
         $this->assertSame('completed', $match->fresh()->status);
+    }
+
+    public function test_individual_scoring_events_are_saved_for_confirmed_roster_athletes(): void
+    {
+        $org = Organization::factory()->create();
+        $sport = Sport::factory()->create(['organization_id' => $org->id, 'scoring_mode' => 'individual']);
+        $event = Event::factory()->create(['organization_id' => $org->id, 'sport_id' => $sport->id]);
+        $home = Participant::factory()->create(['organization_id' => $org->id]);
+        $away = Participant::factory()->create(['organization_id' => $org->id]);
+        $homeEntry = EventParticipant::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'participant_id' => $home->id, 'status' => 'confirmed']);
+        $awayEntry = EventParticipant::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'participant_id' => $away->id, 'status' => 'confirmed']);
+        $homeAthlete = SquadMember::factory()->create(['organization_id' => $org->id, 'event_participant_id' => $homeEntry->id, 'role' => 'athlete_male']);
+        $awayAthlete = SquadMember::factory()->create(['organization_id' => $org->id, 'event_participant_id' => $awayEntry->id, 'role' => 'athlete_male']);
+        $match = Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id]);
+
+        $result = $this->service->create($org, [
+            'match_id' => $match->id, 'score_home' => 2, 'score_away' => 1,
+            'scoring_events' => [
+                ['participant_id' => $home->id, 'squad_member_id' => $homeAthlete->id, 'minute' => 12],
+                ['participant_id' => $home->id, 'squad_member_id' => $homeAthlete->id, 'minute' => 44],
+                ['participant_id' => $away->id, 'squad_member_id' => $awayAthlete->id, 'minute' => 60],
+            ],
+        ]);
+
+        $this->assertCount(3, MatchScoringEvent::where('result_id', $result->id)->get());
+    }
+
+    public function test_individual_scoring_events_must_match_the_recorded_score(): void
+    {
+        $this->expectException(ValidationException::class);
+        $org = Organization::factory()->create();
+        $sport = Sport::factory()->create(['organization_id' => $org->id, 'scoring_mode' => 'individual']);
+        $event = Event::factory()->create(['organization_id' => $org->id, 'sport_id' => $sport->id]);
+        $home = Participant::factory()->create(['organization_id' => $org->id]);
+        $away = Participant::factory()->create(['organization_id' => $org->id]);
+        $entry = EventParticipant::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'participant_id' => $home->id, 'status' => 'confirmed']);
+        $athlete = SquadMember::factory()->create(['organization_id' => $org->id, 'event_participant_id' => $entry->id, 'role' => 'athlete_male']);
+        $match = Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id]);
+
+        $this->service->create($org, [
+            'match_id' => $match->id, 'score_home' => 2, 'score_away' => 0,
+            'scoring_events' => [['participant_id' => $home->id, 'squad_member_id' => $athlete->id]],
+        ]);
     }
 
     public function test_recording_last_league_result_auto_generates_knockout_stage(): void

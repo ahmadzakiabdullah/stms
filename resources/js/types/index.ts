@@ -42,6 +42,7 @@ export interface Sport {
     name: string;
     slug: string;
     icon: string | null;
+    scoring_mode?: 'none' | 'individual' | string;
     is_active: boolean;
     categories?: SportCategory[];
     created_at: string;
@@ -232,14 +233,30 @@ export interface Result {
     notes: string | null;
     match?: Fixture;
     winner?: Participant;
+    scoring_events?: MatchScoringEvent[];
     created_at: string;
     updated_at: string;
+}
+
+export interface MatchScoringEvent {
+    id?: string;
+    participant_id: string;
+    squad_member_id: string;
+    event_type: string;
+    period: number | null;
+    minute: number | null;
+    second: number | null;
+    points: number;
+    notes?: string | null;
+    squad_member?: { id: string; name: string };
 }
 
 // ─── Ranking ───
 export interface RankingEntry {
     participant_id: string;
     participant_name: string;
+    logo_url?: string | null;
+    inverse_logo_url?: string | null;
     participant_type: string;
     team_name: string | null;
     matches_played: number;

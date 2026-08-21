@@ -21,6 +21,7 @@
 | `pools` | Kumpulan draw event. |
 | `matches` | Fixture; model Eloquent bernama `Fixture`. |
 | `results` | Satu result bagi satu match melalui unique `results.match_id`. |
+| `match_scoring_events` | Event jaringan individu yang menghubungkan result, pasukan dan atlet roster. |
 | `draw_versions` | Snapshot draw berversi dengan actor/action/seed. |
 | `sport_user` | Pivot tugasan pengguna kepada sport. |
 | `settings` | Tetapan key/value setiap organisasi. |
@@ -42,6 +43,7 @@ Jadual ke-33 ialah `migrations`.
 - `settings` ialah pengecualian legacy: integer auto-increment `id` dan tiada soft delete.
 - `squad_members` serta `draw_versions` tidak mempunyai soft delete; draw version ialah snapshot sejarah.
 - `tournament_sport`, `sport_user` dan pivot RBAC tidak memerlukan model/soft delete biasa.
+- `match_scoring_events` dipadam bersama result; score agregat kekal pada `results`.
 - Jangan mengubah migration yang telah deployed. Tambah migration baharu untuk pembetulan.
 
 ## Data Workspace Yang Diaudit

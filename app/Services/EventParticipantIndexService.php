@@ -24,13 +24,14 @@ final class EventParticipantIndexService
         $this->dataLoadFailed = false;
 
         $hasParticipant = ! is_null($user->participant_id);
+        $isFacultyRepresentative = $user->hasRole('faculty-representative');
         $search = $filters['search'] ?? null;
         $sportId = $filters['sport_id'] ?? null;
         $categoryId = $filters['category_id'] ?? null;
         $participantId = $filters['participant_id'] ?? null;
         $status = $filters['status'] ?? null;
 
-        $participants = $this->safePaginatedQuery(function () use ($hasParticipant, $user, $search, $sportId, $categoryId, $participantId, $status) {
+        $participants = $this->safePaginatedQuery(function () use ($hasParticipant, $isFacultyRepresentative, $user, $search, $sportId, $categoryId, $participantId, $status) {
             $query = Participant::query()
                 ->with(['eventParticipants' => function ($query) use ($search, $sportId, $categoryId, $status) {
                     $query->with(['event.sport', 'event.sportCategory', 'event.tournament', 'squadMembers' => fn ($query) => $query->ordered()])
@@ -45,6 +46,10 @@ final class EventParticipantIndexService
 
             if ($hasParticipant) {
                 $query->where('id', $user->participant_id);
+            } elseif ($isFacultyRepresentative) {
+                // A faculty account without a mapped participant must never
+                // fall back to the organization-wide registration list.
+                $query->whereRaw('1 = 0');
             } elseif (! $user->hasRole('super-admin')) {
                 $query->whereHas('eventParticipants');
             }
@@ -99,7 +104,7 @@ final class EventParticipantIndexService
             return collect();
         });
 
-        $statusCounts = $this->safeCollectionQuery(function () use ($hasParticipant, $user, $search, $sportId, $categoryId, $participantId) {
+        $statusCounts = $this->safeCollectionQuery(function () use ($hasParticipant, $isFacultyRepresentative, $user, $search, $sportId, $categoryId, $participantId) {
             $query = EventParticipant::query()
                 ->when($search, fn ($query, $value) => $query->where(fn ($query) => $query->whereHas('participant', fn ($query) => $query->where('name', 'like', "%{$value}%"))
                     ->orWhereHas('event', fn ($query) => $query->where('name', 'like', "%{$value}%"))
@@ -111,18 +116,23 @@ final class EventParticipantIndexService
 
             if ($hasParticipant) {
                 $query->where('participant_id', $user->participant_id);
+            } elseif ($isFacultyRepresentative) {
+                // Fail closed rather than exposing all organization counts if
+                // the faculty-user mapping is incomplete.
+                $query->whereRaw('1 = 0');
             }
 
             return $query->selectRaw('status, count(*) as total')
                 ->groupBy('status')
                 ->pluck('total', 'status');
         }, fn () => collect(['pending' => 0, 'confirmed' => 0, 'rejected' => 0]));
+        $statusCounts = collect(['pending' => 0, 'confirmed' => 0, 'rejected' => 0])->merge($statusCounts);
 
         return [
             'participants' => $participants,
             'events' => $events,
             'faculties' => $faculties,
-            'isFacultyRepresentative' => $hasParticipant && $user->hasRole('faculty-representative'),
+            'isFacultyRepresentative' => $isFacultyRepresentative,
             'statusCounts' => $statusCounts,
             'dataLoadFailed' => $this->dataLoadFailed,
         ];

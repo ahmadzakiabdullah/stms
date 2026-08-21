@@ -10,3 +10,7 @@ Sistem tidak hardcode nama sukan tertentu dalam core workflow. Ranking MVP kini 
 - format fixture/draw bergantung pada service yang tersedia, bukan ruleset plugin lengkap.
 
 Jangan mendakwa sokongan semua jenis sukan atau ruleset plugin lengkap. Extension baharu mesti menyimpan rule/version secara data-driven, tenant-scoped, diuji dan tidak menambah conditional nama sukan dalam controller.
+
+## Individual scoring events
+
+Sport boleh menetapkan `scoring_mode=individual` untuk mengaktifkan `match_scoring_events`. Setiap event jaringan memautkan result, pasukan dan `SquadMember` atlet yang aktif serta disahkan dalam roster match. Service result memvalidasi jumlah event terhadap score home/away dan controller tidak mengandungi senarai sukan hardcoded. Paparan awam hanya menunjukkan event scorer apabila data rasmi direkodkan.

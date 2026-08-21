@@ -34,6 +34,25 @@ class PublicPortalController extends Controller
         return Inertia::render('Public/Schedule', $data);
     }
 
+    public function athletes(PublicPortalService $service): Response
+    {
+        return Inertia::render('Public/Athletes', [
+            ...$service->publicContext(),
+            ...$service->athleteDirectory(),
+        ]);
+    }
+
+    public function athlete(string $squadMember, PublicPortalService $service): Response
+    {
+        $profile = $service->athleteProfile($squadMember);
+        abort_unless($profile, 404);
+
+        return Inertia::render('Public/Athlete', [
+            ...$service->publicContext(),
+            ...$profile,
+        ]);
+    }
+
     public function info(string $section, PublicPortalService $service): Response
     {
         abort_unless(in_array($section, ['news', 'downloads', 'faq', 'about'], true), 404);
@@ -47,6 +66,7 @@ class PublicPortalController extends Controller
             ['location' => route('public.index'), 'priority' => '1.0'],
             ['location' => route('public.sports'), 'priority' => '0.7'],
             ['location' => route('public.schedule'), 'priority' => '0.7'],
+            ['location' => route('public.athletes'), 'priority' => '0.6'],
             ['location' => route('public.faculties'), 'priority' => '0.6'],
             ['location' => route('public.venues'), 'priority' => '0.5'],
             ['location' => route('public.about'), 'priority' => '0.4'],

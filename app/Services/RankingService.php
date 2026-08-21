@@ -52,13 +52,27 @@ class RankingService
     public function calculateForTournament(Tournament $tournament): Collection
     {
         $strategy = $tournament->ranking_strategy ?: config('ranking.default');
-        $tournaments = collect([$tournament->load('events')]);
-        $results = $this->resultsForTournaments($tournament->organization_id, collect([$tournament->id]));
+        $tournament->loadMissing(['events', 'session']);
+        // Older production rows may not have organization_id populated on the
+        // tournament. The session is the authoritative tenant boundary for a
+        // tournament selected through the rankings page.
+        $organizationId = $tournament->organization_id ?? $tournament->session?->organization_id;
+
+        if (! $organizationId) {
+            Log::warning('Unable to calculate tournament rankings without an organization.', [
+                'tournament_id' => $tournament->id,
+            ]);
+
+            return collect();
+        }
+
+        $tournaments = collect([$tournament]);
+        $results = $this->resultsForTournaments($organizationId, collect([$tournament->id]));
         $rankings = $this->rank($strategy, $this->aggregateStats($results), $tournament->ranking_rules, $tournaments);
 
         Log::info('Rankings calculated for tournament', [
             'tournament_id' => $tournament->id,
-            'organization_id' => $tournament->organization_id,
+            'organization_id' => $organizationId,
             'strategy' => $strategy,
             'participant_count' => $rankings->count(),
         ]);

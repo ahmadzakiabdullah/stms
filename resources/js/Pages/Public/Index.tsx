@@ -50,6 +50,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
     const [now, setNow] = useState(() => Date.now());
     const progress = stats.total_matches ? Math.round((stats.completed_matches / stats.total_matches) * 100) : 0;
     const hasMedals = medals.some(row => row.total_medals > 0);
+    const liveMatches = upcoming.filter(match => match.status === 'in_progress');
     const startTime = competition?.start_date ? new Date(`${competition.start_date}T00:00:00`).getTime() : NaN;
     const countdown = countdownParts(startTime, now);
     const nextMatch = upcoming[0];
@@ -101,6 +102,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                             <div className="mt-8 flex flex-wrap items-center gap-3">
                                 <Link href="#schedule" className="public-cosmic-bezel inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--public-highlight)] px-5 text-sm font-black text-[var(--public-dark)] transition hover:-translate-y-0.5 hover:brightness-105">{t('View schedule')}<ArrowRight className="size-4" /></Link>
                                 <Link href="#results" className="inline-flex min-h-11 items-center rounded-xl border border-white/15 bg-white/5 px-5 text-sm font-bold text-white transition hover:bg-white/10">{t('View results')}</Link>
+                                <Link href={route('public.athletes')} className="inline-flex min-h-11 items-center rounded-xl border border-white/15 bg-white/5 px-5 text-sm font-bold text-white transition hover:bg-white/10">{t('Athletes & Teams')}</Link>
                             </div>
                             <div className="mt-8 flex flex-wrap items-center gap-3">
                                 {competition?.start_date && <div className="inline-flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-white/10 text-[var(--public-highlight)]"><CalendarDays className="size-4" /></span><span><small className="block text-[9px] font-black uppercase tracking-[.16em] text-white/75">{t('Competition dates')}</small>{formatDate(competition.start_date, locale)}{competition.end_date && ` — ${formatDate(competition.end_date, locale)}`}</span></div>}
@@ -128,28 +130,66 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
                 <section id="overview" className="relative mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 sm:py-24">
                     <PublicSectionHeading eyebrow={t('At a glance')} title={t('Competition overview')} description={t('Everything you need for SAF 2026')} />
-                    <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map(({ value, label, description, icon: Icon, href }, index) => <Link key={label} href={href} className={`group rounded-[1.6rem] border border-[var(--public-dark-border)] bg-white p-6 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] ${index % 2 ? 'lg:translate-y-6' : ''}`}><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Icon className="size-5" /></span><b className="mt-9 block text-5xl font-black tracking-[-.06em]">{value}</b><h3 className="mt-5 text-xs font-black uppercase tracking-[.16em]">{label}</h3><p className="mt-1 text-sm text-[var(--public-dark-faint)]">{description}</p></Link>)}</div>
+                    <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map(({ value, label, description, icon: Icon, href }) => <Link key={label} href={href} className="group rounded-[1.6rem] border border-[var(--public-dark-border)] bg-white p-6 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)]"><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Icon className="size-5" /></span><b className="mt-9 block text-5xl font-black tracking-[-.06em]">{value}</b><h3 className="mt-5 text-xs font-black uppercase tracking-[.16em]">{label}</h3><p className="mt-1 text-sm text-[var(--public-dark-faint)]">{description}</p></Link>)}</div>
                 </section>
 
                 <section id="sports" className="relative scroll-mt-24 border-y border-[var(--public-dark-border)] bg-[var(--public-dark-soft)] py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><PublicSectionHeading eyebrow={t('Sports programme')} title={t('Explore the sports')} description={t('Every official sport and event in the competition.')} /><Link href={route('public.sports')} className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] sm:self-auto">{t('View all sports')}<ArrowRight className="size-4" /></Link></div>
-                    <div className="mt-12 flex flex-wrap gap-2.5">{sports.map(sport => <Link key={sport} href={route('public.sports')} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--public-dark-border)] bg-white py-1 pl-1.5 pr-4 text-sm font-bold transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]"><span className="flex size-7 items-center justify-center rounded-full bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><SportIcon name={sport} /></span>{sport}</Link>)}</div>
+                    <div className="mt-12 flex flex-wrap gap-2.5">{sports.slice(0, 12).map(sport => <Link key={sport} href={route('public.sports')} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--public-dark-border)] bg-white py-1 pl-1.5 pr-4 text-sm font-bold transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]"><span className="flex size-7 items-center justify-center rounded-full bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><SportIcon name={sport} /></span>{sport}</Link>)}{sports.length > 12 && <Link href={route('public.sports')} className="inline-flex min-h-10 items-center rounded-full border border-dashed border-[var(--public-primary-border)] px-4 text-sm font-black text-[var(--public-primary)]">+{sports.length - 12} {t('more')}</Link>}</div>
                 </div></section>
 
                 <section className="border-y border-[var(--public-dark-border)] bg-white py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><PublicSectionHeading eyebrow={t('Latest')} title={t('Live competition updates')} description={`${t('Updated')} ${formatDate(updated_at, locale, true)}`} /><div className="flex flex-col items-start gap-2 sm:items-end"><button type="button" onClick={() => refresh(true)} disabled={refreshing} className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] disabled:opacity-50 sm:self-auto"><RefreshCw className={`size-4 ${refreshing ? 'animate-spin' : ''}`} />{t(refreshing ? 'Refreshing' : 'Refresh')}</button><p role="status" aria-live="polite" className={`min-h-5 text-xs font-semibold ${refreshStatus === 'error' ? 'text-red-700' : 'text-[var(--public-primary)]'}`}>{refreshStatus === 'success' ? t('Refresh complete') : refreshStatus === 'error' ? t('Unable to refresh. Please try again.') : ''}</p></div></div>
+                    {liveMatches.length > 0 && <Link href={route('public.schedule')} className="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-black text-red-700 transition hover:border-red-300 hover:bg-red-100"><span className="inline-flex items-center gap-2"><span className="size-2 animate-pulse rounded-full bg-red-500" />{liveMatches.length} {t('Live')} {t('matches')}</span><ArrowRight className="size-4" /></Link>}
                     <div className="mt-12 grid gap-14 lg:grid-cols-2"><MatchColumn id="schedule" title={t('Schedule')} href={route('public.schedule')} matches={upcoming.slice(0, 5)} variant="upcoming" t={t} /><MatchColumn id="results" title={t('Results')} href={route('public.schedule')} matches={results.slice(0, 5)} variant="result" t={t} /></div>
                 </div></section>
 
                 <section className="border-y border-[var(--public-dark-border)] bg-[var(--public-background)] py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><PublicSectionHeading eyebrow={t('Contingents')} title={t('Participating faculties')} description={t('Meet the faculties taking part in the competition.')} /><Link href={route('public.faculties')} className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] sm:self-auto">{t('View all')}<ArrowRight className="size-4" /></Link></div>
-                    <div className="mt-12 grid grid-cols-2 items-center gap-x-4 gap-y-6 lg:grid-cols-8">{faculties.map(faculty => <Link key={faculty?.name} href={route('public.faculties')} aria-label={faculty?.name ?? t('Faculty')} className="group flex items-center justify-center rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]"><ParticipantLogo participant={faculty} size="xl" alt="" className="size-24" /></Link>)}</div>
+                    <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{faculties.map(faculty => <Link key={faculty?.name} href={route('public.faculties')} aria-label={faculty?.name ?? t('Faculty')} className="group flex min-h-36 flex-col items-center justify-center rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 text-center transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]"><ParticipantLogo participant={faculty} size="xl" alt="" className="size-20" /><span className="mt-3 line-clamp-2 text-xs font-black text-[var(--public-text)]">{faculty?.name ?? t('Faculty')}</span></Link>)}</div>
                 </div></section>
 
-                <section id="medals" className="relative scroll-mt-24 overflow-hidden bg-[var(--public-dark-soft)] py-20 sm:py-24"><div className="absolute -right-32 -top-32 size-96 rounded-full bg-[var(--public-highlight-soft)] blur-3xl" /><div className="relative mx-auto max-w-7xl px-4 sm:px-6"><PublicSectionHeading eyebrow={t('Standings')} title={t('Medal standings')} description={t('Official standings based on confirmed results.')} />{hasMedals ? <div className="mt-12 grid gap-4 lg:grid-cols-3">{medals.slice(0, 6).map(row => <MedalCard key={row.participant_name} row={row} t={t} />)}</div> : <div className="mt-12"><PublicEmptyState text={t('Medal standings will be updated after the final events are completed.')} /></div>}</div></section>
+                <section id="medals" className="relative scroll-mt-24 overflow-hidden bg-[var(--public-dark-soft)] py-20 sm:py-24">
+                    <div className="absolute -right-32 -top-32 size-96 rounded-full bg-[var(--public-highlight-soft)] blur-3xl" />
+                    <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
+                        <PublicSectionHeading eyebrow={t('Standings')} title={t('Medal standings')} description={t('Official standings based on confirmed results.')} />
+                        {hasMedals ? (
+                            <div className="mt-10 grid gap-4 lg:grid-cols-[1.1fr_.9fr]">
+                                <div className="rounded-[1.75rem] border border-[var(--public-dark-border)] bg-white p-5 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] sm:p-7">
+                                    <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[.18em] text-[var(--public-primary)]">{t('Leading contingents')}</p><h3 className="mt-2 text-2xl font-black tracking-tight">{t('The podium')}</h3></div><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-highlight-soft)] text-[var(--public-highlight)]"><Trophy className="size-5" /></span></div>
+                                    <div className="mt-8 grid grid-cols-3 items-end gap-2 sm:gap-4">{medals.slice(0, 3).map(row => <PodiumCard key={row.participant_name} row={row} t={t} />)}</div>
+                                </div>
+                                <div className="rounded-[1.75rem] border border-white/10 bg-[var(--public-dark)] p-5 text-white shadow-[0_24px_70px_-48px_rgba(0,0,0,.9)] sm:p-7">
+                                    <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[.18em] text-[var(--public-accent)]">{t('Current table')}</p><h3 className="mt-2 text-2xl font-black tracking-tight">{t('Medal tally')}</h3></div><Medal className="size-5 text-[var(--public-highlight)]" /></div>
+                                    <div className="mt-7 divide-y divide-white/10">{medals.slice(3, 6).map(row => <MedalListRow key={row.participant_name} row={row} t={t} />)}</div>
+                                    {medals.length > 6 && <p className="mt-5 text-xs font-semibold text-white/55">{t('Showing the top six standings')}</p>}
+                                </div>
+                            </div>
+                        ) : <div className="mt-12"><PublicEmptyState text={t('Medal standings will be updated after the final events are completed.')} /></div>}
+                    </div>
+                </section>
             </main>
         </PublicLayout>
     );
+}
+
+function PodiumCard({ row, t }: { row: MedalRow; t: Translate }) {
+    const isWinner = row.rank === 1;
+    const medalTone = row.rank === 1 ? 'bg-[var(--public-highlight)] text-[var(--public-dark)]' : row.rank === 2 ? 'bg-slate-200 text-slate-700' : 'bg-amber-700 text-white';
+
+    return <article className={`flex min-w-0 flex-col items-center text-center ${isWinner ? 'order-2' : row.rank === 2 ? 'order-1' : 'order-3'}`}>
+        <div className={`relative flex ${isWinner ? 'size-20 sm:size-24' : 'size-16 sm:size-20'} items-center justify-center rounded-[1.5rem] ${medalTone} shadow-lg`}>
+            <ParticipantLogo participant={{ name: row.participant_name, logo_url: row.logo_url, inverse_logo_url: row.inverse_logo_url }} size={isWinner ? 'xl' : 'lg'} alt="" className={isWinner ? 'size-16 sm:size-20' : 'size-12 sm:size-16'} />
+            <span className={`absolute -bottom-2 flex size-7 items-center justify-center rounded-full border-4 border-white text-xs font-black ${medalTone}`}>{row.rank}</span>
+        </div>
+        <h4 className={`mt-5 w-full truncate font-black ${isWinner ? 'text-base' : 'text-sm'}`}>{row.participant_name}</h4>
+        <p className="mt-1 text-xs text-[var(--public-dark-faint)]">{row.gold} {t('Gold')} · {row.silver} {t('Silver')} · {row.bronze} {t('Bronze')}</p>
+        <b className={`mt-3 inline-flex items-center rounded-full px-3 py-1 text-sm ${isWinner ? 'bg-[var(--public-highlight-soft)] text-[var(--public-dark)]' : 'bg-[var(--public-background)] text-[var(--public-dark)]'}`}>{row.total_medals} {t('medals')}</b>
+    </article>;
+}
+
+function MedalListRow({ row, t }: { row: MedalRow; t: Translate }) {
+    return <div className="flex items-center gap-3 py-4 first:pt-0 last:pb-0"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-black text-[var(--public-highlight)]">{row.rank}</span><ParticipantLogo participant={{ name: row.participant_name, logo_url: row.logo_url, inverse_logo_url: row.inverse_logo_url }} surface="dark" size="sm" alt="" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-black">{row.participant_name}</p><p className="mt-0.5 text-xs text-white/55">{row.gold}G · {row.silver}S · {row.bronze}B</p></div><b className="text-xl text-white">{row.total_medals}</b></div>;
 }
 
 function CosmicBackground() {

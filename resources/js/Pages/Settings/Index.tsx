@@ -32,7 +32,7 @@ interface Props {
 
 export default function SettingsIndex({ settings }: Props) {
     const { t } = useI18n();
-    const { flash } = usePage().props;
+    const { flash, errors } = usePage().props;
     const [appName, setAppName] = useState(settings.app_name);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [inverseLogoFile, setInverseLogoFile] = useState<File | null>(null);
@@ -80,6 +80,12 @@ export default function SettingsIndex({ settings }: Props) {
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>
+            )}
+
+            {Object.keys(errors ?? {}).length > 0 && (
+                <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
+                    {t('Please check the highlighted fields and try again.')}
+                </div>
             )}
 
             <div className="space-y-6">
@@ -134,7 +140,7 @@ export default function SettingsIndex({ settings }: Props) {
                         )}
                         <div className="space-y-2">
                             <Label htmlFor="logo">{t('Upload New Logo')}</Label>
-                            <Input id="logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
+                            <Input id="logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,.svg" onChange={(e) => setLogoFile(e.target.files?.[0] || null)} />
                         </div>
                     </CardContent>
                 </Card>
@@ -154,7 +160,7 @@ export default function SettingsIndex({ settings }: Props) {
                         )}
                         <div className="space-y-2">
                             <Label htmlFor="inverse_logo">{t('Upload Dark Mode Logo')}</Label>
-                            <Input id="inverse_logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={(e) => setInverseLogoFile(e.target.files?.[0] || null)} />
+                            <Input id="inverse_logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,.svg" onChange={(e) => setInverseLogoFile(e.target.files?.[0] || null)} />
                         </div>
                     </CardContent>
                 </Card>
@@ -172,7 +178,7 @@ export default function SettingsIndex({ settings }: Props) {
                         )}
                         <div className="space-y-2">
                             <Label htmlFor="tournament_logo">{t('Upload Tournament Logo')}</Label>
-                            <Input id="tournament_logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={(e) => setTournamentLogoFile(e.target.files?.[0] || null)} />
+                            <Input id="tournament_logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,.svg" onChange={(e) => setTournamentLogoFile(e.target.files?.[0] || null)} />
                         </div>
                     </CardContent>
                 </Card>

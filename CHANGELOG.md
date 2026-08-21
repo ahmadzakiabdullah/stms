@@ -1,5 +1,62 @@
 # Changelog
 
+## Unreleased — Result score editor UX (21 August 2026)
+
+- Score editing now uses a focused team-versus-team editor with larger score fields and accessible increment/decrement controls.
+- Match context and score guidance are clearer, while scorer entry remains available below the score for configured sports.
+- Scorer entry now shows only participants with a score above zero, with a per-team scorer limit and roster-only athlete selection.
+
+## Unreleased — Individual scoring events (21 August 2026)
+
+- Added configurable `scoring_mode` on sports and tenant-scoped `match_scoring_events` for athlete-level goals.
+- Results management can record the confirmed roster athlete, team, minute and second for each goal.
+- Scorer events are validated against the match roster and aggregate home/away scores, then shown on public completed match cards.
+- Schedule cards group scorer names beneath their respective home and away participants, including a mobile stacked layout.
+
+## Unreleased — Public match card redesign (21 August 2026)
+
+- Homepage and schedule match cards now share a responsive event, venue, metadata, team and score/time layout inspired by the supplied reference.
+- Match cards are now focused on essential match information; secondary Watch live and Match centre actions were removed to reduce mobile clutter.
+
+## Unreleased — Public homepage UX refactor (20 August 2026)
+
+- Added a direct Athletes & Teams CTA to the hero and a clearer live-status signal.
+- Overview cards now use a consistent responsive grid without staggered offsets.
+- Homepage sports are capped with a clear “more” link, and faculty tiles now show names beneath their logos.
+- Live matches receive a prominent callout linking to the full schedule.
+
+## Unreleased — Faculty registration count isolation (20 August 2026)
+
+- Faculty representative accounts now receive event-participant counts only for their mapped faculty.
+- An unmapped faculty account fails closed with zero registrations instead of falling back to organization-wide counts.
+- Status count payloads always include pending, confirmed and rejected keys for a stable UI.
+
+## Unreleased — Public athlete payload optimisation (20 August 2026)
+
+- `/athletes` and athlete profiles now use a lightweight public context instead of loading the full homepage payload.
+- Athlete filters persist in the URL, faculty logos are reused in athlete cards, and pages show the latest data timestamp.
+- Athlete performance is explicitly labelled as registered faculty team performance.
+
+## Unreleased — Athlete performance profiles (20 August 2026)
+
+- Added public athlete profile pages with confirmed participation details, official match history, scores, opponents and win/draw/loss summary.
+- Performance is derived from official team/event results; individual medal attribution remains deferred until the data model supports it explicitly.
+
+## Unreleased — Athlete directory profiles (20 August 2026)
+
+- Added an individual Athlete Directory view with search, sport/category filters, faculty context and event details.
+- The existing Teams & Rosters view remains available as the default view.
+
+## Unreleased — Public athletes and teams directory (20 August 2026)
+
+- Added `/athletes` with confirmed faculty rosters, athlete/official counts, sport and category filters, search, and expandable roster details.
+- Public roster data excludes identification numbers, phone numbers and inactive squad members.
+
+## Unreleased — Schedule filters sidebar (20 August 2026)
+
+- Desktop `/schedule` now presents search, sport, category and venue filters in a sticky sidebar, leaving the match timeline wider and easier to scan.
+- Filter controls remain responsive on smaller screens and preserve the existing filtering behaviour.
+
 ## Unreleased — Public portal accessibility fixes (20 August 2026)
 
 - Section eyebrows on light backgrounds now use the primary colour instead of the light accent, which failed WCAG AA colour contrast (2.15:1) with the default theme.
@@ -581,3 +638,6 @@ ok
 - Refreshed registration, draw-result, and results-management workflows with clearer operational actions.
 - Refreshed the event registration workspace with accurate all-registration totals and a clearer administrator quick-registration callout.
 - Refactored event participant registration to support selecting and submitting multiple events in one administrator workflow.
+- Fixed rankings for legacy tournaments with a missing `organization_id` by safely resolving the tenant from the owning session and preventing a production 500.
+- Refactored the public homepage medal standings into a podium-led medal tally with responsive top-six ranking cards and participant branding.
+- Added a shared public match-status badge with consistent Live, Scheduled, Completed, Cancelled and Postponed states, plus accessible public empty states.
