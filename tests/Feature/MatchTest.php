@@ -64,6 +64,22 @@ class MatchTest extends TestCase
                 ->has('pools', 1));
     }
 
+    public function test_matches_can_be_searched_by_event_name(): void
+    {
+        $org = Organization::factory()->create();
+        $target = Event::factory()->create(['organization_id' => $org->id, 'name' => 'Badminton Final']);
+        $other = Event::factory()->create(['organization_id' => $org->id, 'name' => 'Football Final']);
+        Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $target->id]);
+        Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $other->id]);
+        $user = $this->createOrgAdmin($org);
+
+        $this->actingAs($user)->get(route('matches.index', ['search' => 'Badminton']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Matches/Index')
+                ->has('allFixtures', 1));
+    }
+
     public function test_super_admin_can_create_match(): void
     {
         $org = Organization::factory()->create();

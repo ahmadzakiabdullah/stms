@@ -33,7 +33,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CalendarDays, CheckCircle2, CheckCheck, LockKeyhole, Minus, Pencil, Plus, Save, Search, Swords, Trash2, Trophy, UnlockKeyhole } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { matchNumberLabel } from '@/lib/matchNumber';
 import { useI18n } from '@/lib/i18n';
 import type { Result, Fixture, Participant, Event } from '@/types';
@@ -291,8 +291,8 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
     const [open, setOpen] = useState(false);
     const [editingResult, setEditingResult] = useState<ResultRow | null>(null);
     const [deleteResult, setDeleteResult] = useState<ResultRow | null>(null);
-    const [filterEventId, setFilterEventId] = useState('');
-    const [query, setQuery] = useState('');
+    const [filterEventId, setFilterEventId] = useState(() => new URLSearchParams(window.location.search).get('event_id') ?? '');
+    const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
 
     const results = useMemo(() => (Array.isArray(resultsProp) ? resultsProp : []), [resultsProp]);
     const matches = useMemo(() => (Array.isArray(matchesProp) ? matchesProp : []), [matchesProp]);
@@ -369,6 +369,20 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             return haystack.includes(q);
         });
     }, [results, filterEventId, query]);
+
+    const applyFilters = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        router.get(route('results.index'), {
+            ...(filterEventId ? { event_id: filterEventId } : {}),
+            ...(query.trim() ? { search: query.trim() } : {}),
+        }, { preserveScroll: true, replace: true });
+    };
+
+    const clearFilters = () => {
+        setQuery('');
+        setFilterEventId('');
+        router.get(route('results.index'), {}, { preserveScroll: true, replace: true });
+    };
 
     const countsByEvent = useMemo(() => {
         const map = new Map<string, { results: number; pending: number }>();
@@ -742,7 +756,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                 </CardContent>
             </Card>
 
-            <div className="mb-4 flex flex-wrap items-center gap-3">
+            <form onSubmit={applyFilters} className="mb-4 flex flex-wrap items-center gap-3">
                 <div className="relative">
                     <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -755,7 +769,9 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                 <span className="text-sm text-muted-foreground">
                     {t('Showing')} {filteredResults.length} {t('of')} {results.length} {t('results')}
                 </span>
-            </div>
+                <Button type="submit" variant="secondary">{t('Apply')}</Button>
+                {(query || filterEventId) && <Button type="button" variant="ghost" onClick={clearFilters}>{t('Clear')}</Button>}
+            </form>
 
             {!selectedEvent ? (
                 <div className="space-y-6">

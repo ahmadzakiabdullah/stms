@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - Competition list search filters (21 August 2026)
+
+- Added server-side search parameters for match venue, notes, number, event, pool and participant fields, with status filtering preserved for the Matches workspace.
+- Added server-side search and event filtering for Results while retaining the existing grouped result-entry workflow and clear/empty states.
+
 ## Unreleased - Preserve Ziggy routes across Inertia authentication (21 August 2026)
 
 - Render the complete Ziggy route map in the application shell so an Inertia login transition does not retain the guest-only route list.

@@ -15,13 +15,14 @@ use App\Models\Result;
 use App\Models\SquadMember;
 use App\Notifications\MatchResultNotification;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ResultController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Result::class);
 
@@ -32,7 +33,7 @@ class ResultController extends Controller
         $scopeToAdminSports = $user->hasRole('admin-sport') && ! $user->hasRole(['super-admin', 'org-admin']);
         $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
 
-        $results = $this->safeCollectionQuery(function () use ($sportIds) {
+        $results = $this->safeCollectionQuery(function () use ($sportIds, $request) {
             $query = Result::query()
                 ->join('matches', fn ($join) => $join->on('matches.id', '=', 'results.match_id')
                     ->whereNull('matches.deleted_at'))
@@ -53,6 +54,22 @@ class ResultController extends Controller
 
             if ($sportIds !== null) {
                 $query->whereIn('events.sport_id', $sportIds);
+            }
+
+            if ($request->filled('event_id')) {
+                $query->where('events.id', $request->string('event_id')->toString());
+            }
+
+            if ($request->filled('search')) {
+                $search = trim($request->string('search')->toString());
+                $query->where(function ($query) use ($search) {
+                    $query->where('results.notes', 'like', "%{$search}%")
+                        ->orWhere('matches.match_number', 'like', "%{$search}%")
+                        ->orWhere('events.name', 'like', "%{$search}%")
+                        ->orWhereHas('match.pool', fn ($pool) => $pool->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('match.homeParticipant', fn ($participant) => $participant->where('name', 'like', "%{$search}%")->orWhere('team_name', 'like', "%{$search}%"))
+                        ->orWhereHas('match.awayParticipant', fn ($participant) => $participant->where('name', 'like', "%{$search}%")->orWhere('team_name', 'like', "%{$search}%"));
+                });
             }
 
             return $query->get();

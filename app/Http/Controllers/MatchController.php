@@ -102,6 +102,19 @@ class MatchController extends Controller
                 'result',
             ])
             ->when($sportIds !== null, fn ($q) => $q->whereIn('events.sport_id', $sportIds))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = trim($request->string('search')->toString());
+                $q->where(function ($q) use ($search) {
+                    $q->where('matches.venue', 'like', "%{$search}%")
+                        ->orWhere('matches.notes', 'like', "%{$search}%")
+                        ->orWhere('matches.match_number', 'like', "%{$search}%")
+                        ->orWhereHas('event', fn ($event) => $event->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('pool', fn ($pool) => $pool->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('homeParticipant', fn ($participant) => $participant->where('name', 'like', "%{$search}%")->orWhere('team_name', 'like', "%{$search}%"))
+                        ->orWhereHas('awayParticipant', fn ($participant) => $participant->where('name', 'like', "%{$search}%")->orWhere('team_name', 'like', "%{$search}%"));
+                });
+            })
+            ->when($request->filled('status'), fn ($q) => $q->where('matches.status', $request->string('status')->toString()))
             ->select('matches.*')
             ->orderBy('events.name')
             ->orderBy('matches.match_number')

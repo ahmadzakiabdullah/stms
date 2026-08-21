@@ -41,6 +41,28 @@ class ResultTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_results_can_be_searched_by_event_name(): void
+    {
+        $org = Organization::factory()->create();
+        $target = Event::factory()->create(['organization_id' => $org->id, 'name' => 'Badminton Final']);
+        $other = Event::factory()->create(['organization_id' => $org->id, 'name' => 'Football Final']);
+        Result::factory()->create([
+            'organization_id' => $org->id,
+            'match_id' => Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $target->id])->id,
+        ]);
+        Result::factory()->create([
+            'organization_id' => $org->id,
+            'match_id' => Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $other->id])->id,
+        ]);
+        $user = $this->createOrgAdmin($org);
+
+        $response = $this->actingAs($user)->get(route('results.index', ['search' => 'Badminton']));
+
+        $response->assertOk();
+        $results = $response->viewData('page')['props']['results'] ?? [];
+        $this->assertCount(1, $results);
+    }
+
     public function test_super_admin_can_create_result(): void
     {
         $org = Organization::factory()->create();

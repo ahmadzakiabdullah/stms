@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { BarChart3, CalendarDays, Eye, Pencil, Plus, RefreshCw, Save, Search, Swords, Trash2, Trophy, Users } from 'lucide-react';
+import { BarChart3, CalendarDays, Eye, Pencil, Plus, RefreshCw, Save, Search, Swords, Trash2, Trophy, Users, X } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { eventCode, matchNumberLabel } from '@/lib/matchNumber';
 import { matchProgress } from '@/lib/matchProgress';
@@ -400,8 +400,8 @@ function MatchMobileCard({ match, onEdit, onDelete, eventCode: code = '', canMan
 export default function MatchesIndex({ events, drawnEventIds, selectedEventId, pools, allFixtures, knockout, participants, canManage = true }: MatchesIndexProps) {
     const { flash } = usePage().props;
     const { t } = useI18n();
-    const [query, setQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
+    const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
+    const [statusFilter, setStatusFilter] = useState(() => new URLSearchParams(window.location.search).get('status') ?? '');
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingMatch, setEditingMatch] = useState<MatchRow | null>(null);
     const [deleteMatch, setDeleteMatch] = useState<MatchRow | null>(null);
@@ -465,6 +465,23 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
         for (const match of fixtures) c[match.status]++;
         return c;
     }, [fixtures]);
+
+    const applyFilters = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const params: Record<string, string> = {};
+        const selected = events.find((item) => item.id === selectedEventId);
+        if (selected) params.event = selected.slug;
+        if (query.trim()) params.search = query.trim();
+        if (statusFilter) params.status = statusFilter;
+        router.get(route('matches.index'), params, { preserveScroll: true, replace: true });
+    };
+
+    const clearFilters = () => {
+        setQuery('');
+        setStatusFilter('');
+        const selected = events.find((item) => item.id === selectedEventId);
+        router.get(route('matches.index'), selected ? { event: selected.slug } : {}, { preserveScroll: true, replace: true });
+    };
 
     const handleFilterChange = (eventId: string) => {
         const event = events.find((item) => item.id === eventId);
@@ -616,6 +633,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
 
                     <Card className="mb-4">
                     <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+                    <form onSubmit={applyFilters} className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center">
                         <div className="relative min-w-0 flex-1">
                             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -639,6 +657,9 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         <span className="text-sm text-muted-foreground">
                             {t('Showing')} {filteredFixtures.length} {t('of')} {fixtures.length} {t('matches')}
                         </span>
+                        <Button type="submit" variant="secondary">{t('Apply')}</Button>
+                        {(query || statusFilter) && <Button type="button" variant="ghost" size="icon" onClick={clearFilters} aria-label={t('Clear filters')}><X className="size-4" /></Button>}
+                    </form>
                     </CardContent>
                     </Card>
 
