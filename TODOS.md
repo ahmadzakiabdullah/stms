@@ -32,6 +32,44 @@
 - [ ] Deploy commit yang diluluskan, restart worker/scheduler dan jalankan smoke test serta Playwright/axe terhadap deployment sebenar.
 - [ ] Cipta annotated release tag hanya selepas semua bukti di atas diluluskan dan direkodkan.
 
+## Pelan Penambahbaikan Berkeutamaan
+
+Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diberikan kepada kebolehoperasian, keselamatan data dan aliran kerja pertandingan sebelum ciri pasca-MVP.
+
+### Fasa 1 — Operasi dan kebolehpercayaan production
+
+- [ ] Jadualkan backup production terenkripsi dengan retention, pemantauan freshness dan bukti salinan off-host.
+- [ ] Automasi isolated restore drill berkala dan rekod RPO/RTO dalam release evidence.
+- [ ] Tambah monitoring untuk availability, error rate, request/DB latency, queue depth/oldest job, failed jobs, disk, backup freshness dan sijil.
+- [ ] Sediakan owner, threshold, alert delivery dan runbook untuk setiap alert production.
+- [ ] Sediakan runbook incident, rollback dan pemulihan worker/scheduler.
+
+### Fasa 2 — Keselamatan dan audit trail
+
+- [ ] Standardkan audit log dengan `actor_id`, `organization_id`, action, subject ID dan request/correlation ID apabila berkaitan.
+- [ ] Redact atau hash e-mel, telefon dan PII daripada application logs; dokumentasikan retention dan kawalan akses log.
+- [x] Audit dan tambah rate limiting untuk login, reset-password, email verification serta mutation/export endpoints yang sesuai; password-reset throttling diuji dalam `RateLimitingTest`.
+- [x] Jalankan dependency, secret dan security scan secara berkala dalam CI; dependency audit sedia ada dan Gitleaks secret scan kini berada dalam workflow CI.
+- [ ] Tambah regression tests untuk authorization, tenant isolation, perubahan score dan akses selepas keputusan dikunci.
+
+### Fasa 3 — Kesediaan operasi pertandingan dan UX admin
+
+- [ ] Tambah bulk import peserta, kontinjen dan roster melalui CSV/XLSX dengan preview, validation report dan rollback.
+- [ ] Tambah export jadual, keputusan, ranking dan medal tally ke PDF/XLSX.
+- [ ] Sediakan print-friendly match sheet dan result sheet.
+- [ ] Tambah search, filter, pagination dan empty/error states yang konsisten pada halaman admin utama.
+- [ ] Tambah validasi konflik venue, masa, participant dan fixture sebelum jadual diterbitkan.
+- [ ] Sokong lock keputusan selepas pengesahan serta approval workflow untuk perubahan keputusan.
+- [ ] Simpan sejarah perubahan score, participant, draw dan status approval yang boleh diaudit.
+
+### Fasa 4 — Selepas MVP stabil
+
+- [ ] Nilai live scoring/realtime berdasarkan keperluan operator dan kapasiti production.
+- [ ] Rancang REST API `/api/v1` dengan API Resources, authorization, rate limiting dan dokumentasi OpenAPI.
+- [ ] Nilai scorer mode PWA/mobile untuk penggunaan di venue dengan rangkaian tidak stabil.
+- [ ] Nilai dashboard analytics dan laporan prestasi selepas definisi metrik disahkan.
+- [ ] Nilai modul accreditation hanya selepas release MVP stabil.
+
 ## Hardening Seterusnya
 
 - [x] Jadikan favicon lookup tenant-explicit untuk guest.

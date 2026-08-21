@@ -107,6 +107,21 @@ class RateLimitingTest extends TestCase
         $response->assertStatus(429);
     }
 
+    public function test_password_reset_requests_are_rate_limited(): void
+    {
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->post(route('password.email'), [
+                'email' => 'unknown@example.test',
+            ]);
+        }
+
+        $response = $this->post(route('password.email'), [
+            'email' => 'unknown@example.test',
+        ]);
+
+        $response->assertStatus(429);
+    }
+
     public function test_match_index_not_rate_limited(): void
     {
         $org = Organization::factory()->create();

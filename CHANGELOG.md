@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — CI secret scanning (21 August 2026)
+
+- Added a read-only Gitleaks job to CI for detecting accidentally committed secrets.
+- Kept Composer and npm dependency audits as part of the regular CI security checks.
+
+## Unreleased — Password reset rate limiting (21 August 2026)
+
+- Added throttling to password-reset request and password-reset submission routes.
+- Added feature coverage confirming excessive password-reset requests receive HTTP 429.
+
 ## Unreleased — Result score editor UX (21 August 2026)
 
 - Score editing now uses a focused team-versus-team editor with larger score fields and accessible increment/decrement controls.
