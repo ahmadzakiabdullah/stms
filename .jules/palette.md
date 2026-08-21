@@ -1,3 +1,0 @@
-## 2026-08-21 - Prevent focus on visually disabled Inertia Links within Shadcn Buttons
-**Learning:** When styling disabled Inertia.js `<Link>` components using Shadcn UI's `<Button asChild>`, the `disabled` prop on the `<Button>` only applies visual styling but does not make the underlying `<a>` tag inert, since anchors don't support the HTML `disabled` attribute. This causes screen readers and keyboard navigation (tabbing) to still access the "disabled" link.
-**Action:** When making a Link appear disabled, explicitly pass `tabIndex={-1}` and `aria-disabled={true}` to the inner `<Link>` component to ensure it is fully removed from the tab order and its disabled state is properly announced to assistive technologies.
