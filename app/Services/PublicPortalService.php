@@ -27,7 +27,7 @@ class PublicPortalService
 
         $cacheKey = 'public-portal:v8:'.$session->id.':'.($limit ?? 'all');
 
-        return Cache::remember($cacheKey, now()->addMinutes(2), function () use ($session, $limit): array {
+        return Cache::flexible($cacheKey, [120, 600], function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
         });
     }
@@ -100,7 +100,7 @@ class PublicPortalService
 
         $cacheKey = 'public-athletes:v1:'.$session->id;
 
-        return Cache::remember($cacheKey, now()->addMinutes(2), function () use ($session): array {
+        return Cache::flexible($cacheKey, [120, 600], function () use ($session): array {
             $tournamentIds = $session->tournaments()->pluck('id');
             $registrations = EventParticipant::query()
                 ->where('organization_id', $session->organization_id)

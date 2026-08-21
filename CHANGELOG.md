@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - Public portal stale-while-revalidate cache (21 August 2026)
+
+- Added stale-while-revalidate caching for public portal and athlete-directory payloads to avoid blocking requests on cache-expiry rebuilds.
+- Documented the two-minute fresh and ten-minute stale windows and the Redis production requirement.
+
 ## Unreleased - Public performance baseline (21 August 2026)
 
 - Recorded Lighthouse production baselines for `/` and `/schedule`, including FCP, LCP, TBT and CLS.
