@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
+use App\Models\Fixture;
 use App\Models\Organization;
+use App\Models\Participant;
+use App\Models\Result;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -64,5 +68,61 @@ class ActivityLogTest extends TestCase
                     && ! collect($activities)->contains('description', 'Hidden activity'))
                 ->where('isSuperAdmin', false)
             );
+    }
+
+    public function test_activity_records_standard_audit_metadata(): void
+    {
+        Role::firstOrCreate(['name' => 'org-admin', 'guard_name' => 'web']);
+        $organization = Organization::factory()->create();
+        $user = User::factory()->create(['organization_id' => $organization->id]);
+        $subject = Organization::factory()->create(['parent_id' => $organization->id]);
+
+        $activity = activity()
+            ->causedBy($user)
+            ->performedOn($subject)
+            ->event('updated')
+            ->log('Organization updated');
+
+        $audit = $activity->getProperty('audit');
+
+        $this->assertSame($user->uuid, $audit['actor_id']);
+        $this->assertSame('updated', $audit['action']);
+        $this->assertSame($subject->id, $audit['subject_id']);
+        $this->assertSame($organization->id, $audit['organization_id']);
+    }
+
+    public function test_score_and_participant_changes_are_available_in_activity_history(): void
+    {
+        $organization = Organization::factory()->create();
+        $participant = Participant::factory()->create(['organization_id' => $organization->id]);
+        $match = Fixture::factory()->create(['organization_id' => $organization->id]);
+        $result = Result::factory()->create([
+            'organization_id' => $organization->id,
+            'match_id' => $match->id,
+            'score_home' => 1,
+            'score_away' => 0,
+        ]);
+
+        $result->update(['score_home' => 2]);
+        $participant->update(['name' => 'Updated participant']);
+
+        $resultChange = Activity::query()
+            ->where('subject_type', $result->getMorphClass())
+            ->where('subject_id', $result->id)
+            ->where('event', 'updated')
+            ->latest('id')
+            ->firstOrFail();
+        $participantChange = Activity::query()
+            ->where('subject_type', $participant->getMorphClass())
+            ->where('subject_id', $participant->id)
+            ->where('event', 'updated')
+            ->latest('id')
+            ->firstOrFail();
+
+        $resultChanges = $resultChange->attribute_changes->toArray();
+        $participantChanges = $participantChange->attribute_changes->toArray();
+
+        $this->assertArrayHasKey('score_home', $resultChanges['attributes'] ?? $resultChanges);
+        $this->assertArrayHasKey('name', $participantChanges['attributes'] ?? $participantChanges);
     }
 }

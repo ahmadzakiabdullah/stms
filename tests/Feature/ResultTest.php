@@ -59,7 +59,93 @@ class ResultTest extends TestCase
             'match_id' => $match->id,
             'score_home' => 3,
             'score_away' => 1,
+            'status' => Result::STATUS_SUBMITTED,
+            'submitted_by' => $super->uuid,
         ]);
+    }
+
+    public function test_org_admin_can_approve_and_lock_result_then_unlock_it(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $match = Fixture::factory()->create(['organization_id' => $org->id]);
+        $result = Result::factory()->create([
+            'organization_id' => $org->id,
+            'match_id' => $match->id,
+            'status' => Result::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($admin)->post(route('results.approve', $result))
+            ->assertRedirect(route('results.index'));
+        $this->assertDatabaseHas('results', [
+            'id' => $result->id,
+            'status' => Result::STATUS_APPROVED,
+            'approved_by' => $admin->uuid,
+        ]);
+
+        $this->actingAs($admin)->post(route('results.lock', $result))
+            ->assertRedirect(route('results.index'));
+        $this->assertDatabaseHas('results', [
+            'id' => $result->id,
+            'status' => Result::STATUS_LOCKED,
+            'locked_by' => $admin->uuid,
+        ]);
+
+        $this->actingAs($admin)->post(route('results.unlock', $result))
+            ->assertRedirect(route('results.index'));
+        $this->assertDatabaseHas('results', [
+            'id' => $result->id,
+            'status' => Result::STATUS_APPROVED,
+            'locked_by' => null,
+            'locked_at' => null,
+        ]);
+    }
+
+    public function test_locked_result_cannot_be_updated_or_deleted(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $match = Fixture::factory()->create(['organization_id' => $org->id]);
+        $result = Result::factory()->create([
+            'organization_id' => $org->id,
+            'match_id' => $match->id,
+            'status' => Result::STATUS_LOCKED,
+        ]);
+
+        $this->actingAs($admin)->put(route('results.update', $result), [
+            'match_id' => $match->id,
+            'score_home' => 99,
+            'score_away' => 0,
+        ])->assertForbidden();
+
+        $this->actingAs($admin)->delete(route('results.destroy', $result))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('results', [
+            'id' => $result->id,
+            'score_home' => $result->score_home,
+            'status' => Result::STATUS_LOCKED,
+        ]);
+    }
+
+    public function test_newly_submitted_result_is_not_publicly_visible_until_approved(): void
+    {
+        $org = Organization::factory()->create();
+        $match = Fixture::factory()->create(['organization_id' => $org->id]);
+        $submitted = Result::factory()->create([
+            'organization_id' => $org->id,
+            'match_id' => $match->id,
+            'status' => Result::STATUS_SUBMITTED,
+        ]);
+        $approved = Result::factory()->create([
+            'organization_id' => $org->id,
+            'status' => Result::STATUS_APPROVED,
+        ]);
+
+        $visibleIds = Result::query()->publiclyVisible()->pluck('id');
+
+        $this->assertFalse($visibleIds->contains($submitted->id));
+        $this->assertTrue($visibleIds->contains($approved->id));
     }
 
     public function test_org_admin_can_update_own_result(): void

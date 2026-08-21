@@ -32,7 +32,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CalendarDays, CheckCircle2, Minus, Pencil, Plus, Save, Search, Swords, Trash2, Trophy } from 'lucide-react';
+import { CalendarDays, CheckCircle2, CheckCheck, LockKeyhole, Minus, Pencil, Plus, Save, Search, Swords, Trash2, Trophy, UnlockKeyhole } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { matchNumberLabel } from '@/lib/matchNumber';
 import { useI18n } from '@/lib/i18n';
@@ -72,6 +72,8 @@ interface ResultsIndexProps {
     participants?: Participant[];
     events?: Array<{ id: string; name: string; slug?: string }>;
     canManage?: boolean;
+    canApproveResults?: boolean;
+    canUnlockResults?: boolean;
 }
 
 const participantName = (participant?: Participant, fallback = 'TBD') => {
@@ -216,9 +218,14 @@ interface ResultRowViewProps {
     onEdit: () => void;
     onDelete: () => void;
     canManage?: boolean;
+    onApprove: () => void;
+    onLock: () => void;
+    onUnlock: () => void;
+    canApprove?: boolean;
+    canUnlock?: boolean;
 }
 
-function ResultRowView({ result, onEdit, onDelete, canManage = true }: ResultRowViewProps) {
+function ResultRowView({ result, onEdit, onDelete, canManage = true, onApprove, onLock, onUnlock, canApprove = false, canUnlock = false }: ResultRowViewProps) {
     const scored = result.score_home !== null && result.score_home !== undefined;
     const isDraw = scored && result.score_home === result.score_away;
 
@@ -260,17 +267,25 @@ function ResultRowView({ result, onEdit, onDelete, canManage = true }: ResultRow
                     <span className="text-sm text-muted-foreground">-</span>
                 )}
             </TableCell>
+            <TableCell>
+                <Badge variant={result.status === 'locked' ? 'default' : result.status === 'submitted' ? 'secondary' : 'outline'}>
+                    {result.status || 'approved'}
+                </Badge>
+            </TableCell>
             {canManage && (
             <TableCell className="space-x-1 text-right">
-                <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit result"><Pencil className="size-3" /></Button>
-                <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete result"><Trash2 className="size-3" /></Button>
+                {result.status === 'submitted' && canApprove && <Button variant="outline" size="icon-sm" onClick={onApprove} aria-label="Approve result"><CheckCheck className="size-3" /></Button>}
+                {result.status === 'approved' && canApprove && <Button variant="outline" size="icon-sm" onClick={onLock} aria-label="Lock result"><LockKeyhole className="size-3" /></Button>}
+                {result.status === 'locked' && canUnlock && <Button variant="outline" size="icon-sm" onClick={onUnlock} aria-label="Unlock result"><UnlockKeyhole className="size-3" /></Button>}
+                {result.status !== 'locked' && <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit result"><Pencil className="size-3" /></Button>}
+                {result.status !== 'locked' && <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete result"><Trash2 className="size-3" /></Button>}
             </TableCell>
             )}
         </TableRow>
     );
 }
 
-export default function ResultsIndex({ results: resultsProp, matches: matchesProp = [], participants: participantsProp = [], events: eventsProp = [], canManage = true }: ResultsIndexProps) {
+export default function ResultsIndex({ results: resultsProp, matches: matchesProp = [], participants: participantsProp = [], events: eventsProp = [], canManage = true, canApproveResults = false, canUnlockResults = false }: ResultsIndexProps) {
     const { flash } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
@@ -801,6 +816,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                         <TableHead className="w-32">Pool / Stage</TableHead>
                                                         <TableHead>Venue / Time</TableHead>
                                                         <TableHead className="w-32">Winner</TableHead>
+                                                        <TableHead className="w-24">Status</TableHead>
                                                         {canManage && <TableHead className="text-right">Actions</TableHead>}
                                                     </TableRow>
                                                 </TableHeader>
@@ -811,7 +827,12 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                             result={result}
                                                             onEdit={() => openEdit(result)}
                                                             onDelete={() => setDeleteResult(result)}
+                                                            onApprove={() => router.post(route('results.approve', result.id), {}, { preserveScroll: true })}
+                                                            onLock={() => router.post(route('results.lock', result.id), {}, { preserveScroll: true })}
+                                                            onUnlock={() => router.post(route('results.unlock', result.id), {}, { preserveScroll: true })}
                                                             canManage={canManage}
+                                                            canApprove={canApproveResults}
+                                                            canUnlock={canUnlockResults}
                                                         />
                                                     ))}
                                                 </TableBody>
@@ -883,6 +904,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                 <TableHead className="w-32">Pool / Stage</TableHead>
                                                 <TableHead>Venue / Time</TableHead>
                                                 <TableHead className="w-32">Winner</TableHead>
+                                                <TableHead className="w-24">Status</TableHead>
                                                 {canManage && <TableHead className="text-right">Actions</TableHead>}
                                             </TableRow>
                                         </TableHeader>
@@ -893,7 +915,12 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                     result={result}
                                                     onEdit={() => openEdit(result)}
                                                     onDelete={() => setDeleteResult(result)}
+                                                    onApprove={() => router.post(route('results.approve', result.id), {}, { preserveScroll: true })}
+                                                    onLock={() => router.post(route('results.lock', result.id), {}, { preserveScroll: true })}
+                                                    onUnlock={() => router.post(route('results.unlock', result.id), {}, { preserveScroll: true })}
                                                     canManage={canManage}
+                                                    canApprove={canApproveResults}
+                                                    canUnlock={canUnlockResults}
                                                 />
                                             ))}
                                         </TableBody>

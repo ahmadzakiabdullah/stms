@@ -1,5 +1,7 @@
 # Database Schema
 
+> **Approval workflow update (21 August 2026):** Migration `2026_08_21_130000` adds result statuses `draft`, `submitted`, `approved` and `locked`, plus approval/lock actor timestamps. The repository now contains 66 migrations.
+
 > **Current update — 21 August 2026:** Migrations 65/65 are present in the repository; the latest two add `sports.scoring_mode` and `match_scoring_events` for athlete-level scoring.
 
 > Snapshot 17 Ogos 2026: **61 migration files**. Migrasi baharu menambah `ranking_rules` JSON pada session/tournament; fresh SQLite migration 61/61 lulus. Runtime production memerlukan migrasi melalui release runbook.
@@ -22,7 +24,7 @@
 | `squad_members` | Roster/pegawai bagi event registration. |
 | `pools` | Kumpulan draw event. |
 | `matches` | Fixture; model Eloquent bernama `Fixture`. |
-| `results` | Satu result bagi satu match melalui unique `results.match_id`. |
+| `results` | Satu result bagi satu match melalui unique `results.match_id`, dengan status approval/lock serta actor timestamps. |
 | `match_scoring_events` | Event jaringan individu yang menghubungkan result, pasukan dan atlet roster. |
 | `draw_versions` | Snapshot draw berversi dengan actor/action/seed. |
 | `sport_user` | Pivot tugasan pengguna kepada sport. |

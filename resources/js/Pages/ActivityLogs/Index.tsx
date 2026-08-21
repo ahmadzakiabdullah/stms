@@ -11,8 +11,10 @@ interface ActivityLogItem {
     id: number;
     log_name: string;
     description: string;
+    event: string | null;
     subject_type: string;
     subject_id: string | number;
+    attribute_changes: Record<string, unknown> | null;
     causer: { id: string; name: string; email: string } | null;
     properties: Record<string, unknown>;
     created_at: string;
@@ -28,6 +30,10 @@ interface Props {
 function subjectLabel(type: string): string {
     const parts = type.split('\\');
     return parts[parts.length - 1] || type;
+}
+
+function changeKeys(changes: Record<string, unknown> | null): string {
+    return changes ? Object.keys(changes).join(', ') : '';
 }
 
 export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, organizations }: Props) {
@@ -88,7 +94,9 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>{t('Description')}</TableHead>
+                                    <TableHead>{t('Event')}</TableHead>
                                     <TableHead>{t('Model')}</TableHead>
+                                    <TableHead>{t('Changed fields')}</TableHead>
                                     <TableHead>{t('User')}</TableHead>
                                     <TableHead>{t('Date')}</TableHead>
                                 </TableRow>
@@ -100,7 +108,13 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                                             {log.description}
                                         </TableCell>
                                         <TableCell>
+                                            <Badge variant="secondary">{log.event || 'custom'}</Badge>
+                                        </TableCell>
+                                        <TableCell>
                                             <Badge variant="outline">{subjectLabel(log.subject_type)}</Badge>
+                                        </TableCell>
+                                        <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
+                                            {changeKeys(log.attribute_changes) || '—'}
                                         </TableCell>
                                         <TableCell className="text-muted-foreground">
                                             {log.causer ? log.causer.name : '—'}

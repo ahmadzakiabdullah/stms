@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,14 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Result extends Model
 {
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_SUBMITTED = 'submitted';
+
+    public const STATUS_APPROVED = 'approved';
+
+    public const STATUS_LOCKED = 'locked';
+
     use BelongsToOrganization, HasFactory, HasUuids, LogsActivity, SoftDeletes;
 
     protected $fillable = [
@@ -23,6 +32,13 @@ class Result extends Model
         'score_away',
         'winner_participant_id',
         'notes',
+        'status',
+        'submitted_by',
+        'submitted_at',
+        'approved_by',
+        'approved_at',
+        'locked_by',
+        'locked_at',
     ];
 
     protected function casts(): array
@@ -30,6 +46,9 @@ class Result extends Model
         return [
             'score_home' => 'integer',
             'score_away' => 'integer',
+            'submitted_at' => 'datetime',
+            'approved_at' => 'datetime',
+            'locked_at' => 'datetime',
         ];
     }
 
@@ -46,6 +65,31 @@ class Result extends Model
     public function winner(): BelongsTo
     {
         return $this->belongsTo(Participant::class, 'winner_participant_id');
+    }
+
+    public function submittedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_by', 'uuid');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by', 'uuid');
+    }
+
+    public function lockedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'locked_by', 'uuid');
+    }
+
+    public function isLocked(): bool
+    {
+        return $this->status === self::STATUS_LOCKED;
+    }
+
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query->whereIn('status', [self::STATUS_APPROVED, self::STATUS_LOCKED]);
     }
 
     public function scoringEvents(): HasMany

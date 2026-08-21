@@ -7,6 +7,7 @@ use App\Models\MatchScoringEvent;
 use App\Models\Organization;
 use App\Models\Result;
 use App\Models\SquadMember;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,9 @@ class ResultService
     {
         $result = DB::transaction(function () use ($organization, $data) {
             $data['organization_id'] = $organization->id;
+            $data['status'] = Result::STATUS_SUBMITTED;
+            $data['submitted_by'] = auth()->id();
+            $data['submitted_at'] = now();
             $scoringEvents = $data['scoring_events'] ?? null;
             unset($data['scoring_events']);
             $result = Result::create($data);
@@ -73,6 +77,7 @@ class ResultService
     {
         $result = DB::transaction(function () use ($organization, $id, $data) {
             $result = $this->getById($organization, $id);
+            $this->assertEditable($result);
             $scoringEvents = $data['scoring_events'] ?? null;
             unset($data['scoring_events']);
             $result->update($data);
@@ -139,6 +144,7 @@ class ResultService
     {
         DB::transaction(function () use ($organization, $id) {
             $result = $this->getById($organization, $id);
+            $this->assertEditable($result);
             $result->delete();
             Log::info('Result deleted', ['id' => $id, 'org_id' => $organization->id]);
         });
@@ -154,6 +160,80 @@ class ResultService
     protected function baseQuery(Organization $organization)
     {
         return Result::where('organization_id', $organization->id);
+    }
+
+    public function submit(Organization $organization, string $id, User $actor): Result
+    {
+        return $this->transition($organization, $id, $actor, Result::STATUS_SUBMITTED, [
+            'submitted_by' => $actor->uuid,
+            'submitted_at' => now(),
+            'approved_by' => null,
+            'approved_at' => null,
+            'locked_by' => null,
+            'locked_at' => null,
+        ], 'submitted');
+    }
+
+    public function approve(Organization $organization, string $id, User $actor): Result
+    {
+        return $this->transition($organization, $id, $actor, Result::STATUS_APPROVED, [
+            'approved_by' => $actor->uuid,
+            'approved_at' => now(),
+        ], 'approved');
+    }
+
+    public function lock(Organization $organization, string $id, User $actor): Result
+    {
+        return $this->transition($organization, $id, $actor, Result::STATUS_LOCKED, [
+            'approved_by' => $actor->uuid,
+            'approved_at' => now(),
+            'locked_by' => $actor->uuid,
+            'locked_at' => now(),
+        ], 'locked');
+    }
+
+    public function unlock(Organization $organization, string $id, User $actor): Result
+    {
+        return $this->transition($organization, $id, $actor, Result::STATUS_APPROVED, [
+            'locked_by' => null,
+            'locked_at' => null,
+        ], 'unlocked');
+    }
+
+    /** @param array<string, mixed> $attributes */
+    protected function transition(Organization $organization, string $id, User $actor, string $status, array $attributes, string $event): Result
+    {
+        $result = DB::transaction(function () use ($organization, $id, $actor, $status, $attributes, $event) {
+            $result = $this->getById($organization, $id);
+
+            if ($result->isLocked() && $status !== Result::STATUS_APPROVED) {
+                throw ValidationException::withMessages(['status' => 'A locked result must be unlocked before another status change.']);
+            }
+
+            if ($status === Result::STATUS_APPROVED && $result->status === Result::STATUS_APPROVED && $event === 'approved') {
+                throw ValidationException::withMessages(['status' => 'Only submitted results can be approved.']);
+            }
+
+            if ($status === Result::STATUS_LOCKED && $result->status !== Result::STATUS_APPROVED) {
+                throw ValidationException::withMessages(['status' => 'Only approved results can be locked.']);
+            }
+
+            $result->update(array_merge($attributes, ['status' => $status]));
+            activity()->performedOn($result)->causedBy($actor)->event($event)->log('Result '.$event);
+
+            return $result->fresh();
+        });
+
+        app(PublicPortalService::class)->forgetForOrganization($organization->id);
+
+        return $result;
+    }
+
+    protected function assertEditable(Result $result): void
+    {
+        if ($result->isLocked()) {
+            throw ValidationException::withMessages(['status' => 'Locked results cannot be edited or deleted.']);
+        }
     }
 
     /** @param array<int, array<string, mixed>> $events */

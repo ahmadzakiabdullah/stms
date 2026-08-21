@@ -21,9 +21,15 @@ class RequestCorrelation
             'request_path' => $request->path(),
         ]);
 
-        $response = $next($request);
-        $response->headers->set('X-Request-ID', $correlationId);
+        try {
+            $response = $next($request);
+            $response->headers->set('X-Request-ID', $correlationId);
 
-        return $response;
+            return $response;
+        } finally {
+            // Prevent shared logger context leaking into a later request in
+            // Octane, queue workers or other long-lived PHP processes.
+            Log::withoutContext();
+        }
     }
 }

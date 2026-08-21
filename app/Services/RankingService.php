@@ -105,6 +105,7 @@ class RankingService
     {
         return Result::query()
             ->where('organization_id', $organizationId)
+            ->publiclyVisible()
             ->whereHas('match.event', fn ($query) => $query
                 ->where('organization_id', $organizationId)
                 ->whereIn('tournament_id', $tournamentIds))

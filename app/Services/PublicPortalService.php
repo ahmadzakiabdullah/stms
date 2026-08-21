@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\EventParticipant;
 use App\Models\Fixture;
 use App\Models\Organization;
-use App\Models\EventParticipant;
 use App\Models\Participant;
 use App\Models\Session;
 use App\Models\Setting;
@@ -299,6 +299,10 @@ class PublicPortalService
             ->when($limit !== null, fn ($query) => $query->limit($limit))
             ->get();
         $completedFixtures = $fixtureQuery()->where('status', 'completed')
+            ->where(function ($query): void {
+                $query->whereDoesntHave('result')
+                    ->orWhereHas('result', fn ($result) => $result->publiclyVisible());
+            })
             ->orderByDesc('scheduled_at')
             ->orderBy('match_number')
             ->when($limit !== null, fn ($query) => $query->limit($limit))

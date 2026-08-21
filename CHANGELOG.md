@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased — Activity history visibility (21 August 2026)
+
+- Activity Logs now show event type and changed field names alongside description, model and actor.
+- Added regression coverage for score and participant field changes; draw snapshots and result approval transitions remain auditable through their existing activity/draw-version records.
+
+## Unreleased — Result approval and locking workflow (21 August 2026)
+
+- Added backward-compatible result statuses: `draft`, `submitted`, `approved` and `locked`.
+- New results are submitted for approval; org-admin/super-admin users can approve, lock and unlock results according to policy.
+- Locked results cannot be edited or deleted, and public rankings/schedules exclude unapproved results while preserving completed fixtures without a result.
+- Added audit activity for workflow transitions and regression coverage for tenant/role access and locked-result protection.
+
+## Unreleased — Standard activity audit metadata (21 August 2026)
+
+- Added a custom activity model that records actor, action, subject, organization and request correlation metadata under `properties.audit`.
+- Documented activity/application log retention and access responsibilities in the logging architecture guide.
+- Added feature coverage for tenant-aware activity metadata.
+
+## Unreleased — Logging PII protection (21 August 2026)
+
+- Added global Monolog context redaction for email, phone, password, token, cookie and authorization values, including nested context.
+- Request correlation logging now clears shared context in a `finally` block to prevent leakage across long-lived PHP requests.
+- Added unit and feature coverage for redaction and request correlation behavior.
+
 ## Unreleased — CI secret scanning (21 August 2026)
 
 - Added a read-only Gitleaks job to CI for detecting accidentally committed secrets.

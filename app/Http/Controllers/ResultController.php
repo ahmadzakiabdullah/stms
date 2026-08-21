@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Results\DeleteResult;
 use App\Actions\Results\StoreResult;
+use App\Actions\Results\TransitionResult;
 use App\Actions\Results\UpdateResult;
 use App\Http\Requests\Result\StoreResultRequest;
 use App\Http\Requests\Result\UpdateResultRequest;
@@ -27,6 +28,7 @@ class ResultController extends Controller
         $dataLoadFailed = false;
 
         $user = auth()->user();
+        $canApproveResults = $user->hasRole(['super-admin', 'org-admin']);
         $scopeToAdminSports = $user->hasRole('admin-sport') && ! $user->hasRole(['super-admin', 'org-admin']);
         $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
 
@@ -123,6 +125,8 @@ class ResultController extends Controller
             'participants' => Participant::query()->active()->orderBy('name')->get(['id', 'name', 'slug']),
             'events' => $events,
             'canManage' => $user->hasAnyRole(['super-admin', 'org-admin', 'admin-sport']),
+            'canApproveResults' => $canApproveResults,
+            'canUnlockResults' => $canApproveResults,
         ]);
 
         if ($dataLoadFailed) {
@@ -181,6 +185,38 @@ class ResultController extends Controller
 
         return redirect()->route('results.index')
             ->with('success', 'Result deleted successfully.');
+    }
+
+    public function submit(Result $result, TransitionResult $action): RedirectResponse
+    {
+        Gate::authorize('submit', $result);
+        $action->handle(auth()->user()->organization, $result, auth()->user(), 'submit');
+
+        return redirect()->route('results.index')->with('success', 'Result submitted for approval.');
+    }
+
+    public function approve(Result $result, TransitionResult $action): RedirectResponse
+    {
+        Gate::authorize('approve', $result);
+        $action->handle(auth()->user()->organization, $result, auth()->user(), 'approve');
+
+        return redirect()->route('results.index')->with('success', 'Result approved successfully.');
+    }
+
+    public function lock(Result $result, TransitionResult $action): RedirectResponse
+    {
+        Gate::authorize('lock', $result);
+        $action->handle(auth()->user()->organization, $result, auth()->user(), 'lock');
+
+        return redirect()->route('results.index')->with('success', 'Result locked successfully.');
+    }
+
+    public function unlock(Result $result, TransitionResult $action): RedirectResponse
+    {
+        Gate::authorize('unlock', $result);
+        $action->handle(auth()->user()->organization, $result, auth()->user(), 'unlock');
+
+        return redirect()->route('results.index')->with('success', 'Result unlocked successfully.');
     }
 
     private function notifyMatchParticipants(Result $result, string $action): void

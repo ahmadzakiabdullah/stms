@@ -231,6 +231,10 @@ export interface Result {
     score_away: number | null;
     winner_participant_id: string | null;
     notes: string | null;
+    status: 'draft' | 'submitted' | 'approved' | 'locked';
+    submitted_at?: string | null;
+    approved_at?: string | null;
+    locked_at?: string | null;
     match?: Fixture;
     winner?: Participant;
     scoring_events?: MatchScoringEvent[];

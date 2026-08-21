@@ -46,11 +46,12 @@ Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diber
 
 ### Fasa 2 — Keselamatan dan audit trail
 
-- [ ] Standardkan audit log dengan `actor_id`, `organization_id`, action, subject ID dan request/correlation ID apabila berkaitan.
-- [ ] Redact atau hash e-mel, telefon dan PII daripada application logs; dokumentasikan retention dan kawalan akses log.
+- [x] Standardkan activity audit metadata dengan `actor_id`, `organization_id`, action, subject ID/type dan request/correlation ID apabila berkaitan; metadata disimpan di bawah `properties.audit` dan diuji.
+- [x] Redact e-mel, telefon, password, token dan PII context daripada application logs melalui global Monolog processor; recursive redaction diuji.
+- [ ] Dokumentasikan retention dan kawalan akses application logs.
 - [x] Audit dan tambah rate limiting untuk login, reset-password, email verification serta mutation/export endpoints yang sesuai; password-reset throttling diuji dalam `RateLimitingTest`.
 - [x] Jalankan dependency, secret dan security scan secara berkala dalam CI; dependency audit sedia ada dan Gitleaks secret scan kini berada dalam workflow CI.
-- [ ] Tambah regression tests untuk authorization, tenant isolation, perubahan score dan akses selepas keputusan dikunci.
+- [x] Tambah regression tests untuk authorization, tenant isolation, perubahan score dan akses selepas keputusan dikunci; ResultTest meliputi submit, approve, lock, unlock serta edit/delete denial.
 
 ### Fasa 3 — Kesediaan operasi pertandingan dan UX admin
 
@@ -59,8 +60,8 @@ Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diber
 - [ ] Sediakan print-friendly match sheet dan result sheet.
 - [ ] Tambah search, filter, pagination dan empty/error states yang konsisten pada halaman admin utama.
 - [ ] Tambah validasi konflik venue, masa, participant dan fixture sebelum jadual diterbitkan.
-- [ ] Sokong lock keputusan selepas pengesahan serta approval workflow untuk perubahan keputusan.
-- [ ] Simpan sejarah perubahan score, participant, draw dan status approval yang boleh diaudit.
+- [x] Sokong lock keputusan selepas pengesahan serta approval workflow: `submitted → approved → locked`, policy role-aware, unlock terkawal dan status dipaparkan pada Results workspace.
+- [x] Simpan sejarah perubahan score, participant, draw dan status approval yang boleh diaudit; model activity log merekod perubahan fields, draw versions menyimpan snapshot draw, dan Activity Logs memaparkan event/changed fields.
 
 ### Fasa 4 — Selepas MVP stabil
 

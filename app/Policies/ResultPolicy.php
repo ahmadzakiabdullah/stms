@@ -37,6 +37,10 @@ class ResultPolicy
 
     public function update(User $user, Result $result): bool
     {
+        if ($result->isLocked()) {
+            return false;
+        }
+
         if ($user->hasRole('super-admin')) {
             return true;
         }
@@ -54,6 +58,10 @@ class ResultPolicy
 
     public function delete(User $user, Result $result): bool
     {
+        if ($result->isLocked()) {
+            return false;
+        }
+
         if ($user->hasRole('super-admin')) {
             return true;
         }
@@ -67,5 +75,27 @@ class ResultPolicy
         }
 
         return $user->canManageSport($result->match->event->sport_id);
+    }
+
+    public function submit(User $user, Result $result): bool
+    {
+        return $this->update($user, $result);
+    }
+
+    public function approve(User $user, Result $result): bool
+    {
+        return ! $result->isLocked()
+            && ($user->hasRole('super-admin') || ($user->hasRole('org-admin') && $user->organization_id === $result->organization_id));
+    }
+
+    public function lock(User $user, Result $result): bool
+    {
+        return $this->approve($user, $result);
+    }
+
+    public function unlock(User $user, Result $result): bool
+    {
+        return $user->hasRole('super-admin')
+            || ($user->hasRole('org-admin') && $user->organization_id === $result->organization_id);
     }
 }

@@ -218,6 +218,10 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
         Route::post('/results', [ResultController::class, 'store'])->name('results.store');
         Route::put('/results/{result}', [ResultController::class, 'update'])->name('results.update');
         Route::delete('/results/{result}', [ResultController::class, 'destroy'])->name('results.destroy');
+        Route::post('/results/{result}/submit', [ResultController::class, 'submit'])->name('results.submit');
+        Route::post('/results/{result}/approve', [ResultController::class, 'approve'])->name('results.approve');
+        Route::post('/results/{result}/lock', [ResultController::class, 'lock'])->name('results.lock');
+        Route::post('/results/{result}/unlock', [ResultController::class, 'unlock'])->name('results.unlock');
     });
 
     // M5: Rankings (rate limited for strategy updates)
