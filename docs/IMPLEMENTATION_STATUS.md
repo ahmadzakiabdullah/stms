@@ -1,5 +1,7 @@
 # Implementation Status
 
+> Current repository update: 21 Ogos 2026. Athlete directory, athlete profiles, participant-grouped scorer events and the score-editor workflow are implemented and included in commit `4c4ebf0c`; production cutover evidence remains outstanding.
+
 > Updated 18 Ogos 2026. “Implemented” bermaksud kod/capability wujud; ia tidak menggantikan release-gate evidence.
 
 ## Implemented
@@ -14,11 +16,11 @@
 | Participant/Registration | Implemented | Standard + inverse logos |
 | Squad/Faculty/Dean workflow | Implemented | Quota, import, approval, printable forms |
 | Draw/Pools/Fixtures | Implemented | Version history/rollback; scheduled-fixture regeneration diuji |
-| Results/Rankings | Implemented | Contract/registry strategies + validated session/tournament rules |
+| Results/Rankings | Implemented | Contract/registry strategies + validated session/tournament rules; scorer events for configured individual sports |
 | Exports/Reports | Implemented | PDF, Excel, match sheet, reports |
 | Notifications | Implemented | Queueable database notifications |
 | Settings/Activity logs | Implemented | Termasuk contact rasmi tenant-editable; operational audit trail bukan immutable compliance ledger |
-| Public portal | Implemented | Homepage berseksyen + `/matches`, directory (`/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`), info (`/news`, `/downloads`, `/faq`, `/about`) dan `/contact-us`; pengurusan dalaman di `/manage/matches` dan `/manage/sports` |
+| Public portal | Implemented | Homepage, `/schedule`, `/athletes`, athlete profiles, info pages and participant-grouped scorer display; `/matches`, `/results`, `/live` redirect to `/schedule` |
 | Docker/CI/Health/Backup | Implemented in repository | Termasuk release preflight baca-sahaja; runtime/operational evidence belum lengkap |
 
 ## Explicit Exceptions to Project Defaults
@@ -45,11 +47,17 @@
 
 ## Production Snapshot
 
-Production <https://saf.utem.edu.my/> menyediakan `/`, `/contact-us` dan `/login`. Homepage memaparkan 1–31 Oktober 2026, 23 sports with events, 30 events, 8 faculties, 12 matches dan 0 completed results pada 17 Ogos 2026.
+Production <https://saf.utem.edu.my/> ialah runtime awam yang perlu disahkan selepas cutover. Repository semasa menyediakan `/schedule`, `/athletes`, athlete profiles, `/results/manage` dan scorer events; angka live production tidak dianggap bukti deployment release candidate.
 
 Public registration ialah 404. Legacy `/sports-programme`, `/medal-tally` dan `/schedules` ialah 404; `GET /results` ialah 405.
 
-> **Catatan 19 Ogos 2026:** repository working tree kini menambah halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq` dan `/about`, serta `/manage/matches` untuk fungsi pengurusan dalaman. Deployment release candidate ke production belum dilakukan (lihat `CURRENT_STATE.md`).
+> **Catatan 21 Ogos 2026:** repository working tree menambah `/athletes`, athlete profiles, scorer events, participant-grouped public scorer display dan `/results/manage` score editor. Deployment release candidate ke production masih perlu disahkan melalui release evidence (lihat `CURRENT_STATE.md`).
+
+## Current Feature Update — 21 August 2026
+
+- Public athlete/team directory with confirmed roster filtering and official team performance is implemented at `/athletes`.
+- `match_scoring_events` supports active/confirmed roster validation, score reconciliation and public participant-grouped scorer display.
+- Shared responsive public match cards and the simplified result score editor are implemented.
 
 ## Deferred
 

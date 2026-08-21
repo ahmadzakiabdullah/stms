@@ -6,7 +6,7 @@ STMS ialah platform pengurusan kejohanan sukan multi-tenant. Repository ini meng
 
 MVP produk beroperasi dan quality gate repository semasa hijau. Deployment production masih menunggu tindakan operator/owner:
 
-- 126 routes, 61 migrations, 39 controllers, 38 Inertia pages dan 94 PHP test files.
+- 148 routes, 65 migrations, 39 controllers, 43 Inertia pages dan 94 PHP test files.
 - PHPUnit 439/439 (1,948 assertions), Pint, TypeScript, Vite build, bundle budget dan tenant-bypass check lulus.
 - Composer/npm audit bersih selepas Guzzle/PSR-7 security update.
 - Playwright/axe lulus 8/8 pada desktop/mobile menggunakan SQLite terasing.
@@ -25,6 +25,8 @@ Rujuk [`CURRENT_STATE.md`](CURRENT_STATE.md) dan [audit penuh 17 Ogos 2026](docs
 - Queued in-app notifications dan role-aware dashboards
 - Standard/inverse participant logos dengan sanitized upload
 - Public SAF homepage, schedules/results/medal sections dan Contact page dengan butiran rasmi tenant-editable
+- Public Athletes & Teams directory dengan profile performance berasaskan match rasmi
+- Athlete-level scoring events untuk Hockey dan Football/Soccer, termasuk roster validation dan public scorer display
 - Docker, GitHub Actions, health checks dan encrypted backup tooling
 - Non-destructive `stms:release-preflight` dan release evidence template untuk handoff operator
 
@@ -34,7 +36,13 @@ REST API, accreditation, live scoring, mobile app, advanced analytics dan AI kek
 
 <https://saf.utem.edu.my/> ialah homepage single-page dengan anchor sections untuk Sports, Schedule, Results dan Medal standings. `/contact-us` ialah satu-satunya halaman maklumat awam berasingan.
 
-Route lama `/sports-programme`, `/medal-tally` dan `/schedules` kini 404; `GET /results` bukan route public. Snapshot production pada 17 Ogos menunjukkan pertandingan 1–31 Oktober 2026, 23 sukan aktif, 30 events, 8 fakulti, 12 matches dan 0 results.
+Route lama `/sports-programme`, `/medal-tally` dan `/schedules` kini 404; `/matches`, `/results` dan `/live` redirect ke `/schedule`. Pengurusan match berada di `/manage/matches`, keputusan di `/results/manage`, dan roster awam di `/athletes`.
+
+## Current Public and Management Routes
+
+- `/athletes` dan `/athletes/{id}` — public roster directory dan athlete performance.
+- `/schedule` — satu-satunya public schedule/results page; `/matches`, `/results` dan `/live` redirect ke sini.
+- `/manage/matches` — match management; `/results/manage` — score dan scorer management.
 
 ## Technology
 

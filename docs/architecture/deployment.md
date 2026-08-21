@@ -1,5 +1,7 @@
 # Deployment Architecture
 
+> **Repository update — 21 August 2026:** Current pushed commit is `4c4ebf0c`, including athlete/scorer workflows. The documented production NO-GO conditions and operator cutover requirements remain authoritative until new release evidence is recorded.
+
 ## Production Shape
 
 Production semasa berada di `https://saf.utem.edu.my/` di belakang IIS 10 dengan Laravel/Inertia sebagai aplikasi root. `/portal` masih alias kepada portal yang sama; ia bukan base path wajib. Aset frontend dibina oleh Vite ke `public/build`.

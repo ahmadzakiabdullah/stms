@@ -2,6 +2,8 @@
 
 ## Quality Gates
 
+Current focused regression evidence (21 Ogos 2026): result/scorer workflow `20/20` tests and `57` assertions; public portal workflow `19/19` tests and `355` assertions. These checks cover the current individual scoring-event and public match-display changes. The connected CI result below remains historical evidence for commit `4b04c46`.
+
 The release baseline must be generated from the exact candidate commit. Historical connected-CI evidence is supporting evidence only and must not be presented as proof for newer code.
 
 | Gate | Purpose |

@@ -1,6 +1,8 @@
 # Frontend Architecture
 
-Frontend menggunakan React 18, Inertia React 2, TypeScript, Tailwind CSS 3, Vite 8 dan komponen shadcn/ui/Radix. Repositori mempunyai 38 Inertia page files. Semua page adalah TSX; beberapa shared UI/layout compatibility files masih `.jsx`, jadi migrasi TypeScript belum menyeluruh.
+> **Current update — 21 August 2026:** Public UI includes `/athletes` and athlete profiles, shared responsive match cards with participant-grouped scorers, and a score editor with keyboard/accessibility-friendly increment controls.
+
+Frontend menggunakan React 18, Inertia React 2, TypeScript, Tailwind CSS 3, Vite 8 dan komponen shadcn/ui/Radix. Repositori mempunyai 43 Inertia page files. Semua page adalah TSX; beberapa shared UI/layout compatibility files masih `.jsx`, jadi migrasi TypeScript belum menyeluruh.
 
 ## Struktur
 
@@ -14,7 +16,7 @@ Form baharu/yang dimigrasi menggunakan React Hook Form dan Zod; form lama masih 
 
 ## Public Portal
 
-Route `/` dan alias `/portal` merender `Public/Index`; public directory pages merangkumi `/sports`, `/faculties` dan `/venues`, manakala `/schedule` ialah satu-satunya halaman jadual/keputusan (tab All/Live/Upcoming/Completed + filter). `/matches`, `/results` dan `/live` redirect 301 ke `/schedule`. `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us` ialah halaman maklumat tambahan. Fungsi pengurusan dalaman Matches dan Sports berada di `/manage/matches` dan `/manage/sports`. Portal menggunakan cache server-side jangka pendek dan refresh Inertia. Alamat, e-mel, telefon serta pautan media sosial pada Contact dibaca daripada tetapan tenant yang boleh disunting; backend hanya mendedahkan e-mel, nombor telefon dan URL HTTP(S) yang sah.
+Route `/` dan alias `/portal` merender `Public/Index`; public pages merangkumi `/sports`, `/faculties`, `/venues`, `/athletes` dan `/athletes/{id}`, manakala `/schedule` ialah satu-satunya halaman jadual/keputusan (tab All/Live/Upcoming/Completed + filter). `/matches`, `/results` dan `/live` redirect 301 ke `/schedule`. `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us` ialah halaman maklumat tambahan. Fungsi pengurusan dalaman Matches, Results dan Sports berada di `/manage/matches`, `/results/manage` dan `/manage/sports`. Portal menggunakan cache server-side jangka pendek dan refresh Inertia. Alamat, e-mel, telefon serta pautan media sosial pada Contact dibaca daripada tetapan tenant yang boleh disunting; backend hanya mendedahkan e-mel, nombor telefon dan URL HTTP(S) yang sah.
 
 ## Build dan Aksesibiliti
 

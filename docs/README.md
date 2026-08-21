@@ -1,5 +1,7 @@
 # Documentation Index
 
+> **Current implementation — 21 August 2026:** Public athlete/team profiles, configured individual scoring events, participant-grouped public scorers and the result score editor UX are implemented. Historical audit files retain their original snapshot dates by design.
+
 Dokumentasi STMS dibahagikan kepada sumber kanonik, keputusan seni bina, panduan operasi dan rekod sejarah.
 
 ## Sumber Kanonik

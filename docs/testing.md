@@ -1,5 +1,7 @@
 # Testing Strategy
 
+> Current focused regression evidence (21 Ogos 2026): scorer/result `20/20` tests with `57` assertions and public portal `19/19` tests with `355` assertions. The full baseline and CI entries below are historical until a newer release-candidate run is recorded.
+
 > Commit calon semasa disahkan oleh connected CI pada 18 Ogos 2026. Lihat [audit penuh](audits/2026-08-17-full-project-and-production-audit.md).
 
 ## Keadaan Semasa

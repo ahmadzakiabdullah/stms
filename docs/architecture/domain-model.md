@@ -63,4 +63,4 @@ Any change to these exceptions requires an ADR and a data migration plan.
 
 ## Deferred Domain Areas
 
-Accreditation, Venue and dedicated Schedule models are not implemented in the current milestone.
+Accreditation and dedicated Schedule domain models are not implemented in the current milestone. Venue support is implemented through event/match venue fields and the public schedule is implemented as a portal view; a standalone Venue aggregate remains deferred.

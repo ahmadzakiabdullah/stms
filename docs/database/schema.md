@@ -1,5 +1,7 @@
 # Database Schema
 
+> **Current update — 21 August 2026:** Migrations 65/65 are present in the repository; the latest two add `sports.scoring_mode` and `match_scoring_events` for athlete-level scoring.
+
 > Snapshot 17 Ogos 2026: **61 migration files**. Migrasi baharu menambah `ranking_rules` JSON pada session/tournament; fresh SQLite migration 61/61 lulus. Runtime production memerlukan migrasi melalui release runbook.
 
 ## Domain dan Tenancy (20 jadual)

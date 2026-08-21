@@ -1,6 +1,8 @@
 # TODOS
 
-> Backlog aktif STMS/SAF dikemas kini 18 Ogos 2026 selepas remediation audit. Kotak hanya ditanda apabila ada bukti; tindakan production/owner tidak dianggap selesai oleh perubahan kod semata-mata.
+> **Repository update — 21 August 2026:** Athlete directory/profile, scorer events, participant-grouped public scorers and result score editor UX are implemented and pushed as `4c4ebf0c`. Remaining unchecked items below are release/operator work unless explicitly changed.
+
+> Backlog aktif STMS/SAF dikemas kini 21 Ogos 2026 selepas athlete/scorer workflows. Kotak hanya ditanda apabila ada bukti; tindakan production/owner tidak dianggap selesai oleh perubahan kod semata-mata.
 
 ## Current Focus (MVP): Release Handoff
 
@@ -47,6 +49,9 @@
 - [x] Sokong pelbagai venue bagi satu event (`events.venues` JSON, migration `2026_08_20_000002`): dialog Event boleh tambah/buang senarai venue, dialog match menawarkan dropdown venue event (default venue pertama) atau teks bebas, dan portal awam mewarisi venue pertama serta menggabungkan semua venue event dalam senarai awam.
 
 ## Product/UX Decisions
+
+- [x] Tambah public Athletes & Teams directory dan profile performance rasmi.
+- [x] Tambah scorer events untuk sport `scoring_mode=individual`: roster confirmed, score reconciliation, participant-grouped public display dan score editor UX.
 
 - [x] Kekalkan portal awam homepage single-page sebagai landasan; halaman berasingan (`/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about`, `/matches`) ditambah dan memerlukan penilaian change request jika mahu dikembangkan lagi.
 - [x] Gabungkan halaman perlawanan awam yang bertindih menjadi satu: `/schedule` ialah satu-satunya halaman jadual/keputusan (tab All/Live/Upcoming/Completed + filter); `/matches`, `/results` dan `/live` redirect 301 ke `/schedule`; nav portal diringkaskan kepada Home/Sports/Schedule/Contact.

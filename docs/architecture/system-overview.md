@@ -1,6 +1,10 @@
 # System Overview
 
-> Current architecture, diselaraskan dengan working tree pada 19 Ogos 2026.
+> Current route inventory is 148 application routes and 43 Inertia pages. Public athlete profiles and scorer events are implemented; `/schedule` is the canonical public match/results view and `/results/manage` is the authenticated result workflow.
+
+> **Current implementation update — 21 August 2026:** Public athlete profiles, configurable individual scoring events and participant-grouped public scorer display are implemented. See `CURRENT_STATE.md` for release status.
+
+> Architecture baseline above is refreshed for the 21 August 2026 working tree; older audit references below remain historical evidence.
 
 ## Architecture Style
 
@@ -56,13 +60,15 @@ Sensitive index/read actions kini memanggil policy/gate yang sesuai. Dashboard, 
 
 ## Frontend
 
-- 41 Inertia pages, semuanya `.tsx`.
+- 43 Inertia pages, semuanya `.tsx`.
 - Shared layouts/components masih mempunyai compatibility `.jsx` files.
 - React Hook Form + Zod digunakan pada forms yang telah dimigrasi; auth dan beberapa pages menggunakan Inertia `useForm`.
 - TanStack Table terpasang tetapi tidak digunakan dalam source semasa.
 - Authenticated navigation ialah role-aware presentation layer; backend Policy mesti kekal authoritative.
 
 ## Public Portal
+
+Current canonical public workflows: `/schedule` renders the schedule/results directory; `/athletes` and `/athletes/{id}` render confirmed rosters and official athlete performance; `/matches`, `/results` and `/live` redirect to `/schedule`. Authenticated result management is `/results/manage`, including individual scorer events for configured sports.
 
 `PublicPortalController` merender:
 
@@ -79,7 +85,7 @@ Navigator dan footer kongsi disediakan oleh `PublicHeader`/`PublicFooter`. `/man
 
 ## Route and Runtime Summary
 
-- 137 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
+- 148 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
 - Email verification ditentukan ketika route bootstrap melalui `EMAIL_VERIFICATION_REQUIRED`.
 - `/health` boleh dilindungi token dan menyamar sebagai 404; `/up` ialah Laravel liveness asas.
 - Runtime workspace audit: production env, debug off, database cache/queue, file session, email verification off, CSP report-only, enforcement off.

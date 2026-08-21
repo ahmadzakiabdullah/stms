@@ -1,12 +1,12 @@
 # CURRENT STATE
 
-> Snapshot jujur STMS/SAF pada **18 Ogos 2026** selepas remediation audit dan refactor query orchestration. Bukti asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
+> Snapshot jujur STMS/SAF pada **21 Ogos 2026** selepas public athlete/scorer workflows dan match-card UX refactor. Bukti asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
 
 ## Status Keseluruhan
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** release hardening terkini dikomit sebagai `4b04c46`; semua quality gate tempatan serta connected CI #112 lulus pada commit yang sama. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants dan final cutover evidence diselesaikan.
+**Repository:** perubahan semasa dikomit sebagai `4c4ebf0c` dan telah dipush ke `origin/master`. Quality gate tempatan untuk scorer/public portal lulus; connected CI #112 merujuk commit terdahulu. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants dan final cutover evidence diselesaikan.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
@@ -16,15 +16,15 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 137 application routes |
-| Migrations | 63 migration files |
+| Laravel routes | 148 application routes |
+| Migrations | 65 migration files |
 | Controllers | 39 controller files |
 | Form Requests | 28 |
 | Policies | 21 fail |
 | Actions | 37 |
 | Services/concerns | 40 fail |
-| Models | 16 |
-| Inertia `.tsx` pages | 41 |
+| Models | 18 |
+| Inertia `.tsx` pages | 43 |
 | PHP tests | 94 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
@@ -60,6 +60,9 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Backup terenkripsi production-labelled workspace telah disalin off-host dan dipulihkan dalam MySQL 8 terasing: SHA-256 sah, 54 uploads serta row counts utama sepadan, health hijau dan RTO 7.699 saat.
 - Authenticated multi-worker staging k6 lulus 1,150/1,150 checks, 0% HTTP failures dan p95 81.543 ms pada 10 VU/30 saat.
 - GitHub Actions memantau `/up` setiap lima minit. Forced-failure evidence membuka serta assign issue #75; recovery probe menutup issue selepas endpoint kembali sihat.
+- Public athlete/team directory tersedia di `/athletes` dengan profile performance berasaskan match rasmi.
+- Match cards homepage/schedule menggunakan layout shared responsive; completed results menyokong scorer mengikut participant.
+- `Sport.scoring_mode=individual` serta `match_scoring_events` menyokong nama atlet, minit jaringan dan validasi roster/score untuk Hockey dan Football/Soccer.
 
 ## Runtime Workspace
 
@@ -87,7 +90,9 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Quality Gates Semasa
 
-| Gate | Keputusan working tree 18 Ogos 2026 |
+**Latest focused validation (21 Ogos 2026):** scorer/result workflow `20/20` tests dengan `57` assertions; public portal workflow `19/19` tests dengan `355` assertions. Baris baseline penuh dan connected CI di bawah dikekalkan sebagai evidence sejarah.
+
+| Gate | Keputusan working tree 21 Ogos 2026 |
 |---|---|
 | PHPUnit | **Lulus — 441/441, 2,040 assertions (working tree 19 Ogos)** |
 | Pint | Lulus |
@@ -101,6 +106,13 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 94` |
 | Connected CI | **Lulus — [run #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726)** pada `4b04c46`; keenam-enam job hijau termasuk browser E2E dan ratchet PCOV |
 
+## Capability Tambahan 21 Ogos 2026
+
+- `/athletes` dan `/athletes/{squadMember}` mendedahkan directory roster confirmed tanpa data sensitif serta performance rasmi pasukan.
+- `/results/manage` merekod scorer individu untuk sport dengan `scoring_mode=individual`; hanya roster athlete aktif/confirmed boleh dipilih.
+- `/schedule` dan homepage mengumpulkan scorer di bawah participant masing-masing; score 0 tidak memaparkan section scorer.
+- Migration `2026_08_21_120000` dan `2026_08_21_120001` telah dijalankan pada runtime workspace.
+
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
 Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us`. Product owner mengesahkan SAF 2026 berlangsung 1–31 Oktober 2026 dengan satu tournament, 30 acara dan 8 kontinjen. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
@@ -113,4 +125,4 @@ Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam 
 4. Deployment disahkan melalui worker/scheduler restart, authenticated smoke/Playwright dan release tag.
 5. Reset-password mail delivery direkod sebelum email verification diaktifkan.
 
-**Last updated:** 18 Ogos 2026.
+**Last updated:** 21 Ogos 2026.
