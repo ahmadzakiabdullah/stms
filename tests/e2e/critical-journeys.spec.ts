@@ -59,3 +59,20 @@ test('public home and contact pages support keyboard navigation and accessibilit
     await expect(page.locator('main')).toBeVisible();
     await expectAccessible(page);
 });
+
+test('public pages avoid horizontal overflow and support locale switching', async ({ page }) => {
+    for (const path of ['/', '/schedule', '/athletes', '/sports', '/faculties', '/venues', '/contact-us']) {
+        await page.goto(path);
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        expect(overflow, `${path} horizontal overflow`).toBeLessThanOrEqual(1);
+        await expect(page.locator('body')).not.toContainText(/Invalid Date|NaN/);
+    }
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    await page.getByRole('button', { name: /Open menu/i }).click();
+    const ms = page.getByRole('button', { name: 'MS' }).first();
+    await expect(ms).toBeVisible();
+    await ms.click();
+    await expect(page.locator('html')).toHaveAttribute('lang', /ms/i);
+});

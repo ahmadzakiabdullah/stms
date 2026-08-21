@@ -12,7 +12,7 @@ Production memaparkan SAF 2026, 23 sports dengan events, 30 events, 8 faculties,
 
 ## P0 — Sebelum Promosi Awam
 
-- [ ] Lengkapkan e-mel, telefon, alamat, waktu operasi dan pemilik kandungan contact.
+- [x] Lengkapkan e-mel, telefon, alamat dan pautan media sosial rasmi contact; waktu operasi dan pemilik kandungan masih perlu disahkan owner.
 - [x] Tambah meta description, canonical, tenant-explicit favicon dan sitemap.
 - [x] Alih Bunny Fonts dan lulus CSP-compatible local browser test; production enforcing menunggu deploy.
 - [x] Refresh/failure state mengekalkan data dan mengumumkan status melalui live region.

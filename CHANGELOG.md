@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - Public portal responsive and locale smoke coverage (21 August 2026)
+
+- Added production E2E coverage for horizontal overflow, invalid date output and locale switching across public pages.
+- Verified the official public contact email, phone, address and social links are populated; operating hours/content owner remain an owner confirmation item.
+
 ## Unreleased - Public portal accessibility contrast (21 August 2026)
 
 - Increased public fixture category badge contrast from `text-red-600` to `text-red-700`; production desktop axe smoke now has a concrete contrast remediation target.
