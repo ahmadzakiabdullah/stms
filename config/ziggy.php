@@ -2,8 +2,9 @@
 
 return [
     /*
-    | Guests only need routes used by the public portal and authentication
-    | screens. Authenticated users continue to receive the complete route map.
+    | The guest group remains available for explicit uses, while the main
+    | application shell renders the complete route map because Inertia login
+    | redirects may happen without a full document reload.
     */
     'groups' => [
         'guest' => [

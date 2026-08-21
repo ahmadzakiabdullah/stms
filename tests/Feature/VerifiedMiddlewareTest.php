@@ -11,6 +11,13 @@ class VerifiedMiddlewareTest extends TestCase
 {
     use CreatesTenantUsers, RefreshDatabase;
 
+    public function test_login_shell_includes_routes_needed_after_inertia_authentication(): void
+    {
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('reports.index');
+    }
+
     public function test_unverified_user_is_redirected_from_dashboard(): void
     {
         $org = Organization::factory()->create();

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - Preserve Ziggy routes across Inertia authentication (21 August 2026)
+
+- Render the complete Ziggy route map in the application shell so an Inertia login transition does not retain the guest-only route list.
+- Added regression coverage confirming `reports.index` is available from the login shell.
+
 ## Unreleased - Admin list search and empty states (21 August 2026)
 
 - Added tenant-scoped server-side search across participant name/team/contact fields and event name/slug/tournament/sport fields.
