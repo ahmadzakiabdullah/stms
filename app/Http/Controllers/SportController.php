@@ -10,19 +10,24 @@ use App\Http\Requests\Sport\UpdateSportRequest;
 use App\Models\Sport;
 use App\Services\SportIconService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SportController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Sport::class);
 
         // Defensive query (prevent 500 on unmigrated prod DB)
-        $sports = $this->safePaginatedQuery(function () {
+        $sports = $this->safePaginatedQuery(function () use ($request) {
             return Sport::with('organization', 'categories')
+                ->when($request->filled('search'), fn ($query) => $query->where(function ($q) use ($request) {
+                    $search = trim($request->string('search')->toString());
+                    $q->where('name', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%");
+                }))
                 ->orderBy('name')
                 ->paginate(15)
                 ->withQueryString();

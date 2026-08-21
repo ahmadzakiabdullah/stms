@@ -30,8 +30,8 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
+import { FormEvent, useState } from 'react';
 import Pagination from '@/components/Pagination';
 import type { Session, Organization, Paginated, Flash } from '@/types';
 import { formatDate, useI18n } from '@/lib/i18n';
@@ -63,8 +63,11 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
     const [open, setOpen] = useState(false);
     const [editingSession, setEditingSession] = useState<SessionRow | null>(null);
     const [deleteSession, setDeleteSession] = useState<SessionRow | null>(null);
+    const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
 
     const sessions = Array.isArray(sessionsProp) ? sessionsProp : (sessionsProp?.data ?? []);
+    const applySearch = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); router.get(route('sessions.index'), search.trim() ? { search: search.trim() } : {}, { preserveState: true, preserveScroll: true, replace: true }); };
+    const clearSearch = () => { setSearch(''); router.get(route('sessions.index'), {}, { preserveState: true, preserveScroll: true, replace: true }); };
 
     const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SessionForm>({
         resolver: zodResolver(sessionSchema),
@@ -289,6 +292,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <form onSubmit={applySearch} className="mb-4 flex gap-2"><div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search sessions...')} className="pl-9 pr-9" aria-label={t('Search sessions')} />{search && <button type="button" onClick={clearSearch} className="absolute right-2 top-1/2 -translate-y-1/2" aria-label={t('Clear search')}><X className="size-4" /></button>}</div><Button type="submit" variant="secondary">{t('Search')}</Button></form>
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -304,7 +308,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                             {sessions.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        {t('No sessions yet. Create the first one.')}
+                                        {search ? t('No sessions match your search.') : t('No sessions yet. Create the first one.')}
                                     </TableCell>
                                 </TableRow>
                             )}

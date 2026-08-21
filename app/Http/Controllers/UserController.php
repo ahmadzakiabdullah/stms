@@ -22,18 +22,28 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', User::class);
 
         $user = Auth::user();
 
         // Manual scoping kept (trait skips users table for auth safety)
-        $users = $this->safePaginatedQuery(function () use ($user) {
+        $users = $this->safePaginatedQuery(function () use ($user, $request) {
             $query = User::with('roles', 'organization', 'participant', 'sports');
 
             if (! $user->hasRole('super-admin')) {
                 $query->where('organization_id', $user->organization_id);
+            }
+
+            if ($request->filled('search')) {
+                $search = trim($request->string('search')->toString());
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHas('participant', fn ($participant) => $participant->where('name', 'like', "%{$search}%"));
+                });
             }
 
             return $query->orderBy('name')

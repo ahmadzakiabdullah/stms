@@ -20,6 +20,7 @@ class ActivityLogController extends Controller
         $filters = $request->validate([
             'organization_id' => 'nullable|uuid|exists:organizations,id',
             'event' => 'nullable|string|max:50',
+            'search' => 'nullable|string|max:100',
             'from' => 'nullable|date',
             'to' => 'nullable|date|after_or_equal:from',
         ]);
@@ -32,6 +33,13 @@ class ActivityLogController extends Controller
             ->when($isSuperAdmin && ! empty($filters['organization_id']), fn ($query) => $query
                 ->whereHas('causer', fn ($causer) => $causer->where('organization_id', $filters['organization_id'])))
             ->when(! empty($filters['event']), fn ($query) => $query->where('event', $filters['event']))
+            ->when(! empty($filters['search']), fn ($query) => $query->where(function ($q) use ($filters) {
+                $search = trim($filters['search']);
+                $q->where('description', 'like', "%{$search}%")
+                    ->orWhere('log_name', 'like', "%{$search}%")
+                    ->orWhere('subject_type', 'like', "%{$search}%")
+                    ->orWhereHas('causer', fn ($causer) => $causer->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+            }))
             ->when(! empty($filters['from']), fn ($query) => $query->whereDate('created_at', '>=', $filters['from']))
             ->when(! empty($filters['to']), fn ($query) => $query->whereDate('created_at', '<=', $filters['to']))
             ->latest()
@@ -43,6 +51,7 @@ class ActivityLogController extends Controller
             'filters' => [
                 'organization_id' => $isSuperAdmin ? ($filters['organization_id'] ?? '') : '',
                 'event' => $filters['event'] ?? '',
+                'search' => $filters['search'] ?? '',
                 'from' => $filters['from'] ?? '',
                 'to' => $filters['to'] ?? '',
             ],

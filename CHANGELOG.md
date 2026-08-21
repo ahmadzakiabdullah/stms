@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - Admin list search coverage (21 August 2026)
+
+- Added server-side search across Sports, Sessions, Tournaments, Users and Activity Logs, preserving existing tenant scoping and pagination.
+- Added consistent search controls and context-aware empty states across the remaining admin list pages.
+
 ## Unreleased - Competition list pagination (21 August 2026)
 
 - Added query-string-preserving Laravel pagination to the all-match and recorded-result workspaces.

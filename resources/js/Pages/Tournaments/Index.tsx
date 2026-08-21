@@ -28,8 +28,8 @@ import {
 } from '@/components/ui/table';
 import { Head, router, usePage } from '@inertiajs/react';
 import { z } from 'zod';
-import { List, Loader, Pencil, Plus, Save, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { List, Loader, Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
+import { FormEvent, useState } from 'react';
 import Pagination from '@/components/Pagination';
 import type { Tournament, Session, Sport, Paginated, Flash } from '@/types';
 import { formatDate, useI18n } from '@/lib/i18n';
@@ -65,6 +65,10 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
     const [editingTournament, setEditingTournament] = useState<TournamentRow | null>(null);
     const [deleteTournament, setDeleteTournament] = useState<TournamentRow | null>(null);
     const [generatingId, setGeneratingId] = useState<string | null>(null);
+    const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
+
+    const applySearch = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); router.get(route('tournaments.index'), search.trim() ? { search: search.trim() } : {}, { preserveState: true, preserveScroll: true, replace: true }); };
+    const clearSearch = () => { setSearch(''); router.get(route('tournaments.index'), {}, { preserveState: true, preserveScroll: true, replace: true }); };
 
     const handleGenerateEvents = (tournament: TournamentRow) => {
         setGeneratingId(tournament.id);
@@ -144,6 +148,7 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <form onSubmit={applySearch} className="mb-4 flex gap-2"><div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search tournaments...')} className="pl-9 pr-9" aria-label={t('Search tournaments')} />{search && <button type="button" onClick={clearSearch} className="absolute right-2 top-1/2 -translate-y-1/2" aria-label={t('Clear search')}><X className="size-4" /></button>}</div><Button type="submit" variant="secondary">{t('Search')}</Button></form>
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -159,7 +164,7 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                             {tournaments.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        {t('No tournaments yet. Create the first one.')}
+                                        {search ? t('No tournaments match your search.') : t('No tournaments yet. Create the first one.')}
                                     </TableCell>
                                 </TableRow>
                             )}

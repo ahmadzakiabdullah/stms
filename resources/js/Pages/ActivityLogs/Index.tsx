@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Head, router } from '@inertiajs/react';
+import { FormEvent, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import Pagination from '@/components/Pagination';
 import type { Paginated } from '@/types';
 import { formatDateTime, useI18n } from '@/lib/i18n';
@@ -22,7 +25,7 @@ interface ActivityLogItem {
 
 interface Props {
     activities: Paginated<ActivityLogItem>;
-    filters: { organization_id: string; event: string; from: string; to: string };
+    filters: { organization_id: string; event: string; from: string; to: string; search: string };
     isSuperAdmin: boolean;
     organizations: Array<{ id: string; name: string }>;
 }
@@ -38,11 +41,13 @@ function changeKeys(changes: Record<string, unknown> | null): string {
 
 export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, organizations }: Props) {
     const { locale, t } = useI18n();
+    const [search, setSearch] = useState(filters.search ?? '');
     const visit = (changes: Partial<Props['filters']>) => router.get(
         route('activity-logs.index'),
         { ...filters, ...changes },
         { preserveState: true, preserveScroll: true, replace: true },
     );
+    const applySearch = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); visit({ search: search.trim() }); };
 
     return (
         <AuthenticatedLayout
@@ -58,6 +63,10 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                 </CardHeader>
                 <CardContent className="border-b pt-0">
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <form onSubmit={applySearch} className="flex items-end gap-2 sm:col-span-2 lg:col-span-4">
+                            <label className="grid flex-1 gap-1 text-xs font-medium text-muted-foreground">{t('Search')}<Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search description, model or user...')} aria-label={t('Search activity logs')} /></label>
+                            <Button type="submit" variant="secondary">{t('Search')}</Button>
+                        </form>
                         {isSuperAdmin && (
                             <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                                 {t('Organization')}
@@ -88,7 +97,7 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                 </CardContent>
                 <CardContent className="p-0">
                     {activities.data.length === 0 ? (
-                        <p className="p-6 text-center text-sm text-muted-foreground">{t('No activity logs yet.')}</p>
+                        <p className="p-6 text-center text-sm text-muted-foreground">{filters.search ? t('No activity logs match your search.') : t('No activity logs yet.')}</p>
                     ) : (
                         <Table>
                             <TableHeader>

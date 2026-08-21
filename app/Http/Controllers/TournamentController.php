@@ -12,6 +12,7 @@ use App\Models\Sport;
 use App\Models\Tournament;
 use App\Services\TournamentService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -20,15 +21,21 @@ use Inertia\Response;
 
 class TournamentController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Tournament::class);
 
         $user = Auth::user();
 
         // Defensive queries (prevent 500 when prod DB is not migrated)
-        $tournaments = $this->safePaginatedQuery(function () {
+        $tournaments = $this->safePaginatedQuery(function () use ($request) {
             return Tournament::with(['session', 'organization', 'sports'])
+                ->when($request->filled('search'), fn ($query) => $query->where(function ($q) use ($request) {
+                    $search = trim($request->string('search')->toString());
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%")
+                        ->orWhereHas('session', fn ($session) => $session->where('name', 'like', "%{$search}%"));
+                }))
                 ->orderBy('start_date', 'desc')
                 ->paginate(15)
                 ->withQueryString();

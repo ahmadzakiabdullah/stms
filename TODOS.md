@@ -58,7 +58,7 @@ Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diber
 - [ ] Tambah bulk import peserta, kontinjen dan roster melalui CSV/XLSX dengan preview, validation report dan rollback.
 - [ ] Tambah export jadual, keputusan, ranking dan medal tally ke PDF/XLSX.
 - [ ] Sediakan print-friendly match sheet dan result sheet.
-- [ ] Tambah search, filter, pagination dan empty/error states yang konsisten pada halaman admin utama. Participants, Events, Matches dan Results kini ada carian server-side, filter controls dan pagination; halaman admin lain masih perlu diselaraskan.
+- [x] Tambah search, filter, pagination dan empty/error states yang konsisten pada halaman admin utama. Participants, Events, Matches, Results, Sports, Sessions, Tournaments, Users dan Activity Logs kini mempunyai carian/filter server-side, pagination dan empty states.
 - [ ] Tambah validasi konflik venue, masa, participant dan fixture sebelum jadual diterbitkan.
 - [x] Sokong lock keputusan selepas pengesahan serta approval workflow: `submitted → approved → locked`, policy role-aware, unlock terkawal dan status dipaparkan pada Results workspace.
 - [x] Simpan sejarah perubahan score, participant, draw dan status approval yang boleh diaudit; model activity log merekod perubahan fields, draw versions menyimpan snapshot draw, dan Activity Logs memaparkan event/changed fields.

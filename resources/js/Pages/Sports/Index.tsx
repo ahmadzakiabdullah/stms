@@ -30,8 +30,8 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ChevronDown, ChevronRight, Pencil, Plus, Save, Trash2 } from 'lucide-react';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { ChevronDown, ChevronRight, Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
+import { Fragment, FormEvent, useEffect, useRef, useState } from 'react';
 import Pagination from '@/components/Pagination';
 import { SportIcon } from '@/lib/sportIcons';
 import type { Paginated, Flash, Sport, SportCategory } from '@/types';
@@ -72,6 +72,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     const [deleteSport, setDeleteSport] = useState<Sport | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [serverError, setServerError] = useState<string | null>(null);
+    const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
     const [iconFile, setIconFile] = useState<File | null>(null);
 
     // ── Category dialog state ──
@@ -82,6 +83,12 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     const [catServerError, setCatServerError] = useState<string | null>(null);
 
     const sports = Array.isArray(sportsProp) ? sportsProp : (sportsProp?.data ?? []);
+
+    const applySearch = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        router.get(route('sports.index'), search.trim() ? { search: search.trim() } : {}, { preserveState: true, preserveScroll: true, replace: true });
+    };
+    const clearSearch = () => { setSearch(''); router.get(route('sports.index'), {}, { preserveState: true, preserveScroll: true, replace: true }); };
 
     // ── Sport form ──
     const autoSlugRef = useRef(true);
@@ -309,6 +316,10 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <form onSubmit={applySearch} className="mb-4 flex gap-2">
+                        <div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search sports...')} className="pl-9 pr-9" aria-label={t('Search sports')} />{search && <button type="button" onClick={clearSearch} className="absolute right-2 top-1/2 -translate-y-1/2" aria-label={t('Clear search')}><X className="size-4" /></button>}</div>
+                        <Button type="submit" variant="secondary">{t('Search')}</Button>
+                    </form>
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -324,7 +335,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                             {sports.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={isSuperAdmin ? 6 : 5} className="text-center text-muted-foreground">
-                                        {t('No sports yet.')}
+                                        {search ? t('No sports match your search.') : t('No sports yet.')}
                                     </TableCell>
                                 </TableRow>
                             )}

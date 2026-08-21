@@ -10,6 +10,7 @@ use App\Http\Requests\Session\UpdateSessionRequest;
 use App\Models\Organization;
 use App\Models\Session;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -17,15 +18,21 @@ use Inertia\Response;
 
 class SessionController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Session::class);
 
         $user = Auth::user();
 
         // Defensive queries
-        $sessions = $this->safePaginatedQuery(function () {
+        $sessions = $this->safePaginatedQuery(function () use ($request) {
             return Session::with('organization')
+                ->when($request->filled('search'), fn ($query) => $query->where(function ($q) use ($request) {
+                    $search = trim($request->string('search')->toString());
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                }))
                 ->orderBy('start_date', 'desc')
                 ->paginate(15)
                 ->withQueryString();
