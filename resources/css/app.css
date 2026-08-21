@@ -131,6 +131,14 @@
     0 12px 30px -18px var(--public-highlight);
 }
 
+/* Keep the hero responsive while below-the-fold portal sections are not
+   contributing to the first layout/paint. The intrinsic size preserves
+   scroll geometry until each section enters the viewport. */
+.public-below-fold {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 720px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .public-cosmic-orbit { animation: none; }
 }

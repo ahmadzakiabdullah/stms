@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased - Public homepage first-paint optimization (21 August 2026)
+
+- Deferred below-the-fold portal layout/paint work and participant logo decoding/loading to reduce initial homepage rendering cost; production Lighthouse remeasurement remains required before claiming an LCP improvement.
+
 ## Unreleased - Public portal stale-while-revalidate cache (21 August 2026)
 
 - Added stale-while-revalidate caching for public portal and athlete-directory payloads to avoid blocking requests on cache-expiry rebuilds.

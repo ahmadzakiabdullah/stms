@@ -66,6 +66,8 @@ export default function ParticipantLogo({
                     src={imageUrl}
                     alt={alt ?? `${participant?.name || 'Participant'} logo`}
                     className="size-full object-contain"
+                    loading="lazy"
+                    decoding="async"
                 />
             ) : (
                 <span aria-hidden="true" className="text-[10px] font-semibold uppercase">

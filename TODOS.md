@@ -81,6 +81,7 @@ Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diber
 - [x] Hadkan guest Ziggy manifest dan buang global initial prefetch.
 - [x] Lengkapkan public refresh success/error status.
 - [x] Tambah desktop/mobile keyboard + axe smoke coverage untuk `/`, `/contact-us`, login dan dashboard; feature tests meliputi empty/public data states.
+- [x] Kurangkan kerja first paint homepage public dengan `content-visibility` untuk seksyen bawah fold dan lazy/deferred participant logos; Lighthouse selepas deployment masih perlu mengesahkan perubahan LCP.
 - [x] Ekstrak query orchestration daripada `DashboardController`, `EventParticipantController` dan `EventController` kepada service khusus tanpa mengubah behavior; 27 targeted tests dan suite penuh hijau.
 - [x] Rekod PCOV connected-CI semasa 75.03% statement coverage (4,676/6,232) dan kuatkuasakan ratchet minimum 74.5%.
 - [x] Harden Docker/Redis release path melalui Predis, production-like staging Compose, authenticated k6 check ratchet dan validated container health startup.
