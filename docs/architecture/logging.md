@@ -32,3 +32,17 @@ This metadata complements the native `causer_*`, `subject_*` and `event` columns
 - Application log retention is controlled by the selected Laravel channel (`LOG_CHANNEL`, `LOG_DAILY_DAYS` and the deployment log collector); the repository does not claim a production retention period until the operator records it.
 - Activity log UI access is protected by the `view-activity-logs` gate. Super-admins may filter across organizations; other users are restricted to activity caused by users in their own organization.
 - Production operators must document log storage location, retention period, export/deletion procedure, access owner and review cadence before release approval.
+
+### Operator Control Record
+
+The release evidence must contain the following values for each production deployment:
+
+| Control | Required record | Owner |
+| --- | --- | --- |
+| Activity retention | `activitylog.clean_after_days`, last successful prune and next scheduled run | Application operator |
+| Application-log retention | Channel/collector, storage location and retention in days | Infrastructure operator |
+| Access | Approved roles/groups, MFA requirement and audit trail for exports | System owner + infrastructure operator |
+| Export/deletion | Approval reference, requester, scope, timestamp and secure disposal result | System owner |
+| Review | Last review date, findings and next review date | System owner |
+
+Application logs and activity records must not be copied to personal devices or shared channels. Exports containing operational or personal data require an approved incident/support reference, encrypted transfer and deletion confirmation after the approved retention period. Direct production filesystem/database access is for named operators only; normal staff access must use the tenant-scoped activity-log UI and its authorization gate.

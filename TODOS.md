@@ -48,7 +48,7 @@ Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diber
 
 - [x] Standardkan activity audit metadata dengan `actor_id`, `organization_id`, action, subject ID/type dan request/correlation ID apabila berkaitan; metadata disimpan di bawah `properties.audit` dan diuji.
 - [x] Redact e-mel, telefon, password, token dan PII context daripada application logs melalui global Monolog processor; recursive redaction diuji.
-- [ ] Dokumentasikan retention dan kawalan akses application logs.
+- [x] Dokumentasikan retention dan kawalan akses application logs; operator control record, access roles, export/deletion procedure and review cadence are defined in `docs/architecture/logging.md`.
 - [x] Audit dan tambah rate limiting untuk login, reset-password, email verification serta mutation/export endpoints yang sesuai; password-reset throttling diuji dalam `RateLimitingTest`.
 - [x] Jalankan dependency, secret dan security scan secara berkala dalam CI; dependency audit sedia ada dan Gitleaks secret scan kini berada dalam workflow CI.
 - [x] Tambah regression tests untuk authorization, tenant isolation, perubahan score dan akses selepas keputusan dikunci; ResultTest meliputi submit, approve, lock, unlock serta edit/delete denial.
@@ -58,7 +58,7 @@ Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diber
 - [ ] Tambah bulk import peserta, kontinjen dan roster melalui CSV/XLSX dengan preview, validation report dan rollback.
 - [ ] Tambah export jadual, keputusan, ranking dan medal tally ke PDF/XLSX.
 - [ ] Sediakan print-friendly match sheet dan result sheet.
-- [ ] Tambah search, filter, pagination dan empty/error states yang konsisten pada halaman admin utama.
+- [ ] Tambah search, filter, pagination dan empty/error states yang konsisten pada halaman admin utama. Participants dan Events kini ada carian server-side, pagination sedia ada dan empty state berbeza; Matches, Results dan halaman admin lain masih perlu diselaraskan.
 - [ ] Tambah validasi konflik venue, masa, participant dan fixture sebelum jadual diterbitkan.
 - [x] Sokong lock keputusan selepas pengesahan serta approval workflow: `submitted → approved → locked`, policy role-aware, unlock terkawal dan status dipaparkan pada Results workspace.
 - [x] Simpan sejarah perubahan score, participant, draw dan status approval yang boleh diaudit; model activity log merekod perubahan fields, draw versions menyimpan snapshot draw, dan Activity Logs memaparkan event/changed fields.

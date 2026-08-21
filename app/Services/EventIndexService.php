@@ -18,7 +18,7 @@ final class EventIndexService
     private bool $dataLoadFailed = false;
 
     /**
-     * @param  array{tournament_id?: ?string, has_is_active?: bool, is_active?: mixed}  $filters
+     * @param  array{search?: ?string, tournament_id?: ?string, has_is_active?: bool, is_active?: mixed}  $filters
      * @return array<string, mixed>
      */
     public function dataFor(User $user, array $filters): array
@@ -44,6 +44,15 @@ final class EventIndexService
 
             if ($tournamentId = ($filters['tournament_id'] ?? null)) {
                 $query->where('tournament_id', $tournamentId);
+            }
+
+            if ($search = trim((string) ($filters['search'] ?? ''))) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%")
+                        ->orWhereHas('tournament', fn ($tournament) => $tournament->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('sport', fn ($sport) => $sport->where('name', 'like', "%{$search}%"));
+                });
             }
 
             if ($filters['has_is_active'] ?? false) {

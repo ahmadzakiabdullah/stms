@@ -29,7 +29,7 @@ import {
 import Pagination from '@/components/Pagination';
 import ParticipantLogo from '@/components/ParticipantLogo';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Upload } from 'lucide-react';
+import { Search, Upload, X } from 'lucide-react';
 import { z } from 'zod';
 import { Eye, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -74,6 +74,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
     const [editingParticipant, setEditingParticipant] = useState<ParticipantRow | null>(null);
     const [deleteParticipant, setDeleteParticipant] = useState<ParticipantRow | null>(null);
     const [viewParticipant, setViewParticipant] = useState<ParticipantRow | null>(null);
+    const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
 
     const participants = Array.isArray(participantsProp) ? participantsProp : (participantsProp?.data ?? []);
     const sessions = Array.isArray(sessionsProp) ? sessionsProp : (sessionsProp ?? []);
@@ -89,6 +90,20 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
             preserveScroll: true,
             onSuccess: () => setDeleteParticipant(null),
         });
+    };
+
+    const applySearch = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        router.get(route('participants.index'), search.trim() ? { search: search.trim() } : {}, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
+
+    const clearSearch = () => {
+        setSearch('');
+        router.get(route('participants.index'), {}, { preserveState: true, preserveScroll: true, replace: true });
     };
 
     return (
@@ -145,6 +160,14 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <form onSubmit={applySearch} className="mb-4 flex flex-wrap gap-2">
+                        <div className="relative min-w-[240px] flex-1">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search name, team, email or phone...')} className="pl-9 pr-9" aria-label={t('Search participants')} />
+                            {search && <button type="button" onClick={clearSearch} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" aria-label={t('Clear search')}><X className="size-4" /></button>}
+                        </div>
+                        <Button type="submit" variant="secondary">{t('Search')}</Button>
+                    </form>
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -160,7 +183,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                             {participants.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        {t('No participants yet.')}
+                                        {search ? t('No participants match your search.') : t('No participants yet.')}
                                     </TableCell>
                                 </TableRow>
                             )}

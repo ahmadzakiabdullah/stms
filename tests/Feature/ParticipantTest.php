@@ -36,6 +36,21 @@ class ParticipantTest extends TestCase
         $this->assertFalse($names->contains('Participant B'));
     }
 
+    public function test_participants_index_searches_name_team_and_contact_fields(): void
+    {
+        $org = Organization::factory()->create();
+        Participant::factory()->create(['organization_id' => $org->id, 'name' => 'Alpha Squad', 'team_name' => 'Blue Falcons']);
+        Participant::factory()->create(['organization_id' => $org->id, 'name' => 'Beta Squad', 'email' => 'beta@example.test']);
+        $admin = $this->createOrgAdmin($org);
+
+        $response = $this->actingAs($admin)->get(route('participants.index', ['search' => 'Falcons']));
+
+        $response->assertOk();
+        $participants = $response->viewData('page')['props']['participants']['data'] ?? [];
+        $this->assertCount(1, $participants);
+        $this->assertSame('Alpha Squad', $participants[0]['name']);
+    }
+
     public function test_super_admin_can_create_participant(): void
     {
         $org = Organization::factory()->create();

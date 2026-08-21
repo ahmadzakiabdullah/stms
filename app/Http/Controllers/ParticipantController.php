@@ -11,6 +11,7 @@ use App\Models\Participant;
 use App\Models\Session;
 use App\Services\ParticipantLogoService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -19,14 +20,24 @@ use Inertia\Response;
 
 class ParticipantController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', Participant::class);
 
         $dataLoadFailed = false;
 
-        $participants = $this->safePaginatedQuery(function () {
+        $search = trim($request->string('search')->toString());
+
+        $participants = $this->safePaginatedQuery(function () use ($search) {
             return Participant::with(['organization', 'users.roles'])
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('team_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
+                })
                 ->orderBy('name')
                 ->paginate(15)
                 ->withQueryString();

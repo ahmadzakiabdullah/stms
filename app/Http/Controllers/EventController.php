@@ -28,6 +28,7 @@ class EventController extends Controller
         abort_unless($user, 401);
 
         $data = $indexService->dataFor($user, [
+            'search' => $request->input('search'),
             'tournament_id' => $request->input('tournament_id'),
             'has_is_active' => $request->has('is_active'),
             'is_active' => $request->input('is_active'),

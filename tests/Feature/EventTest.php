@@ -44,6 +44,30 @@ class EventTest extends TestCase
         $this->assertCount(1, $events); // only sees own org due to global scope
     }
 
+    public function test_events_index_searches_event_tournament_and_sport_names(): void
+    {
+        $org = Organization::factory()->create();
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id, 'name' => 'Inter Faculty Cup']);
+        $sport = Sport::factory()->create(['organization_id' => $org->id, 'name' => 'Badminton']);
+        $category = SportCategory::factory()->forSport($sport)->create();
+        Event::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $category->id,
+            'name' => 'Men Singles',
+        ]);
+        Event::factory()->create(['organization_id' => $org->id, 'name' => 'Women Singles']);
+        $admin = $this->createOrgAdmin($org);
+
+        $response = $this->actingAs($admin)->get(route('events.index', ['search' => 'Badminton']));
+
+        $response->assertOk();
+        $events = $response->viewData('page')['props']['events']['data'] ?? [];
+        $this->assertCount(1, $events);
+        $this->assertSame('Men Singles', $events[0]['name']);
+    }
+
     public function test_non_authorized_user_cannot_create_event(): void
     {
         $org = Organization::factory()->create();

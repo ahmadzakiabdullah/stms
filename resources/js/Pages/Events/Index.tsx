@@ -30,7 +30,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, Pencil, Plus, RefreshCw, RotateCcw, Save, Target, Trash2, Trash, X } from 'lucide-react';
+import { Eye, Pencil, Plus, RefreshCw, RotateCcw, Save, Search, Target, Trash2, Trash, X } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
 import { matchProgress } from '@/lib/matchProgress';
@@ -81,11 +81,26 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     const [redrawEvent, setRedrawEvent] = useState<EventRow | null>(null);
     const [resetDrawEvent, setResetDrawEvent] = useState<EventRow | null>(null);
     const [drawFormat, setDrawFormat] = useState('group_knockout');
+    const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
 
     const events = Array.isArray(eventsProp) ? eventsProp : (eventsProp?.data ?? []);
     const tournaments = Array.isArray(tournamentsProp) ? tournamentsProp : (tournamentsProp ?? []);
     const sports = Array.isArray(sportsProp) ? sportsProp : (sportsProp ?? []);
     const categories = Array.isArray(categoriesProp) ? categoriesProp : (categoriesProp ?? []);
+
+    const applySearch = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        router.get(route('events.index'), search.trim() ? { search: search.trim() } : {}, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
+
+    const clearSearch = () => {
+        setSearch('');
+        router.get(route('events.index'), {}, { preserveState: true, preserveScroll: true, replace: true });
+    };
 
     const { register, handleSubmit, reset, watch, setValue, control, formState: { errors, isSubmitting } } = useForm<EventForm>({
         resolver: zodResolver(eventSchema),
@@ -486,6 +501,14 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <form onSubmit={applySearch} className="mb-4 flex flex-wrap gap-2">
+                        <div className="relative min-w-[240px] flex-1">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('Search event, tournament or sport...')} className="pl-9 pr-9" aria-label={t('Search events')} />
+                            {search && <button type="button" onClick={clearSearch} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" aria-label={t('Clear search')}><X className="size-4" /></button>}
+                        </div>
+                        <Button type="submit" variant="secondary">{t('Search')}</Button>
+                    </form>
                     {isSuperAdmin && selectedIds.size > 0 && (
                         <div className="mb-4 flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">{selectedIds.size} {t('selected')}</span>
@@ -520,7 +543,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                             {events.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={isSuperAdmin ? 10 : 9} className="text-center text-muted-foreground">
-                                        {t('No events yet.')}
+                                        {search ? t('No events match your search.') : t('No events yet.')}
                                     </TableCell>
                                 </TableRow>
                             )}

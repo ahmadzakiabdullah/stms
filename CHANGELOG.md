@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased - Admin list search and empty states (21 August 2026)
+
+- Added tenant-scoped server-side search across participant name/team/contact fields and event name/slug/tournament/sport fields.
+- Added search controls, clear actions and context-aware empty states to the Participants and Events admin lists while preserving pagination query strings.
+
+## Unreleased - Application log retention and access controls (21 August 2026)
+
+- Added a production operator control record covering activity/application-log retention, named access, export/deletion approvals and review cadence.
+- Documented restrictions against copying logs to personal devices or shared channels and required evidence for sensitive exports.
+
 ## Unreleased — Activity history visibility (21 August 2026)
 
 - Activity Logs now show event type and changed field names alongside description, model and actor.
