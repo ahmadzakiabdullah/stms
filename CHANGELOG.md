@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased - Public portal accessibility contrast (21 August 2026)
+
+- Increased public fixture category badge contrast from `text-red-600` to `text-red-700`; production desktop axe smoke now has a concrete contrast remediation target.
+
 ## Unreleased - Admin list search coverage (21 August 2026)
 
 - Added server-side search across Sports, Sessions, Tournaments, Users and Activity Logs, preserving existing tenant scoping and pagination.

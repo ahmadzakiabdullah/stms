@@ -63,7 +63,7 @@ export default function PublicFixtureCard({ match, mode }: Props) {
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-[var(--public-dark-faint)]">
                         <span>{matchLabel}</span>
                         {parts && <><span aria-hidden="true">|</span><span className="inline-flex items-center gap-1"><CalendarDays className="size-3.5" />{parts.date}</span></>}
-                        {category && <span className="rounded-md bg-red-50 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-red-600">{category}</span>}
+                        {category && <span className="rounded-md bg-red-50 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-red-700">{category}</span>}
                     </div>
                 </div>
                 {match.venue && <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-red-600 sm:max-w-[42%] sm:justify-end sm:text-right"><MapPin className="size-4 shrink-0" />{match.venue}</div>}
