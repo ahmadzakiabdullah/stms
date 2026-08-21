@@ -36,6 +36,17 @@ PCOV generates a Clover artifact in CI. Record the first successful percentage i
 - The bundle-budget script prevents oversized individual JS/CSS assets.
 - Performance limits may change only with measured evidence and a documented trade-off.
 
+## Public Lighthouse Baseline — 21 August 2026
+
+Measured against `https://saf.utem.edu.my/` with Lighthouse 13.4.1 and the Playwright Chromium executable. These are a production baseline, not an approval threshold:
+
+| Page | Performance | FCP | LCP | TBT | CLS |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `/` | 64 | 3.7 s | 5.6 s | 20 ms | 0.004 |
+| `/schedule` | 71 | 3.7 s | 5.4 s | 10 ms | 0.068 |
+
+The main follow-up is LCP optimization on both pages. Repeat the measurement from a consistent CI/monitoring region before changing the target or declaring the public performance work complete.
+
 ## TypeScript Status
 
 `npm run typecheck` runs `tsc --noEmit` and is enforced before the production build in CI. Shared declarations cover Ziggy, Inertia page props, and the remaining legacy JSX compatibility boundary; page payload and pagination types are checked in TypeScript.

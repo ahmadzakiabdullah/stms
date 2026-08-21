@@ -33,7 +33,7 @@ Production memaparkan SAF 2026, 23 sports dengan events, 30 events, 8 faculties,
 - [ ] Selaraskan public theme enam warna dengan token design system dan semak kontras setiap kombinasi tenant. Public home audit menemui dan membetulkan badge kategori `text-red-600` kepada `text-red-700` untuk WCAG contrast.
 - [x] Buang global Vite prefetch dan hadkan guest Ziggy manifest.
 - [x] Logo mempunyai saiz, fallback, alt handling dan inverse variant.
-- [ ] Ukur Core Web Vitals sebenar; audit 8 GET sequential (median 237 ms) hanyalah smoke timing, bukan load test.
+- [x] Ukur Core Web Vitals sebenar; production Lighthouse baseline direkodkan dalam `docs/testing/e2e-performance.md` (LCP 5.6s homepage, 5.4s schedule). Optimasi LCP masih susulan.
 
 ## Kriteria Selesai
 

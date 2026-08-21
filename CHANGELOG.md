@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - Public performance baseline (21 August 2026)
+
+- Recorded Lighthouse production baselines for `/` and `/schedule`, including FCP, LCP, TBT and CLS.
+- Identified LCP as the next public performance optimization target.
+
 ## Unreleased - Public portal responsive and locale smoke coverage (21 August 2026)
 
 - Added production E2E coverage for horizontal overflow, invalid date output and locale switching across public pages.
