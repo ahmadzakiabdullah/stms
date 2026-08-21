@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - Competition list pagination (21 August 2026)
+
+- Added query-string-preserving Laravel pagination to the all-match and recorded-result workspaces.
+- Pagination controls reuse the existing Inertia component and preserve active search/status/event filters while navigating pages.
+
 ## Unreleased - Competition list search filters (21 August 2026)
 
 - Added server-side search parameters for match venue, notes, number, event, pool and participant fields, with status filtering preserved for the Matches workspace.

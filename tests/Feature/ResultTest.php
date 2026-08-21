@@ -59,7 +59,7 @@ class ResultTest extends TestCase
         $response = $this->actingAs($user)->get(route('results.index', ['search' => 'Badminton']));
 
         $response->assertOk();
-        $results = $response->viewData('page')['props']['results'] ?? [];
+        $results = $response->viewData('page')['props']['results']['data'] ?? [];
         $this->assertCount(1, $results);
     }
 

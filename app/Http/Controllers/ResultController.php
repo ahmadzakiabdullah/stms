@@ -16,6 +16,7 @@ use App\Models\SquadMember;
 use App\Notifications\MatchResultNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,7 +34,7 @@ class ResultController extends Controller
         $scopeToAdminSports = $user->hasRole('admin-sport') && ! $user->hasRole(['super-admin', 'org-admin']);
         $sportIds = $scopeToAdminSports ? $user->sports()->pluck('sports.id') : null;
 
-        $results = $this->safeCollectionQuery(function () use ($sportIds, $request) {
+        $results = $this->safePaginatedQuery(function () use ($sportIds, $request) {
             $query = Result::query()
                 ->join('matches', fn ($join) => $join->on('matches.id', '=', 'results.match_id')
                     ->whereNull('matches.deleted_at'))
@@ -72,11 +73,11 @@ class ResultController extends Controller
                 });
             }
 
-            return $query->get();
+            return $query->paginate(25)->withQueryString();
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
 
-            return collect();
+            return new LengthAwarePaginator([], 0, 25, 1, ['path' => request()->url()]);
         });
 
         $matches = Fixture::query()

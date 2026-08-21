@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ParticipantLogo, { type ParticipantLogoSize } from '@/components/ParticipantLogo';
+import Pagination from '@/components/Pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +37,7 @@ import { CalendarDays, CheckCircle2, CheckCheck, LockKeyhole, Minus, Pencil, Plu
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { matchNumberLabel } from '@/lib/matchNumber';
 import { useI18n } from '@/lib/i18n';
-import type { Result, Fixture, Participant, Event } from '@/types';
+import type { Result, Fixture, Participant, Event, Paginated } from '@/types';
 
 const resultSchema = z.object({
     match_id: z.string().min(1, 'Match is required'),
@@ -67,7 +68,7 @@ interface MatchOption extends Fixture {
 }
 
 interface ResultsIndexProps {
-    results: ResultRow[];
+    results: Paginated<ResultRow> | ResultRow[];
     matches?: MatchOption[];
     participants?: Participant[];
     events?: Array<{ id: string; name: string; slug?: string }>;
@@ -294,7 +295,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
     const [filterEventId, setFilterEventId] = useState(() => new URLSearchParams(window.location.search).get('event_id') ?? '');
     const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
 
-    const results = useMemo(() => (Array.isArray(resultsProp) ? resultsProp : []), [resultsProp]);
+    const results = useMemo(() => (Array.isArray(resultsProp) ? resultsProp : (resultsProp?.data ?? [])), [resultsProp]);
     const matches = useMemo(() => (Array.isArray(matchesProp) ? matchesProp : []), [matchesProp]);
     const participants = useMemo(() => (Array.isArray(participantsProp) ? participantsProp : []), [participantsProp]);
     const events = useMemo(() => (Array.isArray(eventsProp) ? eventsProp : []), [eventsProp]);
@@ -858,6 +859,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                 </Card>
                             );
                         })}
+                    {!Array.isArray(resultsProp) && <Pagination paginator={resultsProp} />}
                 </div>
             ) : (
                 <div className="space-y-6">

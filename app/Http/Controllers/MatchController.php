@@ -118,7 +118,8 @@ class MatchController extends Controller
             ->select('matches.*')
             ->orderBy('events.name')
             ->orderBy('matches.match_number')
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         $knockout = [
             'has_stage' => $selectedEvent ? $this->knockoutStageService->hasKnockoutStage($selectedEvent) : false,

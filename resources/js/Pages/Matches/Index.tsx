@@ -17,10 +17,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { BarChart3, CalendarDays, Eye, Pencil, Plus, RefreshCw, Save, Search, Swords, Trash2, Trophy, Users, X } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import Pagination from '@/components/Pagination';
 import { eventCode, matchNumberLabel } from '@/lib/matchNumber';
 import { matchProgress } from '@/lib/matchProgress';
 import { useI18n } from '@/lib/i18n';
-import type { Event, Fixture, Participant, Pool, Result } from '@/types';
+import type { Event, Fixture, Participant, Pool, Result, Paginated } from '@/types';
 
 interface StandingRow {
     participant_id: string;
@@ -66,7 +67,7 @@ interface MatchesIndexProps {
     drawnEventIds: string[];
     selectedEventId: string | null;
     pools: PoolWithRelations[];
-    allFixtures: MatchRow[];
+    allFixtures: Paginated<MatchRow> | MatchRow[];
     knockout: KnockoutData;
     participants: Participant[];
     canManage?: boolean;
@@ -406,7 +407,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
     const [editingMatch, setEditingMatch] = useState<MatchRow | null>(null);
     const [deleteMatch, setDeleteMatch] = useState<MatchRow | null>(null);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-    const fixtures = useMemo(() => (Array.isArray(allFixtures) ? allFixtures : []), [allFixtures]);
+    const fixtures = useMemo(() => (Array.isArray(allFixtures) ? allFixtures : (allFixtures?.data ?? [])), [allFixtures]);
     const selectedEvent = events.find((event) => event.id === selectedEventId);
     const selectedFixtures = useMemo(
         () => fixtures.filter((match) => match.event_id === selectedEventId),
@@ -767,6 +768,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                             );
                         })}
                     </div>
+                    {!Array.isArray(allFixtures) && <Pagination paginator={allFixtures} />}
                 </>
             ) : (
                 <div className="space-y-6">

@@ -73,11 +73,11 @@ class MatchTest extends TestCase
         Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $other->id]);
         $user = $this->createOrgAdmin($org);
 
-        $this->actingAs($user)->get(route('matches.index', ['search' => 'Badminton']))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Matches/Index')
-                ->has('allFixtures', 1));
+        $response = $this->actingAs($user)->get(route('matches.index', ['search' => 'Badminton']));
+
+        $response->assertOk();
+        $fixtures = $response->viewData('page')['props']['allFixtures']['data'] ?? [];
+        $this->assertCount(1, $fixtures);
     }
 
     public function test_super_admin_can_create_match(): void
