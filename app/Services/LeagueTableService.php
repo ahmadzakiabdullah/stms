@@ -25,10 +25,10 @@ class LeagueTableService
     {
         $rows = $this->seedParticipantRows($pool);
 
-        $pool->fixtures()
+        $pool->loadMissing('fixtures.result');
+
+        $pool->fixtures
             ->where('status', 'completed')
-            ->with('result')
-            ->get()
             ->each(function ($fixture) use ($rows) {
                 $result = $fixture->result;
                 if (! $result || ! $fixture->home_participant_id || ! $fixture->away_participant_id) {
