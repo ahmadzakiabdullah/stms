@@ -681,6 +681,7 @@ export default function EventParticipantsIndex({
                     const Icon = cfg.icon;
                     return (
                         <button key={card.key || 'all'} type="button" onClick={() => handleStatusChange(isActive ? '' : card.key)}
+                            aria-label={isActive ? t('Clear status filter') : `Filter by ${card.label.toLowerCase()}`}
                             title={isActive ? t('Clear status filter') : `Filter by ${card.label.toLowerCase()}`}
                             className={`flex items-center gap-3 rounded-xl border bg-card px-3.5 py-3 text-left transition ${isActive ? 'border-primary bg-primary/[0.04] ring-1 ring-primary' : 'hover:border-primary/40 hover:bg-muted/40'}`}>
                             <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${cfg.tint}`}>
@@ -743,11 +744,13 @@ export default function EventParticipantsIndex({
                 {activeTab === 'events' && (
                     <div className="inline-flex items-center gap-0.5 rounded-lg border bg-muted/20 p-0.5">
                         <button onClick={() => setViewMode('grid')}
+                            aria-label={t('Grid view')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                            title="Grid view"><LayoutGrid className="size-3.5" /></button>
+                            title={t('Grid view')}><LayoutGrid className="size-3.5" /></button>
                         <button onClick={() => setViewMode('table')}
+                            aria-label={t('Table view')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                            title="Table view"><List className="size-3.5" /></button>
+                            title={t('Table view')}><List className="size-3.5" /></button>
                     </div>
                 )}
             </div>
@@ -888,6 +891,7 @@ export default function EventParticipantsIndex({
                                                             {(members.length > 0 || canManageThisSquad) ? (
                                                                 <button
                                                                     onClick={() => { setExpandedEp(isExpanded ? null : ep.id); setEditingMemberId(null); }}
+                                                                    aria-label={canManageThisSquad ? t('Manage squad members') : t('View squad members')}
                                                                     className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition ${isExpanded ? 'border-primary bg-primary/5 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
                                                                     title={canManageThisSquad ? t('Manage squad members') : t('View squad members')}
                                                                 >
@@ -919,16 +923,19 @@ export default function EventParticipantsIndex({
                                                             {!isFacultyRepresentative && ep.status === 'pending' && (
                                                                 <>
                                                                     <button onClick={() => approveRegistration(ep.id)}
+                                                                        aria-label={t('Approve')}
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"                                                                          title={t('Approve')}>
                                                                         <Check className="size-3.5" />
                                                                     </button>
                                                                     <button onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                        aria-label={t('Reject')}
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-rose-200 text-rose-600 transition hover:bg-rose-600 hover:text-white"                                                                          title={t('Reject')}>
                                                                         <CircleX className="size-3.5" />
                                                                     </button>
                                                                 </>
                                                             )}
                                                              <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                 aria-label={t('Unregister')}
                                                                  className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')}>
                                                                 <X className="size-3.5" />
                                                             </button>
@@ -1106,6 +1113,7 @@ export default function EventParticipantsIndex({
                                                             {cfg.label}
                                                         </Badge>
                                                         <button onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
+                                                            aria-label={t('Unregister')}
                                                             className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
                                                             <X className="size-2.5" />
                                                         </button>
