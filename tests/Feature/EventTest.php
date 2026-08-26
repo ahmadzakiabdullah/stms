@@ -57,7 +57,16 @@ class EventTest extends TestCase
             'sport_category_id' => $category->id,
             'name' => 'Men Singles',
         ]);
-        Event::factory()->create(['organization_id' => $org->id, 'name' => 'Women Singles']);
+
+        $otherSport = Sport::factory()->create(['organization_id' => $org->id, 'name' => 'Tennis']);
+        $otherCategory = SportCategory::factory()->forSport($otherSport)->create();
+        Event::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $tournament->id,
+            'sport_id' => $otherSport->id,
+            'sport_category_id' => $otherCategory->id,
+            'name' => 'Women Singles',
+        ]);
         $admin = $this->createOrgAdmin($org);
 
         $response = $this->actingAs($admin)->get(route('events.index', ['search' => 'Badminton']));
