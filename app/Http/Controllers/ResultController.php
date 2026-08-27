@@ -239,17 +239,18 @@ class ResultController extends Controller
 
     private function notifyMatchParticipants(Result $result, string $action): void
     {
-        $match = $result->match()->with(['event', 'homeParticipant', 'awayParticipant'])->first();
+        // ⚡ Bolt: Eliminate N+1 queries by directly accessing eagerly-loaded relations
+        // instead of mapping over raw IDs and calling Participant::find() in a closure.
+        $match = $result->match()->with(['event', 'homeParticipant.users', 'awayParticipant.users'])->first();
         $result->loadMissing('winner');
 
         if (! $match) {
             return;
         }
 
-        $users = collect([$match->home_participant_id, $match->away_participant_id])
+        $users = collect([$match->homeParticipant, $match->awayParticipant])
             ->filter()
-            ->unique()
-            ->flatMap(fn ($participantId) => Participant::find($participantId)?->users ?? collect())
+            ->flatMap(fn ($participant) => $participant->users ?? collect())
             ->unique(fn ($user) => $user->getKey());
 
         foreach ($users as $user) {
