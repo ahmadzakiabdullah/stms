@@ -13,3 +13,11 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+
+## 2026-08-01 - [Optimize Aggregation in Faculty Dashboard]
+**Learning:** Replacing multiple  calls inside a foreach loop with a single O(1) pass aggregation using  drastically reduces CPU operations and object instantiations when dealing with large collections.
+**Action:** When aggregating data by a property across a collection of relations, use  to flatten the child collections, and then  to aggregate in one pass, instead of looping and calling  repeatedly.
+
+## 2026-08-01 - [Optimize Aggregation in Faculty Dashboard]
+**Learning:** Replacing multiple `->where(...)->count()` calls inside a foreach loop with a single O(1) pass aggregation using `flatMap->countBy()` drastically reduces CPU operations and object instantiations when dealing with large collections.
+**Action:** When aggregating data by a property across a collection of relations, use `flatMap` to flatten the child collections, and then `countBy` to aggregate in one pass, instead of looping and calling `where()->count()` repeatedly.
