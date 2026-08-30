@@ -1,5 +1,6 @@
 <?php
 
+use App\Logging\RedactSensitiveContext;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -63,7 +64,7 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
-            'processors' => [App\Logging\RedactSensitiveContext::class],
+            'processors' => [RedactSensitiveContext::class],
         ],
 
         'daily' => [
@@ -72,7 +73,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
-            'processors' => [App\Logging\RedactSensitiveContext::class],
+            'processors' => [RedactSensitiveContext::class],
         ],
 
         'slack' => [
@@ -104,7 +105,7 @@ return [
                 'stream' => 'php://stderr',
             ],
             'formatter' => env('LOG_STDERR_FORMATTER'),
-            'processors' => [PsrLogMessageProcessor::class, App\Logging\RedactSensitiveContext::class],
+            'processors' => [PsrLogMessageProcessor::class, RedactSensitiveContext::class],
         ],
 
         'syslog' => [
@@ -112,14 +113,14 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
             'replace_placeholders' => true,
-            'processors' => [App\Logging\RedactSensitiveContext::class],
+            'processors' => [RedactSensitiveContext::class],
         ],
 
         'errorlog' => [
             'driver' => 'errorlog',
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
-            'processors' => [App\Logging\RedactSensitiveContext::class],
+            'processors' => [RedactSensitiveContext::class],
         ],
 
         'null' => [
