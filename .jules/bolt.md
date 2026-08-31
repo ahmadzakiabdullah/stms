@@ -13,3 +13,7 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+
+## 2024-05-18 - Optimize FacultyDashboardService Aggregation Loop
+**Learning:** Found a redundant iteration issue in `FacultyDashboardService.php` where it loops through each registration's `squadMembers` collection three separate times (using `where` and `whereIn`) to calculate total counts for male, female, and official roles.
+**Action:** By flattening the collections once (`$registrations->flatMap->squadMembers`) and using Laravel's `countBy('role')`, all squad members are aggregated in a single O(N) pass, significantly reducing CPU cycles and redundant collection filtering.
