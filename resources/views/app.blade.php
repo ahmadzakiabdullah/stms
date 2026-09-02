@@ -27,14 +27,7 @@
         <title inertia>{{ config('app.name', 'STMS Portal') }}</title>
 
         <!-- Scripts -->
-        {{--
-            Inertia login redirects can transition from the guest page to an
-            authenticated page without a full document reload. Keep the
-            complete Ziggy map available so the route helper does not retain
-            the guest-only map after that transition; authorization remains
-            enforced by Laravel middleware and policies.
-        --}}
-        @routes
+        @routes(auth()->check() ? null : 'guest')
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
         @inertiaHead
