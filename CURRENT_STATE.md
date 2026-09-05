@@ -16,8 +16,8 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 148 application routes |
-| Migrations | 65 migration files |
+| Laravel routes | 143 application routes |
+| Migrations | 66 migration files |
 | Controllers | 39 controller files |
 | Form Requests | 28 |
 | Policies | 21 fail |
@@ -25,7 +25,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Services/concerns | 40 fail |
 | Models | 18 |
 | Inertia `.tsx` pages | 43 |
-| PHP tests | 94 PHP test files |
+| PHP tests | 95 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
 ## Tech Stack
