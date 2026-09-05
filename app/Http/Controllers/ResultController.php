@@ -246,10 +246,19 @@ class ResultController extends Controller
             return;
         }
 
-        $users = collect([$match->home_participant_id, $match->away_participant_id])
+        $participantIds = collect([$match->home_participant_id, $match->away_participant_id])
             ->filter()
-            ->unique()
-            ->flatMap(fn ($participantId) => Participant::find($participantId)?->users ?? collect())
+            ->unique();
+
+        if ($participantIds->isEmpty()) {
+            return;
+        }
+
+        $users = Participant::query()
+            ->whereIn('id', $participantIds)
+            ->with('users')
+            ->get()
+            ->flatMap(fn ($participant) => $participant->users)
             ->unique(fn ($user) => $user->getKey());
 
         foreach ($users as $user) {
