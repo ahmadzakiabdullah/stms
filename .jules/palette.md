@@ -1,0 +1,3 @@
+## 2026-09-06 - Add aria-labels to icon-only buttons
+**Learning:** Found multiple instances where icon-only buttons (like those for approving, rejecting, unregistering, or toggling view mode) were missing explicit accessible names, relying only on the `title` attribute which isn't sufficiently reliable for all screen reader configurations. Since `t('...')` translation functions are extensively used, these should also be utilized for `aria-label` assignments on interactive UI components lacking visible text.
+**Action:** When creating or reviewing components with icon-only controls, explicitly add an `aria-label` attribute alongside or in place of `title`, particularly using the provided `t()` translation helper to ensure accessible names are localized properly.
