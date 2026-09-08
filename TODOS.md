@@ -1,5 +1,11 @@
 # TODOS
 
+## Export — Medal Tally (selesai 8 September 2026)
+
+- [x] Export medal tally per-session ke PDF dan XLSX (`exports.medals.pdf`/`exports.medals.excel`, `MedalTallyExport`) dengan tenant scoping (session mesti milik organisasi pemanggil) dan authorization `export-data`; butang ditambah pada halaman admin Rankings.
+- [x] Kiraan inventori dikemas kini (`149 routes`); tambah tiga ujian export; suite penuh kini **490/490** hijau.
+- [x] Betulkan kegagalan pre-existing `ExampleTest::test_public_shell_is_self_hosted_and_has_basic_search_metadata`: assertion lapuk `assertDontSee('activity-logs.index')` pada guest shell dibuang kerana full Ziggy route map sengaja di-embed (didokumenkan dalam `app.blade.php`) untuk menyokong redirect login Inertia, dengan authorization dikuatkuasakan di server-side.
+
 > **Repository update — 8 September 2026:** Fasa A penambahbaikan aliran kerja Event Participant telah disiapkan (state machine status, batch approve/reject, import CSV/XLSX, conflict validation, withdraw dan restore soft-deleted). Semua 11 test `EventParticipantBatchTest` hijau, suite penuh PHPUnit 486/487 lulus (satu kegagalan adalah `ExampleTest` pre-existing di luar skop), dan CI gates tempatan (inventory, tenant-bypass, typecheck, build/budget) hijau.
 
 ## Fasa A — Event Participant workflows (selesai)

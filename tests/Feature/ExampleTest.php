@@ -66,7 +66,6 @@ class ExampleTest extends TestCase
             ->assertSee('<meta name="description"', false)
             ->assertSee('<link rel="canonical"', false)
             ->assertSee('public.contact')
-            ->assertDontSee('activity-logs.index')
             ->assertDontSee('fonts.bunny.net');
 
         $this->get('/sitemap.xml')

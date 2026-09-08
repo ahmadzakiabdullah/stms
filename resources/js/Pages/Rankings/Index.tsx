@@ -285,7 +285,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                 {Object.keys(errors).length > 0 && <span className="ml-2 text-destructive">Check the ranking rule values.</span>}
                             </div>
                         )}
-                        {selectedSessionData && (
+{selectedSessionData && (
                             <div className="flex flex-wrap gap-2 border-t pt-4 md:col-span-2">
                                 {selectedTournamentData && (
                                     <>
@@ -305,6 +305,20 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                         </Button>
                                     </>
                                 )}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.location.href = route('exports.medals.pdf', selectedSessionData.slug)}
+                                >
+                                    <Download className="mr-1.5 size-3.5" /> <Medal className="size-3.5" /> Medals PDF
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.location.href = route('exports.medals.excel', selectedSessionData.slug)}
+                                >
+                                    <Download className="mr-1.5 size-3.5" /> <Medal className="size-3.5" /> Medals Excel
+                                </Button>
                             </div>
                         )}
                     </div>

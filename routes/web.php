@@ -243,6 +243,8 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
         Route::get('/exports/results/excel', [ExportController::class, 'resultsExcel'])->name('exports.results.excel');
         Route::get('/exports/rankings/{tournament}/pdf', [ExportController::class, 'rankingsPdf'])->name('exports.rankings.pdf');
         Route::get('/exports/rankings/{tournament}/excel', [ExportController::class, 'rankingsExcel'])->name('exports.rankings.excel');
+        Route::get('/exports/medals/{session}/pdf', [ExportController::class, 'medalTallyPdf'])->name('exports.medals.pdf');
+        Route::get('/exports/medals/{session}/excel', [ExportController::class, 'medalTallyExcel'])->name('exports.medals.excel');
         Route::get('/exports/match-sheet/{fixture}', [ExportController::class, 'matchSheet'])->name('exports.matchSheet');
     });
 

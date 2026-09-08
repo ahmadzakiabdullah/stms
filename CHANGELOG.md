@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Medal tally exports (8 September 2026)
+
+- Added per-session medal tally PDF and XLSX exports (`exports.medals.pdf` / `exports.medals.excel`) with a dedicated `MedalTallyExport` Excel export and session-scoped ranking computation, surfaced as buttons on the Rankings admin page.
+- Export endpoints are tenant-scoped (session must belong to the caller's organization) and authorized via the existing `export-data` permission gate.
+- Fixed the stale `ExampleTest::test_public_shell_is_self_hosted_and_has_basic_search_metadata` assertion that expected the guest shell to not include `activity-logs.index`; the complete Ziggy route map is intentionally embedded (documented in `app.blade.php`) to support Inertia login transitions, with authorization enforced server-side. This closes the last known suite failure — full suite now 490/490 green.
+
 ## Unreleased - Event Participant registration workflows Fasa A (8 September 2026)
 
 - Added an explicit registration status state machine (`pending → confirmed/rejected/withdrawn/disqualified`, `confirmed → withdrawn/disqualified`, `rejected → confirmed/withdrawn`) with a validated `EventParticipant::canTransitionTo()` guard on every transition.

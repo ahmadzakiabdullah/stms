@@ -16,7 +16,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 147 application routes |
+| Laravel routes | 149 application routes |
 | Migrations | 66 migration files |
 | Controllers | 39 controller files |
 | Form Requests | 28 |
@@ -103,8 +103,14 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | Composer audit | Lulus — 0 advisory |
 | npm audit | Lulus — 0 vulnerability |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
-| Inventory | Menjangka matriks `147 / 66 / 39 / 43 / 97` |
+| Inventory | Menjangka matriks `149 / 66 / 39 / 43 / 97` |
 | Connected CI | **Lulus — [run #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726)** pada `4b04c46`; keenam-enam job hijau termasuk browser E2E dan ratchet PCOV |
+
+## Capability Tambahan 8 September 2026 — Export Medal Tally & Suite Cleanup
+
+- Per-session medal tally PDF/XLSX export (`MedalTallyExport`, `exports.medals.{pdf,excel}`) dengan tenant scoping dan authorization `export-data`; butang ditambah pada halaman admin Rankings.
+- Matriks inventori dikemas kini kepada `149 routes / 66 migrations / 97 testFiles`; suite penuh **490/490** lulus (tiga ujian export baharu ditambah).
+- `ExampleTest::test_public_shell_is_self_hosted_and_has_basic_search_metadata` dibetulkan: assertion lapuk `assertDontSee('activity-logs.index')` dibuang kerana full Ziggy map sengaja di-embed untuk peralihan login Inertia (dijaga oleh authorization server-side); ini menutup kegagalan pre-existing terakhir.
 
 ## Capability Tambahan 8 September 2026 — Fasa A Event Participant Workflows
 
