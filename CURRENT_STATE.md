@@ -16,8 +16,8 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 148 application routes |
-| Migrations | 65 migration files |
+| Laravel routes | 147 application routes |
+| Migrations | 66 migration files |
 | Controllers | 39 controller files |
 | Form Requests | 28 |
 | Policies | 21 fail |
@@ -25,7 +25,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Services/concerns | 40 fail |
 | Models | 18 |
 | Inertia `.tsx` pages | 43 |
-| PHP tests | 94 PHP test files |
+| PHP tests | 97 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
 ## Tech Stack
@@ -103,8 +103,17 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | Composer audit | Lulus — 0 advisory |
 | npm audit | Lulus — 0 vulnerability |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
-| Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 94` |
+| Inventory | Menjangka matriks `147 / 66 / 39 / 43 / 97` |
 | Connected CI | **Lulus — [run #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726)** pada `4b04c46`; keenam-enam job hijau termasuk browser E2E dan ratchet PCOV |
+
+## Capability Tambahan 8 September 2026 — Fasa A Event Participant Workflows
+
+- State machine status pendaftaran dengan `canTransitionTo()` validated; `notes` wajib untuk reject; batch approve/reject pada `event-participants.batch-status`.
+- Import pukal CSV/XLSX (Maatwebsite) ke `/event-participants/import` dengan template muat turun, per-row validation report, skip duplicate/unknown-event serta pentadbiran error tanpa rollback separa.
+- Conflict detection per peserta melalui `ParticipantScheduleConflictService`; badge + tooltip dalam workshop Index.
+- Withdraw dan restore registrations yang di-soft-delete; `EventParticipantPolicy` di-hardening supaya same-org non-admin tanpa permission row tidak lagi menerima 500.
+- Halaman workshop Event Participants ditulis semula: bulk-select toolbar, import/withdraw actions dan dialogs.
+- SUITE: 11/11 `EventParticipantBatchTest`, 486/487 PHPUnit penuh (satu kegagalan `ExampleTest` pre-existing di luar skop), semua CI gates tempatan hijau.
 
 ## Capability Tambahan 21 Ogos 2026
 

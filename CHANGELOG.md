@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased - Event Participant registration workflows Fasa A (8 September 2026)
+
+- Added an explicit registration status state machine (`pending → confirmed/rejected/withdrawn/disqualified`, `confirmed → withdrawn/disqualified`, `rejected → confirmed/withdrawn`) with a validated `EventParticipant::canTransitionTo()` guard on every transition.
+- Added batch approve/reject of pending or rejected registrations via `event-participants.batch-status` with Form Request authorization, reject-notes requirements and tenant scoping.
+- Added bulk CSV/XLSX registration import via Maatwebsite with a downloadable template, per-row validation reporting and duplicate/unknown-event skipping (import reports errors instead of rolling back partial work).
+- Added participant-level schedule conflict detection (`ParticipantScheduleConflictService`) surfaced in the workshop Index UI with a clash badge and tooltip per registration.
+- Added registration withdrawal and reinstatement support, including restoration of soft-deleted registrations when re-registering to the same event.
+- Hardened `EventParticipantPolicy` so same-organization non-admin users without persisted permission rows no longer hit a 500 during `viewAny`.
+- Reworked the Event Participants workshop page: bulk-select toolbar, withdraw action, conflict badge, import button and dialogs; TypeScript typecheck, Vite build, bundle budget, inventory and tenant-bypass CI gates all pass.
+
+## Unreleased - Production monitoring and operations runbook (21 August 2026)
+
+- Added a production monitoring matrix covering availability, errors, latency, database/cache, queue, disk, backups, certificates and CSP reports with starting thresholds and evidence requirements.
+- Added an operations runbook for incident triage, rollback, backup alerts and worker/scheduler recovery, while keeping external activation and named ownership as release evidence requirements.
+
 ## Unreleased - Public homepage first-paint optimization (21 August 2026)
 
 - Deferred below-the-fold portal layout/paint work and participant logo decoding/loading to reduce initial homepage rendering cost; production Lighthouse remeasurement remains required before claiming an LCP improvement.

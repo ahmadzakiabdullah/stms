@@ -1,6 +1,17 @@
 # TODOS
 
-> **Repository update — 21 August 2026:** Athlete directory/profile, scorer events, participant-grouped public scorers and result score editor UX are implemented and pushed as `4c4ebf0c`. Remaining unchecked items below are release/operator work unless explicitly changed.
+> **Repository update — 8 September 2026:** Fasa A penambahbaikan aliran kerja Event Participant telah disiapkan (state machine status, batch approve/reject, import CSV/XLSX, conflict validation, withdraw dan restore soft-deleted). Semua 11 test `EventParticipantBatchTest` hijau, suite penuh PHPUnit 486/487 lulus (satu kegagalan adalah `ExampleTest` pre-existing di luar skop), dan CI gates tempatan (inventory, tenant-bypass, typecheck, build/budget) hijau.
+
+## Fasa A — Event Participant workflows (selesai)
+
+- [x] Implement state machine status pendaftaran (`pending → confirmed/rejected/withdrawn/disqualified`, `confirmed → withdrawn/disqualified`, `rejected → confirmed/withdrawn`); setiap peralihan melalui `EventParticipant::canTransitionTo()` yang validated, dengan `notes` wajib untuk penolakan.
+- [x] Batch approve/reject pendaftaran (pending/rejected) melalui `event-participants.batch-status` dengan Form Request authorization, tenant scoping dan dialog reject-notes dalam UI workshop.
+- [x] Import pukal CSV/XLSX pendaftaran peserta (Maatwebsite) dengan template boleh dimuat turun, laporan validation per-baris serta skip duplicate/unknown-event (import melapor `errors()`/`createdCount()` dan tidak melempar exception merosotkan transaksi `Sheet::import`).
+- [x] Conflict detection per peserta (`ParticipantScheduleConflictService`) dipaparkan dalam Index workshop sebagai badge amber + tooltip.
+- [x] Withdraw pendaftaran dan restore registration yang di-soft-delete apabila mendaftar semula ke event yang sama.
+- [x] Harden `EventParticipantPolicy` dengan helper `hasPermission` defensif yang mengendalikan permohonan tanpa permission row (selesaikan 500 untuk same-org non-admin).
+- [x] Ubah suai halaman workshop Event Participants: bulk-select toolbar, butang withdraw, badge konflik, butang/dialog import; `Migrations 66 / routes 147 / testFiles 97` direkod semula dalam `CURRENT_STATE.md`.
+- [x] Quality gate tempatan 8 September lulus: 486/487 PHPUnit (satu failure pre-existing ialah `ExampleTest::test_public_shell_is_self_hosted_and_has_basic_search_metadata` daripada commit `eff40b7c2` full-Ziggy-map), Pint, TypeScript, inventory, tenant guard, Vite build/budget.
 
 > Backlog aktif STMS/SAF dikemas kini 21 Ogos 2026 selepas athlete/scorer workflows. Kotak hanya ditanda apabila ada bukti; tindakan production/owner tidak dianggap selesai oleh perubahan kod semata-mata.
 
@@ -37,6 +48,8 @@
 Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diberikan kepada kebolehoperasian, keselamatan data dan aliran kerja pertandingan sebelum ciri pasca-MVP.
 
 ### Fasa 1 — Operasi dan kebolehpercayaan production
+
+Dokumen repository untuk monitoring matrix, ownership, threshold, escalation, incident response, rollback dan worker/scheduler recovery telah disediakan. Item di bawah kekal terbuka sehingga monitoring luar, named owners dan alert delivery benar-benar diaktifkan serta dibuktikan.
 
 - [ ] Jadualkan backup production terenkripsi dengan retention, pemantauan freshness dan bukti salinan off-host.
 - [ ] Automasi isolated restore drill berkala dan rekod RPO/RTO dalam release evidence.

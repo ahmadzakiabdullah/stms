@@ -27,11 +27,11 @@ import {
 } from '@/components/ui/table';
 
 import Pagination from '@/components/Pagination';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Ban, CalendarDays, Check, CheckCircle2, ChevronDown, CircleDashed, CircleX, Clock, ClipboardList, FileText, Filter, Inbox, LayoutGrid, List, Pencil, Phone, Plus, RotateCcw, Search, SearchX, Trash2, UserPlus, Users, X, XCircle } from 'lucide-react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { AlertTriangle, Ban, CalendarDays, Check, CheckCircle2, ChevronDown, CircleDashed, CircleX, Clock, ClipboardList, Download, FileText, Filter, Inbox, LayoutGrid, List, LogOut, Pencil, Phone, Plus, RotateCcw, Search, SearchX, Trash2, Upload, UserPlus, Users, X, XCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import type { FormEvent, ReactNode } from 'react';
+import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { useI18n } from '@/lib/i18n';
 import type {
     Event as EventType,
@@ -48,12 +48,24 @@ interface ParticipantWithEvents extends Participant {
     })[];
 }
 
+interface ScheduleConflict {
+    fixture_a_id: string;
+    fixture_b_id: string;
+    event_a: string | null;
+    event_b: string | null;
+    date: string;
+    venue: string;
+    time_a: string;
+    time_b: string;
+}
+
 interface EventParticipantsIndexProps {
     participants: Paginated<ParticipantWithEvents> | ParticipantWithEvents[];
     events: (EventType & { sport?: { name: string }; sport_category?: { name: string }; tournament?: { name: string } })[];
     faculties?: ParticipantWithEvents[];
     isFacultyRepresentative?: boolean;
     statusCounts?: Record<string, number>;
+    conflicts?: Record<string, ScheduleConflict[]>;
 }
 
 const squadRoleConfig: Record<string, { label: string; class: string }> = {
@@ -315,6 +327,127 @@ function ConfirmRejectDialog({ open, onClose, onConfirm, participantName, eventN
     );
 }
 
+function BatchRejectDialog({ open, onClose, count, onConfirm }: {
+    open: boolean; onClose: () => void; count: number; onConfirm: (notes: string) => void;
+}) {
+    const { t } = useI18n();
+    const [notes, setNotes] = useState('');
+
+    useEffect(() => {
+        if (open) setNotes('');
+    }, [open]);
+
+    return (
+        <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{t('Reject registrations?')}</DialogTitle>
+                    <DialogDescription>Reject <strong>{count}</strong> pending registration(s)? The faculty representatives will be notified.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-2">
+                    <Label htmlFor="batch-reject-notes">
+                        {t('Reason')} <span className="text-destructive">*</span>
+                    </Label>
+                    <textarea id="batch-reject-notes" value={notes} onChange={(e) => setNotes(e.target.value)} required
+                        placeholder={t('e.g. Entry over quota / not eligible')}
+                        className="flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>{t('Cancel')}</Button>
+                    <Button variant="destructive" disabled={!notes.trim()} onClick={() => onConfirm(notes.trim())}>
+                        <CircleX className="mr-2 size-4" />{t('Reject')}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function ImportDialog({ open, onClose, participantId, faculties }: {
+    open: boolean; onClose: () => void; participantId: string; faculties?: ParticipantWithEvents[];
+}) {
+    const { t } = useI18n();
+    const { data, setData, post, reset, processing, errors } = useForm({
+        participant_id: participantId,
+        file: null as File | null,
+    });
+
+    useEffect(() => {
+        if (open) setData({ participant_id: participantId, file: null });
+    }, [open, participantId]);
+
+    const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
+        setData('file', e.target.files?.[0] ?? null);
+    };
+
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        if (!data.file) return;
+        post(route('event-participants.import'), {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => { reset(); onClose(); },
+        });
+    };
+
+    const close = () => { reset(); onClose(); };
+
+    return (
+        <Dialog open={open} onOpenChange={(o) => { if (!o) close(); }}>
+            <DialogContent className="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>{t('Import registrations')}</DialogTitle>
+                    <DialogDescription>{t('Upload a CSV or Excel file listing the events to register for the selected faculty.')}</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={submit} className="grid gap-4 py-4">
+                    {faculties && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="import-participant">{t('Faculty')}</Label>
+                            <select id="import-participant" value={data.participant_id}
+                                onChange={(e) => setData('participant_id', e.target.value)}
+                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" required>
+                                <option value="">{t('-- Select Faculty --')}</option>
+                                {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+                            </select>
+                            {errors.participant_id && <p className="text-xs text-destructive">{errors.participant_id}</p>}
+                        </div>
+                    )}
+                    <div className="grid gap-2">
+                        <Label>{t('File')}</Label>
+                        <label className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-7 text-center transition ${data.file ? 'border-emerald-300 bg-emerald-50/60' : 'border-input hover:bg-muted/40'}`}>
+                            <Upload className="size-6 text-muted-foreground" />
+                            {data.file ? (
+                                <span className="text-sm font-medium text-emerald-700">{data.file.name}</span>
+                            ) : (
+                                <>
+                                    <span className="text-sm font-medium">{t('Click to choose a file')}</span>
+                                    <span className="text-xs text-muted-foreground">{t('CSV, XLSX or XLS (max 2 MB)')}</span>
+                                </>
+                            )}
+                            <input type="file" accept=".csv,.xlsx,.xls" className="sr-only" onChange={handleFile} />
+                        </label>
+                        {errors.file && <p className="text-xs text-destructive">{errors.file}</p>}
+                        <Link href={route('event-participants.import.template')} target="_blank"
+                            className="inline-flex items-center gap-1.5 text-xs text-primary underline underline-offset-2">
+                            <Download className="size-3.5" /> {t('Download CSV template')}
+                        </Link>
+                    </div>
+                    <DialogFooter className="pt-2">
+                        <Button type="button" variant="outline" onClick={close}>{t('Cancel')}</Button>
+                        <Button type="submit" disabled={processing || !data.file || !data.participant_id}>
+                            <Upload className="mr-2 size-4" />{t('Import')}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function conflictSummary(conflicts: ScheduleConflict[]): string {
+    return conflicts.map((c) => `${c.date} · ${c.venue} (${c.time_a} & ${c.time_b})`).join('; ');
+}
+
 const SQUAD_ROLE_KEYS = ['manager', 'assistant_manager', 'coach', 'physio', 'athlete_male', 'athlete_female'] as SquadMember['role'][];
 
 const selectClass = 'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50';
@@ -444,7 +577,7 @@ function ConfirmSquadDeleteDialog({ open, onClose, onConfirm, memberName }: {
 
 export default function EventParticipantsIndex({
     participants: participantsProp, events: eventsProp = [], faculties: facultiesProp = [],
-    isFacultyRepresentative = false, statusCounts: statusCountsProp = {},
+    isFacultyRepresentative = false, statusCounts: statusCountsProp = {}, conflicts: conflictsProp = {},
 }: EventParticipantsIndexProps) {
     const { flash, auth } = usePage().props;
     const { t } = useI18n();
@@ -454,6 +587,7 @@ export default function EventParticipantsIndex({
     const events = Array.isArray(eventsProp) ? eventsProp : eventsProp ?? [];
     const faculties = Array.isArray(facultiesProp) ? facultiesProp : [];
     const statusCounts = (statusCountsProp && typeof statusCountsProp === 'object' && !Array.isArray(statusCountsProp)) ? statusCountsProp : {};
+    const conflicts = (conflictsProp && typeof conflictsProp === 'object' && !Array.isArray(conflictsProp)) ? conflictsProp : {};
 
     const defaultTab = isFacultyRepresentative ? 'events' : 'registrations';
     const [activeTab, setActiveTab] = useState<'registrations' | 'events'>(defaultTab);
@@ -564,6 +698,42 @@ export default function EventParticipantsIndex({
     const [expandedEp, setExpandedEp] = useState<string | null>(null);
     const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
     const [squadDeleteTarget, setSquadDeleteTarget] = useState<{ epId: string; memberId: string; memberName: string } | null>(null);
+    const [selectedRegIds, setSelectedRegIds] = useState<string[]>([]);
+    const [batchRejectOpen, setBatchRejectOpen] = useState(false);
+    const [importOpen, setImportOpen] = useState(false);
+
+    const toggleSelect = (id: string) => {
+        setSelectedRegIds((current) => current.includes(id)
+            ? current.filter((i) => i !== id)
+            : [...current, id]);
+    };
+
+    const toggleSelectAll = () => {
+        setSelectedRegIds((current) => allSelected
+            ? current.filter((id) => !batchSelectableIds.includes(id))
+            : [...new Set([...current, ...batchSelectableIds])]);
+    };
+
+    const handleBatchApprove = () => {
+        router.post(route('event-participants.batch-status'), { ids: selectedRegIds, status: 'confirmed' }, {
+            preserveScroll: true, preserveState: true,
+            onSuccess: () => setSelectedRegIds([]),
+        });
+    };
+
+    const handleBatchReject = (notes: string) => {
+        setBatchRejectOpen(false);
+        router.post(route('event-participants.batch-status'), { ids: selectedRegIds, status: 'rejected', notes }, {
+            preserveScroll: true, preserveState: true,
+            onSuccess: () => setSelectedRegIds([]),
+        });
+    };
+
+    const withdrawRegistration = (epId: string) => {
+        router.post(route('event-participants.withdraw', epId), {}, {
+            preserveScroll: true,
+        });
+    };
 
     const handleUnregister = () => {
         if (!unregTarget) return;
@@ -632,6 +802,12 @@ export default function EventParticipantsIndex({
         return rows.sort((a, b) => a.event.name.localeCompare(b.event.name));
     }, [participantsList, events]);
 
+    const batchSelectableIds = useMemo(
+        () => registrationRows.filter((r) => r.ep.status === 'pending' || r.ep.status === 'rejected').map((r) => r.ep.id),
+        [registrationRows],
+    );
+    const allSelected = batchSelectableIds.length > 0 && batchSelectableIds.every((id) => selectedRegIds.includes(id));
+
     const tabLabel = isFacultyRepresentative
         ? { registrations: t('My Registrations'), events: t('Available Events') }
         : { registrations: t('All Registrations'), events: t('All Events') };
@@ -651,9 +827,14 @@ export default function EventParticipantsIndex({
                             <Plus className="size-4 mr-1.5" /> {t('Register to Event')}
                         </Button>
                     ) : (
-                        <Button onClick={() => setAddTarget({ id: '', name: '' })}>
-                            <UserPlus className="size-4 mr-1.5" /> {t('New Registration')}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" onClick={() => setImportOpen(true)}>
+                                <Upload className="size-4 mr-1.5" /> {t('Import')}
+                            </Button>
+                            <Button onClick={() => setAddTarget({ id: '', name: '' })}>
+                                <UserPlus className="size-4 mr-1.5" /> {t('New Registration')}
+                            </Button>
+                        </div>
                     )}
                 </div>
             }
@@ -837,11 +1018,34 @@ export default function EventParticipantsIndex({
                         )}
                     </CardContent></Card>
                 ) : (
-                    <Card>
+                    <div>
+                        {selectedRegIds.length > 0 && (
+                            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2">
+                                <span className="text-sm font-medium tabular-nums">{selectedRegIds.length} {t('selected')}</span>
+                                <div className="ml-auto flex items-center gap-2">
+                                    <Button size="sm" className="h-8" onClick={handleBatchApprove}>
+                                        <Check className="size-3.5 mr-1" /> {t('Approve selected')}
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="h-8 text-destructive" onClick={() => setBatchRejectOpen(true)}>
+                                        <CircleX className="size-3.5 mr-1" /> {t('Reject selected')}
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-8" onClick={() => setSelectedRegIds([])}>
+                                        <X className="size-3.5" /> {t('Clear')}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                        <Card>
                         <CardContent className="p-0">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="hover:bg-transparent">
+                                        <TableHead className="w-10">
+                                            <input type="checkbox" className="size-4 rounded border-input"
+                                                aria-label={t('Select all registrations')}
+                                                checked={allSelected} disabled={batchSelectableIds.length === 0}
+                                                onChange={toggleSelectAll} />
+                                        </TableHead>
                                         <TableHead>{t('Event')}</TableHead>
                                         {!isFacultyRepresentative && <TableHead>{t('Faculty')}</TableHead>}
                                         {!isFacultyRepresentative && <TableHead className="w-24">{t('Squad')}</TableHead>}
@@ -862,6 +1066,13 @@ export default function EventParticipantsIndex({
                                         return (
                                             <Fragment key={ep.id}>
                                                 <TableRow className={isExpanded ? 'bg-muted/40' : undefined}>
+                                                    <TableCell>
+                                                        <input type="checkbox" className="size-4 rounded border-input"
+                                                            aria-label={`Select ${participant.name} - ${evt.name}`}
+                                                            checked={selectedRegIds.includes(ep.id)}
+                                                            disabled={ep.status !== 'pending' && ep.status !== 'rejected'}
+                                                            onChange={() => toggleSelect(ep.id)} />
+                                                    </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-2.5">
                                                             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-sm">{getSportIcon(evt.sport?.name)}</span>
@@ -901,10 +1112,19 @@ export default function EventParticipantsIndex({
                                                         </TableCell>
                                                     )}
                                                     <TableCell>
-                                                        <Badge variant={cfg.variant} className="gap-1.5 px-2 py-0.5 text-[11px] font-medium">
-                                                            <span className={`size-1.5 rounded-full ${statusDot[ep.status] ?? 'bg-muted-foreground'}`} />
-                                                            {cfg.label}
-                                                        </Badge>
+                                                        <div className="flex flex-col items-start gap-1">
+                                                            <Badge variant={cfg.variant} className="gap-1.5 px-2 py-0.5 text-[11px] font-medium">
+                                                                <span className={`size-1.5 rounded-full ${statusDot[ep.status] ?? 'bg-muted-foreground'}`} />
+                                                                {cfg.label}
+                                                            </Badge>
+                                                            {conflicts[ep.id]?.length > 0 && (
+                                                                <span title={conflictSummary(conflicts[ep.id])}
+                                                                    className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                                                    <AlertTriangle className="size-3" />
+                                                                    {conflicts[ep.id].length} clash{conflicts[ep.id].length !== 1 ? 'es' : ''}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center justify-end gap-1">
@@ -928,6 +1148,12 @@ export default function EventParticipantsIndex({
                                                                     </button>
                                                                 </>
                                                             )}
+                                                             {(ep.status === 'pending' || ep.status === 'confirmed' || ep.status === 'rejected') && (
+                                                                <button onClick={() => withdrawRegistration(ep.id)}
+                                                                    className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-muted hover:text-foreground" title={t('Withdraw')}>
+                                                                    <LogOut className="size-3.5" />
+                                                                </button>
+                                                            )}
                                                              <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
                                                                  className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')}>
                                                                 <X className="size-3.5" />
@@ -937,7 +1163,7 @@ export default function EventParticipantsIndex({
                                                 </TableRow>
                                                 {isExpanded && (
                                                     <TableRow className="bg-muted/20">
-                                                        <TableCell colSpan={isFacultyRepresentative ? 3 : 5} className="p-0">
+                                                        <TableCell colSpan={isFacultyRepresentative ? 4 : 6} className="p-0">
                                                             <div className="px-4 py-4">
                                                                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                                                                     <div className="flex items-center gap-2">
@@ -1008,6 +1234,7 @@ export default function EventParticipantsIndex({
                             </Table>
                         </CardContent>
                     </Card>
+                    </div>
                 )
             )}
 
@@ -1137,6 +1364,13 @@ export default function EventParticipantsIndex({
             <ConfirmRejectDialog open={!!rejectTarget} onClose={() => setRejectTarget(null)}
                 onConfirm={rejectRegistration} participantName={rejectTarget?.participantName ?? ''}
                 eventName={rejectTarget?.eventName ?? ''} />
+
+            <BatchRejectDialog open={batchRejectOpen} onClose={() => setBatchRejectOpen(false)}
+                count={selectedRegIds.length} onConfirm={handleBatchReject} />
+
+            <ImportDialog open={importOpen} onClose={() => setImportOpen(false)}
+                participantId={isFacultyRepresentative ? (auth?.user?.participant_id ?? '') : ''}
+                faculties={isFacultyRepresentative ? undefined : faculties} />
 
             <ConfirmSquadDeleteDialog open={!!squadDeleteTarget} onClose={() => setSquadDeleteTarget(null)}
                 onConfirm={handleSquadDelete} memberName={squadDeleteTarget?.memberName ?? ''} />

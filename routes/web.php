@@ -190,13 +190,17 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::get('/event-participants', [EventParticipantController::class, 'index'])->name('event-participants.index');
     Route::get('/participation-confirmations', [ParticipationConfirmationController::class, 'index'])->name('participation-confirmations.index');
     Route::get('/event-participants/{eventParticipant}/team-form', [TeamRegistrationFormController::class, 'show'])->name('event-participants.team-form');
+    Route::get('/event-participants/import/template', [EventParticipantController::class, 'downloadImportTemplate'])->name('event-participants.import.template');
     Route::middleware('throttle:30,1')->group(function () {
         Route::post('/event-participants', [EventParticipantController::class, 'store'])->name('event-participants.store');
+        Route::post('/event-participants/import', [EventParticipantController::class, 'import'])->name('event-participants.import');
+        Route::post('/event-participants/batch-status', [EventParticipantController::class, 'batchUpdateStatus'])->name('event-participants.batch-status');
         Route::post('/dashboard/registrations', [EventParticipantController::class, 'storeBatch'])->name('event-participants.store-batch');
         Route::patch('/event-participants/{eventParticipant}/status', [EventParticipantController::class, 'updateStatus'])->name('event-participants.status');
         // IIS deployments may reject PATCH before Laravel receives the request.
         // Keep a POST equivalent for method-constrained subfolder hosting.
         Route::post('/event-participants/{eventParticipant}/status', [EventParticipantController::class, 'updateStatus'])->name('event-participants.status-post');
+        Route::post('/event-participants/{eventParticipant}/withdraw', [EventParticipantController::class, 'withdraw'])->name('event-participants.withdraw');
         Route::delete('/event-participants/{eventParticipant}', [EventParticipantController::class, 'destroy'])->name('event-participants.destroy');
         Route::post('/event-participants/{eventParticipant}/squad', [EventParticipantController::class, 'storeSquad'])->name('event-participants.squad.store');
         Route::put('/event-participants/{eventParticipant}/squad/{squadMember}', [EventParticipantController::class, 'updateSquad'])->name('event-participants.squad.update');

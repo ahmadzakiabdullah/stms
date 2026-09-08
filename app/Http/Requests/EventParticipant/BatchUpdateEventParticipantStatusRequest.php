@@ -2,22 +2,21 @@
 
 namespace App\Http\Requests\EventParticipant;
 
-use App\Models\EventParticipant;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
-class UpdateEventParticipantStatusRequest extends FormRequest
+class BatchUpdateEventParticipantStatusRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $eventParticipant = $this->route('eventParticipant');
-
-        return $eventParticipant instanceof EventParticipant && Gate::allows('update', $eventParticipant);
+        return $this->user() !== null;
     }
 
     public function rules(): array
     {
         return [
+            'ids' => ['required', 'array', 'min:1', 'max:200'],
+            'ids.*' => ['required', 'uuid', Rule::exists('event_participants', 'id')],
             'status' => ['required', 'string', 'in:confirmed,rejected'],
             'notes' => ['nullable', 'string', 'max:1000', 'required_if:status,rejected'],
         ];

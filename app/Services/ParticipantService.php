@@ -135,6 +135,17 @@ class ParticipantService
             ->first();
 
         if ($existing) {
+            if ($existing->trashed()) {
+                $existing->restore();
+                $existing->update([
+                    'registration_date' => now(),
+                    'status' => EventParticipant::STATUS_PENDING,
+                ]);
+                Log::info('Previously withdrawn registration restored', ['id' => $existing->id, 'participant_id' => $participant->id, 'event_id' => $eventId]);
+
+                return $existing;
+            }
+
             throw ValidationException::withMessages([
                 'participant_id' => ['This participant is already registered for this event.'],
             ]);

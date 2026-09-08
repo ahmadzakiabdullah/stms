@@ -245,14 +245,49 @@ class EventParticipantStatusTest extends TestCase
         $data['facA']->users()->save($facUser);
 
         $this->actingAs($user)
-            ->patch(route('event-participants.status', $data['ep']->id), ['status' => 'rejected'])
-            ->assertRedirect(route('event-participants.index'));
+            ->patch(route('event-participants.status', $data['ep']->id), ['status' => 'rejected', 'notes' => 'Exceeded entry quota for this event.'])
+            ->assertRedirect(route('event-participants.index'))
+            ->assertSessionHas('success');
 
         $this->assertDatabaseHas('event_participants', [
             'id' => $data['ep']->id, 'status' => 'rejected',
         ]);
 
         Notification::assertSentTo($facUser, EventParticipantRejected::class);
+    }
+
+    public function test_reject_requires_a_reason(): void
+    {
+        Notification::fake();
+
+        $user = $this->seedSuperAdmin();
+        $data = $this->seedData();
+
+        $this->actingAs($user)
+            ->patch(route('event-participants.status', $data['ep']->id), ['status' => 'rejected'])
+            ->assertSessionHasErrors('notes');
+
+        $this->assertDatabaseHas('event_participants', [
+            'id' => $data['ep']->id, 'status' => 'pending',
+        ]);
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_cannot_change_status_after_confirmed(): void
+    {
+        $user = $this->seedSuperAdmin();
+        $data = $this->seedData();
+        $data['ep']->update(['status' => 'confirmed']);
+
+        $this->actingAs($user)
+            ->patch(route('event-participants.status', $data['ep']->id), ['status' => 'rejected', 'notes' => 'blocked transition'])
+            ->assertRedirect(route('event-participants.index'))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('event_participants', [
+            'id' => $data['ep']->id, 'status' => 'confirmed',
+        ]);
     }
 
     public function test_invalid_status_is_rejected(): void

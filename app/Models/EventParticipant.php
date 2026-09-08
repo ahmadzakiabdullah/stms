@@ -16,6 +16,24 @@ class EventParticipant extends Model
 {
     use BelongsToOrganization, HasFactory, HasUuids, LogsActivity, SoftDeletes;
 
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_CONFIRMED = 'confirmed';
+
+    public const STATUS_REJECTED = 'rejected';
+
+    public const STATUS_WITHDRAWN = 'withdrawn';
+
+    public const STATUS_DISQUALIFIED = 'disqualified';
+
+    public const ALLOWED_TRANSITIONS = [
+        self::STATUS_PENDING => [self::STATUS_CONFIRMED, self::STATUS_REJECTED, self::STATUS_WITHDRAWN, self::STATUS_DISQUALIFIED],
+        self::STATUS_CONFIRMED => [self::STATUS_WITHDRAWN, self::STATUS_DISQUALIFIED],
+        self::STATUS_REJECTED => [self::STATUS_CONFIRMED, self::STATUS_WITHDRAWN],
+        self::STATUS_WITHDRAWN => [],
+        self::STATUS_DISQUALIFIED => [],
+    ];
+
     protected $table = 'event_participants';
 
     protected $fillable = [
@@ -62,5 +80,14 @@ class EventParticipant extends Model
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty();
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        if ($status === $this->status) {
+            return false;
+        }
+
+        return in_array($status, self::ALLOWED_TRANSITIONS[$this->status] ?? [], true);
     }
 }
