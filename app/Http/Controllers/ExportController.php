@@ -205,6 +205,26 @@ class ExportController extends Controller implements HasMiddleware
         return $pdf->download('match-sheet-'.($fixture->match_number ?? 'draft').'.pdf');
     }
 
+    // ─── RESULT SHEET ───
+
+    public function resultSheet(Request $request, string $fixtureId)
+    {
+        $org = $request->user()->organization;
+
+        $fixture = Fixture::where('organization_id', $org->id)
+            ->with(['event.tournament', 'homeParticipant', 'awayParticipant', 'result.winner', 'result.submittedBy', 'result.approvedBy'])
+            ->findOrFail($fixtureId);
+
+        $result = $fixture->result;
+
+        $pdf = Pdf::loadView('exports.result-sheet', [
+            'fixture' => $fixture,
+            'result' => $result,
+        ]);
+
+        return $pdf->download('result-sheet-'.($fixture->match_number ?? 'draft').'.pdf');
+    }
+
     // ─── MEDAL TALLY ───
 
     public function medalTallyPdf(Request $request, string $sessionSlug)

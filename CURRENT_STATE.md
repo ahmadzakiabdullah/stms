@@ -16,7 +16,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 149 application routes |
+| Laravel routes | 150 application routes |
 | Migrations | 66 migration files |
 | Controllers | 39 controller files |
 | Form Requests | 28 |
@@ -25,7 +25,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Services/concerns | 40 fail |
 | Models | 18 |
 | Inertia `.tsx` pages | 43 |
-| PHP tests | 97 PHP test files |
+| PHP tests | 98 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
 ## Tech Stack
@@ -103,8 +103,18 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | Composer audit | Lulus — 0 advisory |
 | npm audit | Lulus — 0 vulnerability |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
-| Inventory | Menjangka matriks `149 / 66 / 39 / 43 / 97` |
+| Inventory | Menjangka matriks `150 / 66 / 39 / 43 / 98` |
 | Connected CI | **Lulus — [run #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726)** pada `4b04c46`; keenam-enam job hijau termasuk browser E2E dan ratchet PCOV |
+
+## Capability Tambahan 8 September 2026 — Print-Friendly Result Sheet
+
+- PDF resmi `exports.resultSheet` dengan skor akhir, pemenang, status kelulusan, metadata submitted/approved-by dan garis tandatangan; tenant-scoped dan digabungkan sebagai butang print pada setiap baris Result dalam Results workspace.
+- Suite penuh kini **498/498** hijau (routes 150, testFiles 98).
+
+## Capability Tambahan 8 September 2026 — Match Schedule Conflict Validation
+
+- `MatchScheduleConflictValidator` menyekat penciptaan/kemaskini match yang bertindih masa (venue sama dalam tetingkap 120 minit, atau participant bermain serentak dalam dua match) sebelum jadual diterbitkan; digabungkan ke `MatchController::store`/`update` dengan mesej ralat jelas.
+- 6 ujian feature baharu; suite penuh kini **496/496** hijau (testFiles 98).
 
 ## Capability Tambahan 8 September 2026 — Export Medal Tally & Suite Cleanup
 

@@ -246,6 +246,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
         Route::get('/exports/medals/{session}/pdf', [ExportController::class, 'medalTallyPdf'])->name('exports.medals.pdf');
         Route::get('/exports/medals/{session}/excel', [ExportController::class, 'medalTallyExcel'])->name('exports.medals.excel');
         Route::get('/exports/match-sheet/{fixture}', [ExportController::class, 'matchSheet'])->name('exports.matchSheet');
+        Route::get('/exports/result-sheet/{fixture}', [ExportController::class, 'resultSheet'])->name('exports.resultSheet');
     });
 
     // M6: Reporting Dashboard

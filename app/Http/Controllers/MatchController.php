@@ -12,6 +12,7 @@ use App\Models\Fixture;
 use App\Models\Participant;
 use App\Services\KnockoutStageService;
 use App\Services\LeagueTableService;
+use App\Services\MatchScheduleConflictValidator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -148,6 +149,15 @@ class MatchController extends Controller
 
         Gate::authorize('create', [Fixture::class, $event->sport_id]);
 
+        $conflicts = app(MatchScheduleConflictValidator::class)
+            ->conflictsFor(auth()->user()->organization, $request->validated());
+
+        if (! empty($conflicts)) {
+            return redirect()->back()
+                ->with('error', $this->conflictMessage($conflicts))
+                ->withErrors(['scheduled_at' => 'The schedule clashes with an existing match.']);
+        }
+
         $action->handle(
             auth()->user()->organization,
             $request->validated()
@@ -159,6 +169,15 @@ class MatchController extends Controller
     public function update(UpdateMatchRequest $request, Fixture $match, UpdateMatch $action): RedirectResponse
     {
         Gate::authorize('update', $match);
+
+        $conflicts = app(MatchScheduleConflictValidator::class)
+            ->conflictsFor(auth()->user()->organization, $request->validated(), $match->id);
+
+        if (! empty($conflicts)) {
+            return redirect()->back()
+                ->with('error', $this->conflictMessage($conflicts))
+                ->withErrors(['scheduled_at' => 'The schedule clashes with an existing match.']);
+        }
 
         $action->handle(
             auth()->user()->organization,
@@ -199,5 +218,14 @@ class MatchController extends Controller
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    private function conflictMessage(array $conflicts): string
+    {
+        $count = count($conflicts);
+        $details = collect($conflicts)->take(2)->map(fn ($c) => "#{$c['match_number']} ({$c['kind']} clash at {$c['scheduled_at']})")->implode(', ');
+
+        return "Schedule clash detected: the match conflicts with {$count} existing fixture(s): {$details}. "
+            .'Reschedule or change the venue to continue.';
     }
 }

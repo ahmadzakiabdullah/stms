@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased - Print-friendly result sheet (8 September 2026)
+
+- Added a print-friendly official result sheet PDF (`exports.resultSheet`) alongside the existing match sheet, with final score, winner, approval status, submitted/approved-by metadata and signature lines.
+- The result sheet is tenant-scoped, authorized via the `export-data` gate and surfaced as a print button on each Result row in the Results workspace.
+- Added 2 feature tests (success + cross-organization 404); full suite now 498/498 green (routes 150).
+
+## Unreleased - Match schedule conflict validation (8 September 2026)
+
+- Added `MatchScheduleConflictValidator` that detects overlapping-time clashes before a match is created or updated: same venue on the same day within a 120-minute window, or a participant scheduled in more than one match in the same window.
+- Gated `MatchController::store` and `update` on the validator; conflicting submissions are rejected with a clear schedule-clash error rather than persisted.
+- Added 6 feature tests covering venue, participant, cross-day, self-edit and controller-request blocking; full suite now 496/496 green (testFiles 98).
+
 ## Unreleased - Medal tally exports (8 September 2026)
 
 - Added per-session medal tally PDF and XLSX exports (`exports.medals.pdf` / `exports.medals.excel`) with a dedicated `MedalTallyExport` Excel export and session-scoped ranking computation, surfaced as buttons on the Rankings admin page.

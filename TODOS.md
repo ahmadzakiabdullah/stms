@@ -76,9 +76,9 @@ Dokumen repository untuk monitoring matrix, ownership, threshold, escalation, in
 
 - [ ] Tambah bulk import peserta, kontinjen dan roster melalui CSV/XLSX dengan preview, validation report dan rollback.
 - [ ] Tambah export jadual, keputusan, ranking dan medal tally ke PDF/XLSX.
-- [ ] Sediakan print-friendly match sheet dan result sheet.
+- [x] Sediakan print-friendly match sheet dan result sheet; PDF resmi dikeluarkan melalui `exports.matchSheet`/`exports.resultSheet` dengan tenant scoping, authorization `export-data` dan butang print pada baris Result.
 - [x] Tambah search, filter, pagination dan empty/error states yang konsisten pada halaman admin utama. Participants, Events, Matches, Results, Sports, Sessions, Tournaments, Users dan Activity Logs kini mempunyai carian/filter server-side, pagination dan empty states.
-- [ ] Tambah validasi konflik venue, masa, participant dan fixture sebelum jadual diterbitkan.
+- [x] Tambah validasi konflik venue, masa, participant dan fixture sebelum jadual diterbitkan; `MatchScheduleConflictValidator` menyekat penciptaan/kemaskini match yang bertindih (venue sama dalam tetingkap 120 minit, atau participant bermain dalam dua match serentak) di `MatchController::store`/`update`, diliputi 6 ujian feature.
 - [x] Sokong lock keputusan selepas pengesahan serta approval workflow: `submitted → approved → locked`, policy role-aware, unlock terkawal dan status dipaparkan pada Results workspace.
 - [x] Simpan sejarah perubahan score, participant, draw dan status approval yang boleh diaudit; model activity log merekod perubahan fields, draw versions menyimpan snapshot draw, dan Activity Logs memaparkan event/changed fields.
 

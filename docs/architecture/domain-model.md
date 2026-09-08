@@ -64,3 +64,7 @@ Any change to these exceptions requires an ADR and a data migration plan.
 ## Deferred Domain Areas
 
 Accreditation and dedicated Schedule domain models are not implemented in the current milestone. Venue support is implemented through event/match venue fields and the public schedule is implemented as a portal view; a standalone Venue aggregate remains deferred.
+
+## Schedule Conflict Validation
+
+Before a match is created or updated, `MatchScheduleConflictValidator` (in `app/Services`) rejects any fixture whose time window overlaps an existing scheduled fixture on the same day within a 120-minute window when they share a venue, or when the same participant appears in more than one match in that window. The gate is applied in `MatchController::store` and `update`; the submitted fixture is not persisted until the conflicts are resolved.

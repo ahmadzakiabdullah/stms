@@ -33,7 +33,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CalendarDays, CheckCircle2, CheckCheck, LockKeyhole, Minus, Pencil, Plus, Save, Search, Swords, Trash2, Trophy, UnlockKeyhole } from 'lucide-react';
+import { CalendarDays, CheckCircle2, CheckCheck, LockKeyhole, Minus, Pencil, Plus, Printer, Save, Search, Swords, Trash2, Trophy, UnlockKeyhole } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { matchNumberLabel } from '@/lib/matchNumber';
 import { useI18n } from '@/lib/i18n';
@@ -275,6 +275,7 @@ function ResultRowView({ result, onEdit, onDelete, canManage = true, onApprove, 
             </TableCell>
             {canManage && (
             <TableCell className="space-x-1 text-right">
+                {result.match?.id && <Button variant="outline" size="icon-sm" asChild aria-label="Print result sheet" title="Print result sheet"><a href={route('exports.resultSheet', result.match.id)}><Printer className="size-3" /></a></Button>}
                 {result.status === 'submitted' && canApprove && <Button variant="outline" size="icon-sm" onClick={onApprove} aria-label="Approve result"><CheckCheck className="size-3" /></Button>}
                 {result.status === 'approved' && canApprove && <Button variant="outline" size="icon-sm" onClick={onLock} aria-label="Lock result"><LockKeyhole className="size-3" /></Button>}
                 {result.status === 'locked' && canUnlock && <Button variant="outline" size="icon-sm" onClick={onUnlock} aria-label="Unlock result"><UnlockKeyhole className="size-3" /></Button>}
