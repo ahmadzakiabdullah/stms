@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Throwable;
 
-class EventParticipantImport implements ToCollection, WithHeadingRow, WithCustomCsvSettings
+class EventParticipantImport implements ToCollection, WithCustomCsvSettings, WithHeadingRow
 {
     private array $errors = [];
 

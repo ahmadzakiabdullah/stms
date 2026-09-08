@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Event;
 use App\Models\EventParticipant;
+use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Services\ParticipantScheduleConflictService;
@@ -35,7 +36,7 @@ class ParticipantScheduleConflictServiceTest extends TestCase
     {
         $data = $this->seedParticipantWithMatches();
 
-        \App\Models\Fixture::create([
+        Fixture::create([
             'organization_id' => $data['org']->id,
             'event_id' => $data['eventA']->id,
             'home_participant_id' => $data['participant']->id,
@@ -43,7 +44,7 @@ class ParticipantScheduleConflictServiceTest extends TestCase
             'scheduled_at' => now()->setDate(2026, 10, 5)->setTime(9, 0),
             'status' => 'scheduled',
         ]);
-        \App\Models\Fixture::create([
+        Fixture::create([
             'organization_id' => $data['org']->id,
             'event_id' => $data['eventB']->id,
             'away_participant_id' => $data['participant']->id,
@@ -63,7 +64,7 @@ class ParticipantScheduleConflictServiceTest extends TestCase
     {
         $data = $this->seedParticipantWithMatches();
 
-        \App\Models\Fixture::create([
+        Fixture::create([
             'organization_id' => $data['org']->id,
             'event_id' => $data['eventA']->id,
             'home_participant_id' => $data['participant']->id,
@@ -71,7 +72,7 @@ class ParticipantScheduleConflictServiceTest extends TestCase
             'scheduled_at' => now()->setDate(2026, 10, 5)->setTime(9, 0),
             'status' => 'scheduled',
         ]);
-        \App\Models\Fixture::create([
+        Fixture::create([
             'organization_id' => $data['org']->id,
             'event_id' => $data['eventB']->id,
             'away_participant_id' => $data['participant']->id,
@@ -89,7 +90,7 @@ class ParticipantScheduleConflictServiceTest extends TestCase
     {
         $data = $this->seedParticipantWithMatches();
 
-        \App\Models\Fixture::create([
+        Fixture::create([
             'organization_id' => $data['org']->id,
             'event_id' => $data['eventA']->id,
             'home_participant_id' => $data['participant']->id,
@@ -97,7 +98,7 @@ class ParticipantScheduleConflictServiceTest extends TestCase
             'scheduled_at' => now()->setDate(2026, 10, 5)->setTime(9, 0),
             'status' => 'scheduled',
         ]);
-        \App\Models\Fixture::create([
+        Fixture::create([
             'organization_id' => $data['org']->id,
             'event_id' => $data['eventB']->id,
             'away_participant_id' => $data['participant']->id,
