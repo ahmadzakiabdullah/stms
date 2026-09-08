@@ -246,10 +246,19 @@ class ResultController extends Controller
             return;
         }
 
-        $users = collect([$match->home_participant_id, $match->away_participant_id])
+        $participantIds = collect([$match->home_participant_id, $match->away_participant_id])
             ->filter()
-            ->unique()
-            ->flatMap(fn ($participantId) => Participant::find($participantId)?->users ?? collect())
+            ->unique();
+
+        // ⚡ Bolt Optimization: Fetch all participants and their users in a single query
+        // instead of querying individually inside a flatMap loop to avoid N+1 query vulnerability.
+        $participants = Participant::with('users')
+            ->whereIn('id', $participantIds)
+            ->get()
+            ->keyBy('id');
+
+        $users = $participantIds
+            ->flatMap(fn ($participantId) => $participants->get($participantId)?->users ?? collect())
             ->unique(fn ($user) => $user->getKey());
 
         foreach ($users as $user) {
