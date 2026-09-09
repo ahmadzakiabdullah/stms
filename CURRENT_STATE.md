@@ -16,7 +16,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 150 application routes |
+| Laravel routes | 153 application routes |
 | Migrations | 66 migration files |
 | Controllers | 39 controller files |
 | Form Requests | 28 |
@@ -25,7 +25,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Services/concerns | 40 fail |
 | Models | 18 |
 | Inertia `.tsx` pages | 43 |
-| PHP tests | 98 PHP test files |
+| PHP tests | 99 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
 ## Tech Stack
@@ -103,8 +103,15 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | Composer audit | Lulus — 0 advisory |
 | npm audit | Lulus — 0 vulnerability |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
-| Inventory | Menjangka matriks `150 / 66 / 39 / 43 / 98` |
+| Inventory | Menjangka matriks `153 / 66 / 39 / 43 / 99` |
 | Connected CI | **Lulus — [run #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726)** pada `4b04c46`; keenam-enam job hijau termasuk browser E2E dan ratchet PCOV |
+
+## Capability Tambahan 9 September 2026 — Bulk Import Peserta/Kontinjen (Session-level)
+
+- Import pukal peserta/kontinjen aras session melalui dua langkah preview→confirm: `POST /participants/import/preview` mem-parse CSV/XLSX, menjalankan per-row validation (name wajib, participant_type/status/is_active enum, email format, duplicate name/slug dalam organisasi), menyimpan baris sah dalam Cache 30 min dengan token UUID, dan memaparkan validation report.
+- `POST /participants/import/confirm` mencipta semua peserta dalam satu DB transaction (all-or-nothing); sebarang kegagalan di-rollback dan token dibuang. Token yang tamat/kaput memberi mesej jelas tanpa menjejaskan data.
+- Template import tersedia di `/participants/import/template` (`participants.import.template`); UI Import button + dialog preview dengan senarai baris sah/error ditambah pada halaman Participants.
+- Suite penuh kini **506/506** hijau (routes 153, testFiles 99); 8 ujian feature baharu dalam `ParticipantImportTest`.
 
 ## Capability Tambahan 8 September 2026 — Print-Friendly Result Sheet
 

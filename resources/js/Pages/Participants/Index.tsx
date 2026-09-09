@@ -58,6 +58,7 @@ interface ParticipantRow extends Participant {
 interface ParticipantsIndexProps {
     participants: Paginated<ParticipantRow> | ParticipantRow[];
     sessions?: Session[];
+    importPreview?: ImportPreview | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -67,10 +68,11 @@ const statusColors: Record<string, string> = {
     disqualified: 'bg-red-100 text-red-700',
 };
 
-export default function ParticipantsIndex({ participants: participantsProp, sessions: sessionsProp = [] }: ParticipantsIndexProps) {
+export default function ParticipantsIndex({ participants: participantsProp, sessions: sessionsProp = [], importPreview = null }: ParticipantsIndexProps) {
     const { flash } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
+    const [importOpen, setImportOpen] = useState(false);
     const [editingParticipant, setEditingParticipant] = useState<ParticipantRow | null>(null);
     const [deleteParticipant, setDeleteParticipant] = useState<ParticipantRow | null>(null);
     const [viewParticipant, setViewParticipant] = useState<ParticipantRow | null>(null);
@@ -117,7 +119,12 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                         </p>
                     </div>
 
-                    <Dialog open={open} onOpenChange={(isOpen) => {
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={() => setImportOpen(true)}>
+                            <Upload className="mr-2 size-4" />
+                            {t('Import')}
+                        </Button>
+                        <Dialog open={open} onOpenChange={(isOpen) => {
                         if (!isOpen) closeDialog();
                         else setOpen(true);
                     }}>
@@ -136,6 +143,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                 />
                             </DialogContent>
                     </Dialog>
+                    </div>
                 </div>
             }
         >
@@ -341,6 +349,16 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                             {t('Close')}
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={importOpen} onOpenChange={(isOpen) => { if (!isOpen) setImportOpen(false); }}>
+                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+                    <ImportParticipantsDialog
+                        sessions={sessions}
+                        initialPreview={importPreview}
+                        onClose={() => setImportOpen(false)}
+                    />
                 </DialogContent>
             </Dialog>
 
@@ -636,5 +654,213 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
                 </Button>
             </DialogFooter>
         </form>
+    );
+}
+
+interface ImportPreviewRowData {
+    name: string;
+    participant_type: string;
+    team_name?: string;
+    email?: string;
+    status?: string;
+    slug?: string;
+    session_id?: string | null;
+}
+
+interface ImportPreviewRow {
+    row_number: number;
+    data: ImportPreviewRowData;
+}
+
+interface ImportPreview {
+    token: string;
+    valid_count: number;
+    error_count: number;
+    rows: ImportPreviewRow[];
+    errors: string[];
+}
+
+function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessions: Session[]; initialPreview: ImportPreview | null; onClose: () => void }) {
+    const { t } = useI18n();
+    const [file, setFile] = useState<File | null>(null);
+    const [sessionId, setSessionId] = useState('');
+    const [preview, setPreview] = useState<ImportPreview | null>(initialPreview);
+    const [busy, setBusy] = useState(false);
+
+    useEffect(() => {
+        setPreview(initialPreview);
+    }, [initialPreview]);
+
+    const handleUpload = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!file || busy) return;
+
+        setBusy(true);
+        const form = new FormData();
+        form.append('file', file);
+        if (sessionId) form.append('session_id', sessionId);
+
+        router.post(route('participants.import.preview'), form, {
+            preserveState: true,
+            preserveScroll: true,
+            forceFormData: true,
+            onFinish: () => setBusy(false),
+        });
+    };
+
+    const handleConfirm = () => {
+        if (!preview || busy) return;
+
+        setBusy(true);
+        router.post(route('participants.import.confirm'), { token: preview.token }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setPreview(null);
+                setFile(null);
+                onClose();
+            },
+            onFinish: () => setBusy(false),
+        });
+    };
+
+    const resetPreview = () => {
+        setPreview(null);
+        setFile(null);
+    };
+
+    return (
+        <div>
+            <DialogHeader>
+                <DialogTitle>{t('Bulk Import Participants')}</DialogTitle>
+                <DialogDescription>
+                    {t('Upload a CSV or Excel file with one participant per row. Review the preview before confirming; nothing is saved until you confirm.')}
+                </DialogDescription>
+            </DialogHeader>
+
+            <a
+                href={route('participants.import.template')}
+                className="mt-2 inline-block text-sm font-medium text-primary underline underline-offset-4"
+            >
+                {t('Download import template')}
+            </a>
+
+            {!preview ? (
+                <form onSubmit={handleUpload} className="mt-4 grid gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="import_session">{t('Session')}</Label>
+                        <select
+                            id="import_session"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            value={sessionId}
+                            onChange={e => setSessionId(e.target.value)}
+                        >
+                            <option value="">{t('-- No session --')}</option>
+                            {sessions.map((s) => (
+                                <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label>{t('File')}</Label>
+                        <Input
+                            type="file"
+                            accept=".csv,.xlsx,.xls,.txt"
+                            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            {t('Columns: name, participant_type, team_name, email, phone, status, is_active, slug. CSV (UTF-8) or XLSX, max 5 MB.')}
+                        </p>
+                    </div>
+
+                    <DialogFooter className="gap-2">
+                        <Button type="button" variant="outline" onClick={onClose}>
+                            {t('Cancel')}
+                        </Button>
+                        <Button type="submit" disabled={!file || busy}>
+                            <Upload className="mr-2 size-4" />
+                            {busy ? t('Parsing...') : t('Upload & Preview')}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            ) : (
+                <div className="mt-4 grid gap-3">
+                    <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                        <span>
+                            <strong>{preview.valid_count}</strong> {t('valid')} ·{' '}
+                            <strong>{preview.error_count}</strong> {t('with errors')}
+                        </span>
+                    </div>
+
+                    {preview.errors.length > 0 && (
+                        <div className="max-h-40 overflow-y-auto rounded-md border border-red-100 bg-red-50 p-3">
+                            <p className="mb-1 text-sm font-semibold text-red-800">{t('Validation report')}</p>
+                            <ul className="space-y-1 text-xs text-red-700">
+                                {preview.errors.map((err, i) => (
+                                    <li key={i}>{err}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {preview.rows.length > 0 && (
+                        <div className="max-h-52 overflow-y-auto rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-12">#</TableHead>
+                                        <TableHead>{t('Name')}</TableHead>
+                                        <TableHead>{t('Type')}</TableHead>
+                                        <TableHead>{t('Email')}</TableHead>
+                                        <TableHead>{t('Status')}</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {preview.rows.map((row) => (
+                                        <TableRow key={row.row_number}>
+                                            <TableCell className="text-xs text-muted-foreground">{row.row_number}</TableCell>
+                                            <TableCell className="text-sm font-medium">{row.data.name}</TableCell>
+                                            <TableCell className="text-sm capitalize">{row.data.participant_type}</TableCell>
+                                            <TableCell className="text-sm">{row.data.email || '—'}</TableCell>
+                                            <TableCell className="text-sm capitalize">
+                                                <span className={`rounded-full px-2 py-0.5 text-xs capitalize ${statusColors[row.data.status || 'registered'] || 'bg-gray-100 text-gray-600'}`}>
+                                                    {row.data.status || 'registered'}
+                                                </span>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
+
+                    <DialogFooter className="gap-2">
+                        {busy && preview.token ? (
+                            <Button type="button" disabled>
+                                {t('Importing...')}
+                            </Button>
+                        ) : preview.token ? (
+                            <>
+                                <Button type="button" variant="outline" onClick={onClose}>
+                                    {t('Cancel')}
+                                </Button>
+                                <Button type="button" variant="ghost" onClick={resetPreview}>
+                                    {t('Choose another file')}
+                                </Button>
+                                <Button type="button" onClick={handleConfirm}>
+                                    <Save className="mr-2 size-4" />
+                                    {t('Confirm Import')}
+                                </Button>
+                            </>
+                        ) : (
+                            <Button type="button" variant="outline" onClick={onClose}>
+                                {t('Close')}
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </div>
+            )}
+        </div>
     );
 }

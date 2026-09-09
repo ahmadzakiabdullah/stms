@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - Bulk participant/kontinjen import (9 September 2026)
+
+- Added session-level bulk import of participants/kontinjen as a two-step preview → confirm flow: `POST /participants/import/preview` parses CSV/XLSX, runs per-row validation (required name, participant_type/status/is_active enums, email format, in-organization duplicate name/slug detection), stages valid rows in the cache under a UUID token (30-minute TTL) and returns a validation report; `POST /participants/import/confirm` creates all staged rows inside a single DB transaction (all-or-nothing rollback) and forgets the token on success or failure.
+- Expired or unknown tokens produce a clear error without mutating data; session selection is optional and cross-organization session ids are rejected at the Form Request level.
+- Added a downloadable import template at `participants.import.template` and an Import dialog on the Participants page that shows the valid/error row summary before confirmation.
+- Added 8 feature tests in `ParticipantImportTest` (preview parsing, invalid-row reporting, cross-org session rejection, confirm creation, expired-token rejection, transactional rollback, template download, authorization). Full suite now 506/506 green (routes 153, testFiles 99); all CI gates (typecheck, build, bundle budget, inventory, tenant-bypass allowlist) pass.
+
 ## Unreleased - Print-friendly result sheet (8 September 2026)
 
 - Added a print-friendly official result sheet PDF (`exports.resultSheet`) alongside the existing match sheet, with final score, winner, approval status, submitted/approved-by metadata and signature lines.

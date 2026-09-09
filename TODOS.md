@@ -74,8 +74,8 @@ Dokumen repository untuk monitoring matrix, ownership, threshold, escalation, in
 
 ### Fasa 3 — Kesediaan operasi pertandingan dan UX admin
 
-- [ ] Tambah bulk import peserta, kontinjen dan roster melalui CSV/XLSX dengan preview, validation report dan rollback.
-- [ ] Tambah export jadual, keputusan, ranking dan medal tally ke PDF/XLSX.
+- [x] Tambah bulk import peserta, kontinjen dan roster melalui CSV/XLSX dengan preview, validation report dan rollback; dua langkah `participants.import.preview`→`participants.import.confirm`, baris sah dikachekan (token UUID, TTL 30 min), baris dicipta dalam satu DB transaction (all-or-nothing), template di `participants.import.template`, dialog Import di halaman Participants dan 8 ujian feature dalam `ParticipantImportTest`.
+- [x] Tambah export jadual, keputusan, ranking dan medal tally ke PDF/XLSX (fixtures/results/rankings + medal tally per-session, semua tenant-scoped dan bergate `export-data`).
 - [x] Sediakan print-friendly match sheet dan result sheet; PDF resmi dikeluarkan melalui `exports.matchSheet`/`exports.resultSheet` dengan tenant scoping, authorization `export-data` dan butang print pada baris Result.
 - [x] Tambah search, filter, pagination dan empty/error states yang konsisten pada halaman admin utama. Participants, Events, Matches, Results, Sports, Sessions, Tournaments, Users dan Activity Logs kini mempunyai carian/filter server-side, pagination dan empty states.
 - [x] Tambah validasi konflik venue, masa, participant dan fixture sebelum jadual diterbitkan; `MatchScheduleConflictValidator` menyekat penciptaan/kemaskini match yang bertindih (venue sama dalam tetingkap 120 minit, atau participant bermain dalam dua match serentak) di `MatchController::store`/`update`, diliputi 6 ujian feature.

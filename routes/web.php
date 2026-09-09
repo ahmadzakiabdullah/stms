@@ -178,9 +178,14 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
 
     // M3: Participant & Registration
     Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
+    Route::get('/participants/import/template', [ParticipantController::class, 'downloadImportTemplate'])->name('participants.import.template');
     Route::post('/participants', [ParticipantController::class, 'store'])->name('participants.store');
     Route::put('/participants/{participant}', [ParticipantController::class, 'update'])->name('participants.update');
     Route::delete('/participants/{participant}', [ParticipantController::class, 'destroy'])->name('participants.destroy');
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/participants/import/preview', [ParticipantController::class, 'previewImport'])->name('participants.import.preview');
+        Route::post('/participants/import/confirm', [ParticipantController::class, 'confirmImport'])->name('participants.import.confirm');
+    });
 
     Route::get('/registrations', [RegistrationController::class, 'index'])->name('registrations.index');
     Route::post('/registrations', [RegistrationController::class, 'store'])->name('registrations.store');
