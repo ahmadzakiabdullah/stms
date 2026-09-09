@@ -1,5 +1,12 @@
 # Changelog
 
+## 9 September 2026 — Full local quality-gate certification + dependency remediation
+
+- Certified the complete local gate suite against the committed tree: PHPUnit **506/506 (2,345 assertions)**, Pint `--test` green repo-wide, inventory `153 / 66 / 39 / 43 / 99`, tenant-bypass allowlist, TypeScript, Vite build and bundle budget all green.
+- Remediated 5 new Composer advisories by upgrading `league/commonmark` 2.9.0 → **2.10.1** (4 DoS/XSS advisories in the Attributes/SmartPunct extensions) and `maatwebsite/excel` 3.1.69 → **3.1.70** (CVE-2026-84374, export write outside configured disk); `composer audit` now reports 0 advisories and the full PHPUnit suite remains 506/506.
+- Remediated 7 npm vulnerabilities (browserslist, fast-uri, js-yaml, qs, postcss-selector-parser, hono, baseline-browser-mapping) by regenerating `package-lock.json` + `node_modules` on a local drive. npm 10.9.8 on this Windows network-drive workspace fails with the arborist `Tracker "idealTree" already exists` bug (npm/cli #4273/#7596); regenerating on a local drive with npm 12.0.2 and copying back resolves it — `npm audit` now reports **0 vulnerabilities**. Pinned `vite` to `8.0.16` and `@vitejs/plugin-react` to `6.0.2` in `package.json` (previously `"latest"`).
+- Applied Pint formatting across pre-existing Fasa A files (actions, requests, imports, services, config and 3 test files) as commit `7a43b37e`.
+
 ## Unreleased - Bulk participant/kontinjen import (9 September 2026)
 
 - Added session-level bulk import of participants/kontinjen as a two-step preview → confirm flow: `POST /participants/import/preview` parses CSV/XLSX, runs per-row validation (required name, participant_type/status/is_active enums, email format, in-organization duplicate name/slug detection), stages valid rows in the cache under a UUID token (30-minute TTL) and returns a validation report; `POST /participants/import/confirm` creates all staged rows inside a single DB transaction (all-or-nothing rollback) and forgets the token on success or failure.
