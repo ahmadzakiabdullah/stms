@@ -129,17 +129,14 @@ final class EventParticipantIndexService
         $statusCounts = collect(['pending' => 0, 'confirmed' => 0, 'rejected' => 0])->merge($statusCounts);
 
         $conflicts = $this->safeCollectionQuery(function () use ($participants) {
-            $map = [];
-
+            $allEventParticipants = collect();
             foreach ($participants->items() as $participant) {
-                foreach ($participant->eventParticipants ?? [] as $ep) {
-                    $result = app(ParticipantScheduleConflictService::class)->conflictsFor($ep, 3);
-
-                    if ($result !== []) {
-                        $map[$ep->id] = $result;
-                    }
+                if ($participant->eventParticipants) {
+                    $allEventParticipants->push(...$participant->eventParticipants);
                 }
             }
+
+            $map = app(ParticipantScheduleConflictService::class)->conflictsForMultiple($allEventParticipants, 3);
 
             return collect($map);
         }, fn () => collect());

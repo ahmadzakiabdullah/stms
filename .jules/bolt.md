@@ -13,3 +13,7 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+
+## 2024-11-14 - Batching Aggregation Queries in Service Layers
+**Learning:** Found an N+1 vulnerability in `EventParticipantIndexService` where a nested loop iteratively called `ParticipantScheduleConflictService::conflictsFor` on each `EventParticipant`. Since each calculation involved a database call (`Fixture::query()->where(...)`), iterating over participants caused an exponential number of database hits.
+**Action:** When extracting sub-calculations that require database access (like schedule conflicts), ensure the service layer provides a `conflictsForMultiple(Collection)` method. This allows the caller to gather all IDs, execute a single batched query, and map the results back in memory, averting the N+1 trap.
