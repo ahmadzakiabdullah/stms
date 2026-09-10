@@ -38,10 +38,13 @@ class FacultyDashboardService
                 ->orderBy('created_at', 'desc')
                 ->get();
 
+            // Optimization: Use `countBy` to tally roles in a single pass over the collection
+            // instead of calling `where(...)->count()` multiple times per registration, reducing time complexity.
             foreach ($registrations as $reg) {
-                $totalMale += $reg->squadMembers->where('role', 'athlete_male')->count();
-                $totalFemale += $reg->squadMembers->where('role', 'athlete_female')->count();
-                $totalOfficials += $reg->squadMembers->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->count();
+                $roleCounts = $reg->squadMembers->countBy('role');
+                $totalMale += $roleCounts->get('athlete_male', 0);
+                $totalFemale += $roleCounts->get('athlete_female', 0);
+                $totalOfficials += $roleCounts->only(['assistant_manager', 'manager', 'coach', 'physio'])->sum();
             }
         }
 
