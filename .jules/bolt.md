@@ -13,3 +13,7 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+
+## 2024-05-23 - Avoid N+1 mapping in collections via `flatMap` and `countBy`
+**Learning:** Nested loops containing multiple `where(...)->count()` clauses across relations inside a collection (e.g. iterating over `registrations` to count subsets of `squadMembers`) create an O(R * M) bottleneck, mapping and filtering the collection repeatedly.
+**Action:** Replace these nested loops by projecting the collection using `flatMap` to aggregate the relations in a single pass, then utilizing `countBy()` on the target property to reduce time complexity to O(N). Use `$counts->get('key')` and `$counts->only([...])->sum()` to extract results.
