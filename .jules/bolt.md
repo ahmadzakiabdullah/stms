@@ -13,3 +13,7 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+
+## 2024-05-18 - Avoid Hidden DB Queries in Collection Filtering
+**Learning:** Calling `$collection->where(...)->count()` multiple times in a loop forces Laravel to iterate over the entire collection repeatedly. For related models like `squadMembers`, this degrades performance linearly as the outer loop grows.
+**Action:** Replace sequential `where()->count()` calls inside loops with a single `flatMap->relationName->countBy('role')` chain before assigning variables. This reduces O(n*m) iteration down to O(n), consolidating filtering into one pass.
