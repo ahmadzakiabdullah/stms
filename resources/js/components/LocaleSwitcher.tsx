@@ -41,7 +41,7 @@ export default function LocaleSwitcher({ compact = false, showLabel = true }: Lo
                             key={item.code}
                             type="button"
                             onClick={() => handleChange(item.code)}
-                            className={`px-2 py-1 text-xs font-semibold transition ${isActive ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-muted'}`}
+                            className={`px-2 py-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${isActive ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-muted'}`}
                             aria-pressed={isActive}
                         >
                             {item.code.toUpperCase()}
@@ -58,7 +58,7 @@ export default function LocaleSwitcher({ compact = false, showLabel = true }: Lo
             <select
                 value={locale}
                 onChange={(event) => handleChange(event.target.value)}
-                className={`rounded-md border border-input bg-background px-2 py-1 ${compact ? 'h-8 text-xs' : 'text-sm'}`}
+                className={`rounded-md border border-input bg-background px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${compact ? 'h-8 text-xs' : 'text-sm'}`}
                 aria-label={t('Language')}
             >
                 {locales.map((item) => (

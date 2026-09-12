@@ -1,0 +1,3 @@
+## 2026-09-12 - Explicit Keyboard Focus States for Navigation
+**Learning:** Public navigation links (`<Link>`) and interactive elements (like the Locale Switcher) lacked explicit keyboard focus states (`focus-visible`). Relying on default browser outlines can lead to poor contrast against dark backgrounds (`var(--public-dark)`). Adding a high-contrast ring improves WCAG compliance for keyboard users.
+**Action:** When adding interactive elements to the public portal, always include `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-highlight)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--public-dark)]` for components on dark backgrounds, or `focus-visible:ring-ring focus-visible:ring-offset-2` for standard UI components.

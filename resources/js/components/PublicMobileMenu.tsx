@@ -33,7 +33,7 @@ export default function PublicMobileMenu({ links }: { links: PublicMenuLink[] })
                             href={link.href}
                             aria-current={link.current ? 'page' : undefined}
                             onClick={() => setOpen(false)}
-                            className={`flex min-h-11 items-center rounded-xl px-3 text-sm font-bold transition hover:bg-white/10 ${link.current ? 'bg-white/10 text-[var(--public-highlight)]' : 'text-white/75 hover:text-white'}`}
+                            className={`flex min-h-11 items-center rounded-xl px-3 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-highlight)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--public-dark)] hover:bg-white/10 ${link.current ? 'bg-white/10 text-[var(--public-highlight)]' : 'text-white/75 hover:text-white'}`}
                         >
                             {link.label}
                         </Link>
