@@ -1,5 +1,7 @@
 # TMP Housekeeping Audit (Non-Destructive)
 
+> **Historical snapshot.** This document records the project state at its authoring date and is kept for reference only; counts, findings, and recommendations may be outdated. For current status see [`CURRENT_STATE.md`](../../CURRENT_STATE.md).
+
 > **Historical housekeeping snapshot.** This document only records the non-destructive `tmp/` review on 8 August; it is not a current full-project or release audit. See the [17 August audit](2026-08-17-full-project-and-production-audit.md).
 
 Date: 2026-08-08

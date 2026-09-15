@@ -1,5 +1,7 @@
 # Operational Assurance Drill — 5 August 2026
 
+> **Historical snapshot.** This document records the project state at its authoring date and is kept for reference only; counts, findings, and recommendations may be outdated. For current status see [`CURRENT_STATE.md`](../../CURRENT_STATE.md).
+
 > **Historical evidence.** These results apply to commit `ae42a50` and an isolated drill environment. They do not prove the 17 August working tree or current production release-ready; see the [current audit](../audits/2026-08-17-full-project-and-production-audit.md).
 
 This record captures the browser, restore, load, and alert-delivery checks executed against commit `ae42a50`. No production data was modified or copied out of the production database.

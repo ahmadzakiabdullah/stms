@@ -56,8 +56,23 @@ class EventTest extends TestCase
             'sport_id' => $sport->id,
             'sport_category_id' => $category->id,
             'name' => 'Men Singles',
+            'slug' => 'men-singles',
         ]);
-        Event::factory()->create(['organization_id' => $org->id, 'name' => 'Women Singles']);
+
+        // A second event in the same organization whose tournament/sport/slug
+        // must NOT match the search term. Values are set explicitly because the
+        // factory derives name/slug from a random sport (occasionally "Badminton").
+        $otherTournament = Tournament::factory()->create(['organization_id' => $org->id, 'name' => 'Friendly Series']);
+        $otherSport = Sport::factory()->create(['organization_id' => $org->id, 'name' => 'Football']);
+        $otherCategory = SportCategory::factory()->forSport($otherSport)->create();
+        Event::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $otherTournament->id,
+            'sport_id' => $otherSport->id,
+            'sport_category_id' => $otherCategory->id,
+            'name' => 'Women Singles',
+            'slug' => 'women-singles',
+        ]);
         $admin = $this->createOrgAdmin($org);
 
         $response = $this->actingAs($admin)->get(route('events.index', ['search' => 'Badminton']));

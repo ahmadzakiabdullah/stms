@@ -1,5 +1,7 @@
 # Implementation Status
 
+> **Historical snapshot.** This document records the project state at its authoring date and is kept for reference only; counts, findings, and recommendations may be outdated. For current status see [`CURRENT_STATE.md`](../CURRENT_STATE.md).
+
 > Current repository update: 21 Ogos 2026. Athlete directory, athlete profiles, participant-grouped scorer events and the score-editor workflow are implemented and included in commit `4c4ebf0c`; production cutover evidence remains outstanding.
 
 > Updated 18 Ogos 2026. “Implemented” bermaksud kod/capability wujud; ia tidak menggantikan release-gate evidence.

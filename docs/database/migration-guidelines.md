@@ -15,6 +15,12 @@ Examples:
 
 Always use a timestamp that preserves migration order. Group related migrations under the same date block.
 
+Every migration in a date block must have a **unique** timestamp suffix. Two files sharing the same `HHMMSS` rely on filesystem ordering and make history ambiguous.
+
+### Resolved historical collision
+
+`2026_06_12_000002` was previously used by both `create_events_table` and `create_tournament_sport_table`. The pivot migration was renamed to `2026_06_12_000003_create_tournament_sport_table.php`. Because already-deployed databases recorded the old file name, the renamed `up()` starts with `if (Schema::hasTable('tournament_sport')) { return; }` so the upgrade is a safe no-op and the new name is recorded.
+
 ## Primary Keys
 
 Semua jadual domain baharu **mesti** menggunakan UUID sebagai primary key:

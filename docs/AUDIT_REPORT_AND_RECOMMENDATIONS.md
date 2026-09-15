@@ -1,5 +1,7 @@
 # STMS - Full System Audit Report
 
+> **Historical snapshot.** This document records the project state at its authoring date and is kept for reference only; counts, findings, and recommendations may be outdated. For current status see [`CURRENT_STATE.md`](../CURRENT_STATE.md).
+
 > **Historical snapshot — superseded.** This report predates the verified 17 August 2026 audit and its “no critical vulnerabilities”/fully consistent claims are no longer current. Use [`docs/audits/2026-08-17-full-project-and-production-audit.md`](audits/2026-08-17-full-project-and-production-audit.md) for release decisions.
 
 ## 1. Security & Multi-Tenancy

@@ -1,5 +1,7 @@
 # PLAN
 
+> **Historical snapshot.** This document records the project state at its authoring date and is kept for reference only; counts, findings, and recommendations may be outdated. For current status see [`CURRENT_STATE.md`](../CURRENT_STATE.md).
+
 > **Pelan sejarah — digantikan.** Dakwaan “semua fasa selesai” di bawah ialah snapshot lama dan bukan release status semasa. Gunakan [`TODOS.md`](../TODOS.md), [`ROADMAP.md`](../ROADMAP.md) dan [audit 17 Ogos](audits/2026-08-17-full-project-and-production-audit.md).
 
 > Cadangan penambahbaikan berdasarkan audit menyeluruh STMS.
