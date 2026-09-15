@@ -127,7 +127,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
-    Route::put('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+    Route::put('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->middleware('throttle:6,1')->name('users.reset-password');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
     // Roles & Permissions
