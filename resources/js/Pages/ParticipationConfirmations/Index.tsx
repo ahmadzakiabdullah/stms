@@ -1,9 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Head, router } from '@inertiajs/react';
-import { Check, FileCheck2, Printer } from 'lucide-react';
+import { Check, Printer } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 type Option = { id: string; name: string; period?: string };
@@ -81,18 +82,16 @@ export default function Index(props: Props) {
             `}</style>
 
             <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6 lg:p-8">
-                <div className="print-hidden flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <FileCheck2 className="h-7 w-7 text-primary" />
-                            <h1 className="text-2xl font-bold tracking-tight">{t('Participation Confirmation')}</h1>
-                        </div>
-                        <p className="mt-1 text-sm text-muted-foreground">{t('Official faculty participation confirmation form.')}</p>
-                    </div>
-                    <Button onClick={() => window.print()} disabled={!props.participant}>
-                        <Printer className="mr-2 h-4 w-4" /> {t('Print form')}
-                    </Button>
-                </div>
+                <PageHeader
+                    className="print-hidden"
+                    title={t('Participation Confirmation')}
+                    description={t('Official faculty participation confirmation form.')}
+                    actions={
+                        <Button onClick={() => window.print()} disabled={!props.participant}>
+                            <Printer className="mr-2 h-4 w-4" /> {t('Print form')}
+                        </Button>
+                    }
+                />
 
                 <Card className="print-hidden">
                     <CardHeader className="pb-3"><CardTitle className="text-base">{t('Display options')}</CardTitle></CardHeader>

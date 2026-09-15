@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -67,14 +69,10 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Dean Dashboard')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Verify and manage your faculty\'s event registrations')}
-                        </p>
-                    </div>
-                </div>
+                <PageHeader
+                    title={t('Dean Dashboard')}
+                    description={t('Verify and manage your faculty\'s event registrations')}
+                />
             }
         >
             <Head title={t('Dean Dashboard')} />
@@ -249,9 +247,8 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
 
                 {registrations.length === 0 && (
                     <Card>
-                        <CardContent className="py-12 text-center text-muted-foreground">
-                            <ShieldCheck className="mx-auto mb-3 size-8 opacity-50" />
-                            {t('No registrations yet for your faculty.')}
+                        <CardContent className="py-12">
+                            <EmptyState icon={ShieldCheck} title={t('No registrations yet for your faculty.')} />
                         </CardContent>
                     </Card>
                 )}

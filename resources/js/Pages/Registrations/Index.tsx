@@ -27,6 +27,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import Pagination from '@/components/Pagination';
 import { Head, router } from '@inertiajs/react';
 import { Controller, useForm } from 'react-hook-form';
@@ -144,128 +147,125 @@ export default function RegistrationsIndex({ registrations: registrationsProp, t
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Registrations')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Manage participant registrations for tournaments')}
-                        </p>
-                    </div>
+                <PageHeader
+                    title={t('Registrations')}
+                    description={t('Manage participant registrations for tournaments')}
+                    actions={
+                        <Dialog open={open} onOpenChange={(isOpen) => {
+                            if (!isOpen) closeDialog();
+                            else setOpen(true);
+                        }}>
+                            <DialogTrigger asChild>
+                                <Button onClick={openCreate} disabled={tournaments.length === 0 || participants.length === 0}>
+                                    <Plus className="mr-2 size-4" />
+                                    {t('Add Registration')}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-lg">
+                                <form onSubmit={handleSubmit(onSubmit)}>
+                                    <DialogHeader>
+                                        <DialogTitle>{editingRegistration ? t('Edit Registration') : t('Register Participant')}</DialogTitle>
+                                        <DialogDescription>
+                                            {t('Register a participant for a specific tournament.')}
+                                        </DialogDescription>
+                                    </DialogHeader>
 
-                    <Dialog open={open} onOpenChange={(isOpen) => {
-                        if (!isOpen) closeDialog();
-                        else setOpen(true);
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button onClick={openCreate} disabled={tournaments.length === 0 || participants.length === 0}>
-                                <Plus className="mr-2 size-4" />
-                                {t('Add Registration')}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-lg">
-                            <form onSubmit={handleSubmit(onSubmit)}>
-                                <DialogHeader>
-                                    <DialogTitle>{editingRegistration ? t('Edit Registration') : t('Register Participant')}</DialogTitle>
-                                    <DialogDescription>
-                                        {t('Register a participant for a specific tournament.')}
-                                    </DialogDescription>
-                                </DialogHeader>
-
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="tournament_id">{t('Tournament *')}</Label>
-                                        <Controller
-                                            control={control}
-                                            name="tournament_id"
-                                            render={({ field }) => (
-                                                <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)} disabled={!!editingRegistration}>
-                                                    <SelectTrigger id="tournament_id" className="h-9 w-full">
-                                                        <SelectValue placeholder={t('-- Select Tournament --')} />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="none">{t('-- Select Tournament --')}</SelectItem>
-                                                        {tournaments.map((t) => (
-                                                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-                                        />
-                                        {errors.tournament_id && <p className="text-sm text-destructive">{errors.tournament_id.message}</p>}
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="participant_id">{t('Participant *')}</Label>
-                                        <Controller
-                                            control={control}
-                                            name="participant_id"
-                                            render={({ field }) => (
-                                                <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)} disabled={!!editingRegistration}>
-                                                    <SelectTrigger id="participant_id" className="h-9 w-full"><SelectValue placeholder={t('-- Select Participant --')} /></SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="none">{t('-- Select Participant --')}</SelectItem>
-                                                        {participants.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-                                        />
-                                        {errors.participant_id && <p className="text-sm text-destructive">{errors.participant_id.message}</p>}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-4 py-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="status">{t('Status')}</Label>
+                                            <Label htmlFor="tournament_id">{t('Tournament *')}</Label>
                                             <Controller
                                                 control={control}
-                                                name="status"
+                                                name="tournament_id"
                                                 render={({ field }) => (
-                                                    <Select value={field.value} onValueChange={field.onChange}>
-                                                        <SelectTrigger id="status" className="h-9 w-full">
-                                                            <SelectValue placeholder={t('Status')} />
+                                                    <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)} disabled={!!editingRegistration}>
+                                                        <SelectTrigger id="tournament_id" className="h-9 w-full">
+                                                            <SelectValue placeholder={t('-- Select Tournament --')} />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="pending">{t('Pending')}</SelectItem>
-                                                            <SelectItem value="confirmed">{t('Confirmed')}</SelectItem>
-                                                            <SelectItem value="rejected">{t('Rejected')}</SelectItem>
-                                                            <SelectItem value="cancelled">{t('Cancelled')}</SelectItem>
+                                                            <SelectItem value="none">{t('-- Select Tournament --')}</SelectItem>
+                                                            {tournaments.map((t) => (
+                                                                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                                            ))}
                                                         </SelectContent>
                                                     </Select>
                                                 )}
                                             />
+                                            {errors.tournament_id && <p className="text-sm text-destructive">{errors.tournament_id.message}</p>}
                                         </div>
+
                                         <div className="grid gap-2">
-                                            <Label htmlFor="registered_at">{t('Registration Date')}</Label>
-                                            <Input
-                                                id="registered_at"
-                                                type="date"
-                                                {...register('registered_at')}
+                                            <Label htmlFor="participant_id">{t('Participant *')}</Label>
+                                            <Controller
+                                                control={control}
+                                                name="participant_id"
+                                                render={({ field }) => (
+                                                    <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)} disabled={!!editingRegistration}>
+                                                        <SelectTrigger id="participant_id" className="h-9 w-full"><SelectValue placeholder={t('-- Select Participant --')} /></SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="none">{t('-- Select Participant --')}</SelectItem>
+                                                            {participants.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
+                                            {errors.participant_id && <p className="text-sm text-destructive">{errors.participant_id.message}</p>}
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="status">{t('Status')}</Label>
+                                                <Controller
+                                                    control={control}
+                                                    name="status"
+                                                    render={({ field }) => (
+                                                        <Select value={field.value} onValueChange={field.onChange}>
+                                                            <SelectTrigger id="status" className="h-9 w-full">
+                                                                <SelectValue placeholder={t('Status')} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="pending">{t('Pending')}</SelectItem>
+                                                                <SelectItem value="confirmed">{t('Confirmed')}</SelectItem>
+                                                                <SelectItem value="rejected">{t('Rejected')}</SelectItem>
+                                                                <SelectItem value="cancelled">{t('Cancelled')}</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    )}
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="registered_at">{t('Registration Date')}</Label>
+                                                <Input
+                                                    id="registered_at"
+                                                    type="date"
+                                                    {...register('registered_at')}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="notes">{t('Notes')}</Label>
+                                            <textarea
+                                                id="notes"
+                                                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                {...register('notes')}
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="notes">{t('Notes')}</Label>
-                                        <textarea
-                                            id="notes"
-                                            className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                            {...register('notes')}
-                                        />
-                                    </div>
-                                </div>
-
-                                <DialogFooter>
-                                    <Button type="button" variant="outline" onClick={closeDialog}>
-                                        {t('Cancel')}
-                                    </Button>
-                                    <Button type="submit" disabled={isSubmitting}>
-                                        <Save className="mr-2 size-4" />
-                                        {editingRegistration ? t('Update') : t('Save')}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                </div>
+                                    <DialogFooter>
+                                        <Button type="button" variant="outline" onClick={closeDialog}>
+                                            {t('Cancel')}
+                                        </Button>
+                                        <Button type="submit" disabled={isSubmitting}>
+                                            <Save className="mr-2 size-4" />
+                                            {editingRegistration ? t('Update') : t('Save')}
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    }
+                />
             }
         >
             <Head title={t('Registrations')} />
@@ -293,7 +293,7 @@ export default function RegistrationsIndex({ registrations: registrationsProp, t
                             {registrations.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        {t('No registrations yet.')}
+                                        <EmptyState title={t('No registrations yet.')} />
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -335,24 +335,17 @@ export default function RegistrationsIndex({ registrations: registrationsProp, t
                 </CardContent>
             </Card>
 
-            <Dialog open={!!deleteRegistration} onOpenChange={(isOpen) => !isOpen && setDeleteRegistration(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Delete Registration?')}</DialogTitle>
-                        <DialogDescription>
-                            {t('Are you sure you want to delete this registration?')}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteRegistration(null)}>
-                            {t('Cancel')}
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            {t('Yes, Delete')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteRegistration}
+                onOpenChange={(isOpen) => !isOpen && setDeleteRegistration(null)}
+                title={t('Delete Registration?')}
+                description={t('Are you sure you want to delete this registration?')}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                processing={isSubmitting}
+                onConfirm={handleDelete}
+            />
 
             <div className="mt-6 text-xs text-muted-foreground">
                 M3: Registration module complete. Track participant sign-ups for tournaments.

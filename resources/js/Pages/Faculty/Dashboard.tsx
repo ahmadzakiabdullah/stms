@@ -27,6 +27,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
 import ParticipantLogo from '@/components/ParticipantLogo';
 import { Head, Link, router } from '@inertiajs/react';
 import { Download, FileText, Plus, Search, Trash2, Upload, Users } from 'lucide-react';
@@ -264,10 +266,12 @@ export default function FacultyDashboard({
 
             {!participant ? (
                 <Card>
-                    <CardContent className="py-10 text-center">
-                        <Users className="mx-auto mb-4 size-10 text-muted-foreground" />
-                        <p className="text-muted-foreground">{t('Your account is not linked to any faculty profile.')}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{t('Contact admin to link your account to a faculty.')}</p>
+                    <CardContent className="py-10">
+                        <EmptyState
+                            icon={Users}
+                            title={t('Your account is not linked to any faculty profile.')}
+                            description={t('Contact admin to link your account to a faculty.')}
+                        />
                     </CardContent>
                 </Card>
             ) : (
@@ -647,18 +651,16 @@ export default function FacultyDashboard({
             </Dialog>
 
             {/* Delete Squad Member Confirmation */}
-            <Dialog open={!!deleteSquadId} onOpenChange={(isOpen) => !isOpen && setDeleteSquadId(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Remove Squad Member?</DialogTitle>
-                        <DialogDescription>This action cannot be undone.</DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteSquadId(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={handleDeleteSquad}>Remove</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteSquadId}
+                onOpenChange={(isOpen) => !isOpen && setDeleteSquadId(null)}
+                title="Remove Squad Member?"
+                description="This action cannot be undone."
+                confirmLabel="Remove"
+                cancelLabel="Cancel"
+                destructive
+                onConfirm={handleDeleteSquad}
+            />
         </AuthenticatedLayout>
     );
 }
