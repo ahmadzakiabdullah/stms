@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -27,7 +28,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, Pencil, Plus, RefreshCw, RotateCcw, Save, Search, Target, Trash2, Trash, X } from 'lucide-react';
@@ -153,8 +154,8 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             && (!usedCatIds.includes(c.id) || editingEvent?.sport_category_id === c.id)
     );
 
-    const onTournamentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const tid = e.target.value;
+    const onTournamentChange = (value: string) => {
+        const tid = value === 'none' ? '' : value;
         setValue('tournament_id', tid);
         setValue('sport_id', '');
         setValue('sport_category_id', '');
@@ -316,36 +317,40 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="tournament_id">{t('Tournament')}</Label>
-                                        <select
-                                            id="tournament_id"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                            value={selectedTournamentId}
-                                            onChange={onTournamentChange}
+                                        <Select
+                                            value={selectedTournamentId || 'none'}
+                                            onValueChange={onTournamentChange}
                                             disabled={!!editingEvent}
-                                            required
                                         >
-                                            <option value="">{t('Select Tournament')}</option>
-                                            {tournaments.map((t) => (
-                                                <option key={t.id} value={t.id}>{t.name}</option>
-                                            ))}
-                                        </select>
+                                            <SelectTrigger id="tournament_id" className="h-9 w-full">
+                                                <SelectValue placeholder={t('Select Tournament')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">{t('Select Tournament')}</SelectItem>
+                                                {tournaments.map((t) => (
+                                                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                         {errors.tournament_id && <p className="text-sm text-destructive">{errors.tournament_id.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="sport_id">{t('Sport')}</Label>
-                                        <select
-                                            id="sport_id"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                            value={selectedSportId}
-                                            onChange={(e) => { setValue('sport_id', e.target.value); setValue('sport_category_id', ''); }}
-                                            required
+                                        <Select
+                                            value={selectedSportId || 'none'}
+                                            onValueChange={(value) => { setValue('sport_id', value === 'none' ? '' : value); setValue('sport_category_id', ''); }}
                                         >
-                                            <option value="">{t('Select Sport')}</option>
-                                            {filteredSports.map((s) => (
-                                                <option key={s.id} value={s.id}>{s.name}</option>
-                                            ))}
-                                        </select>
+                                            <SelectTrigger id="sport_id" className="h-9 w-full">
+                                                <SelectValue placeholder={t('Select Sport')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">{t('Select Sport')}</SelectItem>
+                                                {filteredSports.map((s) => (
+                                                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                         {filteredSports.length === 0 && selectedTournamentId && (
                                             <p className="text-xs text-amber-600">{t('No sports assigned')}</p>
                                         )}
@@ -354,17 +359,23 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="sport_category_id">{t('Category')}</Label>
-                                        <select
-                                            id="sport_category_id"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                            {...register('sport_category_id')}
-                                            required
-                                        >
-                                            <option value="">{t('Select Category')}</option>
-                                            {filteredCategories.map((c) => (
-                                                <option key={c.id} value={c.id}>{c.name}</option>
-                                            ))}
-                                        </select>
+                                        <Controller
+                                            control={control}
+                                            name="sport_category_id"
+                                            render={({ field }) => (
+                                                <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}>
+                                                    <SelectTrigger id="sport_category_id" className="h-9 w-full">
+                                                        <SelectValue placeholder={t('Select Category')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">{t('Select Category')}</SelectItem>
+                                                        {filteredCategories.map((c) => (
+                                                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
                                         {filteredCategories.length === 0 && selectedSportId && !editingEvent && (
                                             <p className="text-xs text-amber-600">{t('Categories already used')}</p>
                                         )}
@@ -451,12 +462,23 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="format">{t('Format')}</Label>
-                                            <select id="format" {...register('format')} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm">
-                                                <option value="">{t('No format')}</option>
-                                                <option value="league">{t('League (Round Robin)')}</option>
-                                                <option value="group_knockout">{t('Group + Knockout')}</option>
-                                                <option value="knockout">{t('Knockout')}</option>
-                                            </select>
+                                            <Controller
+                                                control={control}
+                                                name="format"
+                                                render={({ field }) => (
+                                                    <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}>
+                                                        <SelectTrigger id="format" className="h-9 w-full">
+                                                            <SelectValue placeholder={t('No format')} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="none">{t('No format')}</SelectItem>
+                                                            <SelectItem value="league">{t('League (Round Robin)')}</SelectItem>
+                                                            <SelectItem value="group_knockout">{t('Group + Knockout')}</SelectItem>
+                                                            <SelectItem value="knockout">{t('Knockout')}</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="pool_size">{t('Pool Size')}</Label>
@@ -686,16 +708,16 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                     </DialogHeader>
                     <div className="grid gap-2 py-2">
                         <Label htmlFor="draw_format">Format</Label>
-                        <select
-                            id="draw_format"
-                            value={drawFormat}
-                            onChange={(e) => setDrawFormat(e.target.value)}
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                        >
-                            <option value="group_knockout">Group + Knockout</option>
-                            <option value="league">League (Round Robin)</option>
-                            <option value="knockout">Knockout</option>
-                        </select>
+                        <Select value={drawFormat} onValueChange={setDrawFormat}>
+                            <SelectTrigger id="draw_format" className="h-9 w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="group_knockout">Group + Knockout</SelectItem>
+                                <SelectItem value="league">League (Round Robin)</SelectItem>
+                                <SelectItem value="knockout">Knockout</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDrawEvent(null)}>Cancel</Button>
