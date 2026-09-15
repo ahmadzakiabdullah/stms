@@ -34,7 +34,7 @@ import { ChevronDown, ChevronRight, Pencil, Plus, Save, Search, Trash2, X } from
 import { Fragment, FormEvent, useEffect, useRef, useState } from 'react';
 import Pagination from '@/components/Pagination';
 import { SportIcon } from '@/lib/sportIcons';
-import type { Paginated, Flash, Sport, SportCategory } from '@/types';
+import type { Paginated, Sport, SportCategory } from '@/types';
 import { useI18n } from '@/lib/i18n';
 
 const sportSchema = z.object({
@@ -65,7 +65,7 @@ interface SportsIndexProps {
 }
 
 export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
-    const { flash, isSuperAdmin = false } = usePage().props;
+    const { isSuperAdmin = false } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingSport, setEditingSport] = useState<Sport | null>(null);
@@ -296,17 +296,6 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
             }
         >
             <Head title={t('Sports')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
-                    {flash.error}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>

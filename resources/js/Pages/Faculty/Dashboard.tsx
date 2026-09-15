@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/table';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ParticipantLogo from '@/components/ParticipantLogo';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Download, FileText, Plus, Search, Trash2, Upload, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { Event, EventParticipant, Participant, SportCategory, SquadMember } from '@/types';
@@ -92,7 +92,6 @@ export default function FacultyDashboard({
     availableEvents,
     sportCategories,
 }: FacultyDashboardProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [activeRegId, setActiveRegId] = useState<string | null>(null);
     const [addSquadOpen, setAddSquadOpen] = useState(false);
@@ -261,13 +260,6 @@ export default function FacultyDashboard({
             }
         >
             <Head title={t('Faculty Dashboard')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>
-            )}
 
             {!participant ? (
                 <Card>

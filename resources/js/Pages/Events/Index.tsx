@@ -35,7 +35,7 @@ import { useState } from 'react';
 import Pagination from '@/components/Pagination';
 import { matchProgress } from '@/lib/matchProgress';
 import { useI18n } from '@/lib/i18n';
-import type { Event, Tournament, Sport, SportCategory, Paginated, Flash } from '@/types';
+import type { Event, Tournament, Sport, SportCategory, Paginated } from '@/types';
 
 const eventSchema = z.object({
     tournament_id: z.string().min(1, 'Tournament is required'),
@@ -70,7 +70,7 @@ interface EventsIndexProps {
 }
 
 export default function EventsIndex({ events: eventsProp, tournaments: tournamentsProp = [], sports: sportsProp = [], categories: categoriesProp = [], usedCategoryIds = {} }: EventsIndexProps) {
-    const { flash, isSuperAdmin = false } = usePage().props;
+    const { isSuperAdmin = false } = usePage().props;
     const { locale, t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
@@ -481,17 +481,6 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             }
         >
             <Head title={t('Events')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
-                    {flash.error}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>

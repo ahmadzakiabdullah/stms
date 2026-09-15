@@ -27,14 +27,14 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import Pagination from '@/components/Pagination';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
-import type { Registration, Tournament, Participant, Paginated, Flash } from '@/types';
+import type { Registration, Tournament, Participant, Paginated } from '@/types';
 
 const registrationSchema = z.object({
     tournament_id: z.string().min(1, 'Tournament is required'),
@@ -64,7 +64,6 @@ const statusColors: Record<string, string> = {
 };
 
 export default function RegistrationsIndex({ registrations: registrationsProp, tournaments: tournamentsProp = [], participants: participantsProp = [] }: RegistrationsIndexProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingRegistration, setEditingRegistration] = useState<RegistrationRow | null>(null);
@@ -256,17 +255,6 @@ export default function RegistrationsIndex({ registrations: registrationsProp, t
             }
         >
             <Head title={t('Registrations')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
-                    {flash.error}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>

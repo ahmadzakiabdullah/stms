@@ -3,7 +3,7 @@ import Pagination from '@/components/Pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Activity, Bell, CheckCheck, CircleAlert, Inbox } from 'lucide-react';
 import { type Paginated } from '@/types';
 import { useI18n } from '@/lib/i18n';
@@ -56,7 +56,6 @@ export default function NotificationsIndex({
     notificationTypes,
 }: Props) {
     const { t } = useI18n();
-    const { flash } = usePage().props;
 
     const visit = (changes: Partial<Filters>) => {
         router.get(route('notifications.index'), { ...filters, ...changes }, {
@@ -98,8 +97,6 @@ export default function NotificationsIndex({
             }
         >
             <Head title={t('Notifications')} />
-
-            {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
 
             <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Notification views">
                 {isSuperAdmin && (

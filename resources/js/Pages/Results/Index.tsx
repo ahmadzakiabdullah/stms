@@ -29,7 +29,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -288,7 +288,6 @@ function ResultRowView({ result, onEdit, onDelete, canManage = true, onApprove, 
 }
 
 export default function ResultsIndex({ results: resultsProp, matches: matchesProp = [], participants: participantsProp = [], events: eventsProp = [], canManage = true, canApproveResults = false, canUnlockResults = false }: ResultsIndexProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingResult, setEditingResult] = useState<ResultRow | null>(null);
@@ -688,17 +687,6 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             }
         >
             <Head title={t('Results')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
-                    {flash.error}
-                </div>
-            )}
 
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 <Button

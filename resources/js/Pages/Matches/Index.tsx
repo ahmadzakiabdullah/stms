@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { BarChart3, CalendarDays, Eye, Pencil, Plus, RefreshCw, Save, Search, Swords, Trash2, Trophy, Users, X } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Pagination from '@/components/Pagination';
@@ -399,7 +399,6 @@ function MatchMobileCard({ match, onEdit, onDelete, eventCode: code = '', canMan
 }
 
 export default function MatchesIndex({ events, drawnEventIds, selectedEventId, pools, allFixtures, knockout, participants, canManage = true }: MatchesIndexProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
     const [statusFilter, setStatusFilter] = useState(() => new URLSearchParams(window.location.search).get('status') ?? '');
@@ -592,9 +591,6 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
             }
         >
             <Head title={t('Matches')} />
-
-            {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
-            {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
 
             <Card className="mb-4">
                 <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-end sm:justify-between">

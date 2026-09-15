@@ -38,7 +38,6 @@ import type {
     EventParticipant as EventParticipantType,
     Participant,
     Paginated,
-    Flash,
     SquadMember,
 } from '@/types';
 
@@ -579,7 +578,7 @@ export default function EventParticipantsIndex({
     participants: participantsProp, events: eventsProp = [], faculties: facultiesProp = [],
     isFacultyRepresentative = false, statusCounts: statusCountsProp = {}, conflicts: conflictsProp = {},
 }: EventParticipantsIndexProps) {
-    const { flash, auth } = usePage().props;
+    const { auth } = usePage().props;
     const { t } = useI18n();
     const userRoles = auth?.user?.roles?.map((r) => r.name) ?? [];
     const canManageSquad = userRoles.includes('super-admin') || userRoles.includes('org-admin');
@@ -840,19 +839,6 @@ export default function EventParticipantsIndex({
             }
         >
             <Head title={t('Registrations & Squads')} />
-
-            {flash?.success && (
-                <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-800">
-                    <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-                    <span>{flash.success}</span>
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-800">
-                    <XCircle className="mt-0.5 size-4 shrink-0" />
-                    <span>{flash.error}</span>
-                </div>
-            )}
 
             {/* Status stat cards */}
             <div className="mb-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
