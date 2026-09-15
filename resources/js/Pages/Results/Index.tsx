@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -30,7 +31,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Head, router } from '@inertiajs/react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { CalendarDays, CheckCircle2, CheckCheck, LockKeyhole, Minus, Pencil, Plus, Printer, Save, Search, Swords, Trash2, Trophy, UnlockKeyhole } from 'lucide-react';
@@ -535,20 +536,29 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="match_id">Match *</Label>
-                                        <select
-                                            id="match_id"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                            {...register('match_id')}
-                                            disabled={!!editingResult}
-                                            required
-                                        >
-                                            <option value="">-- Select Match --</option>
-                                            {dialogMatches.map((m) => (
-                                                <option key={m.id} value={m.id}>
-                                                    {matchLabel(m)} {m.event?.name ? `(${m.event.name})` : ''}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <Controller
+                                            control={control}
+                                            name="match_id"
+                                            render={({ field }) => (
+                                                <Select
+                                                    value={field.value || 'none'}
+                                                    onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}
+                                                    disabled={!!editingResult}
+                                                >
+                                                    <SelectTrigger id="match_id">
+                                                        <SelectValue placeholder={t('-- Select Match --')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">{t('-- Select Match --')}</SelectItem>
+                                                        {dialogMatches.map((m) => (
+                                                            <SelectItem key={m.id} value={m.id}>
+                                                                {matchLabel(m)} {m.event?.name ? `(${m.event.name})` : ''}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
                                         {errors.match_id && <p className="text-sm text-destructive">{errors.match_id.message}</p>}
                                         {dialogMatches.length === 0 && (
                                             <p className="text-sm text-muted-foreground">No matches awaiting a result in this event.</p>
@@ -613,10 +623,26 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                         {eventIndexes.length === 0 && <p className="rounded-md border border-dashed p-2 text-xs text-muted-foreground">{t('No scorers added yet.')}</p>}
                                                         {eventIndexes.map((index) => (
                                                             <div key={scoringFields[index].id} className="grid gap-2 sm:grid-cols-[1fr_72px_72px_auto]">
-                                                                <select className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" {...register(`scoring_events.${index}.squad_member_id`)} required>
-                                                                    <option value="">{members.length ? t('Select athlete') : t('No confirmed athletes')}</option>
-                                                                    {members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
-                                                                </select>
+                                                                <Controller
+                                                                    control={control}
+                                                                    name={`scoring_events.${index}.squad_member_id`}
+                                                                    render={({ field }) => (
+                                                                        <Select
+                                                                            value={field.value || 'none'}
+                                                                            onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}
+                                                                        >
+                                                                            <SelectTrigger>
+                                                                                <SelectValue placeholder={members.length ? t('Select athlete') : t('No confirmed athletes')} />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="none">{members.length ? t('Select athlete') : t('No confirmed athletes')}</SelectItem>
+                                                                                {members.map((member) => (
+                                                                                    <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    )}
+                                                                />
                                                                 <Input type="number" min="0" max="120" placeholder="Min" {...register(`scoring_events.${index}.minute`, { valueAsNumber: true })} />
                                                                 <Input type="number" min="0" max="59" placeholder="Sec" {...register(`scoring_events.${index}.second`, { valueAsNumber: true })} />
                                                                 <Button type="button" variant="ghost" size="icon" onClick={() => removeScoringEvent(index)} aria-label={t('Remove scorer')}><Trash2 className="size-4 text-destructive" /></Button>
@@ -636,26 +662,36 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="winner_participant_id">Winner</Label>
-                                        <select
-                                            id="winner_participant_id"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                            {...register('winner_participant_id')}
-                                        >
-                                            <option value="">-- Draw / None --</option>
-                                            {selectedMatch?.home_participant && (
-                                                <option value={selectedMatch.home_participant.id}>
-                                                    {participantName(selectedMatch.home_participant)} (Home)
-                                                </option>
+                                        <Controller
+                                            control={control}
+                                            name="winner_participant_id"
+                                            render={({ field }) => (
+                                                <Select
+                                                    value={field.value || 'none'}
+                                                    onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}
+                                                >
+                                                    <SelectTrigger id="winner_participant_id">
+                                                        <SelectValue placeholder={t('-- Draw / None --')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">{t('-- Draw / None --')}</SelectItem>
+                                                        {selectedMatch?.home_participant && (
+                                                            <SelectItem value={selectedMatch.home_participant.id}>
+                                                                {participantName(selectedMatch.home_participant)} (Home)
+                                                            </SelectItem>
+                                                        )}
+                                                        {selectedMatch?.away_participant && (
+                                                            <SelectItem value={selectedMatch.away_participant.id}>
+                                                                {participantName(selectedMatch.away_participant)} (Away)
+                                                            </SelectItem>
+                                                        )}
+                                                        {!selectedMatch && participants.map((p) => (
+                                                            <SelectItem key={p.id} value={p.id}>{participantName(p)}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
                                             )}
-                                            {selectedMatch?.away_participant && (
-                                                <option value={selectedMatch.away_participant.id}>
-                                                    {participantName(selectedMatch.away_participant)} (Away)
-                                                </option>
-                                            )}
-                                            {!selectedMatch && participants.map((p) => (
-                                                <option key={p.id} value={p.id}>{participantName(p)}</option>
-                                            ))}
-                                        </select>
+                                        />
                                         <p className="text-xs text-muted-foreground">Auto-set from scores — change only for special cases (e.g. forfeit).</p>
                                     </div>
 
