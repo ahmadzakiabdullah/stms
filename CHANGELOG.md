@@ -1,5 +1,11 @@
 # Changelog
 
+## 15 September 2026 — Malay i18n coverage for error/profile screens + root-domain alignment
+
+- Completed frontend i18n coverage: all pages now use `useI18n()` (including `Error.tsx` and the three Profile partials) and the 20 missing English/Malay keys were added to `resources/js/lib/i18n.ts`.
+- Aligned deployment artifacts with the canonical root domain: `APP_URL=https://saf.utem.edu.my` in `.env.example`, root `<loc>` in `public/sitemap.xml`, and updated `config/session.php` / `public/index.php` comments.
+- Fixed a latent `config/session.php` defect where the `'path'` entry was accidentally commented out by a literal `\r\n` embedded in a `//` line; the session cookie path configuration is active again.
+
 ## 9 September 2026 — Full local quality-gate certification + dependency remediation
 
 - Certified the complete local gate suite against the committed tree: PHPUnit **506/506 (2,345 assertions)**, Pint `--test` green repo-wide, inventory `153 / 66 / 39 / 43 / 99`, tenant-bypass allowlist, TypeScript, Vite build and bundle budget all green.
