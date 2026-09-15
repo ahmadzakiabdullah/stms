@@ -36,7 +36,6 @@ class HockeyMensSampleSeeder extends Seeder
 
             if (! $participant) {
                 $this->command?->warn("Participant {$short} not found; skipped.");
-
                 continue;
             }
 

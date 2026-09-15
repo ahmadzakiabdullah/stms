@@ -32,6 +32,7 @@ class TenantIsolationTest extends TestCase
         $this->assertNull(TenantContext::getOrganizationId());
     }
 
+
     public function test_tenant_context_can_be_set_manually(): void
     {
         $org = Organization::factory()->create();
