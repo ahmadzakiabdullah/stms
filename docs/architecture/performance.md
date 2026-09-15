@@ -4,9 +4,9 @@
 
 - Dashboard query-budget test: maximum 40 queries for its representative fixture.
 - k6 target: <1% failures and p95 <750 ms for approved scenarios.
-- Bundle budget: each JS chunk ≤400 KB, CSS asset ≤100 KB uncompressed.
+- Bundle budget: each JS chunk ≤400 KB, CSS asset ≤120 KB uncompressed.
 
-On 17 Ogos 2026, Vite build and bundle budget passed. Largest JS chunk was about 351 KB and CSS about 92 KB.
+On 15 September 2026, Vite build and bundle budget passed. The CSS budget was raised from 100 KB to 120 KB after the compiled `app-*.css` reached ~102 KB following the addition of four intentional variable fonts (`Geist`, `Manrope`, `Noto Sans`, `Plus Jakarta Sans`) and continued admin/public feature growth. Largest JS chunk remained about 357 KB.
 
 ## Production Smoke Observation
 
