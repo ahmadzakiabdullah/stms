@@ -31,6 +31,17 @@ declare module '@/components/ui/*' {
     export const AvatarFallback: React.ComponentType<any>;
     export const AvatarImage: React.ComponentType<any>;
     export const Badge: React.ComponentType<any>;
+    export const AlertDialog: React.ComponentType<any>;
+    export const AlertDialogAction: React.ComponentType<any>;
+    export const AlertDialogCancel: React.ComponentType<any>;
+    export const AlertDialogContent: React.ComponentType<any>;
+    export const AlertDialogDescription: React.ComponentType<any>;
+    export const AlertDialogFooter: React.ComponentType<any>;
+    export const AlertDialogHeader: React.ComponentType<any>;
+    export const AlertDialogOverlay: React.ComponentType<any>;
+    export const AlertDialogPortal: React.ComponentType<any>;
+    export const AlertDialogTitle: React.ComponentType<any>;
+    export const AlertDialogTrigger: React.ComponentType<any>;
     export const Button: React.ComponentType<any>;
     export const Card: React.ComponentType<any>;
     export const CardContent: React.ComponentType<any>;

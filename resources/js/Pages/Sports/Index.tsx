@@ -1,4 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -279,21 +282,16 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Sports')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Manage sports and their categories')}
-                        </p>
-                    </div>
-
-                    {isSuperAdmin && (
+                <PageHeader
+                    title={t('Sports')}
+                    description={t('Manage sports and their categories')}
+                    actions={isSuperAdmin && (
                         <Button onClick={openCreate}>
                             <Plus className="mr-2 size-4" />
                             {t('Add Sport')}
                         </Button>
                     )}
-                </div>
+                />
             }
         >
             <Head title={t('Sports')} />
@@ -325,7 +323,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                             {sports.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={isSuperAdmin ? 6 : 5} className="text-center text-muted-foreground">
-                                        {search ? t('No sports match your search.') : t('No sports yet.')}
+                                        <EmptyState title={search ? t('No sports match your search.') : t('No sports yet.')} />
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -509,20 +507,17 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={!!deleteSport} onOpenChange={(isOpen) => !isOpen && setDeleteSport(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Delete Sport?')}</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteSport?.name}</strong>? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteSport(null)}>{t('Cancel')}</Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>{t('Yes, Delete')}</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteSport}
+                onOpenChange={(open) => !open && setDeleteSport(null)}
+                title={t('Delete Sport?')}
+                description={<>{t('Are you sure you want to delete')} <strong>{deleteSport?.name}</strong>? {t('This action cannot be undone.')}</>}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                processing={isSubmitting}
+                onConfirm={handleDelete}
+            />
 
             {/* ── Category CRUD dialogs ── */}
             <Dialog open={catOpen} onOpenChange={(isOpen) => { if (!isOpen) closeCatDialog(); }}>

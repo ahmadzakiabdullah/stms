@@ -1,5 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -98,19 +101,19 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Role Management')}</h1>
-                        <p className="text-sm text-muted-foreground">{t('Manage roles and their permissions')}</p>
-                    </div>
-                    <Dialog open={open} onOpenChange={(o) => { if (!o) closeDialog(); else setOpen(true); }}>
-                        <DialogTrigger asChild>
-                            <Button onClick={openCreate}>
-                                <Plus className="mr-2 size-4" /> {t('Add Role')}
-                            </Button>
-                        </DialogTrigger>
-                    </Dialog>
-                </div>
+                <PageHeader
+                    title={t('Role Management')}
+                    description={t('Manage roles and their permissions')}
+                    actions={
+                        <Dialog open={open} onOpenChange={(o) => { if (!o) closeDialog(); else setOpen(true); }}>
+                            <DialogTrigger asChild>
+                                <Button onClick={openCreate}>
+                                    <Plus className="mr-2 size-4" /> {t('Add Role')}
+                                </Button>
+                            </DialogTrigger>
+                        </Dialog>
+                    }
+                />
             }
         >
             <Head title={t('Role Management')} />
@@ -131,7 +134,7 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                         </TableHeader>
                         <TableBody>
                             {roles.length === 0 && (
-                                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">{t('No roles yet.')}</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground"><EmptyState title={t('No roles yet.')} /></TableCell></TableRow>
                             )}
                             {roles.map((role) => (
                                 <TableRow key={role.id}>
@@ -231,18 +234,16 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={!!deleteRole} onOpenChange={(o) => { if (!o) setDeleteRole(null); }}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Delete Role?')}</DialogTitle>
-                        <DialogDescription>{t('Are you sure you want to delete')} <strong>{deleteRole?.name}</strong>? {t('Users with this role may lose access.')}</DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteRole(null)}>{t('Cancel')}</Button>
-                        <Button variant="destructive" onClick={handleDelete}>{t('Delete')}</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteRole}
+                onOpenChange={(open) => !open && setDeleteRole(null)}
+                title={t('Delete Role?')}
+                description={<>{t('Are you sure you want to delete')} <strong>{deleteRole?.name}</strong>? {t('Users with this role may lose access.')}</>}
+                confirmLabel={t('Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={handleDelete}
+            />
         </AuthenticatedLayout>
     );
 }
