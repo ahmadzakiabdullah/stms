@@ -38,11 +38,11 @@ class FacultyDashboardService
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            foreach ($registrations as $reg) {
-                $totalMale += $reg->squadMembers->where('role', 'athlete_male')->count();
-                $totalFemale += $reg->squadMembers->where('role', 'athlete_female')->count();
-                $totalOfficials += $reg->squadMembers->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->count();
-            }
+            $roles = $registrations->flatMap->squadMembers->countBy('role');
+            // Using += to preserve any state initialized outside this block
+            $totalMale += $roles->get('athlete_male', 0);
+            $totalFemale += $roles->get('athlete_female', 0);
+            $totalOfficials += $roles->only(['assistant_manager', 'manager', 'coach', 'physio'])->sum();
         }
 
         $availableEvents = Event::with(['sport', 'sportCategory', 'tournament'])
