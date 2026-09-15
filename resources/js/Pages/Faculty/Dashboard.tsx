@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -564,16 +565,16 @@ export default function FacultyDashboard({
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="member-role">Role <span className="text-destructive">*</span></Label>
-                            <select
-                                id="member-role"
-                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                value={squadForm.role}
-                                onChange={(e) => setSquadForm({ ...squadForm, role: e.target.value as SquadMember['role'] })}
-                            >
-                                 {activeRegAllowedRoles.map((value) => (
-                                     <option key={value} value={value}>{roleLabels[value]}</option>
-                                 ))}
-                            </select>
+                            <Select value={squadForm.role} onValueChange={(value) => setSquadForm({ ...squadForm, role: value as SquadMember['role'] })}>
+                                <SelectTrigger id="member-role" className="h-9 w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {activeRegAllowedRoles.map((value) => (
+                                        <SelectItem key={value} value={value}>{roleLabels[value]}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             <p className="text-xs text-muted-foreground">
                                 {officialRoles.includes(squadForm.role as any)
                                     ? 'Officials: phone number is required.'

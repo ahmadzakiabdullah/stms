@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Head, router } from '@inertiajs/react';
 import { Check, FileCheck2, Printer } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
@@ -98,15 +99,25 @@ export default function Index(props: Props) {
                     <CardContent className="grid gap-4 md:grid-cols-2">
                         {props.canSelectParticipant && (
                             <label className="space-y-1.5 text-sm font-medium">{t('Faculty / participant')}
-                                <select className="mt-1 block h-10 w-full rounded-md border bg-background px-3 text-sm" value={props.filters.participant_id} onChange={(e) => filter('participant_id', e.target.value)}>
-                                    {props.participants.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                                </select>
+                                <Select value={props.filters.participant_id || 'all'} onValueChange={(value) => filter('participant_id', value === 'all' ? '' : value)}>
+                                    <SelectTrigger className="mt-1 h-10 w-full text-sm">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {props.participants.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                             </label>
                         )}
                         <label className="space-y-1.5 text-sm font-medium">{t('Session')}
-                            <select className="mt-1 block h-10 w-full rounded-md border bg-background px-3 text-sm" value={props.filters.session_id} onChange={(e) => filter('session_id', e.target.value)}>
-                                {props.sessions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                            </select>
+                            <Select value={props.filters.session_id || 'all'} onValueChange={(value) => filter('session_id', value === 'all' ? '' : value)}>
+                                <SelectTrigger className="mt-1 h-10 w-full text-sm">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {props.sessions.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                         </label>
                     </CardContent>
                 </Card>

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -524,17 +525,20 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
 
                 <div className="grid gap-2">
                     <Label htmlFor="session_id">{t('Session')}</Label>
-                    <select
-                        id="session_id"
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                        value={formData.session_id}
-                        onChange={e => set('session_id', e.target.value)}
+                    <Select
+                        value={formData.session_id || 'none'}
+                        onValueChange={(value) => set('session_id', value === 'none' ? '' : value)}
                     >
-                        <option value="">{t('-- Select Session --')}</option>
-                        {sessions.map((s) => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                    </select>
+                        <SelectTrigger id="session_id" className="h-9 w-full">
+                            <SelectValue placeholder={t('-- Select Session --')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">{t('-- Select Session --')}</SelectItem>
+                            {sessions.map((s) => (
+                                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -563,15 +567,18 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
                 <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="participant_type">{t('Type')}</Label>
-                        <select
-                            id="participant_type"
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                        <Select
                             value={formData.participant_type}
-                            onChange={e => set('participant_type', e.target.value)}
+                            onValueChange={(value) => set('participant_type', value)}
                         >
-                            <option value="individual">{t('Individual')}</option>
-                            <option value="team">{t('Team')}</option>
-                        </select>
+                            <SelectTrigger id="participant_type" className="h-9 w-full">
+                                <SelectValue placeholder={t('Type')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="individual">{t('Individual')}</SelectItem>
+                                <SelectItem value="team">{t('Team')}</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
@@ -737,17 +744,20 @@ function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessi
                 <form onSubmit={handleUpload} className="mt-4 grid gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="import_session">{t('Session')}</Label>
-                        <select
-                            id="import_session"
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                            value={sessionId}
-                            onChange={e => setSessionId(e.target.value)}
+                        <Select
+                            value={sessionId || 'none'}
+                            onValueChange={(value) => setSessionId(value === 'none' ? '' : value)}
                         >
-                            <option value="">{t('-- No session --')}</option>
-                            {sessions.map((s) => (
-                                <option key={s.id} value={s.id}>{s.name}</option>
-                            ))}
-                        </select>
+                            <SelectTrigger id="import_session" className="h-9 w-full">
+                                <SelectValue placeholder={t('-- No session --')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">{t('-- No session --')}</SelectItem>
+                                {sessions.map((s) => (
+                                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="grid gap-2">
