@@ -16,9 +16,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { BarChart3, Download, Medal, Save, Settings2, Trophy, Users } from 'lucide-react';
-import { type PageProps, type RankingEntry, type RankingRules, type Session, type Tournament } from '@/types';
+import { type RankingEntry, type RankingRules, type Session, type Tournament } from '@/types';
 import { useI18n } from '@/lib/i18n';
 import { useEffect } from 'react';
 import ParticipantLogo from '@/components/ParticipantLogo';
@@ -42,7 +42,6 @@ const rankColors: Record<number, string> = {
 
 export default function RankingsIndex({ sessions, selectedSession, tournaments, selectedTournament, rankings, events, strategies }: RankingsIndexProps) {
     const { t } = useI18n();
-    const { flash } = usePage<PageProps>().props;
 
     const selectedSessionData = sessions.find(s => s.slug === selectedSession);
     const selectedTournamentData = tournaments.find(t => t.slug === selectedTournament);
@@ -117,12 +116,6 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
             }
         >
             <Head title={t('Rankings')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
 
             {selectedSessionData && (
                 <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

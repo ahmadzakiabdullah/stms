@@ -10,7 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Check,
@@ -25,7 +25,7 @@ import {
     X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { Event, Pool, Fixture, Participant, EventParticipant, Result, Flash } from '@/types';
+import type { Event, Pool, Fixture, Participant, EventParticipant, Result } from '@/types';
 import { formatDateTime, useI18n } from '@/lib/i18n';
 
 interface PoolWithRelations extends Pool {
@@ -123,7 +123,6 @@ const StatTile = ({ icon: Icon, label, value, accent }: StatTileProps) => (
 );
 
 export default function DrawResult({ event, pools: initialPools, canEdit, drawVersions }: DrawResultProps) {
-    const { flash } = usePage<{ flash: Flash }>().props;
     const { t, locale } = useI18n();
     const [editing, setEditing] = useState(false);
     const [pools, setPools] = useState(initialPools);
@@ -261,13 +260,6 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
             }
         >
             <Head title={`${t('Draw Result')} · ${event.name}`} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>
-            )}
 
             <div className="space-y-5 sm:space-y-6">
                 <Card className="overflow-hidden border-slate-200 shadow-sm">

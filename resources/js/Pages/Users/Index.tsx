@@ -26,7 +26,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,7 +34,7 @@ import { KeyRound, Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import Pagination from '@/components/Pagination';
 import { useI18n } from '@/lib/i18n';
-import type { User, Role, Organization, Participant, Paginated, Flash, Sport } from '@/types';
+import type { User, Role, Organization, Participant, Paginated, Sport } from '@/types';
 
 const createUserSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -258,7 +258,6 @@ function UserFormDialog({
 }
 
 export default function UsersIndex({ users: usersProp, roles, organizations, participants: participantsProp = [], sports: sportsProp = [] }: UsersIndexProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [dialogMode, setDialogMode] = useState<null | 'create' | User>(null);
     const [deleteUser, setDeleteUser] = useState<User | null>(null);
@@ -328,12 +327,6 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
             }
         >
             <Head title={t('Users')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>

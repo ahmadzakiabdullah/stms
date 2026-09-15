@@ -28,13 +28,13 @@ import {
 } from '@/components/ui/table';
 import Pagination from '@/components/Pagination';
 import ParticipantLogo from '@/components/ParticipantLogo';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Search, Upload, X } from 'lucide-react';
 import { z } from 'zod';
 import { Eye, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
-import type { Participant, Session, Paginated, Flash } from '@/types';
+import type { Participant, Session, Paginated } from '@/types';
 
 const participantSchema = z.object({
     session_id: z.string().nullable().optional().default(''),
@@ -69,7 +69,6 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ParticipantsIndex({ participants: participantsProp, sessions: sessionsProp = [], importPreview = null }: ParticipantsIndexProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [importOpen, setImportOpen] = useState(false);
@@ -148,17 +147,6 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
             }
         >
             <Head title={t('Participants')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
-                    {flash.error}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>

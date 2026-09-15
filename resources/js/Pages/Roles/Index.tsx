@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
@@ -25,7 +25,6 @@ interface RolesIndexProps {
 }
 
 export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingRole, setEditingRole] = useState<RoleData | null>(null);
@@ -115,9 +114,6 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
             }
         >
             <Head title={t('Role Management')} />
-
-            {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
-            {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
 
             <Card>
                 <CardHeader>

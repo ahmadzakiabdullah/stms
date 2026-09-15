@@ -17,10 +17,10 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import Pagination from '@/components/Pagination';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Check, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
-import type { Paginated, Flash, EventParticipant, Event as EventType } from '@/types';
+import type { Paginated, EventParticipant, Event as EventType } from '@/types';
 import { useI18n } from '@/lib/i18n';
 
 interface RegEventParticipant extends Omit<EventParticipant, 'event' | 'participant'> {
@@ -46,7 +46,6 @@ const statusBadge: Record<string, { class: string; label: string }> = {
 };
 
 export default function DeanDashboard({ registrations: regsProp, counts = {} }: DeanDashboardProps) {
-    const { flash } = usePage<{ flash: Flash }>().props;
     const { t } = useI18n();
     const [processing, setProcessing] = useState<string | null>(null);
 
@@ -79,12 +78,6 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
             }
         >
             <Head title={t('Dean Dashboard')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
 
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>

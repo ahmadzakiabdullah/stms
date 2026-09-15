@@ -26,12 +26,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { z } from 'zod';
 import { List, Loader, Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import Pagination from '@/components/Pagination';
-import type { Tournament, Session, Sport, Paginated, Flash } from '@/types';
+import type { Tournament, Session, Sport, Paginated } from '@/types';
 import { formatDate, useI18n } from '@/lib/i18n';
 
 const tournamentSchema = z.object({
@@ -60,7 +60,6 @@ interface TournamentsIndexProps {
 
 export default function TournamentsIndex({ tournaments: tournamentsProp, sessions, sports }: TournamentsIndexProps) {
     const { locale, t } = useI18n();
-    const { flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const [editingTournament, setEditingTournament] = useState<TournamentRow | null>(null);
     const [deleteTournament, setDeleteTournament] = useState<TournamentRow | null>(null);
@@ -128,17 +127,6 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
             }
         >
             <Head title={t('Tournaments')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
-                    {flash.error}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>

@@ -26,14 +26,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import Pagination from '@/components/Pagination';
-import type { Session, Organization, Paginated, Flash } from '@/types';
+import type { Session, Organization, Paginated } from '@/types';
 import { formatDate, useI18n } from '@/lib/i18n';
 
 const sessionSchema = z.object({
@@ -59,7 +59,6 @@ interface SessionsIndexProps {
 
 export default function SessionsIndex({ sessions: sessionsProp, organizations = [] }: SessionsIndexProps) {
     const { locale, t } = useI18n();
-    const { flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const [editingSession, setEditingSession] = useState<SessionRow | null>(null);
     const [deleteSession, setDeleteSession] = useState<SessionRow | null>(null);
@@ -277,12 +276,6 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
             }
         >
             <Head title={t('Sessions')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>
