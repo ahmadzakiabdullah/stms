@@ -146,10 +146,9 @@ return [
     /*
      * The path on the server where the session cookie will be available.
      *
-     * CRITICAL for subfolder deployment (https://saf.utem.edu.my/portal/):
-     * Set SESSION_PATH=/portal in your .env on the server.
-     * Without this, auth cookies are set for "/" and may not be sent
-     * for /portal/* requests → users appear logged out or can bypass auth.
+     * Deployed at the domain root (https://saf.utem.edu.my/), so the cookie
+     * path is "/". If the app is ever moved below a subfolder, set
+     * SESSION_PATH to that subfolder in .env.
      */
     'path' => env('SESSION_PATH', '/'),
 

@@ -21,9 +21,9 @@ Frontend STMS dibina sebagai **Single-Page Application (SPA) yang diganding rapa
 resources/js/
 ├── app.tsx               # Titik masuk utama aplikasi frontend
 ├── bootstrap.js          # Konfigurasi awal (cth: axios)
-├── Components/           # Komponen React boleh guna semula (UI & domain)
+├── components/           # Komponen React boleh guna semula (UI & domain)
 │   ├── ui/               # Komponen shadcn/ui (Button, Input, dll.)
-│   └── ...               # Komponen aplikasi (cth: TournamentCard.tsx)
+│   └── ...               # Komponen aplikasi (cth: LanguageSwitcher.tsx)
 ├── Layouts/              # Komponen susun atur halaman (cth: AuthenticatedLayout.tsx)
 ├── lib/                  # Fungsi utiliti (cth: utils.ts untuk cn())
 ├── Pages/                # Komponen peringkat atasan yang mewakili satu halaman penuh
@@ -74,7 +74,7 @@ Styling dikendalikan sepenuhnya oleh **Tailwind CSS**.
 
 ## 8. Amalan Terbaik
 
-1.  **Fail `.jsx` ke `.tsx`:** Semua fail `.jsx` sedia ada perlu dipindahkan ke `.tsx` secara berperingkat (Rujuk Tugasan 2.2).
+1.  **Fail `.jsx` ke `.tsx`:** Semua 36 halaman dalam `Pages/` telah bertukar ke `.tsx`. Layout dan sesetengah komponen kongsi (cth. `GuestLayout.jsx`, komponen `components/ui/*.jsx`) masih `.jsx` dan berada di belakang compatibility declarations; komponen baharu hendaklah menggunakan `.tsx`.
 2.  **Komponen Kecil & Fokus:** Pecahkan UI kepada komponen yang lebih kecil dan boleh diguna semula.
 3.  **Elakkan State Global:** Cuba elakkan penggunaan perpustakaan pengurusan *state* global (seperti Redux atau Zustand) melainkan jika benar-benar perlu. Seni bina Inertia mengurangkan keperluan untuknya.
 4.  **Aksesibiliti (a11y):** Pastikan komponen yang dibina adalah mudah diakses, menggunakan atribut ARIA yang betul dan elemen HTML semantik. Komponen `shadcn/ui` menyediakan asas yang baik untuk ini.

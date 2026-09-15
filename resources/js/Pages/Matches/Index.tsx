@@ -14,8 +14,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { BarChart3, CalendarDays, Eye, Pencil, Plus, RefreshCw, Save, Search, Swords, Trash2, Trophy, Users } from 'lucide-react';
+import { BarChart3, CalendarDays, ChevronDown, ChevronUp, ChevronsUpDown, Eye, Pencil, Plus, RefreshCw, Save, Search, Swords, Trash2, Trophy, Users } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useT } from '@/lib/i18n';
+import { cn } from '@/lib/utils';
 import { eventCode, matchNumberLabel } from '@/lib/matchNumber';
 import { matchProgress } from '@/lib/matchProgress';
 import type { Event, Fixture, Participant, Pool, Result } from '@/types';
@@ -111,9 +113,12 @@ const participantInitials = (name: string) =>
         .join('');
 
 const formatDateTime = (value: string | null | undefined) =>
-    value ? new Date(value).toLocaleString() : 'Time TBD';
+    value
+        ? new Date(value).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+        : 'Time TBD';
 
 function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { participant?: ParticipantSummary | null; fallback?: string; size?: string }) {
+    const t = useT();
     const name = participantName(participant, fallback);
 
     if (participant?.logo_url) {
@@ -128,6 +133,7 @@ function TeamMark({ participant, fallback = 'TBD', size = 'size-9' }: { particip
 }
 
 function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: ParticipantSummary | null; fallback?: string }) {
+    const t = useT();
     const name = participantName(participant, fallback);
 
     return (
@@ -138,14 +144,22 @@ function ParticipantIdentity({ participant, fallback = 'TBD' }: { participant?: 
     );
 }
 
-function StatCard({ label, value, tone }: { label: string; value: number; tone?: 'default' | 'emerald' | 'destructive' }) {
+function StatCard({ label, value, tone, active = false, onClick }: { label: string; value: number; tone?: 'default' | 'emerald' | 'destructive'; active?: boolean; onClick?: () => void }) {
+    const t = useT();
     const toneClass =
         tone === 'emerald' ? 'text-emerald-600 dark:text-emerald-400'
         : tone === 'destructive' ? 'text-destructive'
         : '';
 
     return (
-        <Card>
+        <Card
+            className={cn(
+                'transition-colors',
+                onClick && 'cursor-pointer hover:bg-muted/50',
+                active && 'border-primary ring-1 ring-primary/40'
+            )}
+            onClick={onClick}
+        >
             <CardContent className="p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
                 <p className={`mt-1 text-2xl font-bold tabular-nums ${toneClass}`}>{value}</p>
@@ -155,6 +169,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone?:
 }
 
 function LeagueTable({ standings }: { standings: StandingRow[] }) {
+    const t = useT();
     return (
         <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -186,7 +201,7 @@ function LeagueTable({ standings }: { standings: StandingRow[] }) {
                                             <img src={row.participant.logo_url} alt={name} className="size-6 shrink-0 object-contain" />
                                         )}
                                         <span className="truncate font-medium">{name}</span>
-                                        {isLeader && <Badge variant="secondary">Leader</Badge>}
+                                        {isLeader && <Badge variant="secondary">{t('Leader')}</Badge>}
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-center">{row.played}</TableCell>
@@ -210,14 +225,40 @@ function LeagueTable({ standings }: { standings: StandingRow[] }) {
 
 const statusBadge = (status: string) => {
     const map: Record<string, { label: string; cls: string }> = {
-        scheduled: { label: 'Scheduled', cls: 'bg-yellow-100 text-yellow-700' },
-        in_progress: { label: 'In Progress', cls: 'bg-blue-100 text-blue-700' },
-        completed: { label: 'Completed', cls: 'bg-emerald-100 text-emerald-700' },
-        cancelled: { label: 'Cancelled', cls: 'bg-red-100 text-red-700' },
+        scheduled: { label: 'Scheduled', cls: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/15 dark:text-yellow-400' },
+        in_progress: { label: 'In Progress', cls: 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-400' },
+        completed: { label: 'Completed', cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-400' },
+        cancelled: { label: 'Cancelled', cls: 'bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-400' },
     };
-    const item = map[status] || { label: status, cls: 'bg-gray-100 text-gray-600' };
+    const item = map[status] || { label: status, cls: 'bg-muted text-muted-foreground' };
     return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${item.cls}`}>{item.label}</span>;
 };
+
+const matchDetail = (match: MatchRow) =>
+    match.pool?.name ?? (match.stage ? stageTitle(match.stage, match.round) : '');
+
+type SortKey = 'number' | 'matchup' | 'detail' | 'time' | 'status';
+type SortDir = 'asc' | 'desc';
+
+function SortableHead({ label, isActive, dir, onToggle, className }: { label: string; isActive: boolean; dir: SortDir; onToggle: () => void; className?: string }) {
+    return (
+        <TableHead className={className}>
+            <button
+                type="button"
+                onClick={onToggle}
+                aria-label={`Sort by ${label}`}
+                className="inline-flex items-center gap-1 font-medium"
+            >
+                {label}
+                {isActive
+                    ? dir === 'asc'
+                        ? <ChevronUp className="size-3" />
+                        : <ChevronDown className="size-3" />
+                    : <ChevronsUpDown className="size-3 opacity-40" />}
+            </button>
+        </TableHead>
+    );
+}
 
 const stageTitle = (stage: string, round?: number | null) => {
     const map: Record<string, string> = {
@@ -229,6 +270,7 @@ const stageTitle = (stage: string, round?: number | null) => {
 };
 
 function KnockoutStageSection({ knockout, canManage = true }: { knockout: KnockoutData; canManage?: boolean }) {
+    const t = useT();
     const [generating, setGenerating] = useState(false);
     const generate = () => {
         setGenerating(true);
@@ -242,15 +284,15 @@ function KnockoutStageSection({ knockout, canManage = true }: { knockout: Knocko
         return (
             <Card>
                 <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> Knockout Stage</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> {t('Knockout Stage')}</CardTitle>
                     <CardDescription>
                         {knockout.league_complete
-                            ? 'League complete — generate the knockout stage to continue.'
-                            : 'Not available yet. The knockout stage unlocks once every league fixture has a result.'}
+                            ? t('League complete — generate the knockout stage to continue.')
+                            : t('Not available yet. The knockout stage unlocks once every league fixture has a result.')}
                     </CardDescription>
                     {knockout.league_complete && canManage && (
                         <Button onClick={generate} disabled={generating} className="mt-2 w-fit">
-                            <Trophy className="mr-2 size-4" /> {generating ? 'Generating…' : 'Generate Knockout Stage'}
+                            <Trophy className="mr-2 size-4" /> {generating ? t('Generating…') : t('Generate Knockout Stage')}
                         </Button>
                     )}
                 </CardHeader>
@@ -261,8 +303,8 @@ function KnockoutStageSection({ knockout, canManage = true }: { knockout: Knocko
     return (
         <Card>
             <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> Knockout Stage</CardTitle>
-                <CardDescription>Semi-finals, bronze and final</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> {t('Knockout Stage')}</CardTitle>
+                <CardDescription>{t('Semi-finals, bronze and final')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -288,7 +330,7 @@ function KnockoutStageSection({ knockout, canManage = true }: { knockout: Knocko
                                         <span className="truncate text-sm font-medium" title={participantFullName(fixture.home_participant)}>{participantName(fixture.home_participant)}</span>
                                     </div>
                                     <span className={`shrink-0 text-sm font-bold ${isFinal ? 'text-primary' : 'text-muted-foreground'}`}>
-                                        {scored ? `${fixture.result!.score_home} : ${fixture.result!.score_away}` : 'VS'}
+                                        {scored ? `${fixture.result!.score_home} : ${fixture.result!.score_away}` : t('VS')}
                                     </span>
                                     <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
                                         <TeamMark participant={fixture.away_participant} fallback="TBD" />
@@ -315,8 +357,9 @@ interface MatchRowViewProps {
 }
 
 function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage = true }: MatchRowViewProps) {
+    const t = useT();
     const scored = match.result?.score_home !== null && match.result?.score_home !== undefined;
-    const detail = match.pool?.name ?? (match.stage ? stageTitle(match.stage, match.round) : `Round ${match.round || 1}`);
+    const detail = match.pool?.name ?? (match.stage ? stageTitle(match.stage, match.round) : t('Round {{number}}', { number: match.round || 1 }));
     const label = code
         ? `${code}${match.match_number}`
         : matchNumberLabel(match.match_number, match.event?.name);
@@ -329,7 +372,7 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
                     <TeamMark participant={match.home_participant} size="size-6" />
                     <span className="max-w-[110px] truncate font-medium" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
                     <span className={`mx-1 shrink-0 rounded-md px-2 py-0.5 text-sm font-bold tabular-nums ${scored ? 'bg-muted' : 'text-muted-foreground'}`}>
-                        {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : 'VS'}
+                        {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : t('VS')}
                     </span>
                     <TeamMark participant={match.away_participant} size="size-6" />
                     <span className="max-w-[110px] truncate font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
@@ -339,15 +382,15 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
             <TableCell className="text-sm">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                     <CalendarDays className="size-3" />
-                    {match.venue || 'Venue TBD'}
+                    {match.venue || t('Venue TBD')}
                 </div>
                 <div className="text-xs text-muted-foreground">{formatDateTime(match.scheduled_at)}</div>
             </TableCell>
             <TableCell>{statusBadge(match.status)}</TableCell>
             {canManage && (
             <TableCell className="space-x-1 text-right">
-                <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit match"><Pencil className="size-3" /></Button>
-                <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete match"><Trash2 className="size-3" /></Button>
+                <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label={t('Edit match')}><Pencil className="size-3" /></Button>
+                <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label={t('Delete match')}><Trash2 className="size-3" /></Button>
             </TableCell>
             )}
         </TableRow>
@@ -355,9 +398,12 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
 }
 
 export default function MatchesIndex({ events, drawnEventIds, selectedEventId, pools, allFixtures, knockout, participants, canManage = true }: MatchesIndexProps) {
+    const t = useT();
     const { flash } = usePage().props;
     const [query, setQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+    const [sortKey, setSortKey] = useState<SortKey>('number');
+    const [sortDir, setSortDir] = useState<SortDir>('asc');
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingMatch, setEditingMatch] = useState<MatchRow | null>(null);
     const [deleteMatch, setDeleteMatch] = useState<MatchRow | null>(null);
@@ -398,6 +444,36 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
             return haystack.includes(q);
         });
     }, [fixtures, query, statusFilter]);
+
+    const toggleSort = (key: SortKey) => {
+        if (key === sortKey) {
+            setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortKey(key);
+            setSortDir('asc');
+        }
+    };
+
+    const compareMatches = useMemo(() => {
+        const dir = sortDir === 'asc' ? 1 : -1;
+
+        return (a: MatchRow, b: MatchRow): number => {
+            let result = 0;
+
+            switch (sortKey) {
+                case 'number': result = a.match_number - b.match_number; break;
+                case 'matchup': result = (participantName(a.home_participant) || '').localeCompare(participantName(b.home_participant) || ''); break;
+                case 'detail': result = matchDetail(a).localeCompare(matchDetail(b)); break;
+                case 'time': result = new Date(a.scheduled_at ?? 0).getTime() - new Date(b.scheduled_at ?? 0).getTime(); break;
+                case 'status': result = (a.status || '').localeCompare(b.status || ''); break;
+            }
+
+            return result * dir;
+        };
+    }, [sortKey, sortDir]);
+
+    const sortedFixtures = useMemo(() => [...filteredFixtures].sort(compareMatches), [filteredFixtures, compareMatches]);
+    const filteredFixtureIds = useMemo(() => new Set(filteredFixtures.map((match) => match.id)), [filteredFixtures]);
 
     const groupedByEvent = useMemo(
         () =>
@@ -507,26 +583,45 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
 
     const eventPools = pools.filter((pool) => pool.event_id === data.event_id);
 
+    const eventParticipantOptions = useMemo(() => {
+        const eventPoolList = pools.filter((pool) => pool.event_id === data.event_id);
+        if (eventPoolList.length === 0) return participants;
+
+        const seen = new Set<string>();
+        const options: ParticipantSummary[] = [];
+
+        for (const pool of eventPoolList) {
+            for (const entry of pool.event_participants) {
+                const participant = entry.participant;
+                if (seen.has(participant.id)) continue;
+                seen.add(participant.id);
+                options.push({ id: participant.id, name: participant.name, team_name: participant.team_name, logo_url: participant.logo_url });
+            }
+        }
+
+        return options.sort((a, b) => participantName(a).localeCompare(participantName(b)));
+    }, [pools, data.event_id, participants]);
+
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Matches</h1>
-                        <p className="text-sm text-muted-foreground">Browse and manage all fixtures across every event.</p>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Matches')}</h1>
+                        <p className="text-sm text-muted-foreground">{t('Browse and manage all fixtures across every event.')}</p>
                     </div>
                     {canManage && (
-                    <Button onClick={() => openCreate()} disabled={!selectedEventId}>
-                        <Plus className="mr-2 size-4" /> Add Match
+                    <Button onClick={() => openCreate()} disabled={!selectedEventId} title={!selectedEventId ? t('Select an event above to add a match') : undefined}>
+                        <Plus className="mr-2 size-4" /> {t('Add Match')}
                     </Button>
                     )}
                 </div>
             }
         >
-            <Head title="Matches" />
+            <Head title={t('Matches')} />
 
-            {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
-            {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
+            {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">{flash.success}</div>}
+            {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-400">{flash.error}</div>}
 
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 <Button
@@ -534,7 +629,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                     size="sm"
                     onClick={() => handleFilterChange('')}
                 >
-                    All Matches
+                    {t('All Matches')}
                     <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">{fixtures.length}</span>
                 </Button>
                 {events.map((event) => {
@@ -562,18 +657,18 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
             {!selectedEvent ? (
                 <>
                     <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                        <StatCard label="Total Matches" value={counts.scheduled + counts.in_progress + counts.completed + counts.cancelled} />
-                        <StatCard label="Completed" value={counts.completed} tone="emerald" />
-                        <StatCard label="In Progress" value={counts.in_progress} />
-                        <StatCard label="Scheduled" value={counts.scheduled} />
-                        <StatCard label="Cancelled" value={counts.cancelled} tone="destructive" />
+                        <StatCard label={t('Total Matches')} value={counts.scheduled + counts.in_progress + counts.completed + counts.cancelled} active={!statusFilter} onClick={() => setStatusFilter('')} />
+                        <StatCard label={t('Completed')} value={counts.completed} tone="emerald" active={statusFilter === 'completed'} onClick={() => setStatusFilter(statusFilter === 'completed' ? '' : 'completed')} />
+                        <StatCard label={t('In Progress')} value={counts.in_progress} active={statusFilter === 'in_progress'} onClick={() => setStatusFilter(statusFilter === 'in_progress' ? '' : 'in_progress')} />
+                        <StatCard label={t('Scheduled')} value={counts.scheduled} active={statusFilter === 'scheduled'} onClick={() => setStatusFilter(statusFilter === 'scheduled' ? '' : 'scheduled')} />
+                        <StatCard label={t('Cancelled')} value={counts.cancelled} tone="destructive" active={statusFilter === 'cancelled'} onClick={() => setStatusFilter(statusFilter === 'cancelled' ? '' : 'cancelled')} />
                     </div>
 
                     <div className="mb-4 flex flex-wrap items-center gap-3">
                         <div className="relative">
                             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                                placeholder="Search team, venue, match #…"
+                                placeholder={t('Search team, venue, match #…')}
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
                                 className="w-72 pl-8"
@@ -584,14 +679,14 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                             onChange={(event) => setStatusFilter(event.target.value)}
                             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
                         >
-                            <option value="">All Statuses</option>
-                            <option value="scheduled">Scheduled</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="">{t('All Statuses')}</option>
+                            <option value="scheduled">{t('Scheduled')}</option>
+                            <option value="in_progress">{t('In Progress')}</option>
+                            <option value="completed">{t('Completed')}</option>
+                            <option value="cancelled">{t('Cancelled')}</option>
                         </select>
                         <span className="text-sm text-muted-foreground">
-                            Showing {filteredFixtures.length} of {fixtures.length} matches
+                            {t('Showing {{shown}} of {{total}} matches', { shown: filteredFixtures.length, total: fixtures.length })}
                         </span>
                     </div>
 
@@ -599,19 +694,21 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         {groupedByEvent.length === 0 && (
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>No Matches</CardTitle>
+                                    <CardTitle>{t('No Matches')}</CardTitle>
                                     <CardDescription>
                                         {query || statusFilter
-                                            ? 'No matches match your search or filters.'
-                                            : 'No matches scheduled yet. Select an event above and add a match.'}
+                                            ? t('No matches match your search or filters.')
+                                            : t('No matches scheduled yet. Select an event above and add a match.')}
                                     </CardDescription>
                                 </CardHeader>
                             </Card>
                         )}
 
                         {groupedByEvent.map(({ event, fixtures: eventFixtures }) => {
-                            const shown = eventFixtures.filter((match) => filteredFixtures.includes(match));
+                            const shown = eventFixtures.filter((match) => filteredFixtureIds.has(match.id));
                             if (shown.length === 0) return null;
+
+                            const sortedShown = [...shown].sort(compareMatches);
 
                             const completed = eventFixtures.filter((match) => match.status === 'completed').length;
                             const eventHasDraw = drawnEventIds.includes(event.id);
@@ -624,14 +721,14 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                             <div>
                                                 <CardTitle className="flex items-center gap-2 text-lg">
                                                     {event.name}
-                                                    {eventHasDraw && <Badge variant="outline">Drawn</Badge>}
+                                                    {eventHasDraw && <Badge variant="outline">{t('Drawn')}</Badge>}
                                                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${progress.badge}`}>{progress.label}</span>
                                                 </CardTitle>
                                                 <CardDescription>
                                                     {event.tournament?.name} · {event.sport?.name}
                                                     {event.sportCategory && ` — ${event.sportCategory.name}`}
                                                     <span className="mx-1.5">·</span>
-                                                    {eventFixtures.length} matches
+                                                    {t('{{count}} matches', { count: eventFixtures.length })}
                                                     <span className="ml-2 inline-flex items-center gap-1.5 align-middle">
                                                         <span className="inline-block h-1 w-16 overflow-hidden rounded-full bg-gray-200">
                                                             <span className={`block h-full ${progress.bar}`} style={{ width: `${progress.pct}%` }} />
@@ -643,11 +740,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                             <div className="flex items-center gap-2">
                                                 {eventHasDraw && (
                                                     <Link href={route('events.draw-result', event.slug)}>
-                                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> {t('View Draw')}</Button>
                                                     </Link>
                                                 )}
                                                 <Button variant="outline" size="sm" onClick={() => handleFilterChange(event.id)}>
-                                                    <Swords className="mr-1 size-3" /> Open Event
+                                                    <Swords className="mr-1 size-3" /> {t('Open Event')}
                                                 </Button>
                                             </div>
                                         </div>
@@ -656,17 +753,17 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                         <div className="overflow-x-auto">
                                             <Table>
                                                 <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead className="w-14">#</TableHead>
-                                                        <TableHead>Matchup</TableHead>
-                                                        <TableHead className="w-32">Pool / Stage</TableHead>
-                                                        <TableHead>Venue / Time</TableHead>
-                                                <TableHead className="w-28">Status</TableHead>
-                                                {canManage && <TableHead className="text-right">Actions</TableHead>}
-                                            </TableRow>
+                                    <TableRow>
+                                        <SortableHead label="#" isActive={sortKey === 'number'} dir={sortDir} onToggle={() => toggleSort('number')} className="w-14" />
+                                        <SortableHead label={t('Matchup')} isActive={sortKey === 'matchup'} dir={sortDir} onToggle={() => toggleSort('matchup')} />
+                                        <SortableHead label={t('Pool / Stage')} isActive={sortKey === 'detail'} dir={sortDir} onToggle={() => toggleSort('detail')} className="w-32" />
+                                        <SortableHead label={t('Venue / Time')} isActive={sortKey === 'time'} dir={sortDir} onToggle={() => toggleSort('time')} />
+                                        <SortableHead label={t('Status')} isActive={sortKey === 'status'} dir={sortDir} onToggle={() => toggleSort('status')} className="w-28" />
+                                        {canManage && <TableHead className="text-right">{t('Actions')}</TableHead>}
+                                    </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {shown.map((match) => (
+                                            {sortedShown.map((match) => (
                                                 <MatchRowView
                                                     key={match.id}
                                                     match={match}
@@ -680,12 +777,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                         </div>
                                         {shown.length < eventFixtures.length && (
                                             <p className="mt-3 text-xs text-muted-foreground">
-                                                Showing {shown.length} of {eventFixtures.length} matches.
+                                                {t('Showing {{shown}} of {{total}} matches.', { shown: shown.length, total: eventFixtures.length })}
                                             </p>
                                         )}
                                     </CardContent>
-                                </Card>
-                            );
+                                </Card>                            );
                         })}
                     </div>
                 </>
@@ -697,7 +793,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 <div>
                                     <CardTitle className="flex items-center gap-2 text-lg">
                                         {selectedEvent.name}
-                                        {drawnEventIds.includes(selectedEvent.id) && <Badge variant="outline">Drawn</Badge>}
+                                        {drawnEventIds.includes(selectedEvent.id) && <Badge variant="outline">{t('Drawn')}</Badge>}
                                     </CardTitle>
                                     <CardDescription>
                                         {selectedEvent.tournament?.name} · {selectedEvent.sport?.name}
@@ -708,11 +804,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 <div className="flex items-center gap-2">
                                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                         <RefreshCw className="size-3 animate-spin [animation-duration:3s]" />
-                                        {lastUpdated ? `Auto-updated ${lastUpdated.toLocaleTimeString()}` : 'Auto-updates every 15s'}
+                                        {lastUpdated ? t('Auto-updated {{time}}', { time: lastUpdated.toLocaleTimeString() }) : t('Auto-updates every 15s')}
                                     </span>
                                     {drawnEventIds.includes(selectedEvent.id) && (
                                         <Link href={route('events.draw-result', selectedEvent.slug)}>
-                                            <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                            <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> {t('View Draw')}</Button>
                                         </Link>
                                     )}
                                 </div>
@@ -721,40 +817,88 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                     </Card>
 
                     {knockout.league_complete && <KnockoutStageSection knockout={knockout} canManage={canManage} />}
+
+                    {pools.length > 0 && (
+                    <div className="mb-1 flex flex-wrap items-center gap-3">
+                        <div className="relative">
+                            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder={t('Search team, venue, match #…')}
+                                value={query}
+                                onChange={(event) => setQuery(event.target.value)}
+                                className="w-72 pl-8"
+                            />
+                        </div>
+                        <select
+                            value={statusFilter}
+                            onChange={(event) => setStatusFilter(event.target.value)}
+                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                            <option value="">{t('All Statuses')}</option>
+                            <option value="scheduled">{t('Scheduled')}</option>
+                            <option value="in_progress">{t('In Progress')}</option>
+                            <option value="completed">{t('Completed')}</option>
+                            <option value="cancelled">{t('Cancelled')}</option>
+                        </select>
+                        <span className="text-sm text-muted-foreground">
+                            {t('Showing {{shown}} of {{total}} matches', {
+                                shown: pools.reduce((sum, pool) => sum + pool.fixtures.filter((fixture) => filteredFixtureIds.has(fixture.id)).length, 0),
+                                total: pools.reduce((sum, pool) => sum + pool.fixtures.length, 0),
+                            })}
+                        </span>
+                    </div>
+                    )}
+
+                    {pools.length > 0 &&
+                        pools.some((pool) => pool.fixtures.length > 0) &&
+                        pools.every((pool) => pool.fixtures.every((fixture) => !filteredFixtureIds.has(fixture.id))) && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>{t('No Matches')}</CardTitle>
+                                <CardDescription>{t('No matches match your search or filters.')}</CardDescription>
+                            </CardHeader>
+                        </Card>
+                    )}
+
                     {pools.length === 0 && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>No Pools</CardTitle>
+                                <CardTitle>{t('No Pools')}</CardTitle>
                                 <CardDescription>
-                                    This event has no pools yet. You can still add matches directly, or run a draw to create pools.
+                                    {t('This event has no pools yet. You can still add matches directly, or run a draw to create pools.')}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-wrap gap-2">
                                     {canManage && (
                                     <Button variant="outline" size="sm" onClick={() => openCreate()}>
-                                        <Plus className="mr-1 size-3" /> Add Match
+                                        <Plus className="mr-1 size-3" /> {t('Add Match')}
                                     </Button>
                                     )}
                                     <Link href={route('events.draw-result', selectedEvent.slug)}>
-                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> {t('View Draw')}</Button>
                                     </Link>
                                 </div>
                             </CardContent>
                         </Card>
                     )}
 
-                    {pools.map((pool) => (
+                    {pools.map((pool) => {
+                        const poolFixtures = pool.fixtures
+                            .filter((fixture) => filteredFixtureIds.has(fixture.id))
+                            .sort(compareMatches);
+
+                        return (
                         <Card key={pool.id}>
                             <CardHeader className="pb-3">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
                                         <CardTitle className="flex items-center gap-2 text-lg"><Users className="size-4" /> {pool.name}</CardTitle>
-                                        <CardDescription>{pool.event_participants.length} participants · {pool.fixtures.length} fixtures</CardDescription>
+                                        <CardDescription>{t('{{count}} participants', { count: pool.event_participants.length })} · {t('{{count}} fixtures', { count: pool.fixtures.length })}</CardDescription>
                                     </div>
                                     {canManage && (
                                     <Button variant="outline" size="sm" onClick={() => openCreate(pool)}>
-                                        <Plus className="mr-1 size-3" /> Add to {pool.name}
+                                        <Plus className="mr-1 size-3" /> {t('Add to {{name}}', { name: pool.name })}
                                     </Button>
                                     )}
                                 </div>
@@ -772,7 +916,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2 text-sm font-semibold">
                                             <BarChart3 className="size-4 text-primary" />
-                                            League Table
+                                            {t('League Table')}
                                         </div>
                                         <LeagueTable standings={pool.standings} />
                                     </div>
@@ -782,19 +926,19 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead className="w-14">#</TableHead>
-                                                <TableHead>Matchup</TableHead>
-                                                <TableHead className="w-32">Pool / Stage</TableHead>
-                                                <TableHead>Venue / Time</TableHead>
-                                                <TableHead className="w-28">Status</TableHead>
-                                                {canManage && <TableHead className="text-right">Actions</TableHead>}
+                                                <SortableHead label="#" isActive={sortKey === 'number'} dir={sortDir} onToggle={() => toggleSort('number')} className="w-14" />
+                                                <SortableHead label={t('Matchup')} isActive={sortKey === 'matchup'} dir={sortDir} onToggle={() => toggleSort('matchup')} />
+                                                <SortableHead label={t('Pool / Stage')} isActive={sortKey === 'detail'} dir={sortDir} onToggle={() => toggleSort('detail')} className="w-32" />
+                                                <SortableHead label={t('Venue / Time')} isActive={sortKey === 'time'} dir={sortDir} onToggle={() => toggleSort('time')} />
+                                                <SortableHead label={t('Status')} isActive={sortKey === 'status'} dir={sortDir} onToggle={() => toggleSort('status')} className="w-28" />
+                                                {canManage && <TableHead className="text-right">{t('Actions')}</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {pool.fixtures.length === 0 && (
-                                                <TableRow><TableCell colSpan={canManage ? 6 : 5} className="text-center text-muted-foreground">No fixtures in this pool.</TableCell></TableRow>
+                                            {poolFixtures.length === 0 && (
+                                                <TableRow><TableCell colSpan={canManage ? 6 : 5} className="text-center text-muted-foreground">{t('No fixtures in this pool.')}</TableCell></TableRow>
                                             )}
-                                            {pool.fixtures.map((fixture) => (
+                                            {poolFixtures.map((fixture) => (
                                                 <MatchRowView
                                                     key={fixture.id}
                                                     match={fixture}
@@ -807,9 +951,15 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                         </TableBody>
                                     </Table>
                                 </div>
+                                {poolFixtures.length < pool.fixtures.length && (
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {t('Showing {{shown}} of {{total}} matches.', { shown: poolFixtures.length, total: pool.fixtures.length })}
+                                    </p>
+                                )}
                             </CardContent>
                         </Card>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -817,53 +967,56 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                 <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
                     <form onSubmit={submitMatch}>
                         <DialogHeader>
-                            <DialogTitle>{editingMatch ? 'Edit Match' : 'Add Match'}</DialogTitle>
-                            <DialogDescription>Set teams, pool, round, venue, schedule and status.</DialogDescription>
+                            <DialogTitle>{editingMatch ? t('Edit Match') : t('Add Match')}</DialogTitle>
+                            <DialogDescription>{t('Set teams, pool, round, venue, schedule and status.')}</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-5 sm:grid-cols-2">
                             <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="event_id">Event</Label>
+                                <Label htmlFor="event_id">{t('Event')}</Label>
                                 <select id="event_id" value={data.event_id} onChange={(event) => setData('event_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm" required>
-                                    <option value="">-- Select Event --</option>
+                                    <option value="">{t('-- Select Event --')}</option>
                                     {events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}
                                 </select>
                                 {errors.event_id && <p className="text-sm text-destructive">{errors.event_id}</p>}
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="pool_id">Pool</Label>
+                                <Label htmlFor="pool_id">{t('Pool')}</Label>
                                 <select id="pool_id" value={data.pool_id} onChange={(event) => setData('pool_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm">
-                                    <option value="">-- No Pool --</option>
+                                    <option value="">{t('-- No Pool --')}</option>
                                     {eventPools.map((pool) => <option key={pool.id} value={pool.id}>{pool.name}</option>)}
                                 </select>
                                 {errors.pool_id && <p className="text-sm text-destructive">{errors.pool_id}</p>}
                             </div>
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="grid gap-2"><Label htmlFor="round">Round</Label><Input id="round" type="number" min="1" value={data.round} onChange={(event) => setData('round', Number(event.target.value))} /></div>
-                                <div className="grid gap-2"><Label htmlFor="match_number">Match #</Label><Input id="match_number" type="number" min="1" value={data.match_number} onChange={(event) => setData('match_number', Number(event.target.value))} required /></div>
+                                <div className="grid gap-2"><Label htmlFor="round">{t('Round')}</Label><Input id="round" type="number" min="1" value={data.round} onChange={(event) => setData('round', Number(event.target.value))} /></div>
+                                <div className="grid gap-2"><Label htmlFor="match_number">{t('Match #')}</Label><Input id="match_number" type="number" min="1" value={data.match_number} onChange={(event) => setData('match_number', Number(event.target.value))} required /></div>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="home_participant_id">Home</Label>
-                                <select id="home_participant_id" value={data.home_participant_id} onChange={(event) => setData('home_participant_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
+                                <Label htmlFor="home_participant_id">{t('Home')}</Label>
+                                <select id="home_participant_id" value={data.home_participant_id} onChange={(event) => setData('home_participant_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="">{t('-- TBD --')}</option>{eventParticipantOptions.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="away_participant_id">Away</Label>
-                                <select id="away_participant_id" value={data.away_participant_id} onChange={(event) => setData('away_participant_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
+                                <Label htmlFor="away_participant_id">{t('Away')}</Label>
+                                <select id="away_participant_id" value={data.away_participant_id} onChange={(event) => setData('away_participant_id', event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="">{t('-- TBD --')}</option>{eventParticipantOptions.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
                                 {errors.away_participant_id && <p className="text-sm text-destructive">{errors.away_participant_id}</p>}
                             </div>
-                            <div className="grid gap-2"><Label htmlFor="venue">Venue</Label><Input id="venue" value={data.venue} onChange={(event) => setData('venue', event.target.value)} /></div>
-                            <div className="grid gap-2"><Label htmlFor="scheduled_at">Scheduled At</Label><Input id="scheduled_at" type="datetime-local" value={data.scheduled_at} onChange={(event) => setData('scheduled_at', event.target.value)} /></div>
-                            <div className="grid gap-2"><Label htmlFor="status">Status</Label><select id="status" value={data.status} onChange={(event) => setData('status', event.target.value as Fixture['status'])} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="scheduled">Scheduled</option><option value="in_progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
-                            <div className="grid gap-2"><Label htmlFor="notes">Notes</Label><Input id="notes" value={data.notes} onChange={(event) => setData('notes', event.target.value)} /></div>
+                            {eventPools.length > 0 && (
+                                <p className="text-xs text-muted-foreground sm:col-span-2">{t('Participants are limited to those drawn into this event.')}</p>
+                            )}
+                            <div className="grid gap-2"><Label htmlFor="venue">{t('Venue')}</Label><Input id="venue" value={data.venue} onChange={(event) => setData('venue', event.target.value)} /></div>
+                            <div className="grid gap-2"><Label htmlFor="scheduled_at">{t('Scheduled At')}</Label><Input id="scheduled_at" type="datetime-local" value={data.scheduled_at} onChange={(event) => setData('scheduled_at', event.target.value)} /></div>
+                            <div className="grid gap-2"><Label htmlFor="status">{t('Status')}</Label><select id="status" value={data.status} onChange={(event) => setData('status', event.target.value as Fixture['status'])} className="h-9 rounded-md border bg-background px-3 text-sm"><option value="scheduled">{t('Scheduled')}</option><option value="in_progress">{t('In Progress')}</option><option value="completed">{t('Completed')}</option><option value="cancelled">{t('Cancelled')}</option></select></div>
+                            <div className="grid gap-2"><Label htmlFor="notes">{t('Notes')}</Label><Input id="notes" value={data.notes} onChange={(event) => setData('notes', event.target.value)} /></div>
                         </div>
-                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button><Button type="submit" disabled={processing}><Save className="mr-2 size-4" />{editingMatch ? 'Update Match' : 'Save Match'}</Button></DialogFooter>
+                        <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>{t('Cancel')}</Button><Button type="submit" disabled={processing}><Save className="mr-2 size-4" />{editingMatch ? t('Update Match') : t('Save Match')}</Button></DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
 
             <Dialog open={!!deleteMatch} onOpenChange={(open) => !open && setDeleteMatch(null)}>
                 <DialogContent>
-                    <DialogHeader><DialogTitle>Delete Match?</DialogTitle><DialogDescription>Match #{matchNumberLabel(deleteMatch?.match_number, deleteMatch?.event?.name ?? selectedEvent?.name)} will be removed. This action cannot be undone.</DialogDescription></DialogHeader>
-                    <DialogFooter><Button variant="outline" onClick={() => setDeleteMatch(null)}>Cancel</Button><Button variant="destructive" onClick={confirmDelete}><Trash2 className="mr-2 size-4" />Delete Match</Button></DialogFooter>
+                    <DialogHeader><DialogTitle>{t('Delete Match?')}</DialogTitle><DialogDescription>{t('Match #{{label}} will be removed. This action cannot be undone.', { label: matchNumberLabel(deleteMatch?.match_number, deleteMatch?.event?.name ?? selectedEvent?.name) })}</DialogDescription></DialogHeader>
+                    <DialogFooter><Button variant="outline" onClick={() => setDeleteMatch(null)}>{t('Cancel')}</Button><Button variant="destructive" onClick={confirmDelete}><Trash2 className="mr-2 size-4" />{t('Delete Match')}</Button></DialogFooter>
                 </DialogContent>
             </Dialog>
         </AuthenticatedLayout>

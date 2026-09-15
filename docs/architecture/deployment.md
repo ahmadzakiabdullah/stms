@@ -52,8 +52,8 @@ Edit `.env`:
 | Variable | Value |
 |----------|-------|
 | `APP_KEY` | Run `php artisan key:generate` |
-| `APP_URL` | `https://your-domain.com/portal` |
-| `SESSION_PATH` | `/portal` |
+| `APP_URL` | `https://saf.utem.edu.my` |
+| `SESSION_PATH` | `/` |
 | `DB_HOST` | `127.0.0.1` (or your MySQL host) |
 | `DB_DATABASE` | `db4safportal` |
 | `DB_USERNAME` | (your DB user) |
@@ -110,8 +110,8 @@ chown -R www-data:www-data storage bootstrap/cache
 
 ## Step 7: Verify
 
-- [ ] Visit `https://your-domain.com/portal` — should show welcome page
-- [ ] Visit `https://your-domain.com/portal/health` — should return JSON `{"status":"ok"}`
+- [ ] Visit `https://saf.utem.edu.my` — should show welcome page
+- [ ] Visit `https://saf.utem.edu.my/health` — should return JSON `{"status":"ok"}`
 - [ ] Provision the initial super-admin with `stms:create-super-admin`; production seeding intentionally creates no default account
 - [ ] Test basic CRUD (Organizations, Sports, Sessions, Tournaments, Events)
 

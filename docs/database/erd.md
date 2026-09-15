@@ -64,6 +64,24 @@ Dokumen ini menerangkan hubungan antara entiti-entiti data utama dalam aplikasi 
 -   **Fixture** (jadual `matches`) mewakili satu perlawanan yang dijadualkan.
 -   Sebuah **Fixture** tergolong dalam **satu** **Event**.
     -   `matches.event_id` → `events.id` (Many-to-One)
--   Sebuah **Fixture** mempunyai **satu** **Result** (boleh jadi `null` jika belum dimainkan).
-    -   `matches.result_id` → `results.id` (One-to-One, Nullable)
--   Sebuah **Fixture** melibatkan dua **Participants** (`participant1_id` dan `participant2_id`).
+-   Sebuah **Fixture** melibatkan dua **Participants** melalui `matches.home_participant_id` dan `matches.away_participant_id` (kedua-duanya nullable).
+-   Sebuah **Fixture** boleh dimiliki oleh satu **Pool** (`matches.pool_id`, nullable).
+
+### 9. Result (Keputusan)
+
+-   **Result** menyimpan keputusan bagi satu perlawanan (hubungan satu-ke-satu dengan Fixture).
+-   Sebuah **Result** tergolong dalam **satu** **Fixture**.
+    -   `results.match_id` → `matches.id` (One-to-One; `results.match_id` adalah **unik**)
+-   Sebuah **Result** merekod `score_home`, `score_away`, dan `winner_participant_id` (nullable).
+
+### 10. Pool (Kumpulan Undian)
+
+-   **Pool** mewakili kumpulan undian bagi sesuatu **Event**.
+-   Sebuah **Pool** tergolong dalam **satu** **Event** dan **satu** **Organization**.
+-   Peserta dihubungkan melalui `event_participants.pool_id`; perlawanan melalui `matches.pool_id`.
+
+### 11. SquadMember (Ahli Skuad)
+
+-   **SquadMember** mewakili ahli dalam skuad satu pendaftaran acara (**EventParticipant**).
+    -   `squad_members.event_participant_id` → `event_participants.id` (Many-to-One)
+-   `matrix_no` adalah unik dalam skop satu pendaftaran acara.

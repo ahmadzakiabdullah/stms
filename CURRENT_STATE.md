@@ -3,7 +3,7 @@
 > **Snapshot of the STMS project implementation status.**
 > This document reflects the reality as of the latest full system review. It should be read together with `CLAUDE.md`, `AGENTS.md`, `TODOS.md`, and `ROADMAP.md`.
 
-**Overall Status:** MVP functionality is implemented for SAF 2026. Core flows cover Organization/User/RBAC → Sport/Category/Session/Tournament/Event → Participant/Registration → Squad Management → Match/Result → Rankings → Exports/Reporting → Dean Verification → Draw/Groups → Notifications → Settings and Activity Logs.
+**Overall Status:** MVP functionality is implemented for SAF 2026. Core flows cover Organization/User/RBAC → Sport/Category/Session/Tournament/Event → Participant/Registration → Squad Management → Match/Result → Rankings → Exports/Reporting → Dean Verification → Draw/Groups → Notifications → Settings and Activity Logs. The interface is bilingual (**English / Bahasa Melayu**) via a server-driven i18n layer.
 **Code Maturity:** Operational MVP with production-hardening Sprints 1-3 implemented in the repository. CI covers lint, TypeScript, PHPUnit, dependency audits, PCOV coverage artifacts, build budgets, and Playwright desktop/mobile journeys with axe. Backend query and k6 thresholds are defined; encrypted backup/restore and internal health monitoring are implemented. Connected-CI browser/coverage results, production MySQL/off-site restore, authenticated load tests, and external alert drills still require environment evidence.
 
 ---
@@ -16,12 +16,13 @@
 | Frontend       | React 18 + Inertia.js (`.tsx` — TypeScript)  | React + Inertia.js + TypeScript              | Implemented |
 | UI             | Full shadcn/ui + Lucide                      | shadcn/ui only                               | Implemented |
 | Auth           | Laravel Breeze Inertia + Spatie RBAC         | Breeze Inertia + Spatie RBAC + org scoping   | Implemented |
-| Database       | 30+ tables (domain + Spatie + Laravel). UUID PKs on all domain tables. Soft deletes on all models | UUID PKs, soft deletes, org_id on tenant tables | Implemented |
+| Database       | 31 tables (domain + Spatie + Laravel). UUID PKs on all domain tables. Soft deletes on all models except Setting and SquadMember | UUID PKs, soft deletes, org_id on tenant tables | Implemented |
 | Multi-tenancy  | Column-based + BelongsToOrganization Global Scope trait | Column-based (organization_id) + Global Scopes | Implemented |
-| Authorization  | Spatie + 12 Policies + Gate in controllers   | Spatie Laravel Permission + Policies + Gates | Implemented |
-| Domain Models  | 16 model files, including tenant/domain models and Setting | Full hierarchy | Implemented |
+| Authorization  | Spatie + 19 Policies + Gate in controllers   | Spatie Laravel Permission + Policies + Gates | Implemented |
+| Domain Models  | 15 model files, including tenant/domain models and Setting | Full hierarchy | Implemented |
+| i18n           | English + Bahasa Melayu via `lang/*.json`, `resources/js/lib/i18n.tsx`, session locale | Multi-Language | Implemented (RTL not implemented) |
 | API            | None (web/Inertia only)                      | RESTful `/api/v1` (future)                   | Future      |
-| Tests          | 76 PHP test files; 318 tests and 1,207 assertions passing on 2 August 2026, plus 6 Playwright/axe journeys | PHP + browser + accessibility | Type-check and local browser/accessibility gates pass; connected-CI coverage percentage pending |
+| Tests          | 76 PHP test files; 331 tests and 1,355 assertions passing, plus 6 Playwright/axe journeys | PHP + browser + accessibility | Type-check and local browser/accessibility gates pass; connected-CI coverage percentage pending |
 
 ---
 
@@ -29,10 +30,11 @@
 
 - **Full domain**: 14 models + RankingService + Export infrastructure. HasUuids + SoftDeletes + full relations chain.
 - **Multi-tenancy**: `BelongsToOrganization` trait + global scope on all tenant-aware models; per-org slug uniqueness.
-- **RBAC**: Spatie with roles: super-admin, org-admin, staff, faculty-representative, dean. 30+ granular permissions. 12 Policies.
+- **RBAC**: Spatie with roles: super-admin, org-admin, admin-sport, staff, faculty-representative, dean. 42 granular permissions. 19 Policies.
 - **Actions + Form Requests**: Complete Create/Update/Delete Actions for every domain module.
-- **Controllers**: 36 controller files including authentication controllers.
-- **Frontend**: 30+ Inertia pages — all TypeScript. shadcn/ui components. Global Error page. Flow-based sidebar.
+- **Controllers**: 37 controller files including authentication controllers.
+- **Frontend**: 36 Inertia pages — all TypeScript. shadcn/ui components. Global Error page. Flow-based sidebar.
+- **i18n**: English + Bahasa Melayu dictionaries (`lang/en.json`, `lang/ms.json`, 750 keys each), `LanguageProvider`/`useT()` in `resources/js/lib/i18n.tsx`, `LanguageSwitcher`, `LanguageController`, session-based locale, default `ms` with `en` fallback.
 - **Exports**: PDF (Dompdf) + Excel (Maatwebsite) for Fixtures, Results, Rankings. Printable match sheet.
 - **Reports**: Dashboard with stats, completion rate, recent results, quick export links.
 - **Faculty Dashboard**: Squad member management with role-based and total-athlete quota validation. Bulk Excel/CSV import uses the same quota rules.
@@ -43,7 +45,7 @@
 - **Participant Dashboard**: Stats cards, per-faculty breakdown, per-event breakdown with filters.
 - **Logo Upload**: Faculty crest/logo upload and display.
 - **Dashboard**: Real data with safe guards, Cache, try/catch (prevents 500s on partial prod DBs).
-- **Routes**: 104 application routes (web + auth); no REST API routes.
+- **Routes**: 112 application routes (web + auth); no REST API routes.
 - **Migrations**: 56 migration files covering domain, framework, fixes, and later features.
 - **Seeding**: `DatabaseSeeder` seeds the 24-sport SAF master list, then `SAF2026DataSeeder` seeds SAF 2026 categories/events with quota fields. Reusable and idempotent.
 - **Tests**: 76 PHP test files; `php artisan test` passes 318 tests / 1,207 assertions. Six Playwright desktop/mobile journeys, including axe checks, pass locally and are committed for connected CI.
@@ -74,8 +76,8 @@
 
 ## What Is Missing / Known Gaps
 
-- **REST API**: Not yet built — deferred for future phase.
-- **Internationalization**: Laravel localization config exists but translations not implemented.
+- **REST API**: Not yet built — deferred for future phase. All 21 `docs/api/*.md` files are placeholders (empty) and marked as future contract designs.
+- **Internationalization**: English + Bahasa Melayu implemented across all pages. Non-translated items are Zod validation messages, technical/example values, and RTL support.
 - **Accreditation, Live Scoring, Mobile App**: All deferred future features.
 - **UNC path limitation**: `\\10.1.2.22\e\others\saf\portal` cannot run CLI directly — use local drive or `u:;` mapping.
 
@@ -95,4 +97,4 @@ Production defaults to `SEED_DEMO_DATA=false`; `DatabaseSeeder` then creates onl
 
 ---
 
-**Last Updated:** 2 August 2026 — verified against routes, migrations, source, seeders, PHPUnit, Pint, TypeScript, Vite, dependency audits, and the local Playwright/axe suite. Environment-dependent production drills remain tracked in `TODOS.md`.
+**Last Updated:** 15 September 2026 — counts re-verified against routes (112), migrations (56), models (15), controllers (37), policies (19), PHPUnit (331 tests / 1,355 assertions, all passing), Pint, and `tsc --noEmit`. Bilingual English/Bahasa Melayu i18n is now in place. Environment-dependent production drills remain tracked in `TODOS.md`.

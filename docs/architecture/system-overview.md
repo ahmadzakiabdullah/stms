@@ -13,8 +13,8 @@ Aplikasi ini dibina sebagai "Modern Monolith" menggunakan framework Laravel untu
 - **Backend:** PHP 8.4, Laravel 13
 - **Frontend:** React, TypeScript, Inertia.js, Tailwind CSS, shadcn/ui
 - **Pangkalan Data:** MySQL 8
-- **Cache:** Pangkalan Data (sedia untuk Redis)
-- **Queue:** Pangkalan Data (sedia untuk Redis)
+- **Cache:** Dikawal persekitaran (`file` secara lalai; `redis` disyorkan untuk production)
+- **Queue:** Dikawal persekitaran (`file`/`sync` secara lalai; `redis` disyorkan untuk production)
 - **Server:** Nginx + PHP-FPM
 - **Pakej Utama Laravel:**
   - `spatie/laravel-permission`: Untuk pengurusan peranan (roles) dan kebenaran (permissions).

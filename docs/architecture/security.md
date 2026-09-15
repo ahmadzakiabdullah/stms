@@ -8,7 +8,7 @@ Laravel Breeze provides Inertia-based authentication scaffolding with login, reg
 
 ## Role-Based Access Control
 
-Roles and permissions are managed via Spatie Laravel Permission v6. Seeded roles include `super-admin`, `org-admin`, `staff`, `faculty-representative`, and `dean`, with granular permissions per domain entity. Authorization is primarily enforced through controller `Gate::authorize()` calls and policies.
+Roles and permissions are managed via Spatie Laravel Permission v6. Seeded roles include `super-admin`, `org-admin`, `admin-sport`, `staff`, `faculty-representative`, and `dean`, with granular permissions per domain entity. Authorization is primarily enforced through controller `Gate::authorize()` calls and policies.
 
 1. **Authentication middleware** — protects the application route group.
 2. **Policy gates** — controller methods perform resource/action authorization before mutations and sensitive reads.

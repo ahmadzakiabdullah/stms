@@ -29,9 +29,13 @@
 | Logo/Crest Upload | ✅ |
 | Draw/Group Allocation + Fixtures | ✅ |
 | SAF 2026 Complete Data Seeding | ✅ |
+| Bilingual UI (English / Bahasa Melayu) | ✅ |
+| Live Scores (public page) | ✅ |
+| Root-domain deployment (`https://saf.utem.edu.my`) | ✅ |
 
 ## Current Production Data
 
+- **URL:** https://saf.utem.edu.my (deployed at the domain root)
 - **Organization:** Universiti Teknikal Malaysia Melaka (UTeM)
 - **Session:** SAF 2026 (1-30 September 2026)
 - **2 Tournaments:** Fasa 1 (11-13 Sept), Fasa 2 (25-27 Sept)

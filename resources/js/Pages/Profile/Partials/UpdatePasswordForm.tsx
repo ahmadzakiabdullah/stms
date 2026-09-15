@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useT } from '@/lib/i18n';
 
 const passwordSchema = z.object({
     current_password: z.string().min(1, 'Current password is required'),
@@ -20,6 +21,7 @@ const passwordSchema = z.object({
 type PasswordForm = z.infer<typeof passwordSchema>;
 
 export default function UpdatePasswordForm() {
+    const t = useT();
     const [saved, setSaved] = useState(false);
 
     const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PasswordForm>({
@@ -52,7 +54,7 @@ export default function UpdatePasswordForm() {
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="grid gap-2">
-                <Label htmlFor="current_password">Current Password</Label>
+                <Label htmlFor="current_password">{t('Current Password')}</Label>
                 <Input
                     id="current_password"
                     type="password"
@@ -63,7 +65,7 @@ export default function UpdatePasswordForm() {
             </div>
 
             <div className="grid gap-2">
-                <Label htmlFor="password">New Password</Label>
+                <Label htmlFor="password">{t('New Password')}</Label>
                 <Input
                     id="password"
                     type="password"
@@ -74,7 +76,7 @@ export default function UpdatePasswordForm() {
             </div>
 
             <div className="grid gap-2">
-                <Label htmlFor="password_confirmation">Confirm Password</Label>
+                <Label htmlFor="password_confirmation">{t('Confirm Password')}</Label>
                 <Input
                     id="password_confirmation"
                     type="password"
@@ -87,9 +89,9 @@ export default function UpdatePasswordForm() {
             <div className="flex items-center gap-3">
                 <Button type="submit" disabled={isSubmitting}>
                     <Save className="mr-2 size-4" />
-                    Save
+                    {t('Save')}
                 </Button>
-                {saved && <span className="text-sm text-emerald-600">Saved.</span>}
+                {saved && <span className="text-sm text-emerald-600">{t('Saved.')}</span>}
             </div>
         </form>
     );

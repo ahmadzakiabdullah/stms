@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Medal, Save, Trophy } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 import { type PageProps, type RankingEntry, type Session, type Tournament } from '@/types';
 
 interface RankingsIndexProps {
@@ -42,6 +43,7 @@ const rankColors: Record<number, string> = {
 };
 
 export default function RankingsIndex({ sessions, selectedSession, tournaments, selectedTournament, rankings, events, strategies }: RankingsIndexProps) {
+    const t = useT();
     const { flash } = usePage<PageProps>().props;
 
     const selectedSessionData = sessions.find(s => s.slug === selectedSession);
@@ -83,15 +85,15 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Rankings</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Rankings')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            View calculated rankings from match results
+                            {t('View calculated rankings from match results')}
                         </p>
                     </div>
                 </div>
             }
         >
-            <Head title="Rankings" />
+            <Head title={t('Rankings')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -101,21 +103,21 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
 
             <Card className="mb-6">
                 <CardHeader>
-                    <CardTitle>Select Session</CardTitle>
+                    <CardTitle>{t('Select Session')}</CardTitle>
                     <CardDescription>
-                        A session is one competition (e.g. SAF 2026); its tournaments (e.g. Fasa 1, Fasa 2) can be viewed separately.
+                        {t('A session is one competition (e.g. SAF 2026); its tournaments (e.g. Fasa 1, Fasa 2) can be viewed separately.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap items-end gap-4">
                         <div className="flex-1">
-                            <label className="text-sm font-medium mb-1 block">Session</label>
+                            <label className="text-sm font-medium mb-1 block">{t('Session')}</label>
                             <select
                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                 value={selectedSession || ''}
                                 onChange={(e) => handleSessionChange(e.target.value)}
                             >
-                                <option value="">-- Select Session --</option>
+                                <option value="">{t('-- Select Session --')}</option>
                                 {sessions.map((s) => (
                                     <option key={s.id} value={s.slug}>
                                         {s.name}
@@ -126,13 +128,13 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
 
                         {tournaments.length > 0 && (
                             <div className="flex-1">
-                                <label className="text-sm font-medium mb-1 block">Tournament (optional)</label>
+                                <label className="text-sm font-medium mb-1 block">{t('Tournament (optional)')}</label>
                                 <select
                                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                     value={selectedTournament || ''}
                                     onChange={(e) => handleTournamentChange(e.target.value)}
                                 >
-                                    <option value="">All Phases (Session Total)</option>
+                                    <option value="">{t('All Phases (Session Total)')}</option>
                                     {tournaments.map((t) => (
                                         <option key={t.id} value={t.slug}>
                                             {t.name}
@@ -145,19 +147,19 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                         {selectedSessionData && (
                             <form onSubmit={updateStrategy} className="flex items-end gap-2">
                                 <div>
-                                    <label className="text-sm font-medium mb-1 block">Strategy</label>
+                                    <label className="text-sm font-medium mb-1 block">{t('Strategy')}</label>
                                     <select
                                         className="flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
                                         value={data.ranking_strategy}
                                         onChange={(e) => setData('ranking_strategy', e.target.value)}
                                     >
                                         {Object.entries(strategies).map(([key, label]) => (
-                                            <option key={key} value={key}>{label}</option>
+                                            <option key={key} value={key}>{t(label)}</option>
                                         ))}
                                     </select>
                                 </div>
                                 <Button type="submit" size="sm" disabled={processing}>
-                                    <Save className="mr-1 size-3" /> Apply
+                                    <Save className="mr-1 size-3" /> {t('Apply')}
                                 </Button>
                             </form>
                         )}
@@ -170,14 +172,14 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                             size="sm"
                                             onClick={() => window.location.href = route('exports.rankings.pdf', selectedTournamentData.slug)}
                                         >
-                                            PDF
+                                            {t('PDF')}
                                         </Button>
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={() => window.location.href = route('exports.rankings.excel', selectedTournamentData.slug)}
                                         >
-                                            Excel
+                                            {t('Excel')}
                                         </Button>
                                     </>
                                 )}

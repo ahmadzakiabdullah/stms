@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/table';
 
 import Pagination from '@/components/Pagination';
+import { useT } from '@/lib/i18n';
 import { Head, router, usePage } from '@inertiajs/react';
 import { ChevronDown, Check, CircleX, LayoutGrid, List, Plus, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
@@ -110,6 +111,7 @@ function AddEventDialog({
     events: EventParticipantsIndexProps['events'];
     participants?: ParticipantWithEvents[];
 }) {
+    const t = useT();
     const [selectedEventId, setSelectedEventId] = useState('');
     const [selectedParticipantId, setSelectedParticipantId] = useState(participantId);
     const [search, setSearch] = useState('');
@@ -134,7 +136,7 @@ function AddEventDialog({
     const grouped = useMemo(() => {
         const g: Record<string, typeof filtered> = {};
         for (const e of filtered) {
-            const key = groupBy === 'tournament' ? (e.tournament?.name || 'Other') : (e.sport?.name || 'Other');
+            const key = groupBy === 'tournament' ? (e.tournament?.name || t('Other')) : (e.sport?.name || t('Other'));
             if (!g[key]) g[key] = [];
             g[key].push(e);
         }
@@ -153,38 +155,38 @@ function AddEventDialog({
         <Dialog open={open} onOpenChange={(o) => { if (!o) { setSelectedEventId(''); setSelectedParticipantId(''); setSearch(''); onClose(); } }}>
             <DialogContent className="max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Register to Event</DialogTitle>
-                    <DialogDescription>Add an event for <strong>{participantName}</strong></DialogDescription>
+                    <DialogTitle>{t('Register to Event')}</DialogTitle>
+                    <DialogDescription>{t('Add an event for')} <strong>{participantName}</strong></DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     {!participantId && participants && (
                         <div className="grid gap-2">
-                            <Label htmlFor="dialog-participant">Participant</Label>
+                            <Label htmlFor="dialog-participant">{t('Participant')}</Label>
                             <select id="dialog-participant" value={selectedParticipantId}
                                 onChange={(e) => setSelectedParticipantId(e.target.value)}
                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" required>
-                                <option value="">-- Select Participant --</option>
+                                <option value="">{t('-- Select Participant --')}</option>
                                 {participants.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
                         </div>
                     )}
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input placeholder="Search by event, sport, or tournament..." value={search}
+                        <Input placeholder={t('Search by event, sport, or tournament...')} value={search}
                             onChange={(e) => setSearch(e.target.value)} className="pl-9" />
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>Group by:</span>
+                        <span>{t('Group by:')}</span>
                         <button type="button" onClick={() => setGroupBy('sport')}
-                            className={`px-2 py-1 rounded ${groupBy === 'sport' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted'}`}>Sport</button>
+                            className={`px-2 py-1 rounded ${groupBy === 'sport' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted'}`}>{t('Sport')}</button>
                         <button type="button" onClick={() => setGroupBy('tournament')}
-                            className={`px-2 py-1 rounded ${groupBy === 'tournament' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted'}`}>Tournament</button>
+                            className={`px-2 py-1 rounded ${groupBy === 'tournament' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted'}`}>{t('Tournament')}</button>
                     </div>
                     <div className="grid gap-2">
-                        <Label>Available Events</Label>
+                        <Label>{t('Available Events')}</Label>
                         <div className="max-h-60 overflow-y-auto rounded-md border">
                             {filtered.length === 0 && (
-                                <p className="p-3 text-sm text-muted-foreground">{search ? 'No matching events.' : 'Already registered for all available events.'}</p>
+                                <p className="p-3 text-sm text-muted-foreground">{search ? t('No matching events.') : t('Already registered for all available events.')}</p>
                             )}
                             {Object.entries(grouped).map(([groupName, evts], gi) => (
                                 <div key={groupName}>
@@ -211,8 +213,8 @@ function AddEventDialog({
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => { setSelectedEventId(''); setSelectedParticipantId(''); setSearch(''); onClose(); }}>Cancel</Button>
-                    <Button onClick={handleRegister} disabled={!selectedEventId}><Plus className="mr-2 size-4" />Register</Button>
+                    <Button variant="outline" onClick={() => { setSelectedEventId(''); setSelectedParticipantId(''); setSearch(''); onClose(); }}>{t('Cancel')}</Button>
+                    <Button onClick={handleRegister} disabled={!selectedEventId}><Plus className="mr-2 size-4" />{t('Register')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -222,16 +224,17 @@ function AddEventDialog({
 function ConfirmUnregisterDialog({ open, onClose, onConfirm, participantName, eventName }: {
     open: boolean; onClose: () => void; onConfirm: () => void; participantName: string; eventName: string;
 }) {
+    const t = useT();
     return (
         <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Unregister {participantName}?</DialogTitle>
-                    <DialogDescription>Remove <strong>{participantName}</strong> from <strong>{eventName}</strong>? This action cannot be undone.</DialogDescription>
+                    <DialogTitle>{t('Unregister {{name}}?', { name: participantName })}</DialogTitle>
+                    <DialogDescription>{t('Remove')} <strong>{participantName}</strong> {t('from')} <strong>{eventName}</strong>? {t('This action cannot be undone.')}</DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button variant="destructive" onClick={onConfirm}>Yes, Unregister</Button>
+                    <Button variant="outline" onClick={onClose}>{t('Cancel')}</Button>
+                    <Button variant="destructive" onClick={onConfirm}>{t('Yes, Unregister')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -241,16 +244,17 @@ function ConfirmUnregisterDialog({ open, onClose, onConfirm, participantName, ev
 function ConfirmRejectDialog({ open, onClose, onConfirm, participantName, eventName }: {
     open: boolean; onClose: () => void; onConfirm: () => void; participantName: string; eventName: string;
 }) {
+    const t = useT();
     return (
         <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Reject registration?</DialogTitle>
-                    <DialogDescription>Reject <strong>{participantName}</strong> from <strong>{eventName}</strong>? The faculty representative will be notified.</DialogDescription>
+                    <DialogTitle>{t('Reject registration?')}</DialogTitle>
+                    <DialogDescription>{t('Reject')} <strong>{participantName}</strong> {t('from')} <strong>{eventName}</strong>? {t('The faculty representative will be notified.')}</DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button variant="destructive" onClick={onConfirm}>Yes, Reject</Button>
+                    <Button variant="outline" onClick={onClose}>{t('Cancel')}</Button>
+                    <Button variant="destructive" onClick={onConfirm}>{t('Yes, Reject')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -261,6 +265,7 @@ export default function EventParticipantsIndex({
     participants: participantsProp, events: eventsProp = [], faculties: facultiesProp = [],
     isFacultyRepresentative = false, statusCounts: statusCountsProp = {},
 }: EventParticipantsIndexProps) {
+    const t = useT();
     const { flash } = usePage().props;
     const participantsList = Array.isArray(participantsProp) ? participantsProp : participantsProp?.data ?? [];
     const events = Array.isArray(eventsProp) ? eventsProp : eventsProp ?? [];
@@ -444,15 +449,15 @@ export default function EventParticipantsIndex({
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Event Registrations</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Event Registrations')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            {isFacultyRepresentative ? "Manage your faculty's event participation" : 'Overview of every faculty\'s event participation'}
+                            {isFacultyRepresentative ? t("Manage your faculty's event participation") : t("Overview of every faculty's event participation")}
                         </p>
                     </div>
                 </div>
             }
         >
-            <Head title="Event Registrations" />
+            <Head title={t('Event Registrations')} />
 
             {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
             {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
@@ -465,13 +470,13 @@ export default function EventParticipantsIndex({
                         <button key={card.key || 'all'} type="button" onClick={() => handleStatusChange(card.key)}
                             className={`flex flex-col items-start gap-0.5 rounded-lg border bg-card px-3 py-2 text-left transition ${isActive ? 'border-primary ring-1 ring-primary' : 'hover:bg-muted/50'}`}>
                             <span className="text-lg font-semibold leading-none tabular-nums">{card.count}</span>
-                            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{card.label}</span>
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t(card.label)}</span>
                         </button>
                     );
                 })}
                 <div className="flex flex-col items-start gap-0.5 rounded-lg border bg-card px-3 py-2">
                     <span className="text-lg font-semibold leading-none tabular-nums">{events.length}</span>
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Events</span>
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t('Events')}</span>
                 </div>
             </div>
 
@@ -480,12 +485,12 @@ export default function EventParticipantsIndex({
                 <div className="flex items-center gap-1 rounded-lg border bg-muted/20 p-0.5">
                     <button onClick={() => setActiveTab('registrations')}
                         className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${activeTab === 'registrations' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}>
-                        {tabLabel.registrations}
+                        {t(tabLabel.registrations)}
                         {activeTab === 'registrations' && registrationRows.length > 0 && <span className="ml-1.5 text-[10px] text-muted-foreground">({registrationRows.length})</span>}
                     </button>
                     <button onClick={() => setActiveTab('events')}
                         className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${activeTab === 'events' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}>
-                        {tabLabel.events}
+                        {t(tabLabel.events)}
                         {activeTab === 'events' && <span className="ml-1.5 text-[10px] text-muted-foreground">({eventRegistry.length})</span>}
                     </button>
                 </div>
@@ -495,10 +500,10 @@ export default function EventParticipantsIndex({
                         <div className="flex items-center gap-1 rounded-lg border bg-muted/20 p-0.5">
                             <button onClick={() => setViewMode('grid')}
                                 className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Grid view"><LayoutGrid className="size-3.5" /></button>
+                                title={t('Grid view')}><LayoutGrid className="size-3.5" /></button>
                             <button onClick={() => setViewMode('table')}
                                 className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                                title="Table view"><List className="size-3.5" /></button>
+                                title={t('Table view')}><List className="size-3.5" /></button>
                         </div>
                     )}
                 </div>
@@ -508,21 +513,21 @@ export default function EventParticipantsIndex({
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input placeholder="Search..." value={searchInput}
+                    <Input placeholder={t('Search...')} value={searchInput}
                         onChange={(e) => handleSearchChange(e.target.value)}
                         className="h-8 w-40 lg:w-48 pl-8 text-xs" />
                 </div>
 
                 <select value={filterSportId} onChange={(e) => handleSportChange(e.target.value)}
                     className="h-8 rounded-md border border-input bg-background px-2 text-xs">
-                    <option value="">All Sports</option>
+                    <option value="">{t('All Sports')}</option>
                     {sports.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
 
                 {categories.length > 0 && (
                     <select value={filterCategoryId} onChange={(e) => handleCategoryChange(e.target.value)}
                         className="h-8 rounded-md border border-input bg-background px-2 text-xs">
-                        <option value="">All Categories</option>
+                        <option value="">{t('All Categories')}</option>
                         {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                 )}
@@ -530,21 +535,21 @@ export default function EventParticipantsIndex({
                 {!isFacultyRepresentative && faculties.length > 0 && (
                     <select value={filterParticipantId} onChange={(e) => handleParticipantChange(e.target.value)}
                         className="h-8 rounded-md border border-input bg-background px-2 text-xs">
-                        <option value="">All Faculties</option>
+                        <option value="">{t('All Faculties')}</option>
                         {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
                     </select>
                 )}
 
                 <select value={filterStatus} onChange={(e) => handleStatusChange(e.target.value)}
                     className="h-8 rounded-md border border-input bg-background px-2 text-xs">
-                    <option value="">All Statuses</option>
+                    <option value="">{t('All Statuses')}</option>
                     {Object.entries(statusConfig).map(([key, cfg]) => (
-                        <option key={key} value={key}>{cfg.label}</option>
+                        <option key={key} value={key}>{t(cfg.label)}</option>
                     ))}
                 </select>
 
                 {hasActiveFilters && (
-                    <Button variant="ghost" size="sm" onClick={handleClearFilters} className="h-8 text-xs">Clear</Button>
+                    <Button variant="ghost" size="sm" onClick={handleClearFilters} className="h-8 text-xs">{t('Clear')}</Button>
                 )}
             </div>
 
@@ -552,7 +557,7 @@ export default function EventParticipantsIndex({
             {activeTab === 'registrations' && (
                 registrationRows.length === 0 ? (
                     <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
-                        {hasActiveFilters ? 'No matching registrations.' : isFacultyRepresentative ? "You haven't registered for any events yet." : 'No registrations yet.'}
+                        {hasActiveFilters ? t('No matching registrations.') : isFacultyRepresentative ? t("You haven't registered for any events yet.") : t('No registrations yet.')}
                     </CardContent></Card>
                 ) : (
                     <Card>
@@ -560,12 +565,12 @@ export default function EventParticipantsIndex({
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Event</TableHead>
-                                        {!isFacultyRepresentative && <TableHead>Faculty</TableHead>}
-                                        <TableHead>Sport / Category</TableHead>
-                                        <TableHead>Tournament</TableHead>
-                                        {!isFacultyRepresentative && <TableHead>Squad</TableHead>}
-                                        <TableHead>Status</TableHead>
+                                        <TableHead>{t('Event')}</TableHead>
+                                        {!isFacultyRepresentative && <TableHead>{t('Faculty')}</TableHead>}
+                                        <TableHead>{t('Sport / Category')}</TableHead>
+                                        <TableHead>{t('Tournament')}</TableHead>
+                                        {!isFacultyRepresentative && <TableHead>{t('Squad')}</TableHead>}
+                                        <TableHead>{t('Status')}</TableHead>
                                         <TableHead className="w-10" />
                                     </TableRow>
                                 </TableHeader>
@@ -590,7 +595,7 @@ export default function EventParticipantsIndex({
                                                                 <button
                                                                     onClick={() => setExpandedEp(isExpanded ? null : ep.id)}
                                                                     className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                                                                    title="View squad members"
+                                                                    title={t('View squad members')}
                                                                 >
                                                                     <ChevronDown className={`size-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                                                     {members.length} member{members.length > 1 ? 's' : ''}
@@ -600,23 +605,23 @@ export default function EventParticipantsIndex({
                                                             )}
                                                         </TableCell>
                                                     )}
-                                                    <TableCell><Badge variant={cfg.variant} className="text-[10px] px-1.5">{cfg.label}</Badge></TableCell>
+                                                    <TableCell><Badge variant={cfg.variant} className="text-[10px] px-1.5">{t(cfg.label)}</Badge></TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-0.5">
                                                             {!isFacultyRepresentative && ep.status === 'pending' && (
                                                                 <>
                                                                     <button onClick={() => approveRegistration(ep.id)}
-                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-600 hover:text-white transition" title="Approve">
+                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-600 hover:text-white transition" title={t('Approve')}>
                                                                         <Check className="size-3" />
                                                                     </button>
                                                                     <button onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Reject">
+                                                                        className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title={t('Reject')}>
                                                                         <CircleX className="size-3" />
                                                                     </button>
                                                                 </>
                                                             )}
                                                             <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                                className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title="Unregister">
+                                                                className="inline-flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition" title={t('Unregister')}>
                                                                 <X className="size-3" />
                                                             </button>
                                                         </div>
@@ -627,7 +632,7 @@ export default function EventParticipantsIndex({
                                                         <TableCell colSpan={isFacultyRepresentative ? 5 : 7} className="p-0">
                                                             <div className="px-4 py-3">
                                                                 <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                                                                    <span className="font-semibold">Squad ({members.length})</span>
+                                                                    <span className="font-semibold">{t('Squad')} ({members.length})</span>
                                                                     <span className="text-blue-600">{maleCount} male</span>
                                                                     <span className="text-pink-600">{femaleCount} female</span>
                                                                     <span className="text-purple-600">{officialCount} official{officialCount !== 1 ? 's' : ''}</span>
@@ -638,7 +643,7 @@ export default function EventParticipantsIndex({
                                                                             const rc = squadRoleConfig[m.role] ?? { label: m.role, class: 'bg-gray-100 text-gray-600' };
                                                                             return (
                                                                                 <div key={m.id} className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5 text-xs">
-                                                                                    <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${rc.class}`}>{rc.label}</span>
+                                                                                    <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${rc.class}`}>{t(rc.label)}</span>
                                                                                     <span className="truncate font-medium">{m.name}</span>
                                                                                     {m.matrix_no && <span className="ml-auto shrink-0 tabular-nums text-muted-foreground">{m.matrix_no}</span>}
                                                                                 </div>
@@ -646,7 +651,7 @@ export default function EventParticipantsIndex({
                                                                         })}
                                                                     </div>
                                                                 ) : (
-                                                                    <p className="text-xs text-muted-foreground">No squad members added yet.</p>
+                                                                    <p className="text-xs text-muted-foreground">{t('No squad members added yet.')}</p>
                                                                 )}
                                                             </div>
                                                         </TableCell>
@@ -666,7 +671,7 @@ export default function EventParticipantsIndex({
             {activeTab === 'events' && (
                 events.length === 0 ? (
                     <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
-                        {hasActiveFilters ? 'No matching events.' : 'No events available.'}
+                        {hasActiveFilters ? t('No matching events.') : t('No events available.')}
                     </CardContent></Card>
                 ) : viewMode === 'table' ? (
                     <Card>
@@ -674,10 +679,10 @@ export default function EventParticipantsIndex({
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Event</TableHead>
-                                        <TableHead>Sport / Category</TableHead>
-                                        <TableHead>Tournament</TableHead>
-                                        <TableHead>Registered</TableHead>
+                                        <TableHead>{t('Event')}</TableHead>
+                                        <TableHead>{t('Sport / Category')}</TableHead>
+                                        <TableHead>{t('Tournament')}</TableHead>
+                                        <TableHead>{t('Registered')}</TableHead>
                                         <TableHead className="w-24" />
                                     </TableRow>
                                 </TableHeader>
@@ -692,14 +697,14 @@ export default function EventParticipantsIndex({
                                                 <TableCell className="font-medium text-xs">{evt.name}</TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">{evt.sport?.name}{evt.sport_category?.name ? ` / ${evt.sport_category.name}` : ''}</TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">{evt.tournament?.name || '-'}</TableCell>
-                                                <TableCell className="text-xs">{isRegistered ? `${registrations.length} faculty` : '-'}</TableCell>
+                                                <TableCell className="text-xs">{isRegistered ? t('{{count}} faculty', { count: registrations.length }) : '-'}</TableCell>
                                                 <TableCell>
                                                     {isFacultyRepresentative ? (
-                                                        isRegistered ? <span className="text-[10px] text-muted-foreground">Registered</span> : deadlinePassed
-                                                            ? <span className="text-[10px] text-destructive">Deadline passed</span>
-                                                            : <Button variant="outline" size="sm" onClick={() => quickRegister(evt.id)} className="h-6 text-[10px] px-2">Register</Button>
+                                                        isRegistered ? <span className="text-[10px] text-muted-foreground">{t('Registered')}</span> : deadlinePassed
+                                                            ? <span className="text-[10px] text-destructive">{t('Deadline passed')}</span>
+                                                            : <Button variant="outline" size="sm" onClick={() => quickRegister(evt.id)} className="h-6 text-[10px] px-2">{t('Register')}</Button>
                                                     ) : (
-                                                        <Button variant="outline" size="sm" onClick={() => setAddTarget({ id: '', name: evt.name })} className="h-6 text-[10px] px-2">Add</Button>
+                                                        <Button variant="outline" size="sm" onClick={() => setAddTarget({ id: '', name: evt.name })} className="h-6 text-[10px] px-2">{t('Add')}</Button>
                                                     )}
                                                 </TableCell>
                                             </TableRow>
@@ -728,12 +733,12 @@ export default function EventParticipantsIndex({
                                         {isFacultyRepresentative ? (
                                             !isRegistered && !deadlinePassed && (
                                                 <Button variant="outline" size="sm" onClick={() => quickRegister(evt.id)} className="h-6 text-[10px] px-2 shrink-0">
-                                                    <Plus className="size-3 mr-0.5" />Register
+                                                    <Plus className="size-3 mr-0.5" />{t('Register')}
                                                 </Button>
                                             )
                                         ) : (
                                             <Button variant="outline" size="sm" onClick={() => setAddTarget({ id: '', name: evt.name })} className="h-6 text-[10px] px-2 shrink-0">
-                                                <Plus className="size-3 mr-0.5" />Add
+                                                <Plus className="size-3 mr-0.5" />{t('Add')}
                                             </Button>
                                         )}
                                     </div>
@@ -744,9 +749,9 @@ export default function EventParticipantsIndex({
                                                 return (
                                                     <div key={ep.id} className="flex items-center gap-1.5 py-0.5 text-xs group">
                                                         <span className="truncate flex-1 min-w-0">{p.name}</span>
-                                                        <Badge variant={cfg.variant} className="h-4 text-[9px] px-1 shrink-0">{cfg.label}</Badge>
+                                                        <Badge variant={cfg.variant} className="h-4 text-[9px] px-1 shrink-0">{t(cfg.label)}</Badge>
                                                         <button onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
-                                                            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
+                                                            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title={t('Unregister')}>
                                                             <X className="size-2.5" />
                                                         </button>
                                                     </div>

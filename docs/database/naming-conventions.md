@@ -62,7 +62,7 @@ $table->softDeletes();  // where applicable
 | `Participant` | `participants` |
 | `Registration` | `registrations` |
 | `EventParticipant` | `event_participants` |
-| `Match` | `matches` |
+| `Fixture` | `matches` |
 | `Result` | `results` |
 | `SquadMember` | `squad_members` |
 

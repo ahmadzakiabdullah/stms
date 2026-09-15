@@ -16,7 +16,7 @@ We will use the **Spatie Laravel Permission** package to implement Role-Based Ac
 
 ### Implementation Approach:
 - Use `spatie/laravel-permission` package.
-- Define roles such as `super-admin`, `org-admin`, `tournament-manager`, `sport-coordinator`, `staff`, and `viewer`.
+- Define roles such as `super-admin`, `org-admin`, `admin-sport`, `staff`, `faculty-representative`, and `dean`.
 - Define granular permissions (e.g., `create.tournament`, `edit.result`, `approve.accreditation`, `view.reports`).
 - Assign permissions to roles, and roles to users.
 - Use Laravel Policies and Gates for authorization checks.
@@ -58,4 +58,4 @@ We will use the **Spatie Laravel Permission** package to implement Role-Based Ac
 - ADR-003: Organization Structure
 
 ## Implementation Status
-Implemented as of June 2026. Spatie Laravel Permission installed with roles (super-admin, org-admin, staff, sport-coordinator, tournament-manager), 30+ permissions, and 12 Policies. See `CURRENT_STATE.md` for details.
+Implemented as of June 2026. Spatie Laravel Permission installed with roles (super-admin, org-admin, admin-sport, staff, faculty-representative, dean), 42 granular permissions, and 19 Policies. See `CURRENT_STATE.md` for details.

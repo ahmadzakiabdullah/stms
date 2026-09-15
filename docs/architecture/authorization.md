@@ -17,11 +17,14 @@ Sistem kebenaran STMS menggunakan gabungan beberapa mekanisme Laravel dan pakej 
 
 Pakej `spatie/laravel-permission` adalah tulang belakang sistem kebenaran berasaskan peranan (RBAC).
 
--   **Permissions (Kebenaran):** Merupakan tindakan atomik yang boleh dilakukan dalam sistem (cth: `create-tournament`, `delete-participant`). Semua kebenaran yang ada didefinisikan dan di-seed dalam `database/seeders/RolesAndPermissionsSeeder.php`.
+-   **Permissions (Kebenaran):** Merupakan tindakan atomik yang boleh dilakukan dalam sistem (cth: `view tournaments`, `delete participants`). Kebenaran asas didefinisikan dan di-seed dalam `database/seeders/DatabaseSeeder.php` (peranan `dean` dan kebenarannya ditambah oleh `SAF2026DataSeeder.php`).
 -   **Roles (Peranan):** Adalah koleksi kebenaran yang boleh diberikan kepada pengguna. Peranan utama dalam aplikasi ini ialah:
     -   `super-admin`: Akses tanpa had ke seluruh sistem.
     -   `org-admin`: Akses penuh kepada semua data dalam organisasinya sendiri.
+    -   `admin-sport`: Skop pentadbir sukan.
     -   `staff`: Akses terhad kepada data dalam organisasinya, berdasarkan kebenaran spesifik yang diberikan.
+    -   `faculty-representative`: Wakil fakulti bagi pendaftaran acara.
+    -   `dean`: Pengesahan pendaftaran acara fakulti.
 
 Pengguna diberikan peranan, dan peranan tersebut menentukan kebenaran yang mereka miliki.
 
@@ -44,7 +47,7 @@ public function authorize(): bool
 
 `Policy` menyediakan logik kebenaran yang terperinci untuk model Eloquent tertentu. Ia menjawab soalan seperti, "Bolehkah Pengguna A mengemas kini Rekod B?".
 
-Setiap `Policy` dipetakan kepada `Model` dalam `App\Providers\AuthServiceProvider`.
+Setiap `Policy` dipetakan kepada `Model` dalam `App\Providers\AppServiceProvider` (melalui `Gate::policy(...)`); beberapa kebenaran tanpa model didaftarkan melalui `Gate::define(...)`.
 
 Ciri-ciri utama `Policy` dalam aplikasi ini:
 

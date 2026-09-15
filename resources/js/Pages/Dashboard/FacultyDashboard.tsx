@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Activity, ArrowRight, ListChecks, ShieldCheck, Trophy, Users, type LucideIcon } from 'lucide-react';
 import { type PageProps, type SquadMember } from '@/types';
+import { useT } from '@/lib/i18n';
 
 interface FacultyRegistration {
     id: string;
@@ -45,37 +46,38 @@ export default function FacultyDashboard({
     facultyOfficials = 0,
 }: FacultyDashboardProps) {
     const { auth, app } = usePage<PageProps>().props;
+    const t = useT();
     const user = auth?.user;
 
     const eventsCount = facultyRegistrations.length;
 
     const statCards: { label: string; value: number; icon: LucideIcon; desc: string }[] = [
-        { label: 'My Events', value: eventsCount, icon: Trophy, desc: 'Registered events' },
-        { label: 'Male Athletes', value: facultyMale, icon: Users, desc: 'Squad members' },
-        { label: 'Female Athletes', value: facultyFemale, icon: Users, desc: 'Squad members' },
-        { label: 'Officials', value: facultyOfficials, icon: ShieldCheck, desc: 'Manager/Coach/Physio' },
+        { label: t('My Events'), value: eventsCount, icon: Trophy, desc: t('Registered events') },
+        { label: t('Male Athletes'), value: facultyMale, icon: Users, desc: t('Squad members') },
+        { label: t('Female Athletes'), value: facultyFemale, icon: Users, desc: t('Squad members') },
+        { label: t('Officials'), value: facultyOfficials, icon: ShieldCheck, desc: t('Manager/Coach/Physio') },
     ];
 
     return (
         <>
-            <Head title="Dashboard" />
+            <Head title={t('Dashboard')} />
 
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <div className="text-sm text-muted-foreground">{user?.name}</div>
-                    <h1 className="mt-1 text-2xl font-semibold tracking-tight">{app?.name || 'Dashboard'}</h1>
+                    <h1 className="mt-1 text-2xl font-semibold tracking-tight">{app?.name || t('Dashboard')}</h1>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <Button asChild variant="outline">
                         <Link href={route('faculty.dashboard')}>
                             <ListChecks className="mr-2 size-4" />
-                            Squad Management
+                            {t('Squad Management')}
                         </Link>
                     </Button>
                     <Button asChild>
                         <Link href={route('event-participants.index')}>
                             <Trophy className="mr-2 size-4" />
-                            Event Registration
+{t('Event Registration')}
                         </Link>
                     </Button>
                 </div>
@@ -106,21 +108,21 @@ export default function FacultyDashboard({
             <div className="mt-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>My Event Registrations</CardTitle>
-                        <CardDescription>Events your faculty is registered for</CardDescription>
+                        <CardTitle>{t('My Event Registrations')}</CardTitle>
+                        <CardDescription>{t('Events your faculty is registered for')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {facultyRegistrations.length > 0 ? (
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Event</TableHead>
-                                        <TableHead>Sport</TableHead>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Male</TableHead>
-                                        <TableHead>Female</TableHead>
-                                        <TableHead>Officials</TableHead>
-                                        <TableHead>Date</TableHead>
+                                        <TableHead>{t('Event')}</TableHead>
+                                        <TableHead>{t('Sport')}</TableHead>
+                                        <TableHead>{t('Category')}</TableHead>
+                                        <TableHead>{t('Male')}</TableHead>
+                                        <TableHead>{t('Female')}</TableHead>
+                                        <TableHead>{t('Officials')}</TableHead>
+                                        <TableHead>{t('Date')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -149,10 +151,10 @@ export default function FacultyDashboard({
                         ) : (
                             <div className="py-8 text-center">
                                 <Activity className="mx-auto mb-3 size-10 text-muted-foreground/50" />
-                                <p className="text-sm text-muted-foreground">Not registered for any events yet.</p>
+                                <p className="text-sm text-muted-foreground">{t('Not registered for any events yet.')}</p>
                                 <Button asChild className="mt-4">
                                     <Link href={route('event-participants.index')}>
-                                        Register for Events <ArrowRight className="ml-2 size-4" />
+                                        {t('Register for Events')} <ArrowRight className="ml-2 size-4" />
                                     </Link>
                                 </Button>
                             </div>

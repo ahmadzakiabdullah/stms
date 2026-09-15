@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
+import { useT } from '@/lib/i18n';
 
 interface Stats {
     total_fixtures: number;
@@ -35,32 +36,33 @@ interface ReportsProps {
 }
 
 export default function ReportsIndex({ stats, fixturesByStatus, recentResults }: ReportsProps) {
+    const t = useT();
     const completionRate = stats.total_fixtures > 0
         ? Math.round((stats.completed_fixtures / stats.total_fixtures) * 100)
         : 0;
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-foreground">Reports & Analytics</h2>}
+            header={<h2 className="text-xl font-semibold leading-tight text-foreground">{t('Reports & Analytics')}</h2>}
         >
-            <Head title="Reports" />
+            <Head title={t('Reports')} />
 
             <div className="space-y-6">
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <StatCard title="Total Fixtures" value={stats.total_fixtures} />
-                    <StatCard title="Completed" value={stats.completed_fixtures} color="text-green-600" />
-                    <StatCard title="Pending" value={stats.pending_fixtures} color="text-yellow-600" />
-                    <StatCard title="In Progress" value={stats.in_progress_fixtures} color="text-blue-600" />
-                    <StatCard title="Results Recorded" value={stats.total_results} />
-                    <StatCard title="Participants" value={stats.total_participants} />
-                    <StatCard title="Registrations" value={stats.total_registrations} />
-                    <StatCard title="Tournaments" value={stats.total_tournaments} />
+                    <StatCard title={t('Total Fixtures')} value={stats.total_fixtures} />
+                    <StatCard title={t('Completed')} value={stats.completed_fixtures} color="text-green-600" />
+                    <StatCard title={t('Pending')} value={stats.pending_fixtures} color="text-yellow-600" />
+                    <StatCard title={t('In Progress')} value={stats.in_progress_fixtures} color="text-blue-600" />
+                    <StatCard title={t('Results Recorded')} value={stats.total_results} />
+                    <StatCard title={t('Participants')} value={stats.total_participants} />
+                    <StatCard title={t('Registrations')} value={stats.total_registrations} />
+                    <StatCard title={t('Tournaments')} value={stats.total_tournaments} />
                 </div>
 
                 {/* Completion Rate */}
                 <div className="rounded-lg border bg-card p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold mb-4">Fixture Completion Rate</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t('Fixture Completion Rate')}</h3>
                     <div className="flex items-center gap-4">
                         <div className="flex-1 bg-muted rounded-full h-6 overflow-hidden">
                             <div
@@ -71,13 +73,13 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults }:
                         <span className="text-2xl font-bold">{completionRate}%</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                        {stats.completed_fixtures} of {stats.total_fixtures} fixtures completed
+                        {t('{{completed}} of {{total}} fixtures completed', { completed: stats.completed_fixtures, total: stats.total_fixtures })}
                     </p>
                 </div>
 
                 {/* Fixtures by Status */}
                 <div className="rounded-lg border bg-card p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold mb-4">Fixtures by Status</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t('Fixtures by Status')}</h3>
                     <div className="space-y-3">
                         {fixturesByStatus.map((item) => (
                             <div key={item.status} className="flex items-center gap-3">
@@ -104,19 +106,19 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults }:
 
                 {/* Recent Results */}
                 <div className="rounded-lg border bg-card p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold mb-4">Recent Results</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t('Recent Results')}</h3>
                     {recentResults.length === 0 ? (
-                        <p className="text-muted-foreground">No results recorded yet.</p>
+                        <p className="text-muted-foreground">{t('No results recorded yet.')}</p>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b">
-                                        <th className="py-2 text-left font-medium">Tournament</th>
-                                        <th className="py-2 text-left font-medium">Home</th>
-                                        <th className="py-2 text-center font-medium">Score</th>
-                                        <th className="py-2 text-left font-medium">Away</th>
-                                        <th className="py-2 text-right font-medium">Date</th>
+                                        <th className="py-2 text-left font-medium">{t('Tournament')}</th>
+                                        <th className="py-2 text-left font-medium">{t('Home')}</th>
+                                        <th className="py-2 text-center font-medium">{t('Score')}</th>
+                                        <th className="py-2 text-left font-medium">{t('Away')}</th>
+                                        <th className="py-2 text-right font-medium">{t('Date')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -137,22 +139,22 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults }:
 
                 {/* Quick Export Links */}
                 <div className="rounded-lg border bg-card p-6 shadow-sm">
-                    <h3 className="text-lg font-semibold mb-4">Quick Exports</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t('Quick Exports')}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <ExportButton
-                            label="Fixtures (PDF)"
+                            label={t('Fixtures (PDF)')}
                             onClick={() => router.visit(route('exports.fixtures.pdf'), { preserveState: true })}
                         />
                         <ExportButton
-                            label="Fixtures (Excel)"
+                            label={t('Fixtures (Excel)')}
                             onClick={() => router.visit(route('exports.fixtures.excel'), { preserveState: true })}
                         />
                         <ExportButton
-                            label="Results (PDF)"
+                            label={t('Results (PDF)')}
                             onClick={() => router.visit(route('exports.results.pdf'), { preserveState: true })}
                         />
                         <ExportButton
-                            label="Results (Excel)"
+                            label={t('Results (Excel)')}
                             onClick={() => router.visit(route('exports.results.excel'), { preserveState: true })}
                         />
                     </div>

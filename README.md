@@ -4,7 +4,7 @@
 
 ## Current Focus (MVP)
 
-This workspace (`saf/portal`) is a specific implementation/context of the STMS platform (currently carrying "Portal SAF" / UTeM branding in the UI).
+This workspace is a specific implementation/context of the STMS platform (currently carrying "Portal SAF" / UTeM branding in the UI) and is deployed at the domain root: `https://saf.utem.edu.my/`.
 
 The project is currently focused on delivering a **Minimum Viable Product (MVP)** with the following core features:
 
@@ -15,6 +15,7 @@ The project is currently focused on delivering a **Minimum Viable Product (MVP)*
 - Participant Registration
 - Match Scheduling & Result Entry
 - Basic Ranking Engine
+- Bilingual interface (English / Bahasa Melayu)
 
 ## SAF 2026 Seed Data
 
@@ -35,12 +36,13 @@ The project is currently focused on delivering a **Minimum Viable Product (MVP)*
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **Forms**: React Hook Form with Zod for validation
 - **Tables**: TanStack Table
-- **Database**: MySQL 8 (using SQLite for local development)
+- **Database**: MySQL 8 (SQLite is used for automated tests)
 - **Primary Keys**: UUIDs
 - **Authorization**: Spatie Laravel Permission
 - **Multi-Tenancy**: Single database with `organization_id` scoping
-- **Cache Driver**: `database` (Recommended: `redis` for production)
-- **Queue Driver**: `database` (Recommended: `redis` for production)
+- **Internationalization**: English + Bahasa Melayu via `lang/*.json` (session locale; default `ms`)
+- **Cache Driver**: environment-controlled (`file` locally, `redis` recommended for production)
+- **Queue Driver**: environment-controlled (`file` locally, `redis` recommended for production)
 
 ## Documentation
 

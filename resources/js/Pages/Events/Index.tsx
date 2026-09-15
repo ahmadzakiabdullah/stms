@@ -33,6 +33,7 @@ import { z } from 'zod';
 import { Eye, Pencil, Plus, Save, Target, Trash2, Trash } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
+import { useT } from '@/lib/i18n';
 import { matchProgress } from '@/lib/matchProgress';
 import type { Event, Tournament, Sport, SportCategory, Paginated, Flash } from '@/types';
 
@@ -68,6 +69,7 @@ interface EventsIndexProps {
 }
 
 export default function EventsIndex({ events: eventsProp, tournaments: tournamentsProp = [], sports: sportsProp = [], categories: categoriesProp = [], usedCategoryIds = {} }: EventsIndexProps) {
+    const t = useT();
     const { flash, isSuperAdmin = false } = usePage().props;
     const [open, setOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
@@ -244,9 +246,9 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('Events')}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Specific competitions within tournaments (Sport + Category)
+                            {t('Specific competitions within tournaments (Sport + Category)')}
                         </p>
                     </div>
 
@@ -258,22 +260,22 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                         <DialogTrigger asChild>
                             <Button onClick={openCreate} disabled={tournaments.length === 0}>
                                 <Plus className="mr-2 size-4" />
-                                Add Event
+                                {t('Add Event')}
                             </Button>
                         </DialogTrigger>
                         )}
                         <DialogContent className="max-w-lg">
                             <form onSubmit={handleSubmit(onSubmit)}>
                                 <DialogHeader>
-                                    <DialogTitle>{editingEvent ? 'Edit Event' : 'Create New Event'}</DialogTitle>
+                                    <DialogTitle>{editingEvent ? t('Edit Event') : t('Create New Event')}</DialogTitle>
                                     <DialogDescription>
-                                        Events tie a tournament to a specific sport and category.
+                                        {t('Events tie a tournament to a specific sport and category.')}
                                     </DialogDescription>
                                 </DialogHeader>
 
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="tournament_id">Tournament</Label>
+                                        <Label htmlFor="tournament_id">{t('Tournament')}</Label>
                                         <select
                                             id="tournament_id"
                                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
@@ -282,7 +284,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             disabled={!!editingEvent}
                                             required
                                         >
-                                            <option value="">-- Select Tournament --</option>
+                                            <option value="">{t('-- Select Tournament --')}</option>
                                             {tournaments.map((t) => (
                                                 <option key={t.id} value={t.id}>{t.name}</option>
                                             ))}
@@ -291,7 +293,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="sport_id">Sport</Label>
+                                        <Label htmlFor="sport_id">{t('Sport')}</Label>
                                         <select
                                             id="sport_id"
                                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
@@ -299,49 +301,49 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             onChange={(e) => { setValue('sport_id', e.target.value); setValue('sport_category_id', ''); }}
                                             required
                                         >
-                                            <option value="">-- Select Sport --</option>
+                                            <option value="">{t('-- Select Sport --')}</option>
                                             {filteredSports.map((s) => (
                                                 <option key={s.id} value={s.id}>{s.name}</option>
                                             ))}
                                         </select>
                                         {filteredSports.length === 0 && selectedTournamentId && (
-                                            <p className="text-xs text-amber-600">This tournament has no sports assigned yet.</p>
+                                            <p className="text-xs text-amber-600">{t('This tournament has no sports assigned yet.')}</p>
                                         )}
                                         {errors.sport_id && <p className="text-sm text-destructive">{errors.sport_id.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="sport_category_id">Category</Label>
+                                        <Label htmlFor="sport_category_id">{t('Category')}</Label>
                                         <select
                                             id="sport_category_id"
                                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                                             {...register('sport_category_id')}
                                             required
                                         >
-                                            <option value="">-- Select Category --</option>
+                                            <option value="">{t('-- Select Category --')}</option>
                                             {filteredCategories.map((c) => (
                                                 <option key={c.id} value={c.id}>{c.name}</option>
                                             ))}
                                         </select>
                                         {filteredCategories.length === 0 && selectedSportId && !editingEvent && (
-                                            <p className="text-xs text-amber-600">All categories for this sport have already been used in this tournament.</p>
+                                            <p className="text-xs text-amber-600">{t('All categories for this sport have already been used in this tournament.')}</p>
                                         )}
                                         {errors.sport_category_id && <p className="text-sm text-destructive">{errors.sport_category_id.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="name">Event Name</Label>
+                                        <Label htmlFor="name">{t('Event Name')}</Label>
                                         <Input
                                             id="name"
                                             {...register('name')}
-                                            placeholder="e.g. Men's Football - Group A"
+                                            placeholder={t("e.g. Men's Football - Group A")}
                                             required
                                         />
                                         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="slug">Slug</Label>
+                                        <Label htmlFor="slug">{t('Slug')}</Label>
                                         <Input
                                             id="slug"
                                             {...register('slug')}
@@ -351,7 +353,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="description">Description</Label>
+                                        <Label htmlFor="description">{t('Description')}</Label>
                                         <textarea
                                             id="description"
                                             className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -361,7 +363,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="start_date">Start Date</Label>
+                                            <Label htmlFor="start_date">{t('Start Date')}</Label>
                                             <Input
                                                 id="start_date"
                                                 type="date"
@@ -371,7 +373,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             {errors.start_date && <p className="text-sm text-destructive">{errors.start_date.message}</p>}
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="end_date">End Date</Label>
+                                            <Label htmlFor="end_date">{t('End Date')}</Label>
                                             <Input
                                                 id="end_date"
                                                 type="date"
@@ -380,7 +382,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             {errors.end_date && <p className="text-sm text-destructive">{errors.end_date.message}</p>}
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="registration_deadline">Registration Deadline</Label>
+                                            <Label htmlFor="registration_deadline">{t('Registration Deadline')}</Label>
                                             <Input
                                                 id="registration_deadline"
                                                 type="date"
@@ -390,16 +392,16 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="format">Format</Label>
+                                            <Label htmlFor="format">{t('Format')}</Label>
                                             <select id="format" {...register('format')} className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm">
-                                                <option value="">No format</option>
-                                                <option value="league">League (Round Robin)</option>
-                                                <option value="group_knockout">Group + Knockout</option>
-                                                <option value="knockout">Knockout</option>
+                                                <option value="">{t('No format')}</option>
+                                                <option value="league">{t('League (Round Robin)')}</option>
+                                                <option value="group_knockout">{t('Group + Knockout')}</option>
+                                                <option value="knockout">{t('Knockout')}</option>
                                             </select>
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="pool_size">Pool Size</Label>
+                                            <Label htmlFor="pool_size">{t('Pool Size')}</Label>
                                             <Input id="pool_size" type="number" min={2} max={32} {...register('pool_size', { valueAsNumber: true })} />
                                         </div>
                                     </div>
@@ -407,11 +409,11 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
 
                                 <DialogFooter>
                                     <Button type="button" variant="outline" onClick={closeDialog}>
-                                        Cancel
+                                        {t('Cancel')}
                                     </Button>
                                     <Button type="submit" disabled={isSubmitting}>
                                         <Save className="mr-2 size-4" />
-                                        {editingEvent ? 'Update' : 'Save'}
+                                        {editingEvent ? t('Update') : t('Save')}
                                     </Button>
                                 </DialogFooter>
                             </form>
@@ -420,7 +422,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                 </div>
             }
         >
-            <Head title="Events" />
+            <Head title={t('Events')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
@@ -435,17 +437,17 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Events List</CardTitle>
+                    <CardTitle>{t('Events List')}</CardTitle>
                     <CardDescription>
-                        Events are the concrete matches/competitions under a tournament, sport and category.
+                        {t('Events are the concrete matches/competitions under a tournament, sport and category.')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     {isSuperAdmin && selectedIds.size > 0 && (
                         <div className="mb-4 flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
+                            <span className="text-sm text-muted-foreground">{t('{{count}} selected', { count: selectedIds.size })}</span>
                             <Button variant="destructive" size="sm" onClick={() => setBatchDelete(true)}>
-                                <Trash className="mr-1 size-3" /> Delete Selected
+                                <Trash className="mr-1 size-3" /> {t('Delete Selected')}
                             </Button>
                         </div>
                     )}
@@ -460,21 +462,21 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                         onChange={toggleSelectAll}
                                     />
                                 </TableHead>}
-                                <TableHead>Name</TableHead>
-                                <TableHead>Tournament</TableHead>
-                                <TableHead>Sport / Category</TableHead>
-                                <TableHead>Dates</TableHead>
-                                <TableHead>Deadline</TableHead>
-                                <TableHead>Format</TableHead>
-                                <TableHead>Status</TableHead>
-                                {isSuperAdmin && <TableHead className="text-right">Actions</TableHead>}
+                                <TableHead>{t('Name')}</TableHead>
+                                <TableHead>{t('Tournament')}</TableHead>
+                                <TableHead>{t('Sport / Category')}</TableHead>
+                                <TableHead>{t('Dates')}</TableHead>
+                                <TableHead>{t('Deadline')}</TableHead>
+                                <TableHead>{t('Format')}</TableHead>
+                                <TableHead>{t('Status')}</TableHead>
+                                {isSuperAdmin && <TableHead className="text-right">{t('Actions')}</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {events.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={isSuperAdmin ? 9 : 8} className="text-center text-muted-foreground">
-                                        No events yet.
+                                        {t('No events yet.')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -510,7 +512,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     <TableCell>
                                         <div className="flex flex-col gap-1">
                                             <span className={event.is_active ? 'rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700' : 'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600'}>
-                                                {event.is_active ? 'Active' : 'Inactive'}
+                                                {event.is_active ? t('Active') : t('Inactive')}
                                             </span>
                                             <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-xs ${ep.badge}`}>
                                                 {ep.label}
@@ -534,19 +536,19 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     <TableCell className="text-right space-x-2">
                                         {(event.pools_count ?? 0) > 0 && (
                                             <Link href={route('events.draw-result', event.slug)}>
-                                                <Button variant="secondary" size="sm" title="View draw result">
-                                                    <Eye className="mr-1 size-3" /> View Draw
+                                                <Button variant="secondary" size="sm" title={t('View draw result')}>
+                                                    <Eye className="mr-1 size-3" /> {t('View Draw')}
                                                 </Button>
                                             </Link>
                                         )}
-                                        <Button variant="outline" size="sm" onClick={() => handleDraw(event)} title="Draw groups and generate fixtures">
-                                            <Target className="mr-1 size-3" /> Draw
+                                        <Button variant="outline" size="sm" onClick={() => handleDraw(event)} title={t('Draw groups and generate fixtures')}>
+                                            <Target className="mr-1 size-3" /> {t('Draw')}
                                         </Button>
                                         <Button variant="outline" size="sm" onClick={() => openEdit(event)}>
-                                            <Pencil className="mr-1 size-3" /> Edit
+                                            <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
                                         <Button variant="destructive" size="sm" onClick={() => setDeleteEvent(event)}>
-                                            <Trash2 className="mr-1 size-3" /> Delete
+                                            <Trash2 className="mr-1 size-3" /> {t('Delete')}
                                         </Button>
                                     </TableCell>
                                     )}
@@ -564,17 +566,17 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                 <Dialog open={batchDelete} onOpenChange={(isOpen) => !isOpen && setBatchDelete(false)}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Delete {selectedIds.size} Events?</DialogTitle>
+                            <DialogTitle>{t('Delete {{count}} Events?', { count: selectedIds.size })}</DialogTitle>
                             <DialogDescription>
-                                This action cannot be undone. The events and all associated data will be permanently deleted.
+                                {t('This action cannot be undone. The events and all associated data will be permanently deleted.')}
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setBatchDelete(false)}>
-                                Cancel
+                                {t('Cancel')}
                             </Button>
                             <Button variant="destructive" onClick={handleBatchDelete}>
-                                Yes, Delete All
+                                {t('Yes, Delete All')}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -585,10 +587,10 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             <Dialog open={!!drawEvent} onOpenChange={(o) => { if (!o) setDrawEvent(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Draw & Generate Fixtures?</DialogTitle>
+                        <DialogTitle>{t('Draw & Generate Fixtures?')}</DialogTitle>
                         <DialogDescription>
-                            This will randomly assign confirmed participants into groups and generate round-robin fixtures for <strong>{drawEvent?.name}</strong>.
-                            Any existing fixtures for this event will be replaced.
+                            {t('This will randomly assign confirmed participants into groups and generate round-robin fixtures for')} <strong>{drawEvent?.name}</strong>.{' '}
+                            {t('Any existing fixtures for this event will be replaced.')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-2 py-2">
@@ -599,18 +601,18 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                             onChange={(e) => setDrawFormat(e.target.value)}
                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                         >
-                            <option value="group_knockout">Group + Knockout</option>
-                            <option value="league">League (Round Robin)</option>
-                            <option value="knockout">Knockout</option>
+                            <option value="group_knockout">{t('Group + Knockout')}</option>
+                            <option value="league">{t('League (Round Robin)')}</option>
+                            <option value="knockout">{t('Knockout')}</option>
                         </select>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDrawEvent(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setDrawEvent(null)}>{t('Cancel')}</Button>
                         <Button onClick={() => {
                             const e = drawEvent;
                             setDrawEvent(null);
                             if (e) router.post(route('events.draw', e.slug), { format: drawFormat }, { preserveScroll: true });
-                        }}>Yes, Draw</Button>
+                        }}>{t('Yes, Draw')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -620,17 +622,17 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             <Dialog open={!!deleteEvent} onOpenChange={(isOpen) => !isOpen && setDeleteEvent(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Event?</DialogTitle>
+                        <DialogTitle>{t('Delete Event?')}</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteEvent?.name}</strong>? This action cannot be undone.
+                            {t('Are you sure you want to delete')} <strong>{deleteEvent?.name}</strong>? {t('This action cannot be undone.')}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteEvent(null)}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            Yes, Delete
+                            {t('Yes, Delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -638,7 +640,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             )}
 
             <div className="mt-6 text-xs text-muted-foreground">
-                M2: Event module complete (CRUD + scoped selectors + relations). Part of the core Organization → Session → Tournament → Sport → Event hierarchy.
+                {t('M2: Event module complete (CRUD + scoped selectors + relations). Part of the core Organization → Session → Tournament → Sport → Event hierarchy.')}
             </div>
         </AuthenticatedLayout>
     );

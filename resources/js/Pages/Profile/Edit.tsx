@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
+import { useT } from '@/lib/i18n';
 
 interface EditProps {
     mustVerifyEmail: boolean;
@@ -12,22 +13,23 @@ interface EditProps {
 }
 
 export default function Edit({ mustVerifyEmail, status }: EditProps) {
+    const t = useT();
     return (
         <AuthenticatedLayout
             header={
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
-                    <p className="text-sm text-muted-foreground">Manage your account settings</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">{t('Profile')}</h1>
+                    <p className="text-sm text-muted-foreground">{t('Manage your account settings')}</p>
                 </div>
             }
         >
-            <Head title="Profile" />
+            <Head title={t('Profile')} />
 
             <div className="mx-auto max-w-2xl space-y-8 py-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Profile Information</CardTitle>
-                        <CardDescription>Update your name and email address</CardDescription>
+                        <CardTitle>{t('Profile Information')}</CardTitle>
+                        <CardDescription>{t('Update your name and email address')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <UpdateProfileInformationForm mustVerifyEmail={mustVerifyEmail} status={status} />
@@ -36,8 +38,8 @@ export default function Edit({ mustVerifyEmail, status }: EditProps) {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Password</CardTitle>
-                        <CardDescription>Ensure your account uses a strong password</CardDescription>
+                        <CardTitle>{t('Password')}</CardTitle>
+                        <CardDescription>{t('Ensure your account uses a strong password')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <UpdatePasswordForm />
@@ -46,8 +48,8 @@ export default function Edit({ mustVerifyEmail, status }: EditProps) {
 
                 <Card className="border-destructive/20">
                     <CardHeader>
-                        <CardTitle className="text-destructive">Delete Account</CardTitle>
-                        <CardDescription>Permanently delete your account and all associated data</CardDescription>
+                        <CardTitle className="text-destructive">{t('Delete Account')}</CardTitle>
+                        <CardDescription>{t('Permanently delete your account and all associated data')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <DeleteUserForm />

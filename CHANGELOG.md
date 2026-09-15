@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- i18n: completed the English/Bahasa Melayu interface. `lang/en.json` and `lang/ms.json` now hold 750 synchronized keys each, and the remaining ten hardcoded pages (Organizations, Roles, Sessions, Registrations, Sports, SportCategories, Tournaments, Participants, Users, EventParticipants) now render through `t()`. Fixed the `Rejected` → `Ditoloak` typo and defaulted `APP_LOCALE=ms` (English fallback).
+- Deployment: standardized the application on the root URL `https://saf.utem.edu.my` (removed the `/portal` subfolder `APP_URL`/`SESSION_PATH` from `.env.example`, `.env.production.example`, `docs/architecture/deployment.md`, `config/session.php`, `public/sitemap.xml`, and the Ziggy URL).
+- Documentation: rewrote `docs/architecture/internationalization.md` (i18n is implemented; no per-user/org `locale` column), refreshed `CURRENT_STATE.md` counts (112 routes, 331 tests, 19 policies, 42 permissions, 750 i18n keys), corrected `docs/database/erd.md` (`results.match_id`, `home/away_participant_id`), `docs/architecture/frontend.md` (`components/` path), `docs/architecture/authorization.md` (`AppServiceProvider`), the `tournament_sport` pivot naming, role lists, and added "future design — not implemented" banners to all 21 `docs/api/*.md` placeholders.
+
 - Results page: pending matches no longer include fixtures belonging to soft-deleted events, so the Pending Matches count and the Add Result list now match what the Matches page displays (regression test added).
 
 - Matches page: added sortable table columns (match #, matchup, pool/stage, venue/time, status), search and status filters inside the event view, clickable status stat cards that filter the list, dark-mode-safe status badges and flash messages, a compact date/time format, and Home/Away selects that are limited to participants drawn into the selected event (with an explanatory hint) plus a tooltip on the disabled Add Match button.

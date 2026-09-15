@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Users, Swords, Pencil, X, Check } from 'lucide-react';
 import { useState } from 'react';
+import { useT } from '@/lib/i18n';
 import type { Event, Pool, Fixture, Participant, EventParticipant, Flash } from '@/types';
 
 interface PoolWithRelations extends Pool {
@@ -60,6 +61,7 @@ const participantFullName = (participant?: Participant, fallback = '') => {
 };
 
 export default function DrawResult({ event, pools: initialPools, canEdit }: DrawResultProps) {
+    const t = useT();
     const { flash } = usePage<{ flash: Flash }>().props;
     const [editing, setEditing] = useState(false);
     const [pools, setPools] = useState(initialPools);
@@ -115,30 +117,30 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                     <Link href={route('events.index')}>
                         <Button variant="ghost" size="sm">
                             <ArrowLeft className="mr-1 size-4" />
-                            Back
+                            {t('Back')}
                         </Button>
                     </Link>
-                    <h2 className="text-xl font-semibold leading-tight">Draw Result</h2>
+                    <h2 className="text-xl font-semibold leading-tight">{t('Draw Result')}</h2>
                     <div className="ml-auto flex items-center gap-2">
                         {editing ? (
                             <>
                                 <Button variant="outline" size="sm" onClick={handleCancel}>
-                                    <X className="mr-1 size-4" /> Cancel
+                                    <X className="mr-1 size-4" /> {t('Cancel')}
                                 </Button>
                                 <Button size="sm" onClick={handleSave} disabled={Object.keys(pendingMoves).length === 0}>
-                                    <Check className="mr-1 size-4" /> Save Changes
+                                    <Check className="mr-1 size-4" /> {t('Save Changes')}
                                 </Button>
                             </>
                         ) : canEdit && (
                             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                                <Pencil className="mr-1 size-4" /> Edit Pools
+                                <Pencil className="mr-1 size-4" /> {t('Edit Pools')}
                             </Button>
                         )}
                     </div>
                 </div>
             }
         >
-            <Head title="Draw Result" />
+            <Head title={t('Draw Result')} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>
@@ -149,7 +151,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
 
             {editing && (
                 <div className="mb-4 rounded-md bg-amber-50 p-3 text-sm text-amber-700">
-                    Edit mode: Select a new pool for each participant you want to move. Fixtures will be regenerated automatically after saving.
+                    {t('Edit mode: Select a new pool for each participant you want to move. Fixtures will be regenerated automatically after saving.')}
                 </div>
             )}
 
@@ -160,7 +162,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                         <CardDescription>
                             {event.tournament?.name} &middot; {event.sport?.name}
                             {event.sport_category && ` - ${event.sport_category.name}`}
-                            &middot; {event.format ?? 'Round Robin'}
+                            &middot; {event.format ?? t('Round Robin')}
                             &middot; {pools.length} Pool{pools.length !== 1 ? 's' : ''}
                         </CardDescription>
                     </CardHeader>
@@ -169,7 +171,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                 <div className="grid gap-6 md:grid-cols-2">
                     {pools.length === 0 && (
                         <div className="col-span-full text-center text-muted-foreground py-12">
-                            No draw has been performed for this event yet.
+                            {t('No draw has been performed for this event yet.')}
                         </div>
                     )}
 
@@ -189,7 +191,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                                 {pool.event_participants.length > 0 && (
                                     <div>
                                         <h4 className="mb-2 text-xs font-medium uppercase text-muted-foreground">
-                                            Participants
+                                            {t('Participants')}
                                         </h4>
                                         <div className="space-y-1">
                                             {pool.event_participants.map((ep) => {
@@ -210,7 +212,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                                                             >
                                                                 {pools.map((p) => (
                                                                     <option key={p.id} value={p.id}>
-                                                                        {p.name}{p.id === pool.id ? ' (current)' : ''}
+                                                                        {p.name}{p.id === pool.id ? t(' (current)') : ''}
                                                                     </option>
                                                                 ))}
                                                             </select>
@@ -224,7 +226,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                                                         )}
                                                         {ep.seed_number && !editing && (
                                                             <Badge variant="secondary" className="text-xs">
-                                                                Seed #{ep.seed_number}
+                                                                {t('Seed #{{number}}', { number: ep.seed_number })}
                                                             </Badge>
                                                         )}
                                                     </div>
@@ -238,17 +240,17 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                                     <div>
                                         <h4 className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase text-muted-foreground">
                                             <Swords className="size-3" />
-                                            Fixtures
+                                            {t('Fixtures')}
                                         </h4>
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
                                                     <TableHead className="w-12">#</TableHead>
-                                                    <TableHead>Round</TableHead>
-                                                    <TableHead>Home</TableHead>
-                                                    <TableHead className="w-8 text-center">vs</TableHead>
-                                                    <TableHead>Away</TableHead>
-                                                    <TableHead>Status</TableHead>
+                                                    <TableHead>{t('Round')}</TableHead>
+                                                    <TableHead>{t('Home')}</TableHead>
+                                                    <TableHead className="w-8 text-center">{t('vs')}</TableHead>
+                                                    <TableHead>{t('Away')}</TableHead>
+                                                    <TableHead>{t('Status')}</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -262,7 +264,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                                                             <span title={participantFullName(f.home_participant)}>{participantName(f.home_participant)}</span>
                                                         </TableCell>
                                                         <TableCell className="text-center text-muted-foreground">
-                                                            vs
+                                                            {t('vs')}
                                                         </TableCell>
                                                         <TableCell className="font-medium">
                                                             <span title={participantFullName(f.away_participant)}>{participantName(f.away_participant)}</span>
@@ -276,7 +278,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit }: Draw
                                 )}
 
                                 {pool.event_participants.length === 0 && pool.fixtures.length === 0 && (
-                                    <p className="py-4 text-center text-sm text-muted-foreground">Empty pool</p>
+                                    <p className="py-4 text-center text-sm text-muted-foreground">{t('Empty pool')}</p>
                                 )}
                             </CardContent>
                         </Card>

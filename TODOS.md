@@ -36,6 +36,9 @@ Evidence and priorities: `docs/audits/2026-07-31-enterprise-audit.md`.
 - [x] Production `/portal/` 405/500 recovery: cleared environment-specific Laravel caches and restored the IIS front controller.
 - [x] Local `db4stms` schema-drift recovery: encrypted pre-migration backup created, all migrations reconciled without `migrate:fresh`, and HTTP/PHP regression checks passed.
 - [x] Restore the complete SAF 2026 local dataset after schema reconciliation and verify the administrator password remains user-controlled.
+- [x] Bilingual English/Bahasa Melayu UI: `lang/en.json` + `lang/ms.json` completed (750 synchronized keys each) and the last 10 hardcoded pages converted to `t()`; `APP_LOCALE=ms` with English fallback.
+- [x] Root-domain deployment: standardized URL on `https://saf.utem.edu.my` (removed `/portal` subfolder configuration from templates and docs).
+- [x] Documentation refresh: corrected stale counts (`CURRENT_STATE.md`), rewrote `internationalization.md`, fixed `erd.md`, `frontend.md`, `authorization.md`, pivot naming and role lists, and added "future design — not implemented" banners to all 21 `docs/api/*.md` placeholders.
 
 **Matlamat:** Projek dalam fasa maintenance — semua isu kritikal telah dibaiki. Semua Fasa 0-3 selesai. Semua ciri MVP telah dibangunkan.
 

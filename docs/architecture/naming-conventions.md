@@ -29,8 +29,8 @@ Dokumen ini menetapkan konvensyen penamaan yang mesti dipatuhi untuk semua eleme
 ### Jadual Pivot (Pivot Tables)
 
 -   **Nama:** Gabungan nama kedua-dua model dalam bentuk tunggal (singular), disusun mengikut abjad, dan dipisahkan oleh `_`.
-    -   **Contoh:** Hubungan antara `tournaments` dan `sports` menggunakan jadual pivot bernama `sport_tournament`.
-    -   **Contoh Buruk:** `tournaments_sports`, `rel_sport_tournament`.
+    -   **Contoh:** Hubungan antara `tournaments` dan `sports` menggunakan jadual pivot bernama `tournament_sport`.
+    -   **Contoh Buruk:** `tournaments_sports`, `rel_tournament_sport`.
 
 ### Kaedah Relasi (Eloquent)
 
