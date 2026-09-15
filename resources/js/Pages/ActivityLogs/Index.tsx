@@ -6,6 +6,7 @@ import { Head, router } from '@inertiajs/react';
 import { FormEvent, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Pagination from '@/components/Pagination';
 import type { Paginated } from '@/types';
 import { formatDateTime, useI18n } from '@/lib/i18n';
@@ -70,20 +71,30 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                         {isSuperAdmin && (
                             <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                                 {t('Organization')}
-                                <select aria-label="Filter activity by organization" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.organization_id} onChange={(event) => visit({ organization_id: event.target.value })}>
-                                    <option value="">{t('All organizations')}</option>
-                                    {organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
-                                </select>
+                                <Select value={filters.organization_id || 'all'} onValueChange={(value) => visit({ organization_id: value === 'all' ? '' : value })}>
+                                    <SelectTrigger aria-label="Filter activity by organization" className="h-9 w-full">
+                                        <SelectValue placeholder={t('All organizations')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('All organizations')}</SelectItem>
+                                        {organizations.map((organization) => <SelectItem key={organization.id} value={organization.id}>{organization.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                             </label>
                         )}
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                             {t('Event')}
-                            <select aria-label="Filter activity by event" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.event} onChange={(event) => visit({ event: event.target.value })}>
-                                <option value="">{t('All events')}</option>
-                                <option value="created">{t('Created')}</option>
-                                <option value="updated">{t('Updated')}</option>
-                                <option value="deleted">{t('Deleted')}</option>
-                            </select>
+                            <Select value={filters.event || 'all'} onValueChange={(value) => visit({ event: value === 'all' ? '' : value })}>
+                                <SelectTrigger aria-label="Filter activity by event" className="h-9 w-full">
+                                    <SelectValue placeholder={t('All events')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('All events')}</SelectItem>
+                                    <SelectItem value="created">{t('Created')}</SelectItem>
+                                    <SelectItem value="updated">{t('Updated')}</SelectItem>
+                                    <SelectItem value="deleted">{t('Deleted')}</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </label>
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                             {t('From')}

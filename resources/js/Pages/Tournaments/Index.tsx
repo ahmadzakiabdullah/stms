@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -321,21 +322,19 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose, t }: {
             <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                     <Label htmlFor="session_id">{t('Session')}</Label>
-                    <select
-                        id="session_id"
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                        value={formData.session_id}
-                        onChange={e => set('session_id', e.target.value)}
-                        disabled={!!tournament}
-                        required
-                    >
-                        <option value="">{t('-- Select Session --')}</option>
-                        {sessions.map((session) => (
-                            <option key={session.id} value={session.id}>
-                                {session.name}
-                            </option>
-                        ))}
-                    </select>
+                    <Select value={formData.session_id || 'none'} onValueChange={(v) => set('session_id', v === 'none' ? '' : v)} disabled={!!tournament}>
+                        <SelectTrigger id="session_id" className="h-9 w-full">
+                            <SelectValue placeholder={t('-- Select Session --')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">{t('-- Select Session --')}</SelectItem>
+                            {sessions.map((session) => (
+                                <SelectItem key={session.id} value={session.id}>
+                                    {session.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     {errors.session_id && <p className="text-sm text-destructive">{errors.session_id}</p>}
                 </div>
 

@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -485,28 +486,35 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                                                 </p>
                                                              </div>
                                                             {editing && (<div className="flex w-full gap-2 pl-11 sm:w-auto sm:pl-0">
-                                                                <select
-                                                                    className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs sm:flex-none"
+                                                                <Select
                                                                     value={pendingTarget ?? pool.id}
-                                                                    onChange={(e) => handlePoolChange(ep.id, e.target.value)}
+                                                                    onValueChange={(value) => handlePoolChange(ep.id, value)}
                                                                 >
-                                                                    {pools.map((p) => (
-                                                                         <option key={p.id} value={p.id}>
-                                                                             {p.name}{p.id === pool.id ? ` (${t('(current)')})` : ''}
-                                                                         </option>
-                                                                    ))}
-                                                                </select>
-                                                                <select
-                                                                    className="w-16 rounded-md border border-input bg-background px-2 py-1.5 text-xs"
-                                                                    value={pendingSeeds[ep.id] ?? displayPosition}
-                                                                    onChange={(e) => setPendingSeeds(prev => ({ ...prev, [ep.id]: Number(e.target.value) }))}
-                                                                    aria-label={t('Position')}
+                                                                    <SelectTrigger className="min-w-0 flex-1 text-xs sm:flex-none">
+                                                                        <SelectValue />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {pools.map((p) => (
+                                                                            <SelectItem key={p.id} value={p.id}>
+                                                                                {p.name}{p.id === pool.id ? ` (${t('(current)')})` : ''}
+                                                                            </SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <Select
+                                                                    value={String(pendingSeeds[ep.id] ?? displayPosition)}
+                                                                    onValueChange={(value) => setPendingSeeds(prev => ({ ...prev, [ep.id]: value === 'none' ? 0 : Number(value) }))}
                                                                 >
-                                                                    <option value="">—</option>
-                                                                    {Array.from({ length: Math.max(1, event.pool_size ?? Math.max(...pools.map((item) => item.event_participants.length), 1)) }, (_, seed) => (
-                                                                        <option key={seed + 1} value={seed + 1}>#{seed + 1}</option>
-                                                                    ))}
-                                                                </select>
+                                                                    <SelectTrigger className="w-16 text-xs" aria-label={t('Position')}>
+                                                                        <SelectValue placeholder="—" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="none">—</SelectItem>
+                                                                        {Array.from({ length: Math.max(1, event.pool_size ?? Math.max(...pools.map((item) => item.event_participants.length), 1)) }, (_, seed) => (
+                                                                            <SelectItem key={seed + 1} value={String(seed + 1)}>#{seed + 1}</SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
                                                             </div>)}
                                                              {!editing && (
                                                                  <Badge variant="secondary" className="text-xs">#{displayPosition}</Badge>
