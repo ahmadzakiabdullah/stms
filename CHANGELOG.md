@@ -5,6 +5,7 @@
 - Completed frontend i18n coverage: all pages now use `useI18n()` (including `Error.tsx` and the three Profile partials) and the 20 missing English/Malay keys were added to `resources/js/lib/i18n.ts`.
 - Aligned deployment artifacts with the canonical root domain: `APP_URL=https://saf.utem.edu.my` in `.env.example`, root `<loc>` in `public/sitemap.xml`, and updated `config/session.php` / `public/index.php` comments.
 - Fixed a latent `config/session.php` defect where the `'path'` entry was accidentally commented out by a literal `\r\n` embedded in a `//` line; the session cookie path configuration is active again.
+- Raised the CSS bundle budget from 100 KB to 120 KB (`scripts/check-bundle-budget.mjs`) and updated `docs/architecture/performance.md` with the measured ~102 KB baseline, restoring a green `build:budget` gate after the intentional variable-font and feature growth.
 
 ## 9 September 2026 — Full local quality-gate certification + dependency remediation
 
