@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -218,12 +219,15 @@ function AddEventDialog({
                     {!participantId && participants && (
                         <div className="grid gap-2">
                             <Label htmlFor="dialog-participant">{t('Participant')}</Label>
-                            <select id="dialog-participant" value={selectedParticipantId}
-                                onChange={(e) => setSelectedParticipantId(e.target.value)}
-                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" required>
-                                <option value="">{t('-- Select Participant --')}</option>
-                                {participants.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
+                            <Select value={selectedParticipantId || 'none'} onValueChange={(v) => setSelectedParticipantId(v === 'none' ? '' : v)}>
+                                <SelectTrigger id="dialog-participant">
+                                    <SelectValue placeholder={t('-- Select Participant --')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">{t('-- Select Participant --')}</SelectItem>
+                                    {participants.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                         </div>
                     )}
                     <div className="relative">
@@ -402,12 +406,15 @@ function ImportDialog({ open, onClose, participantId, faculties }: {
                     {faculties && (
                         <div className="grid gap-2">
                             <Label htmlFor="import-participant">{t('Faculty')}</Label>
-                            <select id="import-participant" value={data.participant_id}
-                                onChange={(e) => setData('participant_id', e.target.value)}
-                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" required>
-                                <option value="">{t('-- Select Faculty --')}</option>
-                                {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-                            </select>
+                            <Select value={data.participant_id || 'none'} onValueChange={(v) => setData('participant_id', v === 'none' ? '' : v)}>
+                                <SelectTrigger id="import-participant">
+                                    <SelectValue placeholder={t('-- Select Faculty --')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">{t('-- Select Faculty --')}</SelectItem>
+                                    {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                             {errors.participant_id && <p className="text-xs text-destructive">{errors.participant_id}</p>}
                         </div>
                     )}
@@ -448,8 +455,6 @@ function conflictSummary(conflicts: ScheduleConflict[]): string {
 }
 
 const SQUAD_ROLE_KEYS = ['manager', 'assistant_manager', 'coach', 'physio', 'athlete_male', 'athlete_female'] as SquadMember['role'][];
-
-const selectClass = 'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50';
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
     return (
@@ -492,9 +497,14 @@ function SquadAddForm({ epId }: { epId: string }) {
             <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-6">
                 <div className="sm:col-span-2"><Field label={t('Full Name')}><Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. Ali bin Ahmad')} required /></Field></div>
                 <div><Field label={t('Role')}>
-                    <select value={role} onChange={(e) => setRole(e.target.value as SquadMember['role'])} className={selectClass}>
-                        {SQUAD_ROLE_KEYS.map((k) => <option key={k} value={k}>{squadRoleConfig[k].label}</option>)}
-                    </select>
+                    <Select value={role} onValueChange={(v) => setRole(v as SquadMember['role'])}>
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {SQUAD_ROLE_KEYS.map((k) => <SelectItem key={k} value={k}>{squadRoleConfig[k].label}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
                 </Field></div>
                 <div><Field label={t('Matrix No.')}><Input value={matrixNo} onChange={(e) => setMatrixNo(e.target.value)} placeholder={t('e.g. B062310001')} required /></Field></div>
                 <div><Field label={t('IC / Passport')}><Input value={identificationNo} onChange={(e) => setIdentificationNo(e.target.value)} placeholder={t('Optional')} /></Field></div>
@@ -539,9 +549,14 @@ function SquadEditForm({ epId, member, onCancel }: { epId: string; member: Squad
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
                 <div className="sm:col-span-2"><Field label={t('Full Name')}><Input value={name} onChange={(e) => setName(e.target.value)} required className="h-8 text-sm" /></Field></div>
                 <div><Field label={t('Role')}>
-                    <select value={role} onChange={(e) => setRole(e.target.value as SquadMember['role'])} className={selectClass + ' h-8'}>
-                        {SQUAD_ROLE_KEYS.map((k) => <option key={k} value={k}>{squadRoleConfig[k].label}</option>)}
-                    </select>
+                    <Select value={role} onValueChange={(v) => setRole(v as SquadMember['role'])}>
+                        <SelectTrigger className="h-8">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {SQUAD_ROLE_KEYS.map((k) => <SelectItem key={k} value={k}>{squadRoleConfig[k].label}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
                 </Field></div>
                 <div><Field label={t('Matrix No.')}><Input value={matrixNo} onChange={(e) => setMatrixNo(e.target.value)} required className="h-8 text-sm" /></Field></div>
                 <div><Field label={t('IC / Passport')}><Input value={identificationNo} onChange={(e) => setIdentificationNo(e.target.value)} className="h-8 text-sm" /></Field></div>
@@ -931,35 +946,51 @@ export default function EventParticipantsIndex({
                         className="h-9 pl-9" />
                 </div>
 
-                <select value={filterSportId} onChange={(e) => handleSportChange(e.target.value)}
-                    className="h-9 rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    <option value="">{t('All Sports')}</option>
-                    {sports.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+                <Select value={filterSportId || 'all'} onValueChange={(v) => handleSportChange(v === 'all' ? '' : v)}>
+                    <SelectTrigger className="h-9 w-auto">
+                        <SelectValue placeholder={t('All Sports')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">{t('All Sports')}</SelectItem>
+                        {sports.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                </Select>
 
                 {categories.length > 0 && (
-                    <select value={filterCategoryId} onChange={(e) => handleCategoryChange(e.target.value)}
-                        className="h-9 rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                        <option value="">{t('All Categories')}</option>
-                        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    <Select value={filterCategoryId || 'all'} onValueChange={(v) => handleCategoryChange(v === 'all' ? '' : v)}>
+                        <SelectTrigger className="h-9 w-auto">
+                            <SelectValue placeholder={t('All Categories')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('All Categories')}</SelectItem>
+                            {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
                 )}
 
                 {!isFacultyRepresentative && faculties.length > 0 && (
-                    <select value={filterParticipantId} onChange={(e) => handleParticipantChange(e.target.value)}
-                        className="h-9 rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                        <option value="">{t('All Faculties')}</option>
-                        {faculties.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-                    </select>
+                    <Select value={filterParticipantId || 'all'} onValueChange={(v) => handleParticipantChange(v === 'all' ? '' : v)}>
+                        <SelectTrigger className="h-9 w-auto">
+                            <SelectValue placeholder={t('All Faculties')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">{t('All Faculties')}</SelectItem>
+                            {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
                 )}
 
-                <select value={filterStatus} onChange={(e) => handleStatusChange(e.target.value)}
-                    className="h-9 rounded-md border border-input bg-background px-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    <option value="">{t('All Statuses')}</option>
-                    {Object.entries(statusConfig).map(([key, cfg]) => (
-                        <option key={key} value={key}>{cfg.label}</option>
-                    ))}
-                </select>
+                <Select value={filterStatus || 'all'} onValueChange={(v) => handleStatusChange(v === 'all' ? '' : v)}>
+                    <SelectTrigger className="h-9 w-auto">
+                        <SelectValue placeholder={t('All Statuses')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">{t('All Statuses')}</SelectItem>
+                        {Object.entries(statusConfig).map(([key, cfg]) => (
+                            <SelectItem key={key} value={key}>{cfg.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
 
                 {hasActiveFilters && (
                     <Button variant="outline" size="sm" onClick={handleClearFilters} className="h-9 text-xs">
