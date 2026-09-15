@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -27,7 +28,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Head, router } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
@@ -68,7 +69,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
     const applySearch = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); router.get(route('sessions.index'), search.trim() ? { search: search.trim() } : {}, { preserveState: true, preserveScroll: true, replace: true }); };
     const clearSearch = () => { setSearch(''); router.get(route('sessions.index'), {}, { preserveState: true, preserveScroll: true, replace: true }); };
 
-    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SessionForm>({
+    const { control, register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SessionForm>({
         resolver: zodResolver(sessionSchema),
         defaultValues: {
             organization_id: '',
@@ -175,20 +176,25 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                     {organizations && organizations.length > 0 && (
                                         <div className="grid gap-2">
                                             <Label htmlFor="organization_id">{t('Organization')}</Label>
-                                            <select
-                                                id="organization_id"
-                                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                                {...register('organization_id')}
-                                                disabled={!!editingSession}
-                                                required
-                                            >
-                                                <option value="">{t('-- Select Organization --')}</option>
-                                                {organizations.map((org) => (
-                                                    <option key={org.id} value={org.id}>
-                                                        {org.name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                            <Controller
+                                                control={control}
+                                                name="organization_id"
+                                                render={({ field }) => (
+                                                    <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}>
+                                                        <SelectTrigger id="organization_id" className="h-9 w-full" disabled={!!editingSession}>
+                                                            <SelectValue placeholder={t('-- Select Organization --')} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="none">{t('-- Select Organization --')}</SelectItem>
+                                                            {organizations.map((org) => (
+                                                                <SelectItem key={org.id} value={org.id}>
+                                                                    {org.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
                                             {errors.organization_id && <p className="text-sm text-destructive">{errors.organization_id.message}</p>}
                                         </div>
                                     )}

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -27,7 +28,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Head, router } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
@@ -63,7 +64,7 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
 
     const organizations = Array.isArray(organizationsProp) ? organizationsProp : (organizationsProp?.data ?? []);
 
-    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<OrganizationForm>({
+    const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<OrganizationForm>({
         resolver: zodResolver(organizationSchema),
         defaultValues: {
             name: '',
@@ -188,17 +189,25 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="organization_type">{t('Organization Type')}</Label>
-                                        <select
-                                            id="organization_type"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                            {...register('organization_type')}
-                                        >
-                                            {organizationTypes.map((type) => (
-                                                <option key={type.value} value={type.value}>
-                                                    {type.label}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <Controller
+                                            control={control}
+                                            name="organization_type"
+                                            render={({ field }) => (
+                                                <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}>
+                                                    <SelectTrigger id="organization_type" className="h-9 w-full">
+                                                        <SelectValue placeholder={t('-- Select Type --')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">{t('-- Select Type --')}</SelectItem>
+                                                        {organizationTypes.map((type) => (
+                                                            <SelectItem key={type.value} value={type.value}>
+                                                                {type.label}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
                                     </div>
 
                                     <div className="grid gap-2">

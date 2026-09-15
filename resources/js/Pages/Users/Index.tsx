@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -27,7 +28,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Head, router } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { KeyRound, Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
@@ -85,7 +86,7 @@ function UserFormDialog({
 }) {
     const { t } = useI18n();
     const schema = editingUser ? editUserSchema : createUserSchema;
-    const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<CreateUserForm>({
+    const { register, handleSubmit, reset, watch, setValue, control, formState: { errors, isSubmitting } } = useForm<CreateUserForm>({
         defaultValues: editingUser
             ? {
                   name: editingUser.name,
@@ -205,17 +206,23 @@ function UserFormDialog({
                         {(isFacultyRepSelected || isDeanSelected) && (
                             <div className="grid gap-2">
                                 <Label htmlFor="participant_id">{t('Faculty (Participant) *')}</Label>
-                                <select
-                                    id="participant_id"
-                                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                    {...register('participant_id')}
-                                    required
-                                >
-                                    <option value="">{t('-- Select Faculty --')}</option>
-                                    {participants.map((p) => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                </select>
+                                <Controller
+                                    control={control}
+                                    name="participant_id"
+                                    render={({ field }) => (
+                                        <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}>
+                                            <SelectTrigger id="participant_id" className="h-9 w-full">
+                                                <SelectValue placeholder={t('-- Select Faculty --')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">{t('-- Select Faculty --')}</SelectItem>
+                                                {participants.map((p) => (
+                                                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
                                 {errors.participant_id && <p className="text-sm text-destructive">{errors.participant_id.message}</p>}
                             </div>
                         )}

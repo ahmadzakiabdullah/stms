@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -27,7 +28,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ChevronDown, ChevronRight, Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
@@ -185,7 +186,7 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
             max_officials: null,
         },
     });
-    const { register: catReg, handleSubmit: catSubmit, reset: catReset, setValue: catSetValue, watch: catWatch, formState: { errors: catErrors, isSubmitting: catSubmitting } } = catForm;
+    const { register: catReg, control: catControl, handleSubmit: catSubmit, reset: catReset, setValue: catSetValue, watch: catWatch, formState: { errors: catErrors, isSubmitting: catSubmitting } } = catForm;
     const catName = catWatch('name');
     const catQuotaMode = catWatch('quota_mode');
 
@@ -558,15 +559,22 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                 <h4 className="mb-3 text-sm font-medium">{t('Quota / Participant Limits')}</h4>
                                 <div className="mb-3 grid gap-2">
                                     <Label htmlFor="cat-quota-mode">{t('Quota Mode')}</Label>
-                                    <select
-                                        id="cat-quota-mode"
-                                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                        {...catReg('quota_mode')}
-                                    >
-                                        <option value="gender_based">{t('Gender based')}</option>
-                                        <option value="open_total">{t('Open total')}</option>
-                                        <option value="mixed_total">{t('Mixed total with minimums')}</option>
-                                    </select>
+                                    <Controller
+                                        control={catControl}
+                                        name="quota_mode"
+                                        render={({ field }) => (
+                                            <Select value={field.value} onValueChange={field.onChange}>
+                                                <SelectTrigger id="cat-quota-mode" className="h-9 w-full">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="gender_based">{t('Gender based')}</SelectItem>
+                                                    <SelectItem value="open_total">{t('Open total')}</SelectItem>
+                                                    <SelectItem value="mixed_total">{t('Mixed total with minimums')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
                                     {catQuotaMode !== 'gender_based' && (
