@@ -9,6 +9,7 @@ use App\Http\Requests\Sport\StoreSportRequest;
 use App\Http\Requests\Sport\UpdateSportRequest;
 use App\Models\Sport;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Policies;
 
 use App\Models\Organization;
+use App\Models\User;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -10,14 +11,14 @@ use Tests\Traits\CreatesTenantUsers;
 
 class UserPolicyTest extends TestCase
 {
-    use CreatesTenantUsers, RefreshDatabase;
+    use RefreshDatabase, CreatesTenantUsers;
 
     private UserPolicy $policy;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new UserPolicy;
+        $this->policy = new UserPolicy();
     }
 
     public function test_super_admin_can_perform_all_actions(): void

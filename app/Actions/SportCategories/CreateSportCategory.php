@@ -10,7 +10,6 @@ class CreateSportCategory
     public function handle(array $data, ?SportCategoryService $service = null): SportCategory
     {
         $service = $service ?? app(SportCategoryService::class);
-
         return $service->createSportCategory($data);
     }
 }

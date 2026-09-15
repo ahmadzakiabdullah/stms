@@ -8,9 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasColumn('events', 'registration_deadline')) {
-            return;
-        }
+        if (Schema::hasColumn('events', 'registration_deadline')) return;
 
         Schema::table('events', function (Blueprint $table) {
             $table->dateTime('registration_deadline')->nullable()->after('end_date');

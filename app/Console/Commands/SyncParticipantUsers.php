@@ -34,7 +34,6 @@ class SyncParticipantUsers extends Command
             if (empty($email)) {
                 $this->warn("  SKIP [{$participant->id}] {$participant->name} — no email");
                 $skipped++;
-
                 continue;
             }
 
@@ -53,13 +52,11 @@ class SyncParticipantUsers extends Command
                         $errors++;
                     }
                 }
-
                 continue;
             }
 
             if ($dryRun) {
                 $this->line("  CREATE [{$participant->id}] {$participant->name} <{$email}>");
-
                 continue;
             }
 

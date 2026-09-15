@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+
 $_SERVER['HTTPS'] = 'on';
 $_SERVER['SERVER_PORT'] = 443;
 $_SERVER['REQUEST_SCHEME'] = 'https';

@@ -21,7 +21,6 @@ class BackfillEventParticipantOrgId extends Command
 
         if ($total === 0) {
             $this->info('No EventParticipant records missing organization_id.');
-
             return Command::SUCCESS;
         }
 
@@ -32,10 +31,9 @@ class BackfillEventParticipantOrgId extends Command
         foreach ($records as $ep) {
             $event = Event::find($ep->event_id);
 
-            if (! $event || ! $event->organization_id) {
+            if (!$event || !$event->organization_id) {
                 $this->warn("  SKIP [{$ep->id}] — event {$ep->event_id} has no org");
                 $skipped++;
-
                 continue;
             }
 

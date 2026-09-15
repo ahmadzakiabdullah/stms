@@ -13,7 +13,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class EventTest extends TestCase
 {
-    use CreatesTenantUsers, RefreshDatabase;
+    use RefreshDatabase, CreatesTenantUsers;
 
     public function test_staff_user_can_only_see_events_in_their_organization(): void
     {

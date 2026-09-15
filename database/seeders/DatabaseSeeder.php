@@ -2,17 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Event;
 use App\Models\Organization;
-use App\Models\Session;
-use App\Models\Sport;
-use App\Models\SportCategory;
-use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
@@ -70,7 +64,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+            \Spatie\Permission\Models\Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
         $superAdmin->givePermissionTo($permissions);
@@ -98,9 +92,7 @@ class DatabaseSeeder extends Seeder
                 'organization_id' => $defaultOrg->id,
             ]
         );
-        if ($defaultAdmin->trashed()) {
-            $defaultAdmin->restore();
-        }
+        if ($defaultAdmin->trashed()) $defaultAdmin->restore();
         if (empty($defaultAdmin->organization_id)) {
             $defaultAdmin->organization_id = $defaultOrg->id;
             $defaultAdmin->save();
@@ -118,9 +110,7 @@ class DatabaseSeeder extends Seeder
                 'organization_id' => $defaultOrg->id,
             ]
         );
-        if ($testAdmin->trashed()) {
-            $testAdmin->restore();
-        }
+        if ($testAdmin->trashed()) $testAdmin->restore();
         $testAdmin->assignRole($superAdmin);
 
         // 5. Basic test user (no admin role)
@@ -133,9 +123,7 @@ class DatabaseSeeder extends Seeder
                 'organization_id' => $defaultOrg->id,
             ]
         );
-        if ($testUser->trashed()) {
-            $testUser->restore();
-        }
+        if ($testUser->trashed()) $testUser->restore();
 
         // 6. Seed the SAF 2026 sport master list for the default organization (M2)
         // Categories and event-specific quotas are configured by SAF2026DataSeeder below.
@@ -167,7 +155,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($defaultSports as $sportData) {
-            $sport = Sport::withTrashed()->firstOrCreate(
+            $sport = \App\Models\Sport::withTrashed()->firstOrCreate(
                 ['slug' => $sportData['slug'], 'organization_id' => $defaultOrg->id],
                 [
                     'organization_id' => $defaultOrg->id,
@@ -186,14 +174,14 @@ class DatabaseSeeder extends Seeder
         $defaultCategories = [];
 
         foreach ($defaultCategories as $sportSlug => $categoryNames) {
-            $sport = Sport::where('slug', $sportSlug)
+            $sport = \App\Models\Sport::where('slug', $sportSlug)
                 ->where('organization_id', $defaultOrg->id)
                 ->first();
 
             if ($sport) {
                 foreach ($categoryNames as $catName) {
                     $catSlug = Str::slug($catName);
-                    SportCategory::withTrashed()->firstOrCreate(
+                    \App\Models\SportCategory::withTrashed()->firstOrCreate(
                         ['sport_id' => $sport->id, 'slug' => $catSlug],
                         [
                             'organization_id' => $defaultOrg->id,
@@ -236,7 +224,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($defaultSessions as $sessionData) {
-            Session::withTrashed()->updateOrCreate(
+            \App\Models\Session::withTrashed()->updateOrCreate(
                 ['slug' => $sessionData['slug'], 'organization_id' => $defaultOrg->id],
                 array_merge($sessionData, ['organization_id' => $defaultOrg->id])
             );
@@ -260,13 +248,13 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($defaultTournaments as $sessionSlug => $tournaments) {
-            $session = Session::where('slug', $sessionSlug)
+            $session = \App\Models\Session::where('slug', $sessionSlug)
                 ->where('organization_id', $defaultOrg->id)
                 ->first();
 
             if ($session) {
                 foreach ($tournaments as $tData) {
-                    $tournament = Tournament::withTrashed()->updateOrCreate(
+                    $tournament = \App\Models\Tournament::withTrashed()->updateOrCreate(
                         ['slug' => $tData['slug'], 'session_id' => $session->id],
                         [
                             'organization_id' => $defaultOrg->id,
@@ -289,7 +277,7 @@ class DatabaseSeeder extends Seeder
                         'volleyball' => ['volleyball'],
                         default => [],
                     };
-                    $sportIds = Sport::whereIn('slug', $sportSlugs)->pluck('id')->toArray();
+                    $sportIds = \App\Models\Sport::whereIn('slug', $sportSlugs)->pluck('id')->toArray();
                     if ($sportIds) {
                         $tournament->sports()->sync($sportIds);
                     }
@@ -325,25 +313,19 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($defaultEvents as $sessionSlug => $tournamentEvents) {
-            $session = Session::where('slug', $sessionSlug)->first();
-            if (! $session) {
-                continue;
-            }
+            $session = \App\Models\Session::where('slug', $sessionSlug)->first();
+            if (!$session) continue;
 
             foreach ($tournamentEvents as $tournamentSlug => $events) {
-                $tournament = Tournament::where('slug', $tournamentSlug)->where('session_id', $session->id)->first();
-                if (! $tournament) {
-                    continue;
-                }
+                $tournament = \App\Models\Tournament::where('slug', $tournamentSlug)->where('session_id', $session->id)->first();
+                if (!$tournament) continue;
 
                 foreach ($events as $eData) {
-                    $sport = Sport::where('slug', $eData['sport_slug'])->first();
-                    $category = SportCategory::where('slug', $eData['category_slug'])->first();
-                    if (! $sport || ! $category) {
-                        continue;
-                    }
+                    $sport = \App\Models\Sport::where('slug', $eData['sport_slug'])->first();
+                    $category = \App\Models\SportCategory::where('slug', $eData['category_slug'])->first();
+                    if (!$sport || !$category) continue;
 
-                    Event::withTrashed()->updateOrCreate(
+                    \App\Models\Event::withTrashed()->updateOrCreate(
                         ['slug' => $eData['slug'], 'tournament_id' => $tournament->id],
                         [
                             'organization_id' => $defaultOrg->id,

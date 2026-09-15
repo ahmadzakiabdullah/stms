@@ -10,20 +10,19 @@ use App\Models\Tournament;
 use App\Policies\EventPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
 class EventPolicyTest extends TestCase
 {
-    use CreatesTenantUsers, RefreshDatabase;
+    use RefreshDatabase, CreatesTenantUsers;
 
     private EventPolicy $policy;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new EventPolicy;
+        $this->policy = new EventPolicy();
     }
 
     public function test_super_admin_can_perform_all_actions(): void
@@ -81,7 +80,7 @@ class EventPolicyTest extends TestCase
         $orgA = Organization::factory()->create();
         $orgB = Organization::factory()->create();
         $managerA = $this->createStaffUser($orgA); // base staff
-        Role::firstOrCreate(['name' => 'tournament-manager', 'guard_name' => 'web']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'tournament-manager', 'guard_name' => 'web']);
         $managerA->assignRole('tournament-manager');
 
         $tournamentA = Tournament::factory()->create(['organization_id' => $orgA->id]);

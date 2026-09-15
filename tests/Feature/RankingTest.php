@@ -14,7 +14,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class RankingTest extends TestCase
 {
-    use CreatesTenantUsers, RefreshDatabase;
+    use RefreshDatabase, CreatesTenantUsers;
 
     public function test_rankings_page_requires_auth(): void
     {

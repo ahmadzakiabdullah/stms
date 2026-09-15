@@ -9,7 +9,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class StoreParticipantRequestTest extends TestCase
 {
-    use CreatesTenantUsers, RefreshDatabase;
+    use RefreshDatabase, CreatesTenantUsers;
 
     public function test_passes_with_valid_data(): void
     {

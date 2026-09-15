@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Organization;
 use App\Services\MatchService;
@@ -18,13 +17,13 @@ class MatchServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new MatchService;
+        $this->service = new MatchService();
     }
 
     public function test_create_match(): void
     {
         $org = Organization::factory()->create();
-        $event = Event::factory()->create(['organization_id' => $org->id]);
+        $event = \App\Models\Event::factory()->create(['organization_id' => $org->id]);
 
         $match = $this->service->create($org, [
             'event_id' => $event->id,
@@ -40,7 +39,7 @@ class MatchServiceTest extends TestCase
     public function test_update_match(): void
     {
         $org = Organization::factory()->create();
-        $event = Event::factory()->create(['organization_id' => $org->id]);
+        $event = \App\Models\Event::factory()->create(['organization_id' => $org->id]);
         $match = Fixture::factory()->create([
             'organization_id' => $org->id,
             'event_id' => $event->id,
@@ -58,7 +57,7 @@ class MatchServiceTest extends TestCase
     public function test_delete_match(): void
     {
         $org = Organization::factory()->create();
-        $event = Event::factory()->create(['organization_id' => $org->id]);
+        $event = \App\Models\Event::factory()->create(['organization_id' => $org->id]);
         $match = Fixture::factory()->create([
             'organization_id' => $org->id,
             'event_id' => $event->id,

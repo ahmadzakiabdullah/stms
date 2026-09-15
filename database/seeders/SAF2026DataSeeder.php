@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Event;
 use App\Models\EventParticipant;
-use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Registration;
 use App\Models\Session;
@@ -13,6 +12,7 @@ use App\Models\SportCategory;
 use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -20,13 +20,11 @@ class SAF2026DataSeeder extends Seeder
 {
     public function run(): void
     {
-        $org = Organization::withTrashed()->firstOrCreate(
+        $org = \App\Models\Organization::withTrashed()->firstOrCreate(
             ['slug' => 'utem'],
             ['name' => 'Universiti Teknikal Malaysia Melaka', 'slug' => 'utem', 'organization_type' => 'university', 'is_active' => true]
         );
-        if ($org->trashed()) {
-            $org->restore();
-        }
+        if ($org->trashed()) $org->restore();
 
         $orgId = $org->id;
 
@@ -49,9 +47,7 @@ class SAF2026DataSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        if ($session->trashed()) {
-            $session->restore();
-        }
+        if ($session->trashed()) $session->restore();
 
         // Tournaments
         $fasa1 = Tournament::withTrashed()->firstOrCreate(
@@ -68,9 +64,7 @@ class SAF2026DataSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        if ($fasa1->trashed()) {
-            $fasa1->restore();
-        }
+        if ($fasa1->trashed()) $fasa1->restore();
 
         $fasa2 = Tournament::withTrashed()->firstOrCreate(
             ['slug' => 'saf-2026-fasa-2', 'session_id' => $session->id],
@@ -86,9 +80,7 @@ class SAF2026DataSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        if ($fasa2->trashed()) {
-            $fasa2->restore();
-        }
+        if ($fasa2->trashed()) $fasa2->restore();
 
         // Sports config
         $sportsConfig = [
@@ -193,9 +185,7 @@ class SAF2026DataSeeder extends Seeder
                     ['slug' => $slug, 'organization_id' => $orgId],
                     ['organization_id' => $orgId, 'name' => $sData['name'], 'slug' => $slug, 'is_active' => true]
                 );
-                if ($sport->trashed()) {
-                    $sport->restore();
-                }
+                if ($sport->trashed()) $sport->restore();
                 $sportIds[] = $sport->id;
 
                 foreach ($sData['cats'] as $catData) {
@@ -219,12 +209,10 @@ class SAF2026DataSeeder extends Seeder
                         ['sport_id' => $sport->id, 'slug' => $catSlug],
                         $catAttributes
                     );
-                    if ($cat->trashed()) {
-                        $cat->restore();
-                    }
+                    if ($cat->trashed()) $cat->restore();
 
-                    $eventName = $sData['name'].' ('.$catName.')';
-                    $eventSlug = Str::startsWith($catSlug, $slug.'-') ? $catSlug : $slug.'-'.$catSlug;
+                    $eventName = $sData['name'] . ' (' . $catName . ')';
+                    $eventSlug = Str::startsWith($catSlug, $slug . '-') ? $catSlug : $slug . '-' . $catSlug;
                     $event = Event::withTrashed()->firstOrCreate(
                         ['slug' => $eventSlug, 'tournament_id' => $tournament->id],
                         [
@@ -239,9 +227,7 @@ class SAF2026DataSeeder extends Seeder
                             'is_active' => true,
                         ]
                     );
-                    if ($event->trashed()) {
-                        $event->restore();
-                    }
+                    if ($event->trashed()) $event->restore();
                     $allEvents[] = $event;
                 }
             }
@@ -276,9 +262,7 @@ class SAF2026DataSeeder extends Seeder
                     'is_active' => true,
                 ]
             );
-            if ($participant->trashed()) {
-                $participant->restore();
-            }
+            if ($participant->trashed()) $participant->restore();
 
             // Register to both tournaments
             foreach ([$fasa1, $fasa2] as $t) {
@@ -295,7 +279,7 @@ class SAF2026DataSeeder extends Seeder
             }
 
             // Faculty rep user
-            $repEmail = Str::lower($f['short']).'@utem.edu.my';
+            $repEmail = Str::lower($f['short']) . '@utem.edu.my';
             $repUser = User::firstOrCreate(
                 ['email' => $repEmail],
                 [
@@ -309,11 +293,11 @@ class SAF2026DataSeeder extends Seeder
             $repUser->assignRole($facRepRole);
 
             // Dean user
-            $deanEmail = 'dean@'.Str::lower($f['short']).'.utem.edu.my';
+            $deanEmail = 'dean@' . Str::lower($f['short']) . '.utem.edu.my';
             $deanUser = User::firstOrCreate(
                 ['email' => $deanEmail],
                 [
-                    'name' => 'Dean '.$f['short'],
+                    'name' => 'Dean ' . $f['short'],
                     'email' => $deanEmail,
                     'password' => bcrypt('password'),
                     'organization_id' => $orgId,

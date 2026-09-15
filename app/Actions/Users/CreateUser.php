@@ -10,7 +10,6 @@ class CreateUser
     public function handle(array $data, ?UserService $service = null): User
     {
         $service = $service ?? app(UserService::class);
-
         return $service->createUser($data);
     }
 }

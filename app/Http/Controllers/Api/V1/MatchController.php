@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\MatchResource;
 use App\Models\Fixture;
+use App\Http\Resources\MatchResource;
 use Illuminate\Http\Request;
 
 class MatchController extends Controller
@@ -22,14 +22,12 @@ class MatchController extends Controller
         }
 
         $matches = $query->orderBy('scheduled_at', 'asc')->paginate(15);
-
         return MatchResource::collection($matches);
     }
 
     public function show(Fixture $match)
     {
         $match->load(['event', 'competitor1.participant', 'competitor2.participant', 'result']);
-
         return new MatchResource($match);
     }
 }

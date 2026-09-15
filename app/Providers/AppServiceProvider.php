@@ -2,30 +2,9 @@
 
 namespace App\Providers;
 
-use App\Models\Event;
-use App\Models\EventParticipant;
-use App\Models\Fixture;
-use App\Models\Organization;
-use App\Models\Result;
-use App\Models\Session;
-use App\Models\Sport;
-use App\Models\SportCategory;
-use App\Models\Tournament;
-use App\Policies\EventParticipantPolicy;
-use App\Policies\EventPolicy;
-use App\Policies\MatchPolicy;
-use App\Policies\OrganizationPolicy;
-use App\Policies\ResultPolicy;
-use App\Policies\RolePolicy;
-use App\Policies\SessionPolicy;
-use App\Policies\SportCategoryPolicy;
-use App\Policies\SportPolicy;
-use App\Policies\TournamentPolicy;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
-use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,33 +27,33 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         // M1: Explicitly register Organization policy (auto-discovery also works in modern Laravel)
-        Gate::policy(Organization::class, OrganizationPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Organization::class, \App\Policies\OrganizationPolicy::class);
 
         // M2: Sport policy
-        Gate::policy(Sport::class, SportPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Sport::class, \App\Policies\SportPolicy::class);
 
         // M2: SportCategory policy
-        Gate::policy(SportCategory::class, SportCategoryPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\SportCategory::class, \App\Policies\SportCategoryPolicy::class);
 
         // M2: Session policy
-        Gate::policy(Session::class, SessionPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Session::class, \App\Policies\SessionPolicy::class);
 
         // M2: Tournament policy
-        Gate::policy(Tournament::class, TournamentPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Tournament::class, \App\Policies\TournamentPolicy::class);
 
         // Event policy (M2 completion)
-        Gate::policy(Event::class, EventPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Event::class, \App\Policies\EventPolicy::class);
 
         // M4: Match policy
-        Gate::policy(Fixture::class, MatchPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Fixture::class, \App\Policies\MatchPolicy::class);
 
         // M4: Result policy
-        Gate::policy(Result::class, ResultPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Result::class, \App\Policies\ResultPolicy::class);
 
         // EventParticipant policy
-        Gate::policy(EventParticipant::class, EventParticipantPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\EventParticipant::class, \App\Policies\EventParticipantPolicy::class);
 
         // Role policy
-        Gate::policy(Role::class, RolePolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\Spatie\Permission\Models\Role::class, \App\Policies\RolePolicy::class);
     }
 }

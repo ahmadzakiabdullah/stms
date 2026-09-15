@@ -24,8 +24,8 @@ class MatchScoreUpdated implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new Channel('matches.'.$this->fixture->id),
-            new Channel('events.'.$this->fixture->event_id),
+            new Channel('matches.' . $this->fixture->id),
+            new Channel('events.' . $this->fixture->event_id),
         ];
     }
 

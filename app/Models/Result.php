@@ -6,14 +6,14 @@ use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Result extends Model
 {
-    use BelongsToOrganization, HasFactory, HasUuids, LogsActivity, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes, LogsActivity, BelongsToOrganization;
 
     protected $fillable = [
         'organization_id',
@@ -39,7 +39,7 @@ class Result extends Model
 
     public function match(): BelongsTo
     {
-        return $this->belongsTo(Fixture::class);
+        return $this->belongsTo(\App\Models\Fixture::class);
     }
 
     public function winner(): BelongsTo
@@ -51,6 +51,7 @@ class Result extends Model
     {
         return 'id';
     }
+
 
     public function getActivitylogOptions(): LogOptions
     {

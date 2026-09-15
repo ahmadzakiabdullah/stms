@@ -2,14 +2,12 @@
 
 namespace App\Services;
 
-use App\Events\MatchScoreUpdated;
-use App\Models\Organization;
 use App\Models\Result;
+use App\Models\Organization;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
 class ResultService
 {
     public function getAllByOrganization(Organization $organization, array $filters = []): LengthAwarePaginator
@@ -52,11 +50,10 @@ class ResultService
 
             // Broadcast the real-time score update
             if ($result->match) {
-                event(new MatchScoreUpdated($result->match));
+                event(new \App\Events\MatchScoreUpdated($result->match));
             }
 
             Log::info('Result created', ['id' => $result->id, 'match_id' => $result->match_id, 'org_id' => $organization->id]);
-
             return $result;
         });
     }
@@ -69,11 +66,10 @@ class ResultService
 
             // Broadcast the real-time score update
             if ($result->match) {
-                event(new MatchScoreUpdated($result->match));
+                event(new \App\Events\MatchScoreUpdated($result->match));
             }
 
             Log::info('Result updated', ['id' => $id, 'org_id' => $organization->id]);
-
             return $result->fresh();
         });
     }

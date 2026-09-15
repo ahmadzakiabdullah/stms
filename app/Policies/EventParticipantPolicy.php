@@ -17,7 +17,6 @@ class EventParticipantPolicy
         if ($user->hasRole('super-admin')) {
             return true;
         }
-
         return $user->organization_id === $eventParticipant->event->organization_id;
     }
 
@@ -31,7 +30,6 @@ class EventParticipantPolicy
         if ($user->hasRole('super-admin')) {
             return true;
         }
-
         return $user->organization_id === $eventParticipant->event->organization_id && (
             $user->hasRole('org-admin') || $user->hasPermissionTo('edit event participants')
         );
@@ -42,7 +40,6 @@ class EventParticipantPolicy
         if ($user->hasRole('super-admin')) {
             return true;
         }
-
         return $user->organization_id === $eventParticipant->event->organization_id && (
             $user->hasRole('org-admin') || $user->hasPermissionTo('delete event participants')
         );

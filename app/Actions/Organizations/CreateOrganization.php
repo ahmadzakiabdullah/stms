@@ -10,7 +10,6 @@ class CreateOrganization
     public function handle(array $data, ?OrganizationService $service = null): Organization
     {
         $service = $service ?? app(OrganizationService::class);
-
         return $service->createOrganization($data);
     }
 }

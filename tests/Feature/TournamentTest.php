@@ -12,7 +12,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class TournamentTest extends TestCase
 {
-    use CreatesTenantUsers, RefreshDatabase;
+    use RefreshDatabase, CreatesTenantUsers;
 
     public function test_non_super_admin_cannot_see_tournaments_from_other_organizations(): void
     {

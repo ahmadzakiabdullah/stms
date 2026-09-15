@@ -49,7 +49,6 @@ class MatchService
             }
             $match = Fixture::create($data);
             Log::info('Match created', ['id' => $match->id, 'org_id' => $organization->id]);
-
             return $match;
         });
     }
@@ -63,7 +62,6 @@ class MatchService
             }
             $match->update($data);
             Log::info('Match updated', ['id' => $id, 'org_id' => $organization->id]);
-
             return $match->fresh();
         });
     }

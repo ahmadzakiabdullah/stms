@@ -20,7 +20,6 @@ abstract class Controller
             if ($fallback) {
                 return $fallback();
             }
-
             return new LengthAwarePaginator([], 0, 15, 1, [
                 'path' => request()->url(),
             ]);
@@ -39,7 +38,6 @@ abstract class Controller
             if ($fallback) {
                 return $fallback();
             }
-
             return collect();
         }
     }

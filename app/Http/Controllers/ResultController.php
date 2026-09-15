@@ -12,7 +12,6 @@ use App\Models\Fixture;
 use App\Models\Participant;
 use App\Models\Result;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -30,8 +29,7 @@ class ResultController extends Controller
                 ->withQueryString();
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
-
-            return new LengthAwarePaginator([], 0, 15, 1, [
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15, 1, [
                 'path' => request()->url(),
             ]);
         });

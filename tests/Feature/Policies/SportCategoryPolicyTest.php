@@ -12,14 +12,14 @@ use Tests\Traits\CreatesTenantUsers;
 
 class SportCategoryPolicyTest extends TestCase
 {
-    use CreatesTenantUsers, RefreshDatabase;
+    use RefreshDatabase, CreatesTenantUsers;
 
     private SportCategoryPolicy $policy;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy = new SportCategoryPolicy;
+        $this->policy = new SportCategoryPolicy();
     }
 
     public function test_super_admin_can_perform_all_actions(): void

@@ -12,7 +12,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class RegistrationTest extends TestCase
 {
-    use CreatesTenantUsers, RefreshDatabase;
+    use RefreshDatabase, CreatesTenantUsers;
 
     public function test_non_super_admin_only_sees_own_organization_registrations_via_global_scope(): void
     {

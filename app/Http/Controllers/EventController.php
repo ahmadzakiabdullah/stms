@@ -47,7 +47,6 @@ class EventController extends Controller
                 ->withQueryString();
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
-
             return new LengthAwarePaginator([], 0, 15, 1, [
                 'path' => request()->url(),
             ]);
@@ -60,7 +59,6 @@ class EventController extends Controller
                 ->get(['id', 'name', 'slug', 'start_date', 'end_date']);
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
-
             return collect();
         });
 
@@ -70,7 +68,6 @@ class EventController extends Controller
                 ->get(['id', 'name', 'slug']);
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
-
             return collect();
         });
 
@@ -81,15 +78,14 @@ class EventController extends Controller
                 ->get(['id', 'name', 'slug', 'sport_id']);
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
-
             return collect();
         });
 
         $usedCategoryIds = Event::query()
             ->select('tournament_id', 'sport_id', 'sport_category_id')
             ->get()
-            ->groupBy(fn ($e) => $e->tournament_id.':'.$e->sport_id)
-            ->map(fn ($group) => $group->pluck('sport_category_id')->values()->toArray())
+            ->groupBy(fn($e) => $e->tournament_id . ':' . $e->sport_id)
+            ->map(fn($group) => $group->pluck('sport_category_id')->values()->toArray())
             ->toArray();
 
         $response = Inertia::render('Events/Index', [

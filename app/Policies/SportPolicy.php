@@ -15,7 +15,6 @@ class SportPolicy
         if ($user->hasRole('super-admin') || $user->hasRole('org-admin') || $user->hasRole('sport-coordinator')) {
             return true;
         }
-
         return $user->hasPermissionTo('view sports');
     }
 
@@ -39,7 +38,6 @@ class SportPolicy
         if ($user->hasRole('super-admin')) {
             return true;
         }
-
         return $user->hasPermissionTo('create sports') || $user->hasRole('org-admin') || $user->hasRole('sport-coordinator');
     }
 

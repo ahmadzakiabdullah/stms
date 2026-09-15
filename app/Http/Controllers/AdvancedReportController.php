@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EventParticipant;
 use App\Models\Participant;
 use App\Models\Result;
-use Illuminate\Support\Facades\DB;
+use App\Models\EventParticipant;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\DB;
 
 class AdvancedReportController extends Controller
 {
@@ -23,7 +24,7 @@ class AdvancedReportController extends Controller
             ->map(function ($item) {
                 return [
                     'name' => ucfirst($item->status),
-                    'value' => $item->value,
+                    'value' => $item->value
                 ];
             });
 

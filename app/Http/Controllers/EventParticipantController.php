@@ -6,14 +6,10 @@ use App\Actions\Participants\RegisterParticipantToEvent;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Participant;
-use App\Models\User;
-use App\Notifications\NewEventRegistration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,7 +20,7 @@ class EventParticipantController extends Controller
         $user = Auth::user();
         $dataLoadFailed = false;
 
-        $hasParticipant = ! is_null($user->participant_id);
+        $hasParticipant = !is_null($user->participant_id);
         $isWakil = $hasParticipant && $user->hasRole('faculty-representative');
 
         $search = $request->input('search');
@@ -39,7 +35,7 @@ class EventParticipantController extends Controller
 
             if ($hasParticipant) {
                 $query->where('id', $user->participant_id);
-            } elseif (! $user->hasRole('super-admin')) {
+            } elseif (!$user->hasRole('super-admin')) {
                 $query->whereHas('eventParticipants');
             }
 
@@ -53,8 +49,7 @@ class EventParticipantController extends Controller
             return $query->paginate(10)->withQueryString();
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
-
-            return new LengthAwarePaginator([], 0, 10, 1, [
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10, 1, [
                 'path' => request()->url(),
             ]);
         });
@@ -67,7 +62,6 @@ class EventParticipantController extends Controller
                 ->get();
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
-
             return collect();
         });
 
@@ -78,7 +72,6 @@ class EventParticipantController extends Controller
                 ->get(['id', 'name']);
         }, function () use (&$dataLoadFailed) {
             $dataLoadFailed = true;
-
             return collect();
         });
 
@@ -123,7 +116,7 @@ class EventParticipantController extends Controller
 
         try {
             $action->handle($participant, $eventId);
-        } catch (ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->route('event-participants.index')
                 ->with('error', $e->getMessage());
         }
@@ -133,11 +126,11 @@ class EventParticipantController extends Controller
             ->latest()
             ->first();
         if ($ep) {
-            $deanUsers = User::where('participant_id', $participant->id)
+            $deanUsers = \App\Models\User::where('participant_id', $participant->id)
                 ->role('dean')
                 ->get();
             foreach ($deanUsers as $deanUser) {
-                $deanUser->notify(new NewEventRegistration($ep));
+                $deanUser->notify(new \App\Notifications\NewEventRegistration($ep));
             }
         }
 

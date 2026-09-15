@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Policies;
 
+use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Result;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -10,7 +11,7 @@ use Tests\Traits\CreatesTenantUsers;
 
 class ResultPolicyTest extends TestCase
 {
-    use CreatesTenantUsers, RefreshDatabase;
+    use RefreshDatabase, CreatesTenantUsers;
 
     public function test_super_admin_can_manage_results(): void
     {

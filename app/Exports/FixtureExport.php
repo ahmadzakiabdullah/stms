@@ -6,16 +6,15 @@ use App\Models\Fixture;
 use App\Models\Organization;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class FixtureExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
+class FixtureExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
 {
     private Collection $fixtures;
-
     private int $row = 0;
 
     public function __construct(Organization $organization, ?string $eventId = null)
