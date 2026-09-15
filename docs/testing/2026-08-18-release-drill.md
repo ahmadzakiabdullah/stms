@@ -1,5 +1,7 @@
 # Release Drill Evidence — 18 August 2026
 
+> **Historical snapshot.** This document records the project state at its authoring date and is kept for reference only; counts, findings, and recommendations may be outdated. For current status see [`CURRENT_STATE.md`](../../CURRENT_STATE.md).
+
 This record contains sanitized evidence only. Encryption keys, database passwords, Redis passwords, health tokens and staging credentials are intentionally excluded.
 
 ## Off-host Backup and Isolated Restore

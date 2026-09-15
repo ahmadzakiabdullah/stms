@@ -1,6 +1,23 @@
 # TODOS
 
-> **Repository update — 21 August 2026:** Athlete directory/profile, scorer events, participant-grouped public scorers and result score editor UX are implemented and pushed as `4c4ebf0c`. Remaining unchecked items below are release/operator work unless explicitly changed.
+## Export — Medal Tally (selesai 8 September 2026)
+
+- [x] Export medal tally per-session ke PDF dan XLSX (`exports.medals.pdf`/`exports.medals.excel`, `MedalTallyExport`) dengan tenant scoping (session mesti milik organisasi pemanggil) dan authorization `export-data`; butang ditambah pada halaman admin Rankings.
+- [x] Kiraan inventori dikemas kini (`149 routes`); tambah tiga ujian export; suite penuh kini **490/490** hijau.
+- [x] Betulkan kegagalan pre-existing `ExampleTest::test_public_shell_is_self_hosted_and_has_basic_search_metadata`: assertion lapuk `assertDontSee('activity-logs.index')` pada guest shell dibuang kerana full Ziggy route map sengaja di-embed (didokumenkan dalam `app.blade.php`) untuk menyokong redirect login Inertia, dengan authorization dikuatkuasakan di server-side.
+
+> **Repository update — 8 September 2026:** Fasa A penambahbaikan aliran kerja Event Participant telah disiapkan (state machine status, batch approve/reject, import CSV/XLSX, conflict validation, withdraw dan restore soft-deleted). Semua 11 test `EventParticipantBatchTest` hijau, suite penuh PHPUnit 486/487 lulus (satu kegagalan adalah `ExampleTest` pre-existing di luar skop), dan CI gates tempatan (inventory, tenant-bypass, typecheck, build/budget) hijau.
+
+## Fasa A — Event Participant workflows (selesai)
+
+- [x] Implement state machine status pendaftaran (`pending → confirmed/rejected/withdrawn/disqualified`, `confirmed → withdrawn/disqualified`, `rejected → confirmed/withdrawn`); setiap peralihan melalui `EventParticipant::canTransitionTo()` yang validated, dengan `notes` wajib untuk penolakan.
+- [x] Batch approve/reject pendaftaran (pending/rejected) melalui `event-participants.batch-status` dengan Form Request authorization, tenant scoping dan dialog reject-notes dalam UI workshop.
+- [x] Import pukal CSV/XLSX pendaftaran peserta (Maatwebsite) dengan template boleh dimuat turun, laporan validation per-baris serta skip duplicate/unknown-event (import melapor `errors()`/`createdCount()` dan tidak melempar exception merosotkan transaksi `Sheet::import`).
+- [x] Conflict detection per peserta (`ParticipantScheduleConflictService`) dipaparkan dalam Index workshop sebagai badge amber + tooltip.
+- [x] Withdraw pendaftaran dan restore registration yang di-soft-delete apabila mendaftar semula ke event yang sama.
+- [x] Harden `EventParticipantPolicy` dengan helper `hasPermission` defensif yang mengendalikan permohonan tanpa permission row (selesaikan 500 untuk same-org non-admin).
+- [x] Ubah suai halaman workshop Event Participants: bulk-select toolbar, butang withdraw, badge konflik, butang/dialog import; `Migrations 66 / routes 147 / testFiles 97` direkod semula dalam `CURRENT_STATE.md`.
+- [x] Quality gate tempatan 8 September lulus: 486/487 PHPUnit (satu failure pre-existing ialah `ExampleTest::test_public_shell_is_self_hosted_and_has_basic_search_metadata` daripada commit `eff40b7c2` full-Ziggy-map), Pint, TypeScript, inventory, tenant guard, Vite build/budget.
 
 > Backlog aktif STMS/SAF dikemas kini 21 Ogos 2026 selepas athlete/scorer workflows. Kotak hanya ditanda apabila ada bukti; tindakan production/owner tidak dianggap selesai oleh perubahan kod semata-mata.
 
@@ -38,6 +55,8 @@ Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diber
 
 ### Fasa 1 — Operasi dan kebolehpercayaan production
 
+Dokumen repository untuk monitoring matrix, ownership, threshold, escalation, incident response, rollback dan worker/scheduler recovery telah disediakan. Item di bawah kekal terbuka sehingga monitoring luar, named owners dan alert delivery benar-benar diaktifkan serta dibuktikan.
+
 - [ ] Jadualkan backup production terenkripsi dengan retention, pemantauan freshness dan bukti salinan off-host.
 - [ ] Automasi isolated restore drill berkala dan rekod RPO/RTO dalam release evidence.
 - [ ] Tambah monitoring untuk availability, error rate, request/DB latency, queue depth/oldest job, failed jobs, disk, backup freshness dan sijil.
@@ -55,11 +74,11 @@ Pelan ini bermula selepas release blockers di atas diselesaikan. Keutamaan diber
 
 ### Fasa 3 — Kesediaan operasi pertandingan dan UX admin
 
-- [ ] Tambah bulk import peserta, kontinjen dan roster melalui CSV/XLSX dengan preview, validation report dan rollback.
-- [ ] Tambah export jadual, keputusan, ranking dan medal tally ke PDF/XLSX.
-- [ ] Sediakan print-friendly match sheet dan result sheet.
+- [x] Tambah bulk import peserta, kontinjen dan roster melalui CSV/XLSX dengan preview, validation report dan rollback; dua langkah `participants.import.preview`→`participants.import.confirm`, baris sah dikachekan (token UUID, TTL 30 min), baris dicipta dalam satu DB transaction (all-or-nothing), template di `participants.import.template`, dialog Import di halaman Participants dan 8 ujian feature dalam `ParticipantImportTest`.
+- [x] Tambah export jadual, keputusan, ranking dan medal tally ke PDF/XLSX (fixtures/results/rankings + medal tally per-session, semua tenant-scoped dan bergate `export-data`).
+- [x] Sediakan print-friendly match sheet dan result sheet; PDF resmi dikeluarkan melalui `exports.matchSheet`/`exports.resultSheet` dengan tenant scoping, authorization `export-data` dan butang print pada baris Result.
 - [x] Tambah search, filter, pagination dan empty/error states yang konsisten pada halaman admin utama. Participants, Events, Matches, Results, Sports, Sessions, Tournaments, Users dan Activity Logs kini mempunyai carian/filter server-side, pagination dan empty states.
-- [ ] Tambah validasi konflik venue, masa, participant dan fixture sebelum jadual diterbitkan.
+- [x] Tambah validasi konflik venue, masa, participant dan fixture sebelum jadual diterbitkan; `MatchScheduleConflictValidator` menyekat penciptaan/kemaskini match yang bertindih (venue sama dalam tetingkap 120 minit, atau participant bermain dalam dua match serentak) di `MatchController::store`/`update`, diliputi 6 ujian feature.
 - [x] Sokong lock keputusan selepas pengesahan serta approval workflow: `submitted → approved → locked`, policy role-aware, unlock terkawal dan status dipaparkan pada Results workspace.
 - [x] Simpan sejarah perubahan score, participant, draw dan status approval yang boleh diaudit; model activity log merekod perubahan fields, draw versions menyimpan snapshot draw, dan Activity Logs memaparkan event/changed fields.
 

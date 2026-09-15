@@ -128,12 +128,29 @@ final class EventParticipantIndexService
         }, fn () => collect(['pending' => 0, 'confirmed' => 0, 'rejected' => 0]));
         $statusCounts = collect(['pending' => 0, 'confirmed' => 0, 'rejected' => 0])->merge($statusCounts);
 
+        $conflicts = $this->safeCollectionQuery(function () use ($participants) {
+            $map = [];
+
+            foreach ($participants->items() as $participant) {
+                foreach ($participant->eventParticipants ?? [] as $ep) {
+                    $result = app(ParticipantScheduleConflictService::class)->conflictsFor($ep, 3);
+
+                    if ($result !== []) {
+                        $map[$ep->id] = $result;
+                    }
+                }
+            }
+
+            return collect($map);
+        }, fn () => collect());
+
         return [
             'participants' => $participants,
             'events' => $events,
             'faculties' => $faculties,
             'isFacultyRepresentative' => $isFacultyRepresentative,
             'statusCounts' => $statusCounts,
+            'conflicts' => $conflicts,
             'dataLoadFailed' => $this->dataLoadFailed,
         ];
     }

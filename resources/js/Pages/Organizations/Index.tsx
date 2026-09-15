@@ -26,14 +26,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
-import type { Organization, Paginated, Flash } from '@/types';
+import type { Organization, Paginated } from '@/types';
 import { useI18n } from '@/lib/i18n';
 
 const organizationSchema = z.object({
@@ -57,7 +57,6 @@ interface OrganizationsIndexProps {
 }
 
 export default function OrganizationsIndex({ organizations: organizationsProp }: OrganizationsIndexProps) {
-    const { flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const [editingOrg, setEditingOrg] = useState<OrganizationRow | null>(null);
     const [deleteOrg, setDeleteOrg] = useState<OrganizationRow | null>(null);
@@ -230,12 +229,6 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
             }
         >
             <Head title="Organizations" />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>

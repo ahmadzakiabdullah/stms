@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -27,14 +28,14 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import Pagination from '@/components/Pagination';
-import { Head, router, usePage } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
+import { Head, router } from '@inertiajs/react';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
-import type { Registration, Tournament, Participant, Paginated, Flash } from '@/types';
+import type { Registration, Tournament, Participant, Paginated } from '@/types';
 
 const registrationSchema = z.object({
     tournament_id: z.string().min(1, 'Tournament is required'),
@@ -64,7 +65,6 @@ const statusColors: Record<string, string> = {
 };
 
 export default function RegistrationsIndex({ registrations: registrationsProp, tournaments: tournamentsProp = [], participants: participantsProp = [] }: RegistrationsIndexProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingRegistration, setEditingRegistration] = useState<RegistrationRow | null>(null);
@@ -74,7 +74,7 @@ export default function RegistrationsIndex({ registrations: registrationsProp, t
     const tournaments = Array.isArray(tournamentsProp) ? tournamentsProp : (tournamentsProp ?? []);
     const participants = Array.isArray(participantsProp) ? participantsProp : (participantsProp ?? []);
 
-    const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<RegistrationForm>({
+    const { register, control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<RegistrationForm>({
         resolver: zodResolver(registrationSchema),
         defaultValues: {
             tournament_id: '',
@@ -174,51 +174,64 @@ export default function RegistrationsIndex({ registrations: registrationsProp, t
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="tournament_id">{t('Tournament *')}</Label>
-                                        <select
-                                            id="tournament_id"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                            {...register('tournament_id')}
-                                            disabled={!!editingRegistration}
-                                            required
-                                        >
-                                            <option value="">{t('-- Select Tournament --')}</option>
-                                            {tournaments.map((t) => (
-                                                <option key={t.id} value={t.id}>{t.name}</option>
-                                            ))}
-                                        </select>
+                                        <Controller
+                                            control={control}
+                                            name="tournament_id"
+                                            render={({ field }) => (
+                                                <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)} disabled={!!editingRegistration}>
+                                                    <SelectTrigger id="tournament_id" className="h-9 w-full">
+                                                        <SelectValue placeholder={t('-- Select Tournament --')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">{t('-- Select Tournament --')}</SelectItem>
+                                                        {tournaments.map((t) => (
+                                                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
                                         {errors.tournament_id && <p className="text-sm text-destructive">{errors.tournament_id.message}</p>}
                                     </div>
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="participant_id">{t('Participant *')}</Label>
-                                        <select
-                                            id="participant_id"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                            {...register('participant_id')}
-                                            disabled={!!editingRegistration}
-                                            required
-                                        >
-                                            <option value="">{t('-- Select Participant --')}</option>
-                                            {participants.map((p) => (
-                                                <option key={p.id} value={p.id}>{p.name}</option>
-                                            ))}
-                                        </select>
+                                        <Controller
+                                            control={control}
+                                            name="participant_id"
+                                            render={({ field }) => (
+                                                <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)} disabled={!!editingRegistration}>
+                                                    <SelectTrigger id="participant_id" className="h-9 w-full"><SelectValue placeholder={t('-- Select Participant --')} /></SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">{t('-- Select Participant --')}</SelectItem>
+                                                        {participants.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
                                         {errors.participant_id && <p className="text-sm text-destructive">{errors.participant_id.message}</p>}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="status">{t('Status')}</Label>
-                                            <select
-                                                id="status"
-                                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                                {...register('status')}
-                                            >
-                                                <option value="pending">{t('Pending')}</option>
-                                                <option value="confirmed">{t('Confirmed')}</option>
-                                                <option value="rejected">{t('Rejected')}</option>
-                                                <option value="cancelled">{t('Cancelled')}</option>
-                                            </select>
+                                            <Controller
+                                                control={control}
+                                                name="status"
+                                                render={({ field }) => (
+                                                    <Select value={field.value} onValueChange={field.onChange}>
+                                                        <SelectTrigger id="status" className="h-9 w-full">
+                                                            <SelectValue placeholder={t('Status')} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="pending">{t('Pending')}</SelectItem>
+                                                            <SelectItem value="confirmed">{t('Confirmed')}</SelectItem>
+                                                            <SelectItem value="rejected">{t('Rejected')}</SelectItem>
+                                                            <SelectItem value="cancelled">{t('Cancelled')}</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
                                         </div>
                                         <div className="grid gap-2">
                                             <Label htmlFor="registered_at">{t('Registration Date')}</Label>
@@ -256,17 +269,6 @@ export default function RegistrationsIndex({ registrations: registrationsProp, t
             }
         >
             <Head title={t('Registrations')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
-                    {flash.error}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>

@@ -75,4 +75,63 @@ class ExportTest extends TestCase
 
         $this->assertTrue($response->isSuccessful() || $response->isRedirect());
     }
+
+    public function test_result_sheet_export_works(): void
+    {
+        $org = Organization::factory()->create();
+        $event = Event::factory()->create(['organization_id' => $org->id]);
+        $fixture = Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id]);
+        $user = $this->createStaffUser($org);
+
+        $response = $this->actingAs($user)->get(route('exports.resultSheet', $fixture));
+
+        $this->assertTrue($response->isSuccessful() || $response->isRedirect());
+    }
+
+    public function test_result_sheet_is_scoped_to_organization(): void
+    {
+        $org = Organization::factory()->create();
+        $otherOrg = Organization::factory()->create();
+        $event = Event::factory()->create(['organization_id' => $otherOrg->id]);
+        $fixture = Fixture::factory()->create(['organization_id' => $otherOrg->id, 'event_id' => $event->id]);
+        $user = $this->createStaffUser($org);
+
+        $response = $this->actingAs($user)->get(route('exports.resultSheet', $fixture));
+
+        $response->assertNotFound();
+    }
+
+    public function test_medal_tally_pdf_export_works(): void
+    {
+        $org = Organization::factory()->create();
+        $session = Session::factory()->create(['organization_id' => $org->id]);
+        $user = $this->createOrgAdmin($org);
+
+        $response = $this->actingAs($user)->get(route('exports.medals.pdf', $session->slug));
+
+        $this->assertTrue($response->isSuccessful() || $response->isRedirect());
+    }
+
+    public function test_medal_tally_excel_export_works(): void
+    {
+        $org = Organization::factory()->create();
+        $session = Session::factory()->create(['organization_id' => $org->id]);
+        $user = $this->createOrgAdmin($org);
+
+        $response = $this->actingAs($user)->get(route('exports.medals.excel', $session->slug));
+
+        $this->assertTrue($response->isSuccessful() || $response->isRedirect());
+    }
+
+    public function test_medal_tally_export_is_scoped_to_organization(): void
+    {
+        $org = Organization::factory()->create();
+        $otherOrg = Organization::factory()->create();
+        $otherSession = Session::factory()->create(['organization_id' => $otherOrg->id]);
+        $user = $this->createOrgAdmin($org);
+
+        $response = $this->actingAs($user)->get(route('exports.medals.pdf', $otherSession->slug));
+
+        $response->assertNotFound();
+    }
 }

@@ -78,6 +78,27 @@ class ParticipantServiceTest extends TestCase
         $this->assertEquals('pending', $registration->status);
     }
 
+    public function test_registering_again_restores_a_soft_deleted_registration(): void
+    {
+        $org = Organization::factory()->create();
+        $event = Event::factory()->create(['organization_id' => $org->id]);
+        $participant = Participant::factory()->create(['organization_id' => $org->id]);
+
+        $registration = $this->service->registerToEvent($participant, $event->id);
+        $registration->delete();
+
+        $this->assertSoftDeleted('event_participants', ['id' => $registration->id]);
+
+        $restored = $this->service->registerToEvent($participant, $event->id);
+
+        $this->assertTrue($restored->is($registration));
+        $this->assertFalse($restored->trashed());
+        $this->assertDatabaseHas('event_participants', [
+            'id' => $registration->id,
+            'status' => 'pending',
+        ]);
+    }
+
     public function test_register_to_event_duplicate_throws_exception(): void
     {
         $org = Organization::factory()->create();

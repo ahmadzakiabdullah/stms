@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui/table';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ParticipantLogo from '@/components/ParticipantLogo';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Download, FileText, Plus, Search, Trash2, Upload, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { Event, EventParticipant, Participant, SportCategory, SquadMember } from '@/types';
@@ -92,7 +93,6 @@ export default function FacultyDashboard({
     availableEvents,
     sportCategories,
 }: FacultyDashboardProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [activeRegId, setActiveRegId] = useState<string | null>(null);
     const [addSquadOpen, setAddSquadOpen] = useState(false);
@@ -261,13 +261,6 @@ export default function FacultyDashboard({
             }
         >
             <Head title={t('Faculty Dashboard')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>
-            )}
 
             {!participant ? (
                 <Card>
@@ -572,16 +565,16 @@ export default function FacultyDashboard({
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="member-role">Role <span className="text-destructive">*</span></Label>
-                            <select
-                                id="member-role"
-                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                value={squadForm.role}
-                                onChange={(e) => setSquadForm({ ...squadForm, role: e.target.value as SquadMember['role'] })}
-                            >
-                                 {activeRegAllowedRoles.map((value) => (
-                                     <option key={value} value={value}>{roleLabels[value]}</option>
-                                 ))}
-                            </select>
+                            <Select value={squadForm.role} onValueChange={(value) => setSquadForm({ ...squadForm, role: value as SquadMember['role'] })}>
+                                <SelectTrigger id="member-role" className="h-9 w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {activeRegAllowedRoles.map((value) => (
+                                        <SelectItem key={value} value={value}>{roleLabels[value]}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             <p className="text-xs text-muted-foreground">
                                 {officialRoles.includes(squadForm.role as any)
                                     ? 'Officials: phone number is required.'

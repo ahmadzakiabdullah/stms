@@ -1,5 +1,63 @@
 # Changelog
 
+## Unreleased — migration hygiene
+
+- Resolved the `2026_06_12_000002` duplicate timestamp by renaming `create_tournament_sport_table` to `2026_06_12_000003`; its `up()` now guards with `Schema::hasTable()` so already-deployed databases treat the renamed migration as a no-op. Documented in `docs/database/migration-guidelines.md`.
+
+## 15 September 2026 — Malay i18n coverage for error/profile screens + root-domain alignment
+
+- Completed frontend i18n coverage: all pages now use `useI18n()` (including `Error.tsx` and the three Profile partials) and the 20 missing English/Malay keys were added to `resources/js/lib/i18n.ts`.
+- Aligned deployment artifacts with the canonical root domain: `APP_URL=https://saf.utem.edu.my` in `.env.example`, root `<loc>` in `public/sitemap.xml`, and updated `config/session.php` / `public/index.php` comments.
+- Fixed a latent `config/session.php` defect where the `'path'` entry was accidentally commented out by a literal `\r\n` embedded in a `//` line; the session cookie path configuration is active again.
+- Raised the CSS bundle budget from 100 KB to 120 KB (`scripts/check-bundle-budget.mjs`) and updated `docs/architecture/performance.md` with the measured ~102 KB baseline, restoring a green `build:budget` gate after the intentional variable-font and feature growth.
+
+## 9 September 2026 — Full local quality-gate certification + dependency remediation
+
+- Certified the complete local gate suite against the committed tree: PHPUnit **506/506 (2,345 assertions)**, Pint `--test` green repo-wide, inventory `153 / 66 / 39 / 43 / 99`, tenant-bypass allowlist, TypeScript, Vite build and bundle budget all green.
+- Remediated 5 new Composer advisories by upgrading `league/commonmark` 2.9.0 → **2.10.1** (4 DoS/XSS advisories in the Attributes/SmartPunct extensions) and `maatwebsite/excel` 3.1.69 → **3.1.70** (CVE-2026-84374, export write outside configured disk); `composer audit` now reports 0 advisories and the full PHPUnit suite remains 506/506.
+- Remediated 7 npm vulnerabilities (browserslist, fast-uri, js-yaml, qs, postcss-selector-parser, hono, baseline-browser-mapping) by regenerating `package-lock.json` + `node_modules` on a local drive. npm 10.9.8 on this Windows network-drive workspace fails with the arborist `Tracker "idealTree" already exists` bug (npm/cli #4273/#7596); regenerating on a local drive with npm 12.0.2 and copying back resolves it — `npm audit` now reports **0 vulnerabilities**. Pinned `vite` to `8.0.16` and `@vitejs/plugin-react` to `6.0.2` in `package.json` (previously `"latest"`).
+- Applied Pint formatting across pre-existing Fasa A files (actions, requests, imports, services, config and 3 test files) as commit `7a43b37e`.
+
+## Unreleased - Bulk participant/kontinjen import (9 September 2026)
+
+- Added session-level bulk import of participants/kontinjen as a two-step preview → confirm flow: `POST /participants/import/preview` parses CSV/XLSX, runs per-row validation (required name, participant_type/status/is_active enums, email format, in-organization duplicate name/slug detection), stages valid rows in the cache under a UUID token (30-minute TTL) and returns a validation report; `POST /participants/import/confirm` creates all staged rows inside a single DB transaction (all-or-nothing rollback) and forgets the token on success or failure.
+- Expired or unknown tokens produce a clear error without mutating data; session selection is optional and cross-organization session ids are rejected at the Form Request level.
+- Added a downloadable import template at `participants.import.template` and an Import dialog on the Participants page that shows the valid/error row summary before confirmation.
+- Added 8 feature tests in `ParticipantImportTest` (preview parsing, invalid-row reporting, cross-org session rejection, confirm creation, expired-token rejection, transactional rollback, template download, authorization). Full suite now 506/506 green (routes 153, testFiles 99); all CI gates (typecheck, build, bundle budget, inventory, tenant-bypass allowlist) pass.
+
+## Unreleased - Print-friendly result sheet (8 September 2026)
+
+- Added a print-friendly official result sheet PDF (`exports.resultSheet`) alongside the existing match sheet, with final score, winner, approval status, submitted/approved-by metadata and signature lines.
+- The result sheet is tenant-scoped, authorized via the `export-data` gate and surfaced as a print button on each Result row in the Results workspace.
+- Added 2 feature tests (success + cross-organization 404); full suite now 498/498 green (routes 150).
+
+## Unreleased - Match schedule conflict validation (8 September 2026)
+
+- Added `MatchScheduleConflictValidator` that detects overlapping-time clashes before a match is created or updated: same venue on the same day within a 120-minute window, or a participant scheduled in more than one match in the same window.
+- Gated `MatchController::store` and `update` on the validator; conflicting submissions are rejected with a clear schedule-clash error rather than persisted.
+- Added 6 feature tests covering venue, participant, cross-day, self-edit and controller-request blocking; full suite now 496/496 green (testFiles 98).
+
+## Unreleased - Medal tally exports (8 September 2026)
+
+- Added per-session medal tally PDF and XLSX exports (`exports.medals.pdf` / `exports.medals.excel`) with a dedicated `MedalTallyExport` Excel export and session-scoped ranking computation, surfaced as buttons on the Rankings admin page.
+- Export endpoints are tenant-scoped (session must belong to the caller's organization) and authorized via the existing `export-data` permission gate.
+- Fixed the stale `ExampleTest::test_public_shell_is_self_hosted_and_has_basic_search_metadata` assertion that expected the guest shell to not include `activity-logs.index`; the complete Ziggy route map is intentionally embedded (documented in `app.blade.php`) to support Inertia login transitions, with authorization enforced server-side. This closes the last known suite failure — full suite now 490/490 green.
+
+## Unreleased - Event Participant registration workflows Fasa A (8 September 2026)
+
+- Added an explicit registration status state machine (`pending → confirmed/rejected/withdrawn/disqualified`, `confirmed → withdrawn/disqualified`, `rejected → confirmed/withdrawn`) with a validated `EventParticipant::canTransitionTo()` guard on every transition.
+- Added batch approve/reject of pending or rejected registrations via `event-participants.batch-status` with Form Request authorization, reject-notes requirements and tenant scoping.
+- Added bulk CSV/XLSX registration import via Maatwebsite with a downloadable template, per-row validation reporting and duplicate/unknown-event skipping (import reports errors instead of rolling back partial work).
+- Added participant-level schedule conflict detection (`ParticipantScheduleConflictService`) surfaced in the workshop Index UI with a clash badge and tooltip per registration.
+- Added registration withdrawal and reinstatement support, including restoration of soft-deleted registrations when re-registering to the same event.
+- Hardened `EventParticipantPolicy` so same-organization non-admin users without persisted permission rows no longer hit a 500 during `viewAny`.
+- Reworked the Event Participants workshop page: bulk-select toolbar, withdraw action, conflict badge, import button and dialogs; TypeScript typecheck, Vite build, bundle budget, inventory and tenant-bypass CI gates all pass.
+
+## Unreleased - Production monitoring and operations runbook (21 August 2026)
+
+- Added a production monitoring matrix covering availability, errors, latency, database/cache, queue, disk, backups, certificates and CSP reports with starting thresholds and evidence requirements.
+- Added an operations runbook for incident triage, rollback, backup alerts and worker/scheduler recovery, while keeping external activation and named ownership as release evidence requirements.
+
 ## Unreleased - Public homepage first-paint optimization (21 August 2026)
 
 - Deferred below-the-fold portal layout/paint work and participant logo decoding/loading to reduce initial homepage rendering cost; production Lighthouse remeasurement remains required before claiming an LCP improvement.

@@ -16,9 +16,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart3, Download, Medal, Save, Settings2, Trophy, Users } from 'lucide-react';
-import { type PageProps, type RankingEntry, type RankingRules, type Session, type Tournament } from '@/types';
+import { type RankingEntry, type RankingRules, type Session, type Tournament } from '@/types';
 import { useI18n } from '@/lib/i18n';
 import { useEffect } from 'react';
 import ParticipantLogo from '@/components/ParticipantLogo';
@@ -42,7 +43,6 @@ const rankColors: Record<number, string> = {
 
 export default function RankingsIndex({ sessions, selectedSession, tournaments, selectedTournament, rankings, events, strategies }: RankingsIndexProps) {
     const { t } = useI18n();
-    const { flash } = usePage<PageProps>().props;
 
     const selectedSessionData = sessions.find(s => s.slug === selectedSession);
     const selectedTournamentData = tournaments.find(t => t.slug === selectedTournament);
@@ -118,12 +118,6 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
         >
             <Head title={t('Rankings')} />
 
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-
             {selectedSessionData && (
                 <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <Card className="border-primary/20 bg-primary/[0.03]">
@@ -169,35 +163,43 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                     <div className="grid gap-4 rounded-xl border bg-muted/20 p-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <label className="text-sm font-medium">{t('Session')}</label>
-                            <select
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-ring"
-                                value={selectedSession || ''}
-                                onChange={(e) => handleSessionChange(e.target.value)}
+                            <Select
+                                value={selectedSession || 'all'}
+                                onValueChange={(value) => handleSessionChange(value === 'all' ? '' : value)}
                             >
-                                <option value="">{t('-- Select Session --')}</option>
-                                {sessions.map((s) => (
-                                    <option key={s.id} value={s.slug}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
+                                <SelectTrigger className="h-10 w-full">
+                                    <SelectValue placeholder={t('-- Select Session --')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('-- Select Session --')}</SelectItem>
+                                    {sessions.map((s) => (
+                                        <SelectItem key={s.id} value={s.slug}>
+                                            {s.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         {tournaments.length > 0 && (
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">{t('Tournament (optional)')}</label>
-                                <select
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm outline-none transition focus:ring-2 focus:ring-ring"
-                                    value={selectedTournament || ''}
-                                    onChange={(e) => handleTournamentChange(e.target.value)}
+                                <Select
+                                    value={selectedTournament || 'all'}
+                                    onValueChange={(value) => handleTournamentChange(value === 'all' ? '' : value)}
                                 >
-                                    <option value="">{t('All Phases (Session Total)')}</option>
-                                    {tournaments.map((t) => (
-                                        <option key={t.id} value={t.slug}>
-                                            {t.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <SelectTrigger className="h-10 w-full">
+                                        <SelectValue placeholder={t('All Phases (Session Total)')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('All Phases (Session Total)')}</SelectItem>
+                                        {tournaments.map((t) => (
+                                            <SelectItem key={t.id} value={t.slug}>
+                                                {t.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         )}
 
@@ -205,15 +207,19 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                             <form onSubmit={updateStrategy} className="flex flex-wrap items-end gap-3 border-t pt-4 md:col-span-2">
                                 <div className="min-w-44">
                                     <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Strategy</label>
-                                    <select
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-sm"
+                                    <Select
                                         value={data.ranking_strategy}
-                                        onChange={(e) => setData('ranking_strategy', e.target.value)}
+                                        onValueChange={(value) => setData('ranking_strategy', value)}
                                     >
-                                        {Object.entries(strategies).map(([key, label]) => (
-                                            <option key={key} value={key}>{label}</option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger className="h-10 w-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(strategies).map(([key, label]) => (
+                                                <SelectItem key={key} value={key}>{label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 {data.ranking_strategy === 'points' && (
                                     <>
@@ -285,7 +291,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                 {Object.keys(errors).length > 0 && <span className="ml-2 text-destructive">Check the ranking rule values.</span>}
                             </div>
                         )}
-                        {selectedSessionData && (
+{selectedSessionData && (
                             <div className="flex flex-wrap gap-2 border-t pt-4 md:col-span-2">
                                 {selectedTournamentData && (
                                     <>
@@ -305,6 +311,20 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                         </Button>
                                     </>
                                 )}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.location.href = route('exports.medals.pdf', selectedSessionData.slug)}
+                                >
+                                    <Download className="mr-1.5 size-3.5" /> <Medal className="size-3.5" /> Medals PDF
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.location.href = route('exports.medals.excel', selectedSessionData.slug)}
+                                >
+                                    <Download className="mr-1.5 size-3.5" /> <Medal className="size-3.5" /> Medals Excel
+                                </Button>
                             </div>
                         )}
                     </div>

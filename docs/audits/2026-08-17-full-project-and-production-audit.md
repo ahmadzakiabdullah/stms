@@ -1,5 +1,7 @@
 # Audit Keseluruhan Projek dan Production SAF
 
+> **Historical snapshot.** This document records the project state at its authoring date and is kept for reference only; counts, findings, and recommendations may be outdated. For current status see [`CURRENT_STATE.md`](../../CURRENT_STATE.md).
+
 **Tarikh audit:** 17 Ogos 2026
 **Repository:** `master` pada `e82ee951f6acdaf9c243af535072943c37ca8e26`, dengan working tree sedia ada yang belum bersih
 **Production awam:** <https://saf.utem.edu.my/>

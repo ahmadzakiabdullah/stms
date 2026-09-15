@@ -13,8 +13,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { BarChart3, CalendarDays, Eye, Pencil, Plus, RefreshCw, Save, Search, Swords, Trash2, Trophy, Users, X } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Pagination from '@/components/Pagination';
@@ -399,7 +400,6 @@ function MatchMobileCard({ match, onEdit, onDelete, eventCode: code = '', canMan
 }
 
 export default function MatchesIndex({ events, drawnEventIds, selectedEventId, pools, allFixtures, knockout, participants, canManage = true }: MatchesIndexProps) {
-    const { flash } = usePage().props;
     const { t } = useI18n();
     const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
     const [statusFilter, setStatusFilter] = useState(() => new URLSearchParams(window.location.search).get('status') ?? '');
@@ -593,25 +593,22 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
         >
             <Head title={t('Matches')} />
 
-            {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
-            {flash?.error && <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{flash.error}</div>}
-
             <Card className="mb-4">
                 <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-end sm:justify-between">
                     <div className="min-w-0 flex-1">
                         <Label htmlFor="event-filter" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Event')}</Label>
-                        <select
-                            id="event-filter"
-                            value={selectedEventId || ''}
-                            onChange={(event) => handleFilterChange(event.target.value)}
-                            className="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
-                        >
-                            <option value="">{t('All Matches')} ({fixtures.length})</option>
-                            {events.map((event) => {
-                                const count = fixtures.filter((match) => match.event_id === event.id).length;
-                                return <option key={event.id} value={event.id}>{eventDisplayName(event)} ({count})</option>;
-                            })}
-                        </select>
+                        <Select value={selectedEventId || 'all'} onValueChange={(v) => handleFilterChange(v === 'all' ? '' : v)}>
+                            <SelectTrigger id="event-filter" className="h-10 w-full min-w-0 text-sm sm:max-w-md">
+                                <SelectValue placeholder={`${t('All Matches')} (${fixtures.length})`} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">{t('All Matches')} ({fixtures.length})</SelectItem>
+                                {events.map((event) => {
+                                    const count = fixtures.filter((match) => match.event_id === event.id).length;
+                                    return <SelectItem key={event.id} value={event.id}>{eventDisplayName(event)} ({count})</SelectItem>;
+                                })}
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="flex items-center justify-between gap-2 sm:justify-end">
                         <span className="text-xs text-muted-foreground">{events.length} events</span>
@@ -644,17 +641,18 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 className="w-full pl-8"
                             />
                         </div>
-                        <select
-                            value={statusFilter}
-                            onChange={(event) => setStatusFilter(event.target.value)}
-                            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:w-44"
-                        >
-                            <option value="">{t('All Statuses')}</option>
-                            <option value="scheduled">{t('Scheduled')}</option>
-                            <option value="in_progress">{t('In Progress')}</option>
-                            <option value="completed">{t('Completed')}</option>
-                            <option value="cancelled">{t('Cancelled')}</option>
-                        </select>
+                        <Select value={statusFilter || 'all'} onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}>
+                            <SelectTrigger className="h-9 w-full text-sm sm:w-44">
+                                <SelectValue placeholder={t('All Statuses')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">{t('All Statuses')}</SelectItem>
+                                <SelectItem value="scheduled">{t('Scheduled')}</SelectItem>
+                                <SelectItem value="in_progress">{t('In Progress')}</SelectItem>
+                                <SelectItem value="completed">{t('Completed')}</SelectItem>
+                                <SelectItem value="cancelled">{t('Cancelled')}</SelectItem>
+                            </SelectContent>
+                        </Select>
                         <span className="text-sm text-muted-foreground">
                             {t('Showing')} {filteredFixtures.length} {t('of')} {fixtures.length} {t('matches')}
                         </span>
@@ -936,22 +934,33 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         <div className="grid min-w-0 gap-4 py-5 sm:grid-cols-2 [&>div]:min-w-0 [&_input]:w-full [&_select]:w-full">
                             <div className="grid min-w-0 gap-2 sm:col-span-2">
                                 <Label htmlFor="event_id">{t('Event')}</Label>
-                                <select id="event_id" value={data.event_id} onChange={(event) => {
-                                    setData('event_id', event.target.value);
-                                    const next = events.find((item) => item.id === event.target.value);
+                                <Select value={data.event_id || 'none'} onValueChange={(v) => {
+                                    const val = v === 'none' ? '' : v;
+                                    setData('event_id', val);
+                                    const next = events.find((item) => item.id === val);
                                     if (next?.venues?.length) setData('venue', next.venues[0]);
-                                }} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm" required>
-                                    <option value="">-- Select Event --</option>
-                                    {events.map((event) => <option key={event.id} value={event.id}>{eventDisplayName(event)}</option>)}
-                                </select>
+                                }}>
+                                    <SelectTrigger id="event_id" className="h-9 min-w-0 text-sm">
+                                        <SelectValue placeholder="-- Select Event --" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">-- Select Event --</SelectItem>
+                                        {events.map((event) => <SelectItem key={event.id} value={event.id}>{eventDisplayName(event)}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                                 {errors.event_id && <p className="text-sm text-destructive">{errors.event_id}</p>}
                             </div>
                             <div className="grid min-w-0 gap-2">
                                 <Label htmlFor="pool_id">{t('Pool')}</Label>
-                                <select id="pool_id" value={data.pool_id} onChange={(event) => setData('pool_id', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm">
-                                    <option value="">-- No Pool --</option>
-                                    {eventPools.map((pool) => <option key={pool.id} value={pool.id}>{pool.name}</option>)}
-                                </select>
+                                <Select value={data.pool_id || 'none'} onValueChange={(v) => setData('pool_id', v === 'none' ? '' : v)}>
+                                    <SelectTrigger id="pool_id" className="h-9 min-w-0 text-sm">
+                                        <SelectValue placeholder="-- No Pool --" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">-- No Pool --</SelectItem>
+                                        {eventPools.map((pool) => <SelectItem key={pool.id} value={pool.id}>{pool.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                                 {errors.pool_id && <p className="text-sm text-destructive">{errors.pool_id}</p>}
                             </div>
                             <div className="grid min-w-0 grid-cols-2 gap-3">
@@ -960,11 +969,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="home_participant_id">{t('Home')}</Label>
-                                <select id="home_participant_id" value={data.home_participant_id} onChange={(event) => setData('home_participant_id', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
+                                <Select value={data.home_participant_id || 'none'} onValueChange={(v) => setData('home_participant_id', v === 'none' ? '' : v)}><SelectTrigger id="home_participant_id" className="h-9 min-w-0 text-sm"><SelectValue placeholder="-- TBD --" /></SelectTrigger><SelectContent><SelectItem value="none">-- TBD --</SelectItem>{participants.map((participant) => <SelectItem key={participant.id} value={participant.id}>{participantName(participant)}</SelectItem>)}</SelectContent></Select>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="away_participant_id">{t('Away')}</Label>
-                                <select id="away_participant_id" value={data.away_participant_id} onChange={(event) => setData('away_participant_id', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm"><option value="">-- TBD --</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participantName(participant)}</option>)}</select>
+                                <Select value={data.away_participant_id || 'none'} onValueChange={(v) => setData('away_participant_id', v === 'none' ? '' : v)}><SelectTrigger id="away_participant_id" className="h-9 min-w-0 text-sm"><SelectValue placeholder="-- TBD --" /></SelectTrigger><SelectContent><SelectItem value="none">-- TBD --</SelectItem>{participants.map((participant) => <SelectItem key={participant.id} value={participant.id}>{participantName(participant)}</SelectItem>)}</SelectContent></Select>
                                 {errors.away_participant_id && <p className="text-sm text-destructive">{errors.away_participant_id}</p>}
                             </div>
                             <div className="grid gap-2"><Label htmlFor="venue">Venue</Label>{(() => {
@@ -974,10 +983,15 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                     return <Input id="venue" value={data.venue} onChange={(event) => setData('venue', event.target.value)} />;
                                 }
                                 return (
-                                    <select id="venue" value={data.venue} onChange={(event) => setData('venue', event.target.value)} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm">
-                                        <option value="">-- Venue TBD --</option>
-                                        {venues.map((venue) => <option key={venue} value={venue}>{venue}</option>)}
-                                    </select>
+                                    <Select value={data.venue || 'none'} onValueChange={(v) => setData('venue', v === 'none' ? '' : v)}>
+                                        <SelectTrigger id="venue" className="h-9 min-w-0 text-sm">
+                                            <SelectValue placeholder="-- Venue TBD --" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">-- Venue TBD --</SelectItem>
+                                            {venues.map((venue) => <SelectItem key={venue} value={venue}>{venue}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
                                 );
                             })()}</div>
                             <div className="grid gap-2"><Label htmlFor="scheduled_at">Scheduled At</Label>{(() => {
@@ -987,7 +1001,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
 
                                 return <Input id="scheduled_at" type="datetime-local" value={data.scheduled_at} min={start} max={end} onChange={(event) => setData('scheduled_at', event.target.value)} />;
                             })()}</div>
-                            <div className="grid gap-2"><Label htmlFor="status">{t('Status')}</Label><select id="status" value={data.status} onChange={(event) => setData('status', event.target.value as Fixture['status'])} className="h-9 min-w-0 rounded-md border bg-background px-3 text-sm"><option value="scheduled">{t('Scheduled')}</option><option value="in_progress">{t('In Progress')}</option><option value="completed">{t('Completed')}</option><option value="cancelled">{t('Cancelled')}</option></select></div>
+                            <div className="grid gap-2"><Label htmlFor="status">{t('Status')}</Label><Select value={data.status} onValueChange={(v) => setData('status', v as Fixture['status'])}><SelectTrigger id="status" className="h-9 min-w-0 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="scheduled">{t('Scheduled')}</SelectItem><SelectItem value="in_progress">{t('In Progress')}</SelectItem><SelectItem value="completed">{t('Completed')}</SelectItem><SelectItem value="cancelled">{t('Cancelled')}</SelectItem></SelectContent></Select></div>
                             <div className="grid gap-2"><Label htmlFor="notes">Notes</Label><Input id="notes" value={data.notes} onChange={(event) => setData('notes', event.target.value)} /></div>
                         </div>
                         <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>{t('Cancel')}</Button><Button type="submit" disabled={processing}><Save className="mr-2 size-4" />{editingMatch ? t('Update Match') : t('Save')}</Button></DialogFooter>

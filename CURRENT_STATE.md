@@ -16,8 +16,8 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 148 application routes |
-| Migrations | 65 migration files |
+| Laravel routes | 153 application routes |
+| Migrations | 66 migration files |
 | Controllers | 39 controller files |
 | Form Requests | 28 |
 | Policies | 21 fail |
@@ -25,7 +25,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Services/concerns | 40 fail |
 | Models | 18 |
 | Inertia `.tsx` pages | 43 |
-| PHP tests | 94 PHP test files |
+| PHP tests | 99 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
 ## Tech Stack
@@ -90,21 +90,59 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Quality Gates Semasa
 
-**Latest focused validation (21 Ogos 2026):** scorer/result workflow `20/20` tests dengan `57` assertions; public portal workflow `19/19` tests dengan `355` assertions. Baris baseline penuh dan connected CI di bawah dikekalkan sebagai evidence sejarah.
+**Certification run — 9 September 2026:** semua gate tempatan dijalankan semula terhadap working tree selepas commit `6f266b1bc` dan `7a43b37e`. PHPUnit penuh **506/506 (2,345 assertions)**; Pint `--test` hijau seluruh repo; inventori `153 / 66 / 39 / 43 / 99`; tenant-bypass allowlist lulus; TypeScript, Vite build, bundle budget lulus; Composer audit dan npm audit kedua-duanya **0 vulnerability** selepas remediasi dependensi (lihat nota di bawah). Playwright/axe 8/8 kekal sebagai evidence CI untuk production smoke.
 
-| Gate | Keputusan working tree 21 Ogos 2026 |
+| Gate | Keputusan working tree 9 September 2026 |
 |---|---|
-| PHPUnit | **Lulus — 441/441, 2,040 assertions (working tree 19 Ogos)** |
-| Pint | Lulus |
+| PHPUnit | **Lulus — 506/506, 2,345 assertions** |
+| Pint | Lulus (`--test` seluruh repo) |
 | TypeScript | Lulus |
 | Tenant bypass allowlist | Lulus |
 | Vite production build | Lulus |
 | Bundle budget | Lulus |
-| Composer audit | Lulus — 0 advisory |
-| npm audit | Lulus — 0 vulnerability |
+| Composer audit | **Lulus — 0 advisory** |
+| npm audit | **Lulus — 0 vulnerability** |
 | Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
-| Inventory | Menjangka matriks `126 / 61 / 39 / 38 / 94` |
+| Inventory | Matriks `153 / 66 / 39 / 43 / 99` |
 | Connected CI | **Lulus — [run #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726)** pada `4b04c46`; keenam-enam job hijau termasuk browser E2E dan ratchet PCOV |
+
+## Capability Tambahan 9 September 2026 — Remediasi Dependensi & Pint Cleanup
+
+- Composer audit memaparkan 5 advisory baharu: `league/commonmark` 2.9.0 (4 advisory DoS/XSS dalam extension Attributes/SmartPunct, dirujuk laravel/framework) dan `maatwebsite/excel` 3.1.69 (CVE-2026-84374: penulisan export luar disk, <3.1.70). Dikemas kini ke `league/commonmark` **2.10.1** dan `maatwebsite/excel` **3.1.70**; audit kini 0 advisory dan suite PHPUnit penuh kekal 506/506.
+- npm audit memaparkan 7 vulnerability (1 low/3 moderate/3 high) dalam toolchain build transitif (`browserslist`, `fast-uri`, `js-yaml`, `qs`, `postcss-selector-parser`, `hono`, `baseline-browser-mapping`). `npm install` di persekitaran npm 10.9.8 Windows/network-drive gagal dengan bug arborist `Tracker "idealTree" already exists` (npm/cli#4273, npm/cli#7596); workaround: regenerasi lockfile + node_modules di drive tempatan (npm 12.0.2) dan salin balik — audited **0 vulnerability**, typecheck/build/budget kekal hijau. `vite` dan `@vitejs/plugin-react` di-pin kepada `8.0.16`/`6.0.2` dalam `package.json` (menggantikan `"latest"`).
+- Pint `--test` mendedahkan gaya tertunda dalam fail Fasa A (`EventParticipants` actions/requests, `EventParticipantImport`, request/settings/services, config dan 3 fail test); `vendor/bin/pint` digunakan dan difailkan sebagai commit `7a43b37e`. Fail yang dikecualikan (UTeM normalize seeders, deployment/runbook docs) dibiarkan unstaged.
+
+## Capability Tambahan 9 September 2026 — Bulk Import Peserta/Kontinjen (Session-level)
+
+- Import pukal peserta/kontinjen aras session melalui dua langkah preview→confirm: `POST /participants/import/preview` mem-parse CSV/XLSX, menjalankan per-row validation (name wajib, participant_type/status/is_active enum, email format, duplicate name/slug dalam organisasi), menyimpan baris sah dalam Cache 30 min dengan token UUID, dan memaparkan validation report.
+- `POST /participants/import/confirm` mencipta semua peserta dalam satu DB transaction (all-or-nothing); sebarang kegagalan di-rollback dan token dibuang. Token yang tamat/kaput memberi mesej jelas tanpa menjejaskan data.
+- Template import tersedia di `/participants/import/template` (`participants.import.template`); UI Import button + dialog preview dengan senarai baris sah/error ditambah pada halaman Participants.
+- Suite penuh kini **506/506** hijau (routes 153, testFiles 99); 8 ujian feature baharu dalam `ParticipantImportTest`.
+
+## Capability Tambahan 8 September 2026 — Print-Friendly Result Sheet
+
+- PDF resmi `exports.resultSheet` dengan skor akhir, pemenang, status kelulusan, metadata submitted/approved-by dan garis tandatangan; tenant-scoped dan digabungkan sebagai butang print pada setiap baris Result dalam Results workspace.
+- Suite penuh kini **498/498** hijau (routes 150, testFiles 98).
+
+## Capability Tambahan 8 September 2026 — Match Schedule Conflict Validation
+
+- `MatchScheduleConflictValidator` menyekat penciptaan/kemaskini match yang bertindih masa (venue sama dalam tetingkap 120 minit, atau participant bermain serentak dalam dua match) sebelum jadual diterbitkan; digabungkan ke `MatchController::store`/`update` dengan mesej ralat jelas.
+- 6 ujian feature baharu; suite penuh kini **496/496** hijau (testFiles 98).
+
+## Capability Tambahan 8 September 2026 — Export Medal Tally & Suite Cleanup
+
+- Per-session medal tally PDF/XLSX export (`MedalTallyExport`, `exports.medals.{pdf,excel}`) dengan tenant scoping dan authorization `export-data`; butang ditambah pada halaman admin Rankings.
+- Matriks inventori dikemas kini kepada `149 routes / 66 migrations / 97 testFiles`; suite penuh **490/490** lulus (tiga ujian export baharu ditambah).
+- `ExampleTest::test_public_shell_is_self_hosted_and_has_basic_search_metadata` dibetulkan: assertion lapuk `assertDontSee('activity-logs.index')` dibuang kerana full Ziggy map sengaja di-embed untuk peralihan login Inertia (dijaga oleh authorization server-side); ini menutup kegagalan pre-existing terakhir.
+
+## Capability Tambahan 8 September 2026 — Fasa A Event Participant Workflows
+
+- State machine status pendaftaran dengan `canTransitionTo()` validated; `notes` wajib untuk reject; batch approve/reject pada `event-participants.batch-status`.
+- Import pukal CSV/XLSX (Maatwebsite) ke `/event-participants/import` dengan template muat turun, per-row validation report, skip duplicate/unknown-event serta pentadbiran error tanpa rollback separa.
+- Conflict detection per peserta melalui `ParticipantScheduleConflictService`; badge + tooltip dalam workshop Index.
+- Withdraw dan restore registrations yang di-soft-delete; `EventParticipantPolicy` di-hardening supaya same-org non-admin tanpa permission row tidak lagi menerima 500.
+- Halaman workshop Event Participants ditulis semula: bulk-select toolbar, import/withdraw actions dan dialogs.
+- SUITE: 11/11 `EventParticipantBatchTest`, 486/487 PHPUnit penuh (satu kegagalan `ExampleTest` pre-existing di luar skop), semua CI gates tempatan hijau.
 
 ## Capability Tambahan 21 Ogos 2026
 

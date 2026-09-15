@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useI18n } from '@/lib/i18n';
 
 const profileSchema = z.object({
     name: z.string().min(1, 'Name is required').max(255),
@@ -21,6 +22,7 @@ interface UpdateProfileInformationProps {
 }
 
 export default function UpdateProfileInformation({ mustVerifyEmail, status }: UpdateProfileInformationProps) {
+    const { t } = useI18n();
     const user = usePage().props.auth.user;
     const [saved, setSaved] = useState(false);
 
@@ -43,39 +45,39 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status }: Up
 
     useEffect(() => {
         if (saved) {
-            const t = setTimeout(() => setSaved(false), 2000);
-            return () => clearTimeout(t);
+            const timer = setTimeout(() => setSaved(false), 2000);
+            return () => clearTimeout(timer);
         }
     }, [saved]);
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="grid gap-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{t('Name')}</Label>
                 <Input id="name" {...register('name')} required autoComplete="name" />
                 {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
 
             <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('Email')}</Label>
                 <Input id="email" type="email" {...register('email')} required autoComplete="username" />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
 
             {mustVerifyEmail && user.email_verified_at === null && (
                 <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-                    Your email is unverified.{' '}
+                    {t('Your email is unverified.')}{' '}
                     <Link
                         href={route('verification.send')}
                         method="post"
                         as="button"
                         className="underline hover:text-amber-900"
                     >
-                        Resend verification email
+                        {t('Resend verification email')}
                     </Link>
                     {status === 'verification-link-sent' && (
                         <span className="block mt-1 font-medium text-emerald-600">
-                            Verification link sent!
+                            {t('Verification link sent!')}
                         </span>
                     )}
                 </div>
@@ -84,9 +86,9 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status }: Up
             <div className="flex items-center gap-3">
                 <Button type="submit" disabled={isSubmitting || !isDirty}>
                     <Save className="mr-2 size-4" />
-                    Save
+                    {t('Save')}
                 </Button>
-                {saved && <span className="text-sm text-emerald-600">Saved.</span>}
+                {saved && <span className="text-sm text-emerald-600">{t('Saved.')}</span>}
             </div>
         </form>
     );

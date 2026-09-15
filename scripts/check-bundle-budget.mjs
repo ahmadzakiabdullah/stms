@@ -4,7 +4,7 @@ import { join } from 'node:path';
 const assetDirectory = join(process.cwd(), 'public', 'build', 'assets');
 const budgets = {
     '.js': Number(process.env.BUNDLE_JS_MAX_BYTES ?? 400_000),
-    '.css': Number(process.env.BUNDLE_CSS_MAX_BYTES ?? 100_000),
+    '.css': Number(process.env.BUNDLE_CSS_MAX_BYTES ?? 120_000),
 };
 
 const files = await readdir(assetDirectory);

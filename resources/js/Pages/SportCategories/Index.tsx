@@ -19,6 +19,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Table,
     TableBody,
     TableCell,
@@ -27,13 +34,13 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mars, Pencil, Plus, Save, Trash2, Venus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Pagination from '@/components/Pagination';
-import type { Sport, SportCategory, Paginated, Flash } from '@/types';
+import type { Sport, SportCategory, Paginated } from '@/types';
 import { useI18n } from '@/lib/i18n';
 
 const categorySchema = z.object({
@@ -57,7 +64,7 @@ interface SportCategoriesIndexProps {
 }
 
 export default function SportCategoriesIndex({ categories: categoriesProp, sports }: SportCategoriesIndexProps) {
-    const { flash, isSuperAdmin = false } = usePage().props;
+    const { isSuperAdmin = false } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [editingCategory, setEditingCategory] = useState<SportCategory | null>(null);
@@ -69,7 +76,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
     const slugify = (val: string) =>
         val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-    const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<CategoryForm>({
+    const { register, control, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<CategoryForm>({
         resolver: zodResolver(categorySchema),
         defaultValues: {
             sport_id: sports.length > 0 ? sports[0].id : '',
@@ -238,20 +245,29 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="sport_id">{t('Sport')}</Label>
-                                        <select
-                                            id="sport_id"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                            {...register('sport_id')}
-                                            disabled={!!editingCategory}
-                                            required
-                                        >
-                                            <option value="">{t('-- Select Sport --')}</option>
-                                            {sports.map((sport) => (
-                                                <option key={sport.id} value={sport.id}>
-                                                    {sport.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <Controller
+                                            control={control}
+                                            name="sport_id"
+                                            render={({ field }) => (
+                                                <Select
+                                                    value={field.value || 'none'}
+                                                    onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}
+                                                    disabled={!!editingCategory}
+                                                >
+                                                    <SelectTrigger id="sport_id" disabled={!!editingCategory}>
+                                                        <SelectValue placeholder={t('-- Select Sport --')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">{t('-- Select Sport --')}</SelectItem>
+                                                        {sports.map((sport) => (
+                                                            <SelectItem key={sport.id} value={sport.id}>
+                                                                {sport.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
                                         {errors.sport_id && <p className="text-sm text-destructive">{errors.sport_id.message}</p>}
                                     </div>
 
@@ -284,15 +300,26 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                         <h4 className="mb-3 text-sm font-medium">{t('Quota / Participant Limits')}</h4>
                                         <div className="mb-3 grid gap-2">
                                             <Label htmlFor="quota_mode">{t('Quota Mode')}</Label>
-                                            <select
-                                                id="quota_mode"
-                                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                                {...register('quota_mode')}
-                                            >
-                                                <option value="gender_based">{t('Gender based')}</option>
-                                                <option value="open_total">{t('Open total')}</option>
-                                                <option value="mixed_total">{t('Mixed total with minimums')}</option>
-                                            </select>
+                                            <Controller
+                                                control={control}
+                                                name="quota_mode"
+                                                render={({ field }) => (
+                                                    <Select
+                                                        value={field.value || 'gender_based'}
+                                                        onValueChange={field.onChange}
+                                                    >
+                                                        <SelectTrigger id="quota_mode">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="gender_based">{t('Gender based')}</SelectItem>
+                                                            <SelectItem value="open_total">{t('Open total')}</SelectItem>
+                                                            <SelectItem value="mixed_total">{t('Mixed total with minimums')}</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
+
                                         </div>
                                         <div className="grid grid-cols-3 gap-3">
                                             {quotaMode !== 'gender_based' && (
@@ -388,17 +415,6 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
             }
         >
             <Head title={t('Sport Categories')} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
-                    {flash.error}
-                </div>
-            )}
 
             <Card>
                 <CardHeader>

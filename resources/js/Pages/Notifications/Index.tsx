@@ -3,7 +3,8 @@ import Pagination from '@/components/Pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Head, Link, router } from '@inertiajs/react';
 import { Activity, Bell, CheckCheck, CircleAlert, Inbox } from 'lucide-react';
 import { type Paginated } from '@/types';
 import { useI18n } from '@/lib/i18n';
@@ -56,7 +57,6 @@ export default function NotificationsIndex({
     notificationTypes,
 }: Props) {
     const { t } = useI18n();
-    const { flash } = usePage().props;
 
     const visit = (changes: Partial<Filters>) => {
         router.get(route('notifications.index'), { ...filters, ...changes }, {
@@ -99,8 +99,6 @@ export default function NotificationsIndex({
         >
             <Head title={t('Notifications')} />
 
-            {flash?.success && <div className="mb-4 rounded-md bg-emerald-50 p-3 text-sm text-emerald-700">{flash.success}</div>}
-
             <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Notification views">
                 {isSuperAdmin && (
                     <Button
@@ -129,41 +127,50 @@ export default function NotificationsIndex({
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                             {t('Read status')}
-                            <select
-                                aria-label="Filter notifications by read status"
-                                className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                            <Select
                                 value={filters.status}
-                                onChange={(event) => visit({ status: event.target.value as Filters['status'] })}
+                                onValueChange={(value) => visit({ status: value as Filters['status'] })}
                             >
-                                <option value="all">{t('All')}</option>
-                                <option value="unread">{t('Unread')}</option>
-                                <option value="read">{t('Read')}</option>
-                            </select>
+                                <SelectTrigger aria-label="Filter notifications by read status" className="h-9 w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('All')}</SelectItem>
+                                    <SelectItem value="unread">{t('Unread')}</SelectItem>
+                                    <SelectItem value="read">{t('Read')}</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </label>
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                             {t('Type')}
-                            <select
-                                aria-label="Filter notifications by type"
-                                className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
-                                value={filters.type}
-                                onChange={(event) => visit({ type: event.target.value })}
+                            <Select
+                                value={filters.type || 'all'}
+                                onValueChange={(value) => visit({ type: value === 'all' ? '' : value })}
                             >
-                                <option value="">{t('All types')}</option>
-                                {notificationTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-                            </select>
+                                <SelectTrigger aria-label="Filter notifications by type" className="h-9 w-full">
+                                    <SelectValue placeholder={t('All types')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('All types')}</SelectItem>
+                                    {notificationTypes.map((type) => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                         </label>
                         {isSuperAdmin && (
                             <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                                 {t('Organization')}
-                                <select
-                                    aria-label="Filter notifications by organization"
-                                    className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
-                                    value={filters.organization_id}
-                                    onChange={(event) => visit({ organization_id: event.target.value })}
+                                <Select
+                                    value={filters.organization_id || 'all'}
+                                    onValueChange={(value) => visit({ organization_id: value === 'all' ? '' : value })}
                                 >
-                                    <option value="">{t('All organizations')}</option>
-                                    {organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}
-                                </select>
+                                    <SelectTrigger aria-label="Filter notifications by organization" className="h-9 w-full">
+                                        <SelectValue placeholder={t('All organizations')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('All organizations')}</SelectItem>
+                                        {organizations.map((organization) => <SelectItem key={organization.id} value={organization.id}>{organization.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                             </label>
                         )}
                     </div>

@@ -16,6 +16,7 @@ import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useI18n } from '@/lib/i18n';
 
 const deleteSchema = z.object({
     password: z.string().min(1, 'Password is required to confirm deletion'),
@@ -24,6 +25,7 @@ const deleteSchema = z.object({
 type DeleteForm = z.infer<typeof deleteSchema>;
 
 export default function DeleteUserForm() {
+    const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const passwordInput = useRef<HTMLInputElement>(null);
 
@@ -49,28 +51,28 @@ export default function DeleteUserForm() {
                 <DialogTrigger asChild>
                     <Button variant="destructive">
                         <Trash2 className="mr-2 size-4" />
-                        Delete Account
+                        {t('Delete Account')}
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <DialogHeader>
-                            <DialogTitle>Delete Account</DialogTitle>
+                            <DialogTitle>{t('Delete Account')}</DialogTitle>
                             <DialogDescription>
-                                This action cannot be undone. All your data will be permanently deleted.
-                                Please enter your password to confirm.
+                                {t('This action cannot be undone. All your data will be permanently deleted.')}{' '}
+                                {t('Please enter your password to confirm.')}
                             </DialogDescription>
                         </DialogHeader>
 
                         <div className="py-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="delete-password" className="sr-only">Password</Label>
+                                <Label htmlFor="delete-password" className="sr-only">{t('Password')}</Label>
                                 <Input
                                     id="delete-password"
                                     type="password"
                                     ref={passwordInput}
                                     {...register('password')}
-                                    placeholder="Enter your password to confirm"
+                                    placeholder={t('Enter your password to confirm')}
                                     autoFocus
                                 />
                                 {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
@@ -79,10 +81,10 @@ export default function DeleteUserForm() {
 
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                                Cancel
+                                {t('Cancel')}
                             </Button>
                             <Button type="submit" variant="destructive" disabled={isSubmitting}>
-                                Delete Account
+                                {t('Delete Account')}
                             </Button>
                         </DialogFooter>
                     </form>

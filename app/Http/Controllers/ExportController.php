@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Exports\FixtureExport;
+use App\Exports\MedalTallyExport;
 use App\Exports\RankingExport;
 use App\Exports\ResultExport;
 use App\Models\Fixture;
 use App\Models\Result;
+use App\Models\Session;
 use App\Models\Tournament;
 use App\Services\RankingService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -201,5 +203,72 @@ class ExportController extends Controller implements HasMiddleware
         ]);
 
         return $pdf->download('match-sheet-'.($fixture->match_number ?? 'draft').'.pdf');
+    }
+
+    // ─── RESULT SHEET ───
+
+    public function resultSheet(Request $request, string $fixtureId)
+    {
+        $org = $request->user()->organization;
+
+        $fixture = Fixture::where('organization_id', $org->id)
+            ->with(['event.tournament', 'homeParticipant', 'awayParticipant', 'result.winner', 'result.submittedBy', 'result.approvedBy'])
+            ->findOrFail($fixtureId);
+
+        $result = $fixture->result;
+
+        $pdf = Pdf::loadView('exports.result-sheet', [
+            'fixture' => $fixture,
+            'result' => $result,
+        ]);
+
+        return $pdf->download('result-sheet-'.($fixture->match_number ?? 'draft').'.pdf');
+    }
+
+    // ─── MEDAL TALLY ───
+
+    public function medalTallyPdf(Request $request, string $sessionSlug)
+    {
+        $org = $request->user()->organization;
+
+        $session = Session::where('organization_id', $org->id)
+            ->where('slug', $sessionSlug)
+            ->firstOrFail();
+
+        $service = app(RankingService::class);
+        $rankings = $service->calculateMedalTallyForSession($session);
+
+        $headings = ['#', 'Participant', 'Played', 'Gold', 'Silver', 'Bronze', 'Total Medals'];
+        $rows = $rankings->map(function ($r) {
+            return [
+                $r['rank'],
+                $r['participant_name'],
+                $r['matches_played'],
+                $r['gold'],
+                $r['silver'],
+                $r['bronze'],
+                $r['total_medals'],
+            ];
+        });
+
+        $pdf = Pdf::loadView('exports.pdf', [
+            'title' => 'Medal Tally — '.$session->name,
+            'subtitle' => $org->name,
+            'headings' => $headings,
+            'rows' => $rows,
+        ]);
+
+        return $pdf->download('medal-tally-'.$session->slug.'-'.now()->format('Y-m-d').'.pdf');
+    }
+
+    public function medalTallyExcel(Request $request, string $sessionSlug)
+    {
+        $org = $request->user()->organization;
+
+        $session = Session::where('organization_id', $org->id)
+            ->where('slug', $sessionSlug)
+            ->firstOrFail();
+
+        return Excel::download(new MedalTallyExport($org, $session->id), 'medal-tally-'.$session->slug.'-'.now()->format('Y-m-d').'.xlsx');
     }
 }
