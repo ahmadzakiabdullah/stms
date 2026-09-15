@@ -1,5 +1,7 @@
 # Full Laravel Security, Architecture, and Performance Audit
 
+> **Historical snapshot.** This document records the project state at its authoring date and is kept for reference only; counts, findings, and recommendations may be outdated. For current status see [`CURRENT_STATE.md`](../../CURRENT_STATE.md).
+
 > **Historical snapshot — superseded for current status.** Remediation and pass counts below apply to the 12 August working tree. The repository changed afterward; use the [17 August 2026 full project and production audit](2026-08-17-full-project-and-production-audit.md).
 
 **Audit date:** 12 August 2026

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — migration hygiene
+
+- Resolved the `2026_06_12_000002` duplicate timestamp by renaming `create_tournament_sport_table` to `2026_06_12_000003`; its `up()` now guards with `Schema::hasTable()` so already-deployed databases treat the renamed migration as a no-op. Documented in `docs/database/migration-guidelines.md`.
+
 ## 15 September 2026 — Malay i18n coverage for error/profile screens + root-domain alignment
 
 - Completed frontend i18n coverage: all pages now use `useI18n()` (including `Error.tsx` and the three Profile partials) and the 20 missing English/Malay keys were added to `resources/js/lib/i18n.ts`.

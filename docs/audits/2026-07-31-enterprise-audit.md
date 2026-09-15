@@ -1,5 +1,7 @@
 # Enterprise System Audit — 31 July 2026
 
+> **Historical snapshot.** This document records the project state at its authoring date and is kept for reference only; counts, findings, and recommendations may be outdated. For current status see [`CURRENT_STATE.md`](../../CURRENT_STATE.md).
+
 > **Historical evidence only.** Counts, scores and pass results apply to the dated commit/worktree. They are superseded for current decisions by the [17 August 2026 audit](2026-08-17-full-project-and-production-audit.md).
 
 ## Executive Summary
