@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { usePageLoading } from '@/hooks/usePageLoading';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useI18n } from '@/lib/i18n';
 import type { PageProps, Session, Tournament } from '@/types';
@@ -126,6 +128,7 @@ export default function Dashboard({
 }: DashboardProps) {
     const { auth } = usePage<PageProps>().props;
     const { locale, t } = useI18n();
+    const loading = usePageLoading();
     const user = auth?.user;
     const safeStats = stats && typeof stats === 'object' && !Array.isArray(stats) ? stats : {};
     const safeSessions = Array.isArray(recentSessions) ? recentSessions : [];
@@ -265,7 +268,7 @@ export default function Dashboard({
                     <section aria-labelledby="system-kpis">
                         <div className="mb-4 flex items-end justify-between px-1"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-700">{t('Overview')}</p><h2 id="system-kpis" className="mt-1 text-xl font-bold tracking-tight text-slate-950">{t('System at a glance')}</h2></div><span className="hidden text-xs text-slate-500 sm:block">{t('Current tenant data')}</span></div>
                         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                            {primaryMetrics.map((metric) => { const Icon = metric.icon; return <Card key={metric.label} className="rounded-2xl border-slate-200/80 bg-white shadow-sm"><CardHeader className="flex flex-row items-start justify-between pb-2"><div><CardDescription>{t(metric.label)}</CardDescription><CardTitle className="mt-1 text-3xl tabular-nums text-slate-950">{metric.value}</CardTitle></div><div className={`flex size-11 items-center justify-center rounded-xl ring-1 ${metric.tone}`}><Icon className="size-5" /></div></CardHeader><CardContent><p className="text-xs text-muted-foreground">{metric.note}</p></CardContent></Card>; })}
+                            {loading ? Array.from({ length: 4 }).map((_, i) => <Card key={i} className="rounded-2xl border-slate-200/80 bg-white shadow-sm"><CardHeader className="flex flex-row items-start justify-between pb-2"><div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-8 w-16" /></div><Skeleton className="size-11 rounded-xl" /></CardHeader><CardContent><Skeleton className="h-4 w-full" /></CardContent></Card>) : primaryMetrics.map((metric) => { const Icon = metric.icon; return <Card key={metric.label} className="rounded-2xl border-slate-200/80 bg-white shadow-sm"><CardHeader className="flex flex-row items-start justify-between pb-2"><div><CardDescription>{t(metric.label)}</CardDescription><CardTitle className="mt-1 text-3xl tabular-nums text-slate-950">{metric.value}</CardTitle></div><div className={`flex size-11 items-center justify-center rounded-xl ring-1 ${metric.tone}`}><Icon className="size-5" /></div></CardHeader><CardContent><p className="text-xs text-muted-foreground">{metric.note}</p></CardContent></Card>; })}
                         </div>
                     </section>
 
