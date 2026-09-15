@@ -1,4 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -145,14 +148,10 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Sessions')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Manage event sessions (e.g. SUKMA XXI, Paris 2024)')}
-                        </p>
-                    </div>
-
+                <PageHeader
+                    title={t('Sessions')}
+                    description={t('Manage event sessions (e.g. SUKMA XXI, Paris 2024)')}
+                    actions={
                     <Dialog open={open} onOpenChange={(isOpen) => {
                         if (!isOpen) closeDialog();
                         else setOpen(true);
@@ -278,7 +277,8 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                             </form>
                         </DialogContent>
                     </Dialog>
-                </div>
+                    }
+                />
             }
         >
             <Head title={t('Sessions')} />
@@ -307,7 +307,7 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                             {sessions.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        {search ? t('No sessions match your search.') : t('No sessions yet. Create the first one.')}
+                                        <EmptyState title={search ? t('No sessions match your search.') : t('No sessions yet. Create the first one.')} />
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -359,24 +359,17 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                 <Pagination paginator={sessionsProp} />
             </Card>
 
-            <Dialog open={!!deleteSession} onOpenChange={(isOpen) => !isOpen && setDeleteSession(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Delete Session?')}</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteSession?.name}</strong>? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteSession(null)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            {t('Yes, Delete')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteSession}
+                onOpenChange={(open) => !open && setDeleteSession(null)}
+                title={t('Delete Session?')}
+                description={<>{t('Are you sure you want to delete')} <strong>{deleteSession?.name}</strong>? {t('This action cannot be undone.')}</>}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                processing={isSubmitting}
+                onConfirm={handleDelete}
+            />
 
             <div className="mt-6 text-xs text-muted-foreground">
                 M2: Session Management. Sessions contain tournaments and events. Next: Tournaments.

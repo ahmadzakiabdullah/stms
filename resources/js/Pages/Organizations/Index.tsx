@@ -34,6 +34,9 @@ import { z } from 'zod';
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import type { Organization, Paginated } from '@/types';
 import { useI18n } from '@/lib/i18n';
 
@@ -138,103 +141,100 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Organizations')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Manage organizations in the system (M1 - Foundation)')}
-                        </p>
-                    </div>
+                <PageHeader
+                    title={t('Organizations')}
+                    description={t('Manage organizations in the system (M1 - Foundation)')}
+                    actions={
+                        <Dialog open={open} onOpenChange={(isOpen) => {
+                            if (!isOpen) closeDialog();
+                            else setOpen(true);
+                        }}>
+                            <DialogTrigger asChild>
+                                <Button onClick={openCreate}>
+                                    <Plus className="mr-2 size-4" />
+                                    {t('Add Organization')}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <form onSubmit={handleSubmit(onSubmit)}>
+                                    <DialogHeader>
+                                        <DialogTitle>{editingOrg ? t('Edit Organization') : t('Create New Organization')}</DialogTitle>
+                                        <DialogDescription>
+                                            {editingOrg ? t('Update organization information.') : t('Organizations are the root of the multi-tenancy hierarchy.')}
+                                        </DialogDescription>
+                                    </DialogHeader>
 
-                    <Dialog open={open} onOpenChange={(isOpen) => {
-                        if (!isOpen) closeDialog();
-                        else setOpen(true);
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button onClick={openCreate}>
-                                <Plus className="mr-2 size-4" />
-                                {t('Add Organization')}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <form onSubmit={handleSubmit(onSubmit)}>
-                                <DialogHeader>
-                                    <DialogTitle>{editingOrg ? t('Edit Organization') : t('Create New Organization')}</DialogTitle>
-                                    <DialogDescription>
-                                        {editingOrg ? t('Update organization information.') : t('Organizations are the root of the multi-tenancy hierarchy.')}
-                                    </DialogDescription>
-                                </DialogHeader>
-
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="name">{t('Name')}</Label>
-                                        <Input
-                                            id="name"
-                                            {...register('name')}
-                                            required
-                                        />
-                                        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="slug">{t('Slug (unique)')}</Label>
-                                        <Input
-                                            id="slug"
-                                            {...register('slug')}
-                                            placeholder={t('e.g. utm or sukma-2026')}
-                                            required
-                                        />
-                                        {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="organization_type">{t('Organization Type')}</Label>
-                                        <Controller
-                                            control={control}
-                                            name="organization_type"
-                                            render={({ field }) => (
-                                                <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}>
-                                                    <SelectTrigger id="organization_type" className="h-9 w-full">
-                                                        <SelectValue placeholder={t('-- Select Type --')} />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="none">{t('-- Select Type --')}</SelectItem>
-                                                        {organizationTypes.map((type) => (
-                                                            <SelectItem key={type.value} value={type.value}>
-                                                                {type.label}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-                                        />
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="is_active">{t('Status')}</Label>
-                                        <label className="flex items-center gap-2 text-sm">
-                                            <input
-                                                type="checkbox"
-                                                {...register('is_active')}
+                                    <div className="grid gap-4 py-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="name">{t('Name')}</Label>
+                                            <Input
+                                                id="name"
+                                                {...register('name')}
+                                                required
                                             />
-                                            {t('Active')}
-                                        </label>
-                                    </div>
-                                </div>
+                                            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                                        </div>
 
-                                <DialogFooter>
-                                    <Button type="button" variant="outline" onClick={closeDialog}>
-                                        {t('Cancel')}
-                                    </Button>
-                                    <Button type="submit" disabled={isSubmitting}>
-                                        <Save className="mr-2 size-4" />
-                                        {editingOrg ? t('Update') : t('Save')}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="slug">{t('Slug (unique)')}</Label>
+                                            <Input
+                                                id="slug"
+                                                {...register('slug')}
+                                                placeholder={t('e.g. utm or sukma-2026')}
+                                                required
+                                            />
+                                            {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="organization_type">{t('Organization Type')}</Label>
+                                            <Controller
+                                                control={control}
+                                                name="organization_type"
+                                                render={({ field }) => (
+                                                    <Select value={field.value || 'none'} onValueChange={(v) => field.onChange(v === 'none' ? '' : v)}>
+                                                        <SelectTrigger id="organization_type" className="h-9 w-full">
+                                                            <SelectValue placeholder={t('-- Select Type --')} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="none">{t('-- Select Type --')}</SelectItem>
+                                                            {organizationTypes.map((type) => (
+                                                                <SelectItem key={type.value} value={type.value}>
+                                                                    {type.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="is_active">{t('Status')}</Label>
+                                            <label className="flex items-center gap-2 text-sm">
+                                                <input
+                                                    type="checkbox"
+                                                    {...register('is_active')}
+                                                />
+                                                {t('Active')}
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <DialogFooter>
+                                        <Button type="button" variant="outline" onClick={closeDialog}>
+                                            {t('Cancel')}
+                                        </Button>
+                                        <Button type="submit" disabled={isSubmitting}>
+                                            <Save className="mr-2 size-4" />
+                                            {editingOrg ? t('Update') : t('Save')}
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    }
+                />
             }
         >
             <Head title="Organizations" />
@@ -264,7 +264,7 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
                             {organizations.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={8} className="text-center text-muted-foreground">
-                                        {t('No organizations yet. Create the first one.')}
+                                        <EmptyState title={t('No organizations yet. Create the first one.')} />
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -314,24 +314,17 @@ export default function OrganizationsIndex({ organizations: organizationsProp }:
                 <Pagination paginator={organizationsProp} />
             </Card>
 
-            <Dialog open={!!deleteOrg} onOpenChange={(isOpen) => !isOpen && setDeleteOrg(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Delete Organization?')}</DialogTitle>
-                        <DialogDescription>
-                            {t('Are you sure you want to delete...This action cannot be undone.')} <strong>{deleteOrg?.name}</strong>
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteOrg(null)}>
-                            {t('Cancel')}
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            {t('Yes, Delete')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteOrg}
+                onOpenChange={(open) => !open && setDeleteOrg(null)}
+                title={t('Delete Organization?')}
+                description={<>{t('Are you sure you want to delete...This action cannot be undone.')} <strong>{deleteOrg?.name}</strong></>}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                processing={isSubmitting}
+                onConfirm={handleDelete}
+            />
 
             <div className="mt-6 text-xs text-muted-foreground">
                 M1: Organization module with full CRUD. Next: RBAC, User association with organization_id, and scoping.
