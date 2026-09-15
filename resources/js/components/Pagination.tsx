@@ -40,17 +40,15 @@ export default function Pagination<T>({ paginator, links: legacyLinks }: Paginat
 
             <div className="flex items-center gap-1">
                 {prevLink && (
-                    <Button variant="outline" size="sm" asChild disabled={!prevLink.url}>
-                        <Link
-                            href={prevLink.url || '#'}
-                            className={!prevLink.url ? 'pointer-events-none opacity-40' : ''}
-                            aria-disabled={!prevLink.url ? true : undefined}
-                            tabIndex={!prevLink.url ? -1 : undefined}
-                        >
+                    <Link
+                        href={prevLink.url || '#'}
+                        className={!prevLink.url ? 'pointer-events-none opacity-40' : ''}
+                    >
+                        <Button variant="outline" size="sm" disabled={!prevLink.url}>
                             <ChevronLeft className="mr-1 size-4" />
                             Prev
-                        </Link>
-                    </Button>
+                        </Button>
+                    </Link>
                 )}
 
                 <div className="flex items-center gap-1 px-2 text-xs">
@@ -61,17 +59,15 @@ export default function Pagination<T>({ paginator, links: legacyLinks }: Paginat
 
                         if (pageLink && pageLink.url) {
                             return (
-                                <Button
-                                    key={page}
-                                    variant={isActive ? 'default' : 'ghost'}
-                                    size="sm"
-                                    className="h-8 w-8 p-0 text-xs"
-                                    asChild
-                                >
-                                    <Link href={pageLink.url}>
+                                <Link key={page} href={pageLink.url}>
+                                    <Button
+                                        variant={isActive ? 'default' : 'ghost'}
+                                        size="sm"
+                                        className="h-8 w-8 p-0 text-xs"
+                                    >
                                         {page}
-                                    </Link>
-                                </Button>
+                                    </Button>
+                                </Link>
                             );
                         }
                         return (
@@ -84,17 +80,15 @@ export default function Pagination<T>({ paginator, links: legacyLinks }: Paginat
                 </div>
 
                 {nextLink && (
-                    <Button variant="outline" size="sm" asChild disabled={!nextLink.url}>
-                        <Link
-                            href={nextLink.url || '#'}
-                            className={!nextLink.url ? 'pointer-events-none opacity-40' : ''}
-                            aria-disabled={!nextLink.url ? true : undefined}
-                            tabIndex={!nextLink.url ? -1 : undefined}
-                        >
+                    <Link
+                        href={nextLink.url || '#'}
+                        className={!nextLink.url ? 'pointer-events-none opacity-40' : ''}
+                    >
+                        <Button variant="outline" size="sm" disabled={!nextLink.url}>
                             Next
                             <ChevronRight className="ml-1 size-4" />
-                        </Link>
-                    </Button>
+                        </Button>
+                    </Link>
                 )}
             </div>
         </div>
