@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { EmptyState } from '@/components/EmptyState';
 import ParticipantLogo from '@/components/ParticipantLogo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -363,17 +364,11 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                 )}
 
                 {pools.length === 0 && (
-                    <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
-                        <span className="flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-                            <ClipboardList className="size-6" />
-                        </span>
-                        <div>
-                            <p className="font-semibold text-slate-700">{t('No draw has been performed yet')}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                {t('Run a draw from the Events page to create groups...')}
-                            </p>
-                        </div>
-                    </div>
+                    <EmptyState
+                        icon={ClipboardList}
+                        title={t('No draw has been performed yet')}
+                        description={t('Run a draw from the Events page to create groups...')}
+                    />
                 )}
 
                 {allFixtures.length > 0 && (

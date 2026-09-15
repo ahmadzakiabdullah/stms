@@ -28,6 +28,9 @@ import {
 } from '@/components/ui/table';
 
 import Pagination from '@/components/Pagination';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AlertTriangle, Ban, CalendarDays, Check, CheckCircle2, ChevronDown, CircleDashed, CircleX, Clock, ClipboardList, Download, FileText, Filter, Inbox, LayoutGrid, List, LogOut, Pencil, Phone, Plus, RotateCcw, Search, SearchX, Trash2, Upload, UserPlus, Users, X, XCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -290,46 +293,6 @@ function AddEventDialog({
     );
 }
 
-function ConfirmUnregisterDialog({ open, onClose, onConfirm, participantName, eventName }: {
-    open: boolean; onClose: () => void; onConfirm: () => void; participantName: string; eventName: string;
-}) {
-    const { t } = useI18n();
-    return (
-        <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{t('Unregister')} {participantName}?</DialogTitle>
-                    <DialogDescription>Remove <strong>{participantName}</strong> from <strong>{eventName}</strong>? This action cannot be undone.</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>{t('Cancel')}</Button>
-                    <Button variant="destructive" onClick={onConfirm}>{t('Yes, Unregister')}</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-function ConfirmRejectDialog({ open, onClose, onConfirm, participantName, eventName }: {
-    open: boolean; onClose: () => void; onConfirm: () => void; participantName: string; eventName: string;
-}) {
-    const { t } = useI18n();
-    return (
-        <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{t('Reject registration?')}</DialogTitle>
-                    <DialogDescription>Reject <strong>{participantName}</strong> from <strong>{eventName}</strong>? The faculty representative will be notified.</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>{t('Cancel')}</Button>
-                    <Button variant="destructive" onClick={onConfirm}>{t('Yes, Reject')}</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
 function BatchRejectDialog({ open, onClose, count, onConfirm }: {
     open: boolean; onClose: () => void; count: number; onConfirm: (notes: string) => void;
 }) {
@@ -566,26 +529,6 @@ function SquadEditForm({ epId, member, onCancel }: { epId: string; member: Squad
                 <Button type="submit" size="sm" disabled={busy}><Check className="size-3.5 mr-1" /> {t('Save')}</Button>
             </div>
         </form>
-    );
-}
-
-function ConfirmSquadDeleteDialog({ open, onClose, onConfirm, memberName }: {
-    open: boolean; onClose: () => void; onConfirm: () => void; memberName: string;
-}) {
-    const { t } = useI18n();
-    return (
-        <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{t('Remove squad member?')}</DialogTitle>
-                    <DialogDescription>Remove <strong>{memberName}</strong> from the squad? This action cannot be undone.</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>{t('Cancel')}</Button>
-                    <Button variant="destructive" onClick={onConfirm}>{t('Yes, Remove')}</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     );
 }
 
@@ -829,28 +772,26 @@ export default function EventParticipantsIndex({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Registrations & Squads')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {isFacultyRepresentative ? t('Manage your faculty\'s event participation') : t('Overview of every faculty\'s event participation')}
-                        </p>
-                    </div>
-                    {isFacultyRepresentative ? (
-                        <Button onClick={() => setActiveTab('events')}>
-                            <Plus className="size-4 mr-1.5" /> {t('Register to Event')}
-                        </Button>
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" onClick={() => setImportOpen(true)}>
-                                <Upload className="size-4 mr-1.5" /> {t('Import')}
+                <PageHeader
+                    title={t('Registrations & Squads')}
+                    description={isFacultyRepresentative ? t('Manage your faculty\'s event participation') : t('Overview of every faculty\'s event participation')}
+                    actions={
+                        isFacultyRepresentative ? (
+                            <Button onClick={() => setActiveTab('events')}>
+                                <Plus className="size-4 mr-1.5" /> {t('Register to Event')}
                             </Button>
-                            <Button onClick={() => setAddTarget({ id: '', name: '' })}>
-                                <UserPlus className="size-4 mr-1.5" /> {t('New Registration')}
-                            </Button>
-                        </div>
-                    )}
-                </div>
+                        ) : (
+                            <>
+                                <Button variant="outline" onClick={() => setImportOpen(true)}>
+                                    <Upload className="size-4 mr-1.5" /> {t('Import')}
+                                </Button>
+                                <Button onClick={() => setAddTarget({ id: '', name: '' })}>
+                                    <UserPlus className="size-4 mr-1.5" /> {t('New Registration')}
+                                </Button>
+                            </>
+                        )
+                    }
+                />
             }
         >
             <Head title={t('Registrations & Squads')} />
@@ -1002,25 +943,15 @@ export default function EventParticipantsIndex({
             {/* === TAB: Registrations (Table) === */}
             {activeTab === 'registrations' && (
                 registrationRows.length === 0 ? (
-                    <Card><CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-                        <span className="flex size-12 items-center justify-center rounded-full bg-muted">
-                            {hasActiveFilters
-                                ? <SearchX className="size-5 text-muted-foreground" />
-                                : <Inbox className="size-5 text-muted-foreground" />}
-                        </span>
-                        <div>
-                            <p className="text-sm font-semibold">
-                                {hasActiveFilters ? t('No matching registrations') : t('No registrations yet')}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                                {hasActiveFilters
-                                    ? t('Try adjusting your search or filters.')
-                                    : isFacultyRepresentative
-                                        ? t('Browse available events and register your faculty.')
-                                        : t('Register the first faculty to an event to get started.')}
-                            </p>
-                        </div>
-                        {hasActiveFilters ? (
+                    <EmptyState
+                        icon={hasActiveFilters ? SearchX : Inbox}
+                        title={hasActiveFilters ? t('No matching registrations') : t('No registrations yet')}
+                        description={hasActiveFilters
+                            ? t('Try adjusting your search or filters.')
+                            : isFacultyRepresentative
+                                ? t('Browse available events and register your faculty.')
+                                : t('Register the first faculty to an event to get started.')}
+                        action={hasActiveFilters ? (
                             <Button variant="outline" size="sm" onClick={handleClearFilters}>
                                 <RotateCcw className="size-3.5 mr-1" /> {t('Clear filters')}
                             </Button>
@@ -1033,7 +964,7 @@ export default function EventParticipantsIndex({
                                 <UserPlus className="size-3.5 mr-1" /> {t('New Registration')}
                             </Button>
                         )}
-                    </CardContent></Card>
+                    />
                 ) : (
                     <div>
                         {selectedRegIds.length > 0 && (
@@ -1258,15 +1189,11 @@ export default function EventParticipantsIndex({
             {/* === TAB: Events (Grid or Table) === */}
             {activeTab === 'events' && (
                 events.length === 0 ? (
-                    <Card><CardContent className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-                        <span className="flex size-12 items-center justify-center rounded-full bg-muted">
-                            <CalendarDays className="size-5 text-muted-foreground" />
-                        </span>
-                        <div>
-                            <p className="text-sm font-semibold">No events available</p>
-                            <p className="mt-1 text-xs text-muted-foreground">Events will appear here once they are created.</p>
-                        </div>
-                    </CardContent></Card>
+                    <EmptyState
+                        icon={CalendarDays}
+                        title="No events available"
+                        description="Events will appear here once they are created."
+                    />
                 ) : viewMode === 'table' ? (
                     <Card>
                         <CardContent className="p-0">
@@ -1374,13 +1301,27 @@ export default function EventParticipantsIndex({
                 events={events}
                 participants={isFacultyRepresentative ? undefined : faculties} />
 
-            <ConfirmUnregisterDialog open={!!unregTarget} onClose={() => setUnregTarget(null)}
-                onConfirm={handleUnregister} participantName={unregTarget?.participantName ?? ''}
-                eventName={unregTarget?.eventName ?? ''} />
+            <ConfirmDialog
+                open={!!unregTarget}
+                onOpenChange={(open) => { if (!open) setUnregTarget(null); }}
+                title={`${t('Unregister')} ${unregTarget?.participantName ?? ''}?`}
+                description={<>Remove <strong>{unregTarget?.participantName ?? ''}</strong> from <strong>{unregTarget?.eventName ?? ''}</strong>? This action cannot be undone.</>}
+                confirmLabel={t('Yes, Unregister')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={handleUnregister}
+            />
 
-            <ConfirmRejectDialog open={!!rejectTarget} onClose={() => setRejectTarget(null)}
-                onConfirm={rejectRegistration} participantName={rejectTarget?.participantName ?? ''}
-                eventName={rejectTarget?.eventName ?? ''} />
+            <ConfirmDialog
+                open={!!rejectTarget}
+                onOpenChange={(open) => { if (!open) setRejectTarget(null); }}
+                title={t('Reject registration?')}
+                description={<>Reject <strong>{rejectTarget?.participantName ?? ''}</strong> from <strong>{rejectTarget?.eventName ?? ''}</strong>? The faculty representative will be notified.</>}
+                confirmLabel={t('Yes, Reject')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={rejectRegistration}
+            />
 
             <BatchRejectDialog open={batchRejectOpen} onClose={() => setBatchRejectOpen(false)}
                 count={selectedRegIds.length} onConfirm={handleBatchReject} />
@@ -1389,8 +1330,16 @@ export default function EventParticipantsIndex({
                 participantId={isFacultyRepresentative ? (auth?.user?.participant_id ?? '') : ''}
                 faculties={isFacultyRepresentative ? undefined : faculties} />
 
-            <ConfirmSquadDeleteDialog open={!!squadDeleteTarget} onClose={() => setSquadDeleteTarget(null)}
-                onConfirm={handleSquadDelete} memberName={squadDeleteTarget?.memberName ?? ''} />
+            <ConfirmDialog
+                open={!!squadDeleteTarget}
+                onOpenChange={(open) => { if (!open) setSquadDeleteTarget(null); }}
+                title={t('Remove squad member?')}
+                description={<>Remove <strong>{squadDeleteTarget?.memberName ?? ''}</strong> from the squad? This action cannot be undone.</>}
+                confirmLabel={t('Yes, Remove')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={handleSquadDelete}
+            />
         </AuthenticatedLayout>
     );
 }

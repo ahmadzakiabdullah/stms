@@ -1,4 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import ParticipantLogo, { type ParticipantLogoSize } from '@/components/ParticipantLogo';
 import Pagination from '@/components/Pagination';
 import { Badge } from '@/components/ui/badge';
@@ -485,15 +488,11 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Results')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Record and manage match results')}
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
+                <PageHeader
+                    title={t('Results')}
+                    description={t('Record and manage match results')}
+                    actions={
+                        <>
                         {canManage && (
                         <>
                         <Button
@@ -718,8 +717,9 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                         </DialogContent>
                         </Dialog>
                         )}
-                    </div>
-                </div>
+                        </>
+                    }
+                />
             }
         >
             <Head title={t('Results')} />
@@ -936,7 +936,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                         </CardHeader>
                         <CardContent>
                             {filteredResults.length === 0 ? (
-                                <p className="text-center text-sm text-muted-foreground">No results recorded yet.</p>
+                                <EmptyState title="No results recorded yet." />
                             ) : (
                                 <div className="overflow-x-auto">
                                     <Table>
@@ -975,24 +975,17 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                 </div>
             )}
 
-            <Dialog open={!!deleteResult} onOpenChange={(isOpen) => !isOpen && setDeleteResult(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete Result?</DialogTitle>
-                        <DialogDescription>
-                            Result for Match #{matchNumberLabel(deleteResult?.match?.match_number, deleteResult?.match?.event?.name)} will be removed. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteResult(null)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            Yes, Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteResult}
+                onOpenChange={(isOpen) => !isOpen && setDeleteResult(null)}
+                title="Delete Result?"
+                description={<>Result for Match #{matchNumberLabel(deleteResult?.match?.match_number, deleteResult?.match?.event?.name)} will be removed. This action cannot be undone.</>}
+                confirmLabel="Yes, Delete"
+                cancelLabel="Cancel"
+                destructive
+                processing={isSubmitting}
+                onConfirm={handleDelete}
+            />
         </AuthenticatedLayout>
     );
 }

@@ -27,6 +27,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import Pagination from '@/components/Pagination';
 import ParticipantLogo from '@/components/ParticipantLogo';
 import { Head, router } from '@inertiajs/react';
@@ -111,40 +114,37 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Participants')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Manage athletes and teams participating in tournaments')}
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={() => setImportOpen(true)}>
-                            <Upload className="mr-2 size-4" />
-                            {t('Import')}
-                        </Button>
-                        <Dialog open={open} onOpenChange={(isOpen) => {
-                        if (!isOpen) closeDialog();
-                        else setOpen(true);
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button onClick={() => { setEditingParticipant(null); setOpen(true); }}>
-                                <Plus className="mr-2 size-4" />
-                                {t('Add Participant')}
+                <PageHeader
+                    title={t('Participants')}
+                    description={t('Manage athletes and teams participating in tournaments')}
+                    actions={
+                        <>
+                            <Button variant="outline" onClick={() => setImportOpen(true)}>
+                                <Upload className="mr-2 size-4" />
+                                {t('Import')}
                             </Button>
-                        </DialogTrigger>
-                            <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-                                <ParticipantFormDialog
-                                    key={editingParticipant?.id ?? 'create'}
-                                    participant={editingParticipant}
-                                    sessions={sessions}
-                                    onClose={closeDialog}
-                                />
-                            </DialogContent>
-                    </Dialog>
-                    </div>
-                </div>
+                            <Dialog open={open} onOpenChange={(isOpen) => {
+                                if (!isOpen) closeDialog();
+                                else setOpen(true);
+                            }}>
+                                <DialogTrigger asChild>
+                                    <Button onClick={() => { setEditingParticipant(null); setOpen(true); }}>
+                                        <Plus className="mr-2 size-4" />
+                                        {t('Add Participant')}
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+                                    <ParticipantFormDialog
+                                        key={editingParticipant?.id ?? 'create'}
+                                        participant={editingParticipant}
+                                        sessions={sessions}
+                                        onClose={closeDialog}
+                                    />
+                                </DialogContent>
+                            </Dialog>
+                        </>
+                    }
+                />
             }
         >
             <Head title={t('Participants')} />
@@ -180,7 +180,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                             {participants.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                                        {search ? t('No participants match your search.') : t('No participants yet.')}
+                                        <EmptyState title={search ? t('No participants match your search.') : t('No participants yet.')} />
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -241,24 +241,20 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                 </CardContent>
             </Card>
 
-            <Dialog open={!!deleteParticipant} onOpenChange={(isOpen) => !isOpen && setDeleteParticipant(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Delete Participant?')}</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteParticipant?.name}</strong>? This will also remove all their tournament registrations. This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteParticipant(null)}>
-                            {t('Cancel')}
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={false}>
-                            {t('Yes, Delete')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteParticipant}
+                onOpenChange={(isOpen) => !isOpen && setDeleteParticipant(null)}
+                title={t('Delete Participant?')}
+                description={
+                    <>
+                        Are you sure you want to delete <strong>{deleteParticipant?.name}</strong>? This will also remove all their tournament registrations. This action cannot be undone.
+                    </>
+                }
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={handleDelete}
+            />
 
             <Dialog open={!!viewParticipant} onOpenChange={(isOpen) => !isOpen && setViewParticipant(null)}>
                 <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">

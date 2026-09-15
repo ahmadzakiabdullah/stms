@@ -34,6 +34,9 @@ import { z } from 'zod';
 import { Eye, Pencil, Plus, RefreshCw, RotateCcw, Save, Search, Target, Trash2, Trash, X } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/Pagination';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { matchProgress } from '@/lib/matchProgress';
 import { useI18n } from '@/lib/i18n';
 import type { Event, Tournament, Sport, SportCategory, Paginated } from '@/types';
@@ -285,14 +288,10 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Events')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Specific competitions within tournaments (Sport + Category)')}
-                        </p>
-                    </div>
-
+                <PageHeader
+                    title={t('Events')}
+                    description={t('Specific competitions within tournaments (Sport + Category)')}
+                    actions={
                     <Dialog open={open} onOpenChange={(isOpen) => {
                         if (!isOpen) closeDialog();
                         else setOpen(true);
@@ -499,7 +498,8 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                             </form>
                         </DialogContent>
                     </Dialog>
-                </div>
+                    }
+                />
             }
         >
             <Head title={t('Events')} />
@@ -554,7 +554,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                             {events.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={isSuperAdmin ? 10 : 9} className="text-center text-muted-foreground">
-                                        {search ? t('No events match your search.') : t('No events yet.')}
+                                        <EmptyState title={search ? t('No events match your search.') : t('No events yet.')} />
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -768,24 +768,17 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             )}
 
             {isSuperAdmin && (
-            <Dialog open={!!deleteEvent} onOpenChange={(isOpen) => !isOpen && setDeleteEvent(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete Event?</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteEvent?.name}</strong>? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteEvent(null)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            Yes, Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteEvent}
+                onOpenChange={(open) => !open && setDeleteEvent(null)}
+                title={t('Delete Event?')}
+                description={<>{t('Are you sure you want to delete')} <strong>{deleteEvent?.name}</strong>? {t('This action cannot be undone.')}</>}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                processing={isSubmitting}
+                onConfirm={handleDelete}
+            />
             )}
 
             <div className="mt-6 text-xs text-muted-foreground">

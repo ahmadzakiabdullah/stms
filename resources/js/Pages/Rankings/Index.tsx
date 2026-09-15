@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -105,15 +107,11 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                            <BarChart3 className="size-4" /> {t('Analytics')}
-                        </div>
-                        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{t('Rankings')}</h1>
-                    </div>
-                    {rankingScope && <Badge variant="secondary" className="w-fit">{rankingScope}</Badge>}
-                </div>
+                <PageHeader
+                    title={t('Rankings')}
+                    description={t('Analytics')}
+                    actions={rankingScope && <Badge variant="secondary" className="w-fit">{rankingScope}</Badge>}
+                />
             }
         >
             <Head title={t('Rankings')} />
@@ -459,12 +457,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
             )}
 
             {!selectedSession && (
-                <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                        <Trophy className="mx-auto mb-4 size-12 opacity-30" />
-                        <p>Select a session above to view rankings</p>
-                    </CardContent>
-                </Card>
+                <EmptyState icon={Trophy} title="Select a session above to view rankings" />
             )}
 
             <div className="mt-6 text-xs text-muted-foreground">

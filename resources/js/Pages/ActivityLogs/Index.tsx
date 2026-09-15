@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -53,7 +55,7 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
     return (
         <AuthenticatedLayout
             header={
-                <h1 className="text-2xl font-semibold tracking-tight">{t('Activity Logs')}</h1>
+                <PageHeader title={t('Activity Logs')} />
             }
         >
             <Head title={t('Activity Logs')} />
@@ -108,7 +110,7 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                 </CardContent>
                 <CardContent className="p-0">
                     {activities.data.length === 0 ? (
-                        <p className="p-6 text-center text-sm text-muted-foreground">{filters.search ? t('No activity logs match your search.') : t('No activity logs yet.')}</p>
+                        <EmptyState description={filters.search ? t('No activity logs match your search.') : t('No activity logs yet.')} />
                     ) : (
                         <Table>
                             <TableHeader>

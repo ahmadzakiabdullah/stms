@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import Pagination from '@/components/Pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -77,24 +79,24 @@ export default function NotificationsIndex({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
-                        <p className="text-sm text-muted-foreground">{t('Actionable updates for your account')}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {isSuperAdmin && (
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href={route('activity-logs.index')}>
-                                    <Activity className="mr-2 size-4" /> {t('System Activity')}
-                                </Link>
+                <PageHeader
+                    title="Notifications"
+                    description={t('Actionable updates for your account')}
+                    actions={
+                        <>
+                            {isSuperAdmin && (
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href={route('activity-logs.index')}>
+                                        <Activity className="mr-2 size-4" /> {t('System Activity')}
+                                    </Link>
+                                </Button>
+                            )}
+                            <Button variant="outline" size="sm" onClick={() => router.post(route('notifications.mark-all-read'), {}, { preserveScroll: true })}>
+                                <CheckCheck className="mr-2 size-4" /> {t('Mark All as Read')}
                             </Button>
-                        )}
-                        <Button variant="outline" size="sm" onClick={() => router.post(route('notifications.mark-all-read'), {}, { preserveScroll: true })}>
-                            <CheckCheck className="mr-2 size-4" /> {t('Mark All as Read')}
-                        </Button>
-                    </div>
-                </div>
+                        </>
+                    }
+                />
             }
         >
             <Head title={t('Notifications')} />
@@ -178,13 +180,11 @@ export default function NotificationsIndex({
 
                 <CardContent className="p-0">
                     {notifications.data.length === 0 ? (
-                        <div className="p-10 text-center">
-                            <Bell className="mx-auto mb-3 size-8 text-muted-foreground" />
-                            <p className="font-medium">{t('Nothing to show')}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                {filters.tab === 'action' ? t('There are no pending notifications requiring attention.') : t('No notifications match the selected filters.')}
-                            </p>
-                        </div>
+                        <EmptyState
+                            icon={Bell}
+                            title={t('Nothing to show')}
+                            description={filters.tab === 'action' ? t('There are no pending notifications requiring attention.') : t('No notifications match the selected filters.')}
+                        />
                     ) : (
                         <div className="divide-y">
                             {notifications.data.map((notification) => {

@@ -19,6 +19,9 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { BarChart3, CalendarDays, Eye, Pencil, Plus, RefreshCw, Save, Search, Swords, Trash2, Trophy, Users, X } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Pagination from '@/components/Pagination';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { eventCode, matchNumberLabel } from '@/lib/matchNumber';
 import { matchProgress } from '@/lib/matchProgress';
 import { useI18n } from '@/lib/i18n';
@@ -578,17 +581,15 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Matches')}</h1>
-                        <p className="text-sm text-muted-foreground">{t('Browse and manage all fixtures across every event.')}</p>
-                    </div>
-                    {canManage && (
-                    <Button onClick={() => openCreate()} disabled={!selectedEventId}>
-                        <Plus className="mr-2 size-4" /> {t('Add Match')}
-                    </Button>
+                <PageHeader
+                    title={t('Matches')}
+                    description={t('Browse and manage all fixtures across every event.')}
+                    actions={canManage && (
+                        <Button onClick={() => openCreate()} disabled={!selectedEventId}>
+                            <Plus className="mr-2 size-4" /> {t('Add Match')}
+                        </Button>
                     )}
-                </div>
+                />
             }
         >
             <Head title={t('Matches')} />
@@ -663,18 +664,14 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                     </Card>
 
                     <div className="space-y-6">
-                        {groupedByEvent.length === 0 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>{t('No Matches')}</CardTitle>
-                                    <CardDescription>
-                                        {query || statusFilter
-                                            ? t('No matches match your search or filters.')
-                                            : t('No matches scheduled yet. Select an event above and add a match.')}
-                                    </CardDescription>
-                                </CardHeader>
-                            </Card>
-                        )}
+                    {groupedByEvent.length === 0 && (
+                        <EmptyState
+                            title={t('No Matches')}
+                            description={query || statusFilter
+                                ? t('No matches match your search or filters.')
+                                : t('No matches scheduled yet. Select an event above and add a match.')}
+                        />
+                    )}
 
                         {groupedByEvent.map(({ event, fixtures: eventFixtures }) => {
                             const shown = eventFixtures.filter((match) => filteredFixtures.includes(match));
@@ -1009,12 +1006,17 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={!!deleteMatch} onOpenChange={(open) => !open && setDeleteMatch(null)}>
-                <DialogContent>
-                    <DialogHeader><DialogTitle>Delete Match?</DialogTitle><DialogDescription>Match #{matchNumberLabel(deleteMatch?.match_number, deleteMatch?.event?.name ?? selectedEvent?.name)} will be removed. This action cannot be undone.</DialogDescription></DialogHeader>
-                    <DialogFooter><Button variant="outline" onClick={() => setDeleteMatch(null)}>Cancel</Button><Button variant="destructive" onClick={confirmDelete}><Trash2 className="mr-2 size-4" />Delete Match</Button></DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteMatch}
+                onOpenChange={(open) => !open && setDeleteMatch(null)}
+                title={t('Delete Match?')}
+                description={<>Match #{matchNumberLabel(deleteMatch?.match_number, deleteMatch?.event?.name ?? selectedEvent?.name)} {t('will be removed. This action cannot be undone.')}</>}
+                confirmLabel={t('Delete Match')}
+                cancelLabel={t('Cancel')}
+                destructive
+                processing={processing}
+                onConfirm={confirmDelete}
+            />
         </AuthenticatedLayout>
     );
 }
