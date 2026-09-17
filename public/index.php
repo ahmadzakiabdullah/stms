@@ -5,7 +5,7 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-// Force HTTPS recognition (common for reverse proxy / load balancer / IIS setups like saf.utem.edu.my)
+// Force HTTPS recognition (common for reverse proxy / load balancer / IIS setups)
 // This ensures url(), asset(), Inertia requests, and redirects use https:// instead of http://
 if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
     $_SERVER['HTTPS'] = 'on';

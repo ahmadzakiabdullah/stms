@@ -38,13 +38,10 @@ Route::get('/health', HealthCheckController::class)
 
 // IIS cannot create Laravel's public/storage junction in this deployment.
 // Serve only files from the configured public disk, while keeping legacy
-// /portal/storage URLs functional for records saved before the root move.
+// /storage URLs functional.
 Route::get('/storage/{path}', PublicStorageController::class)
     ->where('path', '.*')
     ->name('public-storage.show');
-Route::get('/portal/storage/{path}', PublicStorageController::class)
-    ->where('path', '.*')
-    ->name('legacy-public-storage.show');
 
 // Some IIS deployments send a non-GET method when resolving the application
 // directory default document. Keep the clean root URL available while the
@@ -82,10 +79,12 @@ Route::post('/locale', function (Request $request) {
     // Use 303 for POST locale changes so Inertia always follows with a GET.
     return redirect()->back(303)->withCookie(cookie('app_locale', $validated['locale'], 60 * 24 * 365, '/'));
 })->name('locale.update');
-// IIS includes the /portal mount point in REQUEST_URI. Laravel normalizes both
-// /portal and /portal/ to this route, so redirecting it to APP_URL (/portal)
-// creates a self-redirect in production.
-Route::any('/portal', PublicPortalController::class);
+// Legacy /portal mount path — redirect to the canonical root URL.
+Route::redirect('/portal', '/', 301);
+// Keep /portal/storage serving files directly for legacy URLs and IIS compatibility.
+Route::get('/portal/storage/{path}', PublicStorageController::class)
+    ->where('path', '.*')
+    ->name('legacy-public-storage.show');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(config('app.email_verification_required') ? ['auth', 'verified'] : ['auth'])

@@ -72,3 +72,5 @@ php artisan route:list --except-vendor
 Rollback aplikasi kepada artefak/tag terdahulu yang diketahui baik. Pulihkan pangkalan data daripada backup yang disahkan jika migration tidak backward-compatible; jangan jalankan `migrate:rollback` secara membuta tuli. Rekod insiden dan hasil rollback dalam changelog/operational record.
 
 Rujuk [deployment architecture](../architecture/deployment.md), [backup/restore](backup-restore.md) dan [audit 17 Ogos](../audits/2026-08-17-full-project-and-production-audit.md).
+
+Gunakan [operations runbook](operations-runbook.md) untuk incident triage, rollback, pemulihan worker/scheduler dan penutupan alert. Gunakan [monitoring matrix](../architecture/monitoring.md) untuk threshold dan bukti yang perlu dikumpulkan.

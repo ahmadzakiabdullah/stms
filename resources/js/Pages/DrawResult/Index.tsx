@@ -180,11 +180,10 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
             router.post(route('events.draw.move-participant', event.slug), {
                 event_participant_id: epId,
                 target_pool_id: targetPoolId,
-                seed_number: pendingSeeds[epId] ?? pools.flatMap(p => p.event_participants).find(item => item.id === epId)?.seed_number,
+                seed_number: pendingSeeds[epId],
             }, {
                 preserveScroll: true,
                 onFinish: () => processNext(),
-                onError: () => processNext(),
             });
         };
         processNext();

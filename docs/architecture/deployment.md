@@ -4,7 +4,7 @@
 
 ## Production Shape
 
-Production semasa berada di `https://saf.utem.edu.my/` di belakang IIS 10 dengan Laravel/Inertia sebagai aplikasi root. `/portal` masih alias kepada portal yang sama; ia bukan base path wajib. Aset frontend dibina oleh Vite ke `public/build`.
+Production semasa berada di `https://saf.utem.edu.my/` di belakang IIS 10 dengan Laravel/Inertia sebagai aplikasi root. Route lama `/portal` kini redirect 301 ke root. Aset frontend dibina oleh Vite ke `public/build`.
 
 Keperluan minimum repositori ialah PHP 8.4, Composer 2, Node/npm yang serasi dengan lockfile, MySQL dan web server yang menunjuk document root kepada `public/`. Redis ialah sasaran production untuk cache/session/queue, tetapi runtime yang diaudit masih menggunakan database cache, database queue dan file session.
 
@@ -45,3 +45,5 @@ Restart queue workers selepas deploy. Pastikan scheduler Laravel berjalan. Gunak
 Tiada Git tag pada 18 Ogos 2026. Release hardening terkini dikomit sebagai `4b04c46` dan CI #112 lulus pada SHA itu. Entry JS/CSS production sepadan dengan manifest build semasa, tetapi runtime cutover/preflight dan authenticated post-deploy evidence belum lengkap.
 
 Prosedur kelulusan penuh berada dalam [release runbook](../deployment/release-runbook.md).
+
+Prosedur respons operasi, rollback, pemulihan worker/scheduler dan ownership alert berada dalam [operations runbook](../deployment/operations-runbook.md). Threshold dan signal minimum berada dalam [monitoring matrix](monitoring.md); kedua-duanya memerlukan pengaktifan serta bukti operator sebelum release dianggap lulus.

@@ -28,9 +28,7 @@ require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
 
 $request = Request::capture();
-// IIS does not infer the application base URL when the physical directory is
-// requested without a trailing slash. Canonicalize that one malformed request
-// before Laravel route matching so `/saf/portal` becomes `/saf/portal/`.
+// Canonicalize the application directory request before Laravel route matching.
 if ($request->getBaseUrl() === '' && basename($request->path()) === basename(__DIR__)) {
     $queryString = $request->getQueryString();
     $location = '/'.trim($request->path(), '/').'/'.($queryString ? '?'.$queryString : '');

@@ -230,13 +230,10 @@ class PublicPortalTest extends TestCase
         }
     }
 
-    public function test_iis_portal_mount_path_renders_without_a_self_redirect(): void
+    public function test_legacy_portal_mount_path_redirects_to_root(): void
     {
-        $this->get('/portal')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Public/Index'));
-
-        $this->get('/portal/')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Public/Index'));
+        $this->get('/portal')->assertRedirect('/')->assertStatus(301);
+        $this->get('/portal/')->assertRedirect('/')->assertStatus(301);
     }
 
     public function test_completed_fixtures_without_scheduled_at_still_appear_in_results(): void

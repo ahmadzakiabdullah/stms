@@ -300,7 +300,21 @@ class DrawService
                     ->where('event_id', $event->id)
                     ->firstOrFail();
 
-                $ep->update(['pool_id' => $targetPool->id, 'seed_number' => $seedNumber ?? $ep->seed_number]);
+                if ($seedNumber === null) {
+                    $usedSeeds = EventParticipant::where('event_id', $event->id)
+                        ->where('pool_id', $targetPool->id)
+                        ->where('id', '!=', $ep->id)
+                        ->whereNotNull('seed_number')
+                        ->pluck('seed_number')
+                        ->all();
+
+                    $seedNumber = 1;
+                    while (in_array($seedNumber, $usedSeeds, true)) {
+                        $seedNumber++;
+                    }
+                }
+
+                $ep->update(['pool_id' => $targetPool->id, 'seed_number' => $seedNumber]);
             }
 
             if ($hadFixtures) {

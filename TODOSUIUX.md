@@ -6,7 +6,7 @@
 
 ## Skop Semasa
 
-Portal public ialah satu landing page Inertia pada `/` (alias `/portal`) dengan seksyen programme, medal tally, schedule dan result. Hanya `/contact-us` wujud sebagai page public berasingan. `/sports-programme`, `/medal-tally` dan `/schedules` memberi 404; GET `/results` tidak wujud sebagai page dan bertembung dengan POST authenticated result route.
+Portal public ialah satu landing page Inertia pada `/` dengan seksyen programme, medal tally, schedule dan result. Hanya `/contact-us` wujud sebagai page public berasingan. `/sports-programme`, `/medal-tally` dan `/schedules` memberi 404; GET `/results` tidak wujud sebagai page dan bertembung dengan POST authenticated result route.
 
 Production memaparkan SAF 2026, 23 sports dengan events, 30 events, 8 faculties, 12 upcoming matches, 0 completed matches/results/medal rows. Contact e-mel, telefon dan alamat kosong.
 

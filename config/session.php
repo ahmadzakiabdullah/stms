@@ -146,11 +146,10 @@ return [
     /*
      * The path on the server where the session cookie will be available.
      *
-     * The application is deployed at the domain root (https://saf.utem.edu.my/),
-     * so the cookie path defaults to "/". SESSION_PATH remains an explicit
-     * override for subfolder deployments or when running behind a proxy.
+     * For root deployments (https://saf.utem.edu.my/), SESSION_PATH=/ is correct.
+     * Only set a subfolder path if the app is ever deployed below a subfolder.
      */
-    // Derive the cookie path from APP_URL; SESSION_PATH overrides when behind a proxy.
+    // Derive the cookie path from APP_URL. SESSION_PATH remains an explicit override when the app is behind a proxy.
     'path' => env('SESSION_PATH', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_PATH) ?: '/'),
 
     /*

@@ -72,7 +72,7 @@ Current canonical public workflows: `/schedule` renders the schedule/results dir
 
 `PublicPortalController` merender:
 
-- `/` dan alias `/portal` -> `Public/Index` (homepage dengan anchor sections Sports, Schedule, Results dan Medal standings).
+- `/` -> `Public/Index` (homepage dengan anchor sections Sports, Schedule, Results dan Medal standings).
 - `/matches` -> `Public/Matches` — semua jadual perlawanan dan keputusan terkini.
 - `/sports`, `/schedule`, `/results`, `/faculties`, `/venues` dan `/live` -> `Public/Directory` (seksyen disahkan di controller).
 - `/news`, `/downloads`, `/faq` dan `/about` -> `Public/Info`.

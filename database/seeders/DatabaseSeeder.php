@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         $defaultOrg = Organization::withTrashed()->firstOrCreate(
             ['slug' => 'utem'],
             [
-                'name' => 'Universiti Teknikal Malaysia Melaka',
+                'name' => 'Universiti Teknikal Malaysia Melaka (UTeM)',
                 'slug' => 'utem',
                 'organization_type' => 'university',
                 'is_active' => true,

@@ -30,7 +30,7 @@ class SAF2026DataSeeder extends Seeder
 
         $org = Organization::withTrashed()->firstOrCreate(
             ['slug' => 'utem'],
-            ['name' => 'Universiti Teknikal Malaysia Melaka', 'slug' => 'utem', 'organization_type' => 'university', 'is_active' => true]
+            ['name' => 'Universiti Teknikal Malaysia Melaka (UTeM)', 'slug' => 'utem', 'organization_type' => 'university', 'is_active' => true]
         );
         if ($org->trashed()) {
             $org->restore();

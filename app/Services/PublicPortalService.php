@@ -25,7 +25,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v8:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v9:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::flexible($cacheKey, [120, 600], function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -219,7 +219,7 @@ class PublicPortalService
             ->where(function ($query) use ($participant) {
                 $query->where('home_participant_id', $participant->id)->orWhere('away_participant_id', $participant->id);
             })
-            ->with(['event:id,name', 'result', 'homeParticipant:id,name', 'awayParticipant:id,name'])
+            ->with(['event:id,name,venues', 'result', 'homeParticipant:id,name', 'awayParticipant:id,name'])
             ->orderByDesc('scheduled_at')->orderByDesc('match_number')->get();
 
         $matches = $fixtures->map(function (Fixture $fixture) use ($participant) {
@@ -239,7 +239,7 @@ class PublicPortalService
                 'score_for' => $isHome ? $result?->score_home : $result?->score_away,
                 'score_against' => $isHome ? $result?->score_away : $result?->score_home,
                 'scheduled_at' => $fixture->scheduled_at?->toIso8601String(),
-                'venue' => $fixture->venue,
+                'venue' => $fixture->venue ?: ($fixture->event?->venues[0] ?? null),
                 'status' => $fixture->status,
                 'outcome' => $outcome,
             ];
