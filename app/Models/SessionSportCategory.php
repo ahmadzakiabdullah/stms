@@ -22,6 +22,13 @@ class SessionSportCategory extends Model
         'start_date' => 'date', 'end_date' => 'date',
     ];
 
-    public function sessionSport() { return $this->belongsTo(SessionSport::class); }
-    public function category() { return $this->belongsTo(SportCategory::class, 'sport_category_id'); }
+    public function sessionSport()
+    {
+        return $this->belongsTo(SessionSport::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(SportCategory::class, 'sport_category_id');
+    }
 }
