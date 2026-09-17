@@ -34,10 +34,10 @@ import { Head, router } from '@inertiajs/react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { FileText, Pencil, Plus, Save, Search, Trash2, Upload, ExternalLink, X } from 'lucide-react';
+import { FormEvent, useEffect, useState } from 'react';
 import Pagination from '@/components/Pagination';
-import type { Session, Organization, Paginated } from '@/types';
+import type { Session, Organization, Paginated, SportDocument } from '@/types';
 import { formatDate, useI18n } from '@/lib/i18n';
 
 const sessionSchema = z.object({
@@ -54,6 +54,7 @@ type SessionForm = z.infer<typeof sessionSchema>;
 
 interface SessionRow extends Session {
     organization?: { name: string } | null;
+    documents?: SportDocument[];
 }
 
 interface SessionsIndexProps {
@@ -67,10 +68,17 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
     const [editingSession, setEditingSession] = useState<SessionRow | null>(null);
     const [deleteSession, setDeleteSession] = useState<SessionRow | null>(null);
     const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
+    const [documentSession, setDocumentSession] = useState<SessionRow | null>(null);
+    const [documentTitle, setDocumentTitle] = useState('');
+    const [documentFile, setDocumentFile] = useState<string>('');
+    const [availableFiles, setAvailableFiles] = useState<{name: string; path: string}[]>([]);
 
     const sessions = Array.isArray(sessionsProp) ? sessionsProp : (sessionsProp?.data ?? []);
     const applySearch = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); router.get(route('sessions.index'), search.trim() ? { search: search.trim() } : {}, { preserveState: true, preserveScroll: true, replace: true }); };
     const clearSearch = () => { setSearch(''); router.get(route('sessions.index'), {}, { preserveState: true, preserveScroll: true, replace: true }); };
+    useEffect(() => { if (documentSession) fetch(route('sessions.documents.available', documentSession.slug)).then((response) => response.json()).then((data) => setAvailableFiles(data.files ?? [])); }, [documentSession]);
+    const uploadDocument = (event: FormEvent) => { event.preventDefault(); if (!documentSession || !documentFile) return; router.post(route('sessions.documents.select', documentSession.slug), { title: documentTitle, file_path: documentFile }, { onSuccess: () => { setDocumentSession(null); setDocumentTitle(''); setDocumentFile(''); router.reload({ only: ['sessions'] }); } }); };
+    const deleteDocument = (document: SportDocument) => { if (window.confirm(`Delete ${document.title}?`)) router.delete(route('sessions.documents.destroy', document.id), { preserveScroll: true }); };
 
     const { control, register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SessionForm>({
         resolver: zodResolver(sessionSchema),
@@ -342,6 +350,9 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                         >
                                             <Pencil className="mr-1 size-3" /> {t('Edit')}
                                         </Button>
+                                        <Button variant="outline" size="sm" onClick={() => setDocumentSession(session)}>
+                                            <FileText className="mr-1 size-3" /> {t('Documents')}
+                                        </Button>
                                         <Button
                                             variant="destructive"
                                             size="sm"
@@ -358,6 +369,14 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
 
                 <Pagination paginator={sessionsProp} />
             </Card>
+
+            <Dialog open={!!documentSession} onOpenChange={(open) => !open && setDocumentSession(null)}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader><DialogTitle>{t('Session Documents')}</DialogTitle><DialogDescription>{documentSession?.name}</DialogDescription></DialogHeader>
+                    <div className="space-y-2">{(documentSession?.documents?.length ?? 0) === 0 ? <p className="text-sm text-muted-foreground">{t('No documents yet.')}</p> : documentSession?.documents?.map((document) => <div key={document.id} className="flex items-center justify-between rounded border px-3 py-2 text-sm"><span><span className="font-medium">{document.title}</span><span className="ml-2 text-xs text-muted-foreground">{document.file_name}</span></span><span className="flex gap-1"><a href={document.url} target="_blank" rel="noreferrer"><Button type="button" size="sm" variant="ghost"><ExternalLink className="mr-1 size-3" />{t('View')}</Button></a><Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => deleteDocument(document)}><Trash2 className="size-3" /></Button></span></div>)}</div>
+                    <form onSubmit={uploadDocument} className="grid gap-3 border-t pt-4"><Label>{t('Select General Rules Document')}</Label><Input value={documentTitle} onChange={(event) => setDocumentTitle(event.target.value)} placeholder={t('Document title')} required /><Select value={documentFile ?? ''} onValueChange={setDocumentFile as (value: string) => void}><SelectTrigger><SelectValue placeholder={t('Select existing PDF or Markdown file')} /></SelectTrigger><SelectContent>{availableFiles.map((file) => <SelectItem key={file.path} value={file.path}>{file.name}</SelectItem>)}</SelectContent></Select><div className="flex justify-end"><Button type="submit" disabled={!documentFile || !documentTitle}><FileText className="mr-2 size-4" />{t('Link Document')}</Button></div></form>
+                </DialogContent>
+            </Dialog>
 
             <ConfirmDialog
                 open={!!deleteSession}

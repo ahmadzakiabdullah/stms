@@ -56,6 +56,8 @@ class UpdateParticipantRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
             'logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
             'inverse_logo' => ['nullable', File::image(allowSvg: true)->max('2mb')],
+            'logo_path_existing' => ['nullable', 'string', 'starts_with:logos/', 'regex:/\.(png|jpe?g|gif|webp|svg)$/i'],
+            'inverse_logo_path_existing' => ['nullable', 'string', 'starts_with:logos/', 'regex:/\.(png|jpe?g|gif|webp|svg)$/i'],
             'remove_logo' => ['boolean'],
             'remove_inverse_logo' => ['boolean'],
             'is_active' => ['boolean'],

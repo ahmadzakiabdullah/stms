@@ -62,7 +62,7 @@ type EventForm = z.infer<typeof eventSchema>;
 interface EventRow extends Omit<Event, 'tournament' | 'sport'> {
     tournament?: { name: string } | null;
     sport?: { name: string } | null;
-    sportCategory?: { name: string } | null;
+    sport_category?: { name: string } | null;
 }
 
 interface EventsIndexProps {
@@ -140,6 +140,18 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
 const formatForDateInput = (dateStr: string | null | undefined) => {
         if (!dateStr) return '';
         return dateStr.split('T')[0];
+    };
+
+    const formatForDateDisplay = (dateStr: string | null | undefined) => {
+        const iso = formatForDateInput(dateStr);
+        if (!iso) return '';
+        const [year, month, day] = iso.split('-');
+        return `${day}/${month}/${year}`;
+    };
+
+    const parseDateDisplay = (value: string) => {
+        const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        return match ? `${match[3]}-${match[2]}-${match[1]}` : '';
     };
 
     const selectedTournament = tournaments.find(t => t.id === selectedTournamentId);
@@ -434,8 +446,10 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             <Label htmlFor="start_date">{t('Start Date')}</Label>
                                             <Input
                                                 id="start_date"
-                                                type="date"
-                                                {...register('start_date')}
+                                                type="text"
+                                                placeholder="dd/mm/yyyy"
+                                                value={formatForDateDisplay(watch('start_date'))}
+                                                onChange={(event) => setValue('start_date', parseDateDisplay(event.target.value), { shouldValidate: true })}
                                                 required
                                             />
                                             {errors.start_date && <p className="text-sm text-destructive">{errors.start_date.message}</p>}
@@ -444,8 +458,10 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             <Label htmlFor="end_date">{t('End Date')}</Label>
                                             <Input
                                                 id="end_date"
-                                                type="date"
-                                                {...register('end_date')}
+                                                type="text"
+                                                placeholder="dd/mm/yyyy"
+                                                value={formatForDateDisplay(watch('end_date'))}
+                                                onChange={(event) => setValue('end_date', parseDateDisplay(event.target.value), { shouldValidate: true })}
                                             />
                                             {errors.end_date && <p className="text-sm text-destructive">{errors.end_date.message}</p>}
                                         </div>
@@ -453,8 +469,10 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             <Label htmlFor="registration_deadline">{t('Registration Deadline')}</Label>
                                             <Input
                                                 id="registration_deadline"
-                                                type="date"
-                                                {...register('registration_deadline')}
+                                                type="text"
+                                                placeholder="dd/mm/yyyy"
+                                                value={formatForDateDisplay(watch('registration_deadline'))}
+                                                onChange={(event) => setValue('registration_deadline', parseDateDisplay(event.target.value), { shouldValidate: true })}
                                             />
                                         </div>
                                     </div>
@@ -576,13 +594,13 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     <TableCell className="font-medium">{event.name}</TableCell>
                                     <TableCell>{event.tournament?.name || '-'}</TableCell>
                                     <TableCell>
-                                        {event.sport?.name} / {event.sportCategory?.name}
+                                        {event.sport?.name} / {event.sport_category?.name}
                                     </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
-                                        {new Date(event.start_date).toLocaleDateString(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short', year: 'numeric' })} {event.end_date ? `→ ${new Date(event.end_date).toLocaleDateString(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+                                        {new Date(event.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })} {event.end_date ? `→ ${new Date(event.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}` : ''}
                                     </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
-                                        {(event as any).registration_deadline ? new Date((event as any).registration_deadline).toLocaleDateString(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                                        {(event as any).registration_deadline ? new Date((event as any).registration_deadline).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
                                     </TableCell>
                                     <TableCell>
                                         <span className="text-xs">{formatLabel((event as any).format)}</span>

@@ -2202,8 +2202,8 @@ export function formatDate(value: string | Date | null | undefined, locale: stri
     }
 
     return new Intl.DateTimeFormat(localeTag(locale), {
-        day: 'numeric',
-        month: 'short',
+        day: '2-digit',
+        month: '2-digit',
         year: 'numeric',
     }).format(value instanceof Date ? value : new Date(value));
 }

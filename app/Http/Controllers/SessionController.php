@@ -26,7 +26,7 @@ class SessionController extends Controller
 
         // Defensive queries
         $sessions = $this->safePaginatedQuery(function () use ($request) {
-            return Session::with('organization')
+            return Session::with('organization', 'documents')
                 ->when($request->filled('search'), fn ($query) => $query->where(function ($q) use ($request) {
                     $search = trim($request->string('search')->toString());
                     $q->where('name', 'like', "%{$search}%")

@@ -207,11 +207,11 @@ final class ReleasePreflightService
 
     private function publicPortal(): array
     {
-        if (trim((string) config('app.public_org_slug')) === '' || trim((string) config('app.public_session_slug')) === '') {
-            return $this->error('PUBLIC_ORG_SLUG and PUBLIC_SESSION_SLUG are required.');
+        if (trim((string) config('app.public_org_slug')) === '') {
+            return $this->error('PUBLIC_ORG_SLUG is required.');
         }
 
-        return $this->ok('Public organization and session selectors are configured.');
+        return $this->ok('Public organization is configured; the active session is selected automatically.');
     }
 
     private function attempt(string $successMessage, \Closure $callback): array

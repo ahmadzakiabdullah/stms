@@ -50,9 +50,7 @@ class NotificationController extends Controller
         }
 
         $notifications = $query->paginate(20)->withQueryString();
-        $actionRequiredCount = $user->unreadNotifications()
-            ->where('data->type', 'new_registration')
-            ->count();
+        $actionRequiredCount = 0;
 
         if (request()->wantsJson()) {
             return response()->json([
@@ -79,7 +77,6 @@ class NotificationController extends Controller
                 ? Organization::query()->active()->orderBy('name')->get(['id', 'name'])
                 : [],
             'notificationTypes' => [
-                ['value' => 'new_registration', 'label' => 'New registration'],
                 ['value' => 'confirmed', 'label' => 'Registration approved'],
                 ['value' => 'rejected', 'label' => 'Registration rejected'],
                 ['value' => 'result_recorded', 'label' => 'Result recorded'],

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — dashboard attention queue
+
+- Events without fixtures are now counted as requiring attention only when they have at least one participant registration. Empty events no longer keep the dashboard alert active after registration/match reset.
+
 ## Unreleased — migration hygiene
 
 - Resolved the `2026_06_12_000002` duplicate timestamp by renaming `create_tournament_sport_table` to `2026_06_12_000003`; its `up()` now guards with `Schema::hasTable()` so already-deployed databases treat the renamed migration as a no-op. Documented in `docs/database/migration-guidelines.md`.

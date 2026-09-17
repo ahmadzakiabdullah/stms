@@ -47,6 +47,11 @@ class Sport extends Model
         return $this->hasMany(Event::class);
     }
 
+    public function documents()
+    {
+        return $this->hasMany(SportDocument::class)->orderBy('sort_order')->orderBy('title');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

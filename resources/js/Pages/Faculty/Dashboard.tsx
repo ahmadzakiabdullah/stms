@@ -255,10 +255,17 @@ export default function FacultyDashboard({
                             </p>
                         </div>
                     </div>
-                    <Button className="shrink-0" onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
+                    <div className="flex shrink-0 items-center gap-2">
+                    <Button asChild variant="outline" disabled={!participant}>
+                        <Link href={route('faculty.register-events')}>
+                            {t('Register Events Page')}
+                        </Link>
+                    </Button>
+                    <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
                         <Plus className="mr-2 size-4" />
                         {t('Register for Events')}
                     </Button>
+                    </div>
                 </div>
             }
         >

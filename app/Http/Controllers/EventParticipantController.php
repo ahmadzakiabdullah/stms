@@ -31,6 +31,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EventParticipantController extends Controller
 {
+    public function registerEvents(Request $request, EventParticipantIndexService $indexService): Response
+    {
+        return $this->index($request, $indexService);
+    }
+
     public function index(Request $request, EventParticipantIndexService $indexService): Response
     {
         Gate::authorize('viewAny', EventParticipant::class);
@@ -53,7 +58,7 @@ class EventParticipantController extends Controller
         return $response;
     }
 
-    public function store(RegisterEventParticipantRequest $request, RegisterParticipantToEvent $action, EventParticipantNotificationService $notificationService): RedirectResponse
+    public function store(RegisterEventParticipantRequest $request, RegisterParticipantToEvent $action): RedirectResponse
     {
         $user = Auth::user();
         $isWakil = $user->hasRole('faculty-representative') && $user->participant_id;
@@ -68,13 +73,11 @@ class EventParticipantController extends Controller
                 ->with('error', $e->getMessage());
         }
 
-        $notificationService->notifyRegistration($ep);
-
         return redirect()->route($isWakil ? 'dashboard' : 'event-participants.index')
             ->with('success', 'Participant registered to event successfully.');
     }
 
-    public function storeBatch(BatchRegisterEventParticipantsRequest $request, BatchRegisterParticipantToEvents $action, EventParticipantNotificationService $notificationService): RedirectResponse
+    public function storeBatch(BatchRegisterEventParticipantsRequest $request, BatchRegisterParticipantToEvents $action): RedirectResponse
     {
         $user = Auth::user();
         $isWakil = $user->hasRole('faculty-representative') && $user->participant_id;
@@ -84,10 +87,6 @@ class EventParticipantController extends Controller
         $validated = $request->validated();
 
         ['registered' => $registered, 'failures' => $failures, 'created' => $created] = $action->handle($participant, $validated['event_ids']);
-
-        foreach ($created as $ep) {
-            $notificationService->notifyRegistration($ep);
-        }
 
         $redirect = $isWakil ? 'dashboard' : 'event-participants.index';
 

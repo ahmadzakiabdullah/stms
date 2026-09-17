@@ -104,7 +104,9 @@ final class DashboardDataService
                     (SELECT COUNT(*) FROM organizations WHERE is_active = 0) AS inactive_organizations,
                     (SELECT COUNT(*) FROM events WHERE is_active = 1) AS active_events,
                     (SELECT COUNT(*) FROM events WHERE is_active = 0) AS inactive_events,
-                    (SELECT COUNT(*) FROM events e WHERE e.is_active = 1 AND NOT EXISTS (SELECT 1 FROM matches m WHERE m.event_id = e.id)) AS events_without_fixtures,
+                    (SELECT COUNT(*) FROM events e WHERE e.is_active = 1
+                        AND EXISTS (SELECT 1 FROM event_participants ep WHERE ep.event_id = e.id)
+                        AND NOT EXISTS (SELECT 1 FROM matches m WHERE m.event_id = e.id)) AS events_without_fixtures,
                     (SELECT COUNT(*) FROM matches WHERE scheduled_at IS NULL AND status IN ('scheduled', 'in_progress')) AS unscheduled_fixtures,
                     (SELECT COUNT(*) FROM matches WHERE status = 'scheduled') AS fixtures_scheduled,
                     (SELECT COUNT(*) FROM matches WHERE status = 'in_progress') AS fixtures_in_progress,

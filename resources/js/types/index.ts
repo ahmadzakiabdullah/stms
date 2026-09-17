@@ -45,9 +45,12 @@ export interface Sport {
     scoring_mode?: 'none' | 'individual' | string;
     is_active: boolean;
     categories?: SportCategory[];
+    documents?: SportDocument[];
     created_at: string;
     updated_at: string;
 }
+
+export interface SportDocument { id: string; sport_id: string; session_id: string; title: string; file_name: string; mime_type: string; file_size: number; is_published: boolean; url: string; }
 
 // ─── SportCategory ───
 export interface SportCategory {

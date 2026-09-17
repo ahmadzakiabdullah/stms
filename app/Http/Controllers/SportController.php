@@ -8,6 +8,7 @@ use App\Actions\Sports\UpdateSport;
 use App\Http\Requests\Sport\StoreSportRequest;
 use App\Http\Requests\Sport\UpdateSportRequest;
 use App\Models\Sport;
+use App\Models\Session;
 use App\Services\SportIconService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class SportController extends Controller
 
         // Defensive query (prevent 500 on unmigrated prod DB)
         $sports = $this->safePaginatedQuery(function () use ($request) {
-            return Sport::with('organization', 'categories')
+            return Sport::with('organization', 'categories', 'documents')
                 ->when($request->filled('search'), fn ($query) => $query->where(function ($q) use ($request) {
                     $search = trim($request->string('search')->toString());
                     $q->where('name', 'like', "%{$search}%")->orWhere('slug', 'like', "%{$search}%");
@@ -35,6 +36,7 @@ class SportController extends Controller
 
         return Inertia::render('Sports/Index', [
             'sports' => $sports,
+            'sessions' => Session::query()->orderByDesc('start_date')->get(['id', 'name']),
         ]);
     }
 

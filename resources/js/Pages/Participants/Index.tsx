@@ -63,6 +63,7 @@ interface ParticipantsIndexProps {
     participants: Paginated<ParticipantRow> | ParticipantRow[];
     sessions?: Session[];
     importPreview?: ImportPreview | null;
+    availableLogos?: { path: string; url: string }[];
 }
 
 const statusColors: Record<string, string> = {
@@ -72,7 +73,7 @@ const statusColors: Record<string, string> = {
     disqualified: 'bg-red-100 text-red-700',
 };
 
-export default function ParticipantsIndex({ participants: participantsProp, sessions: sessionsProp = [], importPreview = null }: ParticipantsIndexProps) {
+export default function ParticipantsIndex({ participants: participantsProp, sessions: sessionsProp = [], importPreview = null, availableLogos = [] }: ParticipantsIndexProps) {
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const [importOpen, setImportOpen] = useState(false);
@@ -138,6 +139,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                         key={editingParticipant?.id ?? 'create'}
                                         participant={editingParticipant}
                                         sessions={sessions}
+                                        availableLogos={availableLogos}
                                         onClose={closeDialog}
                                     />
                                 </DialogContent>
@@ -367,7 +369,7 @@ interface FormData {
     is_active: boolean;
 }
 
-function ParticipantFormDialog({ participant, sessions, onClose }: { participant: ParticipantRow | null; sessions: Session[]; onClose: () => void }) {
+function ParticipantFormDialog({ participant, sessions, availableLogos, onClose }: { participant: ParticipantRow | null; sessions: Session[]; availableLogos: { path: string; url: string }[]; onClose: () => void }) {
     const { t } = useI18n();
     const [formData, setFormData] = useState<FormData>(() => participant ? {
         session_id: participant.session_id || '',
@@ -401,6 +403,8 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
     const [inverseLogoPreview, setInverseLogoPreview] = useState<string | null>(participant?.inverse_logo_url ?? null);
     const [removeLogo, setRemoveLogo] = useState(false);
     const [removeInverseLogo, setRemoveInverseLogo] = useState(false);
+    const [selectedLogoPath, setSelectedLogoPath] = useState('');
+    const [selectedInverseLogoPath, setSelectedInverseLogoPath] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const inverseFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -463,6 +467,8 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
         if (inverseLogoFile) {
             fd.append('inverse_logo', inverseLogoFile);
         }
+        if (selectedLogoPath) fd.append('logo_path_existing', selectedLogoPath);
+        if (selectedInverseLogoPath) fd.append('inverse_logo_path_existing', selectedInverseLogoPath);
         if (participant) {
             fd.append('remove_logo', removeLogo ? '1' : '0');
             fd.append('remove_inverse_logo', removeInverseLogo ? '1' : '0');
@@ -613,6 +619,7 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
                                 {logoPreview && <Button type="button" variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={clearLogo}><Trash2 className="mr-1 size-3" />{t('Remove')}</Button>}
                             </div>
                             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={handleLogoChange} />
+                            {participant && <div className="mt-2 grid max-h-32 grid-cols-6 gap-2 overflow-y-auto rounded-md border p-2">{availableLogos.map(item => <button key={item.path} type="button" title={item.path} onClick={() => { setSelectedLogoPath(item.path); setLogoFile(null); setLogoPreview(item.url); }} className={`flex aspect-square items-center justify-center rounded border p-1 ${selectedLogoPath === item.path ? 'border-primary ring-2 ring-primary/30' : 'border-muted'}`}><img src={item.url} alt="" className="size-full object-contain" /></button>)}</div>}
                             {logoFile && <p className="mt-2 truncate text-[10px] text-muted-foreground">{logoFile.name}</p>}
                             {errors.logo && <p className="mt-2 text-sm text-destructive">{errors.logo}</p>}
                         </div>
@@ -627,6 +634,7 @@ function ParticipantFormDialog({ participant, sessions, onClose }: { participant
                                 {inverseLogoPreview && <Button type="button" variant="ghost" size="sm" className="text-rose-300 hover:bg-white/10 hover:text-rose-200" onClick={clearInverseLogo}><Trash2 className="mr-1 size-3" />{t('Remove')}</Button>}
                             </div>
                             <input ref={inverseFileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={handleInverseLogoChange} />
+                            {participant && <div className="mt-2 grid max-h-32 grid-cols-6 gap-2 overflow-y-auto rounded-md border border-white/20 bg-white/5 p-2">{availableLogos.map(item => <button key={item.path} type="button" title={item.path} onClick={() => { setSelectedInverseLogoPath(item.path); setInverseLogoFile(null); setInverseLogoPreview(item.url); }} className={`flex aspect-square items-center justify-center rounded border p-1 ${selectedInverseLogoPath === item.path ? 'border-white ring-2 ring-white/40' : 'border-white/20'}`}><img src={item.url} alt="" className="size-full object-contain" /></button>)}</div>}
                             {inverseLogoFile && <p className="mt-2 truncate text-[10px] text-white/60">{inverseLogoFile.name}</p>}
                             {errors.inverse_logo && <p className="mt-2 text-sm text-rose-300">{errors.inverse_logo}</p>}
                         </div>

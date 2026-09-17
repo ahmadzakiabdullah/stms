@@ -45,9 +45,19 @@ class Session extends Model
         return $this->hasMany(Tournament::class);
     }
 
+    public function sessionSports()
+    {
+        return $this->hasMany(SessionSport::class);
+    }
+
     public function events()
     {
         return $this->hasManyThrough(Event::class, Tournament::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(SportDocument::class)->whereNull('sport_id')->orderBy('sort_order')->orderBy('title');
     }
 
     public function scopeActive($query)

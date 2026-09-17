@@ -88,6 +88,25 @@ class DashboardTest extends TestCase
         $this->assertGreaterThanOrEqual(2, $props['stats']['activeSessions'] ?? 0);
     }
 
+    public function test_empty_events_are_not_counted_as_events_needing_fixtures(): void
+    {
+        $organization = Organization::factory()->create();
+        $session = Session::factory()->create(['organization_id' => $organization->id]);
+        $tournament = Tournament::factory()->create([
+            'organization_id' => $organization->id,
+            'session_id' => $session->id,
+        ]);
+        Event::factory()->forTournament($tournament)->create([
+            'organization_id' => $organization->id,
+        ]);
+        $super = $this->createSuperAdmin();
+
+        $response = $this->actingAs($super)->get(route('dashboard'));
+        $props = $response->viewData('page')['props'] ?? [];
+
+        $this->assertSame(0, $props['system']['eventsWithoutFixtures'] ?? null);
+    }
+
     public function test_dashboard_includes_registration_overview_for_admins(): void
     {
         $orgA = Organization::factory()->create();

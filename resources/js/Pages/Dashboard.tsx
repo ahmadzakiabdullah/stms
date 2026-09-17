@@ -104,7 +104,7 @@ const roleLabels: Record<string, string> = {
 function formatDate(date: string | undefined, locale: string, t: (key: string) => string) {
     if (!date) return t('Date not set');
     return new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', {
-        day: 'numeric', month: 'short', year: 'numeric',
+        day: '2-digit', month: '2-digit', year: 'numeric',
     }).format(new Date(date));
 }
 

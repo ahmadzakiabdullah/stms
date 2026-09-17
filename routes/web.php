@@ -26,6 +26,8 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SportCategoryController;
 use App\Http\Controllers\SportController;
+use App\Http\Controllers\SportDocumentController;
+use App\Http\Controllers\SessionDocumentController;
 use App\Http\Controllers\TeamRegistrationFormController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\UserController;
@@ -140,6 +142,8 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::post('/manage/sports', [SportController::class, 'store'])->name('sports.store');
     Route::put('/manage/sports/{sport}', [SportController::class, 'update'])->name('sports.update');
     Route::delete('/manage/sports/{sport}', [SportController::class, 'destroy'])->name('sports.destroy');
+    Route::post('/manage/sports/{sport}/documents', [SportDocumentController::class, 'store'])->name('sports.documents.store');
+    Route::delete('/manage/sport-documents/{sportDocument}', [SportDocumentController::class, 'destroy'])->name('sports.documents.destroy');
 
     // M2: SportCategory (basic per-sport management)
     Route::get('/sport-categories', [SportCategoryController::class, 'index'])->name('sport-categories.index');
@@ -152,6 +156,10 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::post('/sessions', [SessionController::class, 'store'])->name('sessions.store');
     Route::put('/sessions/{session}', [SessionController::class, 'update'])->name('sessions.update');
     Route::delete('/sessions/{session}', [SessionController::class, 'destroy'])->name('sessions.destroy');
+    Route::post('/sessions/{session}/documents', [SessionDocumentController::class, 'store'])->name('sessions.documents.store');
+    Route::get('/sessions/{session}/documents/available', [SessionDocumentController::class, 'available'])->name('sessions.documents.available');
+    Route::post('/sessions/{session}/documents/select', [SessionDocumentController::class, 'select'])->name('sessions.documents.select');
+    Route::delete('/manage/session-documents/{sportDocument}', [SessionDocumentController::class, 'destroy'])->name('sessions.documents.destroy');
 
     // M2: Tournament (Basic)
     Route::get('/tournaments', [TournamentController::class, 'index'])->name('tournaments.index');
@@ -192,6 +200,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::delete('/registrations/{registration}', [RegistrationController::class, 'destroy'])->name('registrations.destroy');
 
     Route::get('/event-participants', [EventParticipantController::class, 'index'])->name('event-participants.index');
+    Route::get('/faculty/register-events', [EventParticipantController::class, 'registerEvents'])->name('faculty.register-events');
     Route::get('/participation-confirmations', [ParticipationConfirmationController::class, 'index'])->name('participation-confirmations.index');
     Route::get('/event-participants/{eventParticipant}/team-form', [TeamRegistrationFormController::class, 'show'])->name('event-participants.team-form');
     Route::get('/event-participants/import/template', [EventParticipantController::class, 'downloadImportTemplate'])->name('event-participants.import.template');

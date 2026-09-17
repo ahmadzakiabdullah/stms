@@ -60,6 +60,11 @@ class ParticipantController extends Controller
         $response = Inertia::render('Participants/Index', [
             'participants' => $participants,
             'sessions' => Session::query()->orderBy('name')->get(['id', 'name', 'slug']),
+            'availableLogos' => collect(Storage::disk('public')->files('logos'))
+                ->filter(fn (string $path) => preg_match('/\.(png|jpe?g|gif|webp|svg)$/i', $path) === 1)
+                ->map(fn (string $path) => ['path' => $path, 'url' => Storage::disk('public')->url($path)])
+                ->values()
+                ->all(),
         ]);
 
         $importPreview = session('participant_import_preview');
@@ -120,6 +125,15 @@ class ParticipantController extends Controller
             ] as $uploadField => $fields) {
                 $currentPath = $participant->getAttribute($fields['path']);
 
+                $selectedPath = $request->input($fields['path'].'_existing');
+                if (is_string($selectedPath) && $selectedPath !== '') {
+                    $data[$fields['path']] = $selectedPath;
+                    if ($currentPath && $currentPath !== $selectedPath) {
+                        $pathsToDelete[] = $currentPath;
+                    }
+                    continue;
+                }
+
                 if ($request->hasFile($uploadField)) {
                     $data[$fields['path']] = $logoService->store($request->file($uploadField), $uploadField);
                     $storedPaths[] = $data[$fields['path']];
@@ -133,7 +147,7 @@ class ParticipantController extends Controller
                 }
             }
 
-            unset($data['logo'], $data['inverse_logo'], $data['remove_logo'], $data['remove_inverse_logo']);
+            unset($data['logo'], $data['inverse_logo'], $data['remove_logo'], $data['remove_inverse_logo'], $data['logo_path_existing'], $data['inverse_logo_path_existing']);
             $action->handle($participant, $data);
         } catch (\Throwable $exception) {
             Storage::disk('public')->delete($storedPaths);

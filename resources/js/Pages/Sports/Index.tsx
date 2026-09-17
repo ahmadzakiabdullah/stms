@@ -34,11 +34,11 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ChevronDown, ChevronRight, Pencil, Plus, Save, Search, Trash2, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, Plus, Save, Search, Trash2, X, FileText, Upload, ExternalLink } from 'lucide-react';
 import { Fragment, FormEvent, useEffect, useRef, useState } from 'react';
 import Pagination from '@/components/Pagination';
 import { SportIcon } from '@/lib/sportIcons';
-import type { Paginated, Sport, SportCategory } from '@/types';
+import type { Paginated, Sport, SportCategory, SportDocument, Session } from '@/types';
 import { useI18n } from '@/lib/i18n';
 
 const sportSchema = z.object({
@@ -66,9 +66,10 @@ type CategoryForm = z.infer<typeof categorySchema>;
 
 interface SportsIndexProps {
     sports: Paginated<Sport> | Sport[];
+    sessions?: Session[];
 }
 
-export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
+export default function SportsIndex({ sports: sportsProp, sessions = [] }: SportsIndexProps) {
     const { isSuperAdmin = false } = usePage().props;
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
@@ -78,6 +79,10 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     const [serverError, setServerError] = useState<string | null>(null);
     const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
     const [iconFile, setIconFile] = useState<File | null>(null);
+    const [documentSport, setDocumentSport] = useState<Sport | null>(null);
+    const [documentTitle, setDocumentTitle] = useState('');
+    const [documentSession, setDocumentSession] = useState('');
+    const [documentFile, setDocumentFile] = useState<File | null>(null);
 
     // ── Category dialog state ──
     const [catOpen, setCatOpen] = useState(false);
@@ -278,6 +283,8 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
     const toggleExpand = (id: string) => {
         setExpandedId(expandedId === id ? null : id);
     };
+    const uploadDocument = (event: FormEvent) => { event.preventDefault(); if (!documentSport || !documentFile) return; const fd = new FormData(); fd.append('title', documentTitle); fd.append('session_id', documentSession); fd.append('document', documentFile); fd.append('is_published', '1'); router.post(route('sports.documents.store', documentSport.slug), fd, { forceFormData: true, onSuccess: () => { setDocumentSport(null); router.reload({ only: ['sports'] }); } }); };
+    const deleteDocument = (document: SportDocument) => { if (window.confirm(`Delete ${document.title}?`)) router.delete(route('sports.documents.destroy', document.id), { preserveScroll: true }); };
 
     return (
         <AuthenticatedLayout
@@ -394,6 +401,10 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
                                                          </Button>
                                                         )}
                                                     </div>
+                                                    <div className="mb-4 rounded-lg border bg-background p-3">
+                                                        <div className="mb-2 flex items-center justify-between"><h5 className="flex items-center gap-2 text-sm font-medium"><FileText className="size-4" /> {t('Documents')}</h5>{isSuperAdmin && <Button size="sm" variant="outline" onClick={() => setDocumentSport(sport)}><Upload className="mr-1 size-3" /> {t('Upload')}</Button>}</div>
+                                                        {(sport.documents?.length ?? 0) === 0 ? <p className="text-sm text-muted-foreground">{t('No documents yet.')}</p> : sport.documents?.map((doc) => <div key={doc.id} className="flex items-center justify-between border-t py-2 text-sm"><span><span className="font-medium">{doc.title}</span><span className="ml-2 text-xs text-muted-foreground">{doc.file_name}</span></span><span className="flex gap-1"><a href={doc.url} target="_blank" rel="noreferrer"><Button type="button" size="sm" variant="ghost"><ExternalLink className="mr-1 size-3" />{t('View')}</Button></a>{isSuperAdmin && <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => deleteDocument(doc)}><Trash2 className="size-3" /></Button>}</span></div>)}
+                                                    </div>
                                                     {(sport.categories?.length ?? 0) === 0 ? (
                                                         <p className="text-sm text-muted-foreground">{t('No categories yet for this sport.')}</p>
                                                     ) : (
@@ -436,6 +447,9 @@ export default function SportsIndex({ sports: sportsProp }: SportsIndexProps) {
 
             {isSuperAdmin && (
                 <>
+            <Dialog open={!!documentSport} onOpenChange={(open) => !open && setDocumentSport(null)}>
+                <DialogContent><form onSubmit={uploadDocument}><DialogHeader><DialogTitle>{t('Upload Sport Document')}</DialogTitle><DialogDescription>{documentSport?.name}</DialogDescription></DialogHeader><div className="grid gap-4 py-4"><div className="grid gap-2"><Label htmlFor="document-title">{t('Title')}</Label><Input id="document-title" value={documentTitle} onChange={(e) => setDocumentTitle(e.target.value)} required /></div><div className="grid gap-2"><Label>{t('Session')}</Label><Select value={documentSession} onValueChange={setDocumentSession}><SelectTrigger><SelectValue placeholder={t('Select session')} /></SelectTrigger><SelectContent>{sessions.map((session) => <SelectItem key={session.id} value={session.id}>{session.name}</SelectItem>)}</SelectContent></Select></div><div className="grid gap-2"><Label htmlFor="document-file">{t('PDF or Markdown file')}</Label><Input id="document-file" type="file" accept=".pdf,.md,.markdown,application/pdf,text/markdown" onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)} required /><p className="text-xs text-muted-foreground">Maximum 10 MB.</p></div></div><DialogFooter><Button type="button" variant="outline" onClick={() => setDocumentSport(null)}>{t('Cancel')}</Button><Button type="submit" disabled={!documentFile || !documentTitle || !documentSession}><Upload className="mr-2 size-4" />{t('Upload')}</Button></DialogFooter></form></DialogContent>
+            </Dialog>
             {/* ── Sport CRUD dialogs ── */}
             <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) closeDialog(); }}>
                 <DialogContent>
