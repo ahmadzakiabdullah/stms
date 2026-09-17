@@ -36,7 +36,7 @@ final class DashboardDataService
         $sportId = $filters['sport_id'] ?? null;
         $facultyId = $filters['faculty_id'] ?? null;
         $status = $filters['status'] ?? null;
-        $cacheKey = 'dashboard-v5-'.($user->organization_id ?? 'all').'-'.$user->getKey().'-'.md5(implode('|', [$sportId, $facultyId, $status]));
+        $cacheKey = 'dashboard-v6-'.($user->organization_id ?? 'all').'-'.$user->getKey().'-'.md5(implode('|', [$sportId, $facultyId, $status]));
 
         $data = Cache::remember($cacheKey, 60, function () use ($isSuper, $user, $sportId, $facultyId, $status) {
             $stats = [
