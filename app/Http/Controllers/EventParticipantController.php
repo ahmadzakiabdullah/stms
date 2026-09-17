@@ -16,7 +16,6 @@ use App\Models\EventParticipant;
 use App\Models\Participant;
 use App\Models\SquadMember;
 use App\Services\EventParticipantIndexService;
-use App\Services\EventParticipantNotificationService;
 use App\Services\SquadManagementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
