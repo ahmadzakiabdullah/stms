@@ -38,6 +38,10 @@ class SessionDocumentController extends Controller
         $data = $request->validate(['title'=>['required','string','max:255'],'file_path'=>['required','string']]);
         $year = $session->start_date?->format('Y') ?? now()->format('Y');
         $prefix = 'documents/'.$year.'/general/';
+
+        // Prevent path traversal attacks
+        abort_if(str_contains($data['file_path'], '..'), 422);
+
         abort_unless(str_starts_with($data['file_path'], $prefix) && Storage::disk('public')->exists($data['file_path']), 422);
         $absolute = Storage::disk('public')->path($data['file_path']);
         $file = new \SplFileInfo($absolute);
