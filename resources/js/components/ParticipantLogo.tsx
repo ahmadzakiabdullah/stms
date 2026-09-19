@@ -6,7 +6,7 @@ export interface ParticipantLogoSource {
     inverse_logo_url?: string | null;
 }
 
-export type ParticipantLogoSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+export type ParticipantLogoSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 interface ParticipantLogoProps {
     participant?: ParticipantLogoSource | null;
@@ -22,6 +22,7 @@ const sizeClasses: Record<ParticipantLogoSize, string> = {
     md: 'size-10',
     lg: 'size-12',
     xl: 'size-14',
+    '2xl': 'size-[150px]',
 };
 
 const initials = (name?: string | null) => (name || '?')

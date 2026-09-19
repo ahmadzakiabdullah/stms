@@ -143,6 +143,8 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::put('/manage/sports/{sport}', [SportController::class, 'update'])->name('sports.update');
     Route::delete('/manage/sports/{sport}', [SportController::class, 'destroy'])->name('sports.destroy');
     Route::post('/manage/sports/{sport}/documents', [SportDocumentController::class, 'store'])->name('sports.documents.store');
+    Route::get('/manage/sports/{sport}/documents/available', [SportDocumentController::class, 'available'])->name('sports.documents.available');
+    Route::post('/manage/sports/{sport}/documents/select', [SportDocumentController::class, 'select'])->name('sports.documents.select');
     Route::delete('/manage/sport-documents/{sportDocument}', [SportDocumentController::class, 'destroy'])->name('sports.documents.destroy');
 
     // M2: SportCategory (basic per-sport management)

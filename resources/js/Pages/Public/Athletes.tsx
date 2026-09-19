@@ -80,7 +80,7 @@ export default function PublicAthletes({ app_name, competition, rosters = [], at
                             </div>
                             <select value={sport} onChange={event => setSport(event.target.value)} aria-label={t('Filter by sport')} className="rounded-xl border border-[var(--public-dark-border)] bg-white px-3.5 py-2.5 text-sm font-semibold outline-none focus:border-[var(--public-primary-border)]"><option value="">{t('All Sports')}</option>{sports.map(value => <option key={value} value={value}>{value}</option>)}</select>
                             <select value={category} onChange={event => setCategory(event.target.value)} aria-label={t('Filter by category')} className="rounded-xl border border-[var(--public-dark-border)] bg-white px-3.5 py-2.5 text-sm font-semibold outline-none focus:border-[var(--public-primary-border)]"><option value="">{t('All Categories')}</option>{categories.map(value => <option key={value} value={value}>{value}</option>)}</select>
-                            {hasFilters && <button type="button" onClick={clearFilters} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--public-dark-border)] px-4 py-2.5 text-sm font-black text-slate-600 hover:border-red-200 hover:text-red-600"><X className="size-4" />{t('Clear')}</button>}
+                            {hasFilters && <button type="button" onClick={clearFilters} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--public-dark-border)] px-4 py-2.5 text-sm font-black text-slate-600 hover:border-red-200 hover:text-red-700"><X className="size-4" />{t('Clear')}</button>}
                         </div>
                     </section>
 
@@ -117,7 +117,7 @@ function AthleteCard({ athlete, t }: { athlete: Athlete; t: (key: string) => str
 }
 
 function formatUpdatedAt(value: string, locale: string) {
-    return new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+    return new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuala_Lumpur' }).format(new Date(value));
 }
 
 function RosterCard({ roster, t }: { roster: Roster; t: (key: string) => string }) {

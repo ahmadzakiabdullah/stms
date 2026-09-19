@@ -323,9 +323,16 @@ class PublicPortalService
             'stats' => ['sports' => (clone $eventQuery)->distinct()->count('sport_id'), 'events' => (clone $eventQuery)->count(),
                 'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()->count(),
                 'completed_matches' => $completedFixtures->count(), 'total_matches' => $playableCount],
-            'sports_catalog' => (clone $eventQuery)->with(['sport:id,name', 'sportCategory:id,name'])->get()
+            'sports_catalog' => (clone $eventQuery)->with(['sport:id,name', 'sport.documents' => fn ($query) => $query->where('session_id', $session->id)->where('is_published', true)->select(['id', 'sport_id', 'title', 'file_name', 'file_path', 'mime_type', 'file_size'])], 'sportCategory:id,name')->get()
                 ->groupBy('sport_id')->map(fn ($events) => [
                     'name' => $events->first()->sport?->name,
+                    'documents' => $events->first()->sport?->documents->map(fn ($document) => [
+                        'title' => $document->title,
+                        'file_name' => $document->file_name,
+                        'url' => $document->url,
+                        'mime_type' => $document->mime_type,
+                        'file_size' => $document->file_size,
+                    ])->values()->all() ?? [],
                     'categories' => $events->map(fn ($event) => $event->sportCategory?->name)->filter()->unique()->sort()->values()->all(),
                     'events' => $events->map(fn ($event) => [
                         'name' => $event->name,

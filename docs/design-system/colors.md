@@ -82,3 +82,26 @@ CSS variables use the OKLCH color space and are consumed via Tailwind's `var()` 
 | `border` | Dividers and borders |
 | `input` | Form input borders |
 | `ring` | Focus ring indicators |
+
+## Public Portal Theme (tenant-configurable)
+
+The public portal (`/`, `/sports`, `/schedule`, `/contact-us`, etc.) uses a separate six-colour token set injected from tenant settings. Audit 19 September 2026 verified every combination used in `resources/js/Pages/Public/**` against WCAG AA (4.5:1 for text, 3:1 for large text/UI):
+
+| Token | Role | Example usage |
+|---|---|---|
+| `--public-dark` | Hero/sidebar background | `PublicPageHero`, contact aside |
+| `--public-primary` | Primary actions & accents | Sport card CTA, filter focus rings |
+| `--public-highlight` | CTA on dark surfaces | "View schedule" button in hero |
+| `--public-accent` | Eyebrow labels on dark | Section eyebrows |
+| `--public-dark-border` | Borders on light surfaces | Card borders |
+| `--public-dark-faint` | Secondary text on light | Captions, meta text (AA ≥ 4.5:1 on white) |
+
+Contrast rules enforced in code:
+
+- `text-red-700` (not `text-red-600`) for red text on light backgrounds — applied to live strips and clear-filter hover states (audit fixed remaining `text-red-600` occurrences in `Schedule.tsx` and `Athletes.tsx`, 19 September 2026).
+- Text on `--public-dark` surfaces uses `white`, `white/65`, `white/75`, or `--public-highlight` — all ≥ 4.5:1 against the dark gradient.
+- Badge chips use `--public-primary` text on `--public-primary-soft` background; tenant themes must keep the soft variant light enough for AA.
+
+## Dates and timezone (public pages)
+
+All `Intl.DateTimeFormat`/`toLocaleDateString` calls in public pages (`Index`, `Schedule`, `Athletes`, `Athlete`) and the shared helpers `formatDate`/`formatDateTime` in `resources/js/lib/i18n.ts` explicitly set `timeZone: 'Asia/Kuala_Lumpur'`. This guarantees fixture times render in Malaysian time regardless of the visitor's browser timezone. Audited and applied 19 September 2026.

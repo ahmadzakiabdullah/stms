@@ -27,6 +27,7 @@ const formatDateTime = (value: string | null, locale: string) => {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur',
     }).format(new Date(value));
 };
 
@@ -40,7 +41,11 @@ const tabs: { key: TabType; label: string; icon: typeof CalendarDays }[] = [
 export default function SchedulePage({ app_name, competition, upcoming = [], completed = [], sports_catalog = [], venues = [], updated_at }: Props) {
     const { t, locale } = useI18n();
     const [activeTab, setActiveTab] = useState<TabType>('all');
-    const [sportFilter, setSportFilter] = useState('');
+    const [sportFilter, setSportFilter] = useState(() => {
+        if (typeof window === 'undefined') return '';
+        const param = new URLSearchParams(window.location.search).get('sport');
+        return param && sports_catalog.some(s => s.name === param) ? param : '';
+    });
     const [categoryFilter, setCategoryFilter] = useState('');
     const [venueFilter, setVenueFilter] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
@@ -118,6 +123,7 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
+                    timeZone: 'Asia/Kuala_Lumpur',
                 })
                 : t('Date to be confirmed');
 
@@ -291,7 +297,7 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                                     <button
                                         type="button"
                                         onClick={clearFilters}
-                                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:border-red-200 hover:text-red-600"
+                                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:border-red-200 hover:text-red-700"
                                     >
                                         <X className="size-4" />
                                         {t('Clear')}
@@ -400,7 +406,7 @@ function FilterPanel({
                     <option value="">{t('All Venues')}</option>
                     {venues.map(venue => <option key={venue} value={venue}>{venue}</option>)}
                 </select>
-                {hasActiveFilters && <button type="button" onClick={clearFilters} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:border-red-200 hover:text-red-600"><X className="size-4" />{t('Clear')}</button>}
+                {hasActiveFilters && <button type="button" onClick={clearFilters} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:border-red-200 hover:text-red-700"><X className="size-4" />{t('Clear')}</button>}
             </div>
         </div>
     );
@@ -411,6 +417,7 @@ function formatDateRange(start: string, end: string | null, locale: string) {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
+        timeZone: 'Asia/Kuala_Lumpur',
     }).format(new Date(d));
 
     return end ? `${fmt(start)} — ${fmt(end)}` : fmt(start);

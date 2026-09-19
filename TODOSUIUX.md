@@ -25,12 +25,12 @@ Production memaparkan SAF 2026, 23 sports dengan events, 30 events, 8 faculties,
 - [x] Progress tidak mendominasi ketika fixture/result kosong.
 - [x] Navigation public mempunyai label/active semantics dan touch target utama.
 - [x] Paparkan `Last updated`, `Refreshing…`, kegagalan refresh dan tindakan refresh secara konsisten.
-- [ ] Terangkan bila jadual/result/medal akan tersedia dan siapa yang mengesahkannya.
-- [ ] Uji content overflow, nama sport/fakulti panjang, timezone Asia/Kuala_Lumpur dan format dwibahasa.
+- [x] Terangkan bila jadual/result/medal akan tersedia dan siapa yang mengesahkannya.
+- [x] Uji content overflow, nama sport/fakulti panjang, timezone Asia/Kuala_Lumpur dan format dwibahasa.
 
 ## P2 — Konsistensi dan Prestasi
 
-- [ ] Selaraskan public theme enam warna dengan token design system dan semak kontras setiap kombinasi tenant. Public home audit menemui dan membetulkan badge kategori `text-red-600` kepada `text-red-700` untuk WCAG contrast.
+- [x] Selaraskan public theme enam warna dengan token design system dan semak kontras setiap kombinasi tenant. Public home audit menemui dan membetulkan badge kategori `text-red-600` kepada `text-red-700` untuk WCAG contrast. Audit 19 September 2026 membetulkan baki `text-red-600` dalam `Schedule.tsx`/`Athletes.tsx` dan mendokumentasikan token + matriks kontras dalam `docs/design-system/colors.md`.
 - [x] Buang global Vite prefetch dan hadkan guest Ziggy manifest.
 - [x] Logo mempunyai saiz, fallback, alt handling dan inverse variant.
 - [x] Ukur Core Web Vitals sebenar; production Lighthouse baseline direkodkan dalam `docs/testing/e2e-performance.md` (LCP 5.6s homepage, 5.4s schedule). Optimasi LCP masih susulan.

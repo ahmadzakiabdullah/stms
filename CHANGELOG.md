@@ -790,3 +790,6 @@ ok
 - Fixed rankings for legacy tournaments with a missing `organization_id` by safely resolving the tenant from the owning session and preventing a production 500.
 - Refactored the public homepage medal standings into a podium-led medal tally with responsive top-six ranking cards and participant branding.
 - Added a shared public match-status badge with consistent Live, Scheduled, Completed, Cancelled and Postponed states, plus accessible public empty states.
+- Sports documents can now be linked by selecting existing PDF/Markdown files from `storage/app/public/documents/{year}/sports` instead of uploading them again. Existing shared files are not deleted when an association is removed.
+- Public sports cards now show published sport-specific rules with read and download actions.
+- Public Sports Programme now shows the active session in its intro, clearer rules actions, and rules-availability filtering.

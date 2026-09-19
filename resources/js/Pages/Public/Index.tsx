@@ -30,6 +30,7 @@ const formatDate = (value: string | null, locale: string, includeTime = false) =
     if (!value) return null;
     return new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', {
         day: 'numeric', month: 'short', year: 'numeric',
+        timeZone: 'Asia/Kuala_Lumpur',
         ...(includeTime ? { hour: '2-digit', minute: '2-digit' } : {}),
     }).format(new Date(value));
 };
@@ -88,7 +89,10 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
     return (
         <PublicLayout title={competition?.name || app_name} appName={app_name} current="home">
-            <Head><link rel="canonical" href={route('public.index')} /></Head>
+            <Head>
+                <link rel="canonical" href={route('public.index')} />
+                <link rel="preload" as="image" href="/images/banner/banner-saf-20-2026.jpeg" fetchPriority="high" />
+            </Head>
             <main>
                 <section className="relative isolate overflow-hidden bg-[var(--public-dark)] pb-16 pt-32 text-white sm:pb-20 sm:pt-40">
                     <CosmicBackground />
@@ -129,9 +133,37 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                     </div>
                 </section>
 
+                <section aria-label={competition?.name || app_name} className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 sm:pt-16">
+                    <figure className="overflow-hidden rounded-[1.75rem] border border-[var(--public-dark-border)] shadow-[0_32px_80px_-48px_rgba(7,27,51,.9)]">
+                        <img
+                            src="/images/banner/banner-saf-20-2026.jpeg"
+                            alt={competition?.name ? `${t('Official banner')} — ${competition.name}` : t('Official banner')}
+                            className="max-h-56 w-full object-cover object-top sm:max-h-80 lg:max-h-[26rem]"
+                            loading="eager"
+                            decoding="async"
+                            fetchPriority="high"
+                        />
+                    </figure>
+                    {liveMatches.length > 0 && (
+                        <Link href={route('public.schedule')} className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-black text-red-700 transition hover:border-red-300 hover:bg-red-100">
+                            <span className="inline-flex items-center gap-2"><span className="size-2 animate-pulse rounded-full bg-red-500" />{liveMatches.length} {t('Live')} {t('matches')}</span>
+                            <span className="inline-flex items-center gap-1.5">{t('Watch now')}<ArrowRight className="size-4" /></span>
+                        </Link>
+                    )}
+                </section>
+
                 <section id="overview" className="public-below-fold relative mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 sm:py-24">
                     <PublicSectionHeading eyebrow={t('At a glance')} title={t('Competition overview')} description={t('Everything you need for SAF 2026')} />
                     <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map(({ value, label, description, icon: Icon, href }) => <Link key={label} href={href} className="group rounded-[1.6rem] border border-[var(--public-dark-border)] bg-white p-6 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)]"><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Icon className="size-5" /></span><b className="mt-9 block text-5xl font-black tracking-[-.06em]">{value}</b><h3 className="mt-5 text-xs font-black uppercase tracking-[.16em]">{label}</h3><p className="mt-1 text-sm text-[var(--public-dark-faint)]">{description}</p></Link>)}</div>
+                    {stats.total_matches === 0 && (
+                        <p className="mt-6 flex items-start gap-3 rounded-2xl border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] px-5 py-4 text-sm font-semibold text-[var(--public-text)]">
+                            <CalendarDays className="mt-0.5 size-5 shrink-0 text-[var(--public-primary)]" />
+                            <span>
+                                {t('Fixtures and results will appear here once published by the secretariat.')}
+                                {competition?.start_date ? ` ${t('The competition starts on')} ${formatDate(competition.start_date, locale)}.` : ''}
+                            </span>
+                        </p>
+                    )}
                 </section>
 
                 <section id="sports" className="public-below-fold relative scroll-mt-24 border-y border-[var(--public-dark-border)] bg-[var(--public-dark-soft)] py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
