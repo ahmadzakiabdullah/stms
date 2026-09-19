@@ -5,12 +5,13 @@ import PublicPageHero from '@/components/PublicPageHero';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
 import { useI18n } from '@/lib/i18n';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, MapPin, Search, Trophy, Users, X } from 'lucide-react';
+import { ArrowRight, FileText, MapPin, Search, Trophy, Users, X } from 'lucide-react';
 import { SportIcon } from '@/lib/sportIcons';
 import { type ComponentType, useMemo, useState } from 'react';
 
 type Team = { name: string; logo_url: string | null; inverse_logo_url: string | null } | null;
-type SportCatalogEntry = { name: string; categories: string[]; events: { name: string; category: string | null }[] };
+type SportDocument = { title: string; url: string; file_name: string; mime_type: string; file_size: number };
+type SportCatalogEntry = { name: string; categories: string[]; events: { name: string; category: string | null }[]; documents?: SportDocument[] };
 type Props = { section: 'sports' | 'faculties' | 'venues'; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; sports_catalog: SportCatalogEntry[]; faculties: Team[]; venues: string[] };
 
 const labels: Record<Props['section'], { title: string; intro: string; icon: ComponentType<{ className?: string }> }> = {
@@ -50,17 +51,36 @@ const stripEventPrefix = (name: string): string => {
 
 function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEntry[]; t: (key: string) => string }) {
     const [query, setQuery] = useState('');
+    const [category, setCategory] = useState('');
     const totalEvents = sports_catalog.reduce((sum, sport) => sum + sport.events.length, 0);
     const normalized = query.trim().toLowerCase();
 
+    const categories = useMemo(() => {
+        const counts = new Map<string, number>();
+
+        sports_catalog.forEach(sport => {
+            sport.categories.forEach(name => counts.set(name, (counts.get(name) ?? 0) + 1));
+        });
+
+        return Array.from(counts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    }, [sports_catalog]);
+
     const filtered = useMemo(() => {
-        if (!normalized) return sports_catalog;
-        return sports_catalog.filter(sport =>
-            sport.name.toLowerCase().includes(normalized)
-            || sport.events.some(event => event.name.toLowerCase().includes(normalized))
-            || sport.categories.some(category => category.toLowerCase().includes(normalized)),
-        );
-    }, [sports_catalog, normalized]);
+        return sports_catalog.filter(sport => {
+            if (category && !sport.categories.includes(category)) return false;
+            if (!normalized) return true;
+
+            return sport.name.toLowerCase().includes(normalized)
+                || sport.events.some(event => event.name.toLowerCase().includes(normalized))
+                || sport.categories.some(name => name.toLowerCase().includes(normalized));
+        });
+    }, [sports_catalog, normalized, category]);
+
+    const chipClass = (active: boolean) => `inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-black uppercase tracking-wider transition ${
+        active
+            ? 'border-[var(--public-primary)] bg-[var(--public-primary)] text-white'
+            : 'border-[var(--public-dark-border)] bg-white text-[var(--public-dark-faint)] hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]'
+    }`;
 
     return (
         <section>
@@ -93,7 +113,25 @@ function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEn
                 </div>
             </div>
 
-            <p aria-live="polite" className="mt-6 text-xs font-bold text-[var(--public-dark-faint)]">{normalized ? `${t('Showing')} ${filtered.length} ${t('of')} ${sports_catalog.length} ${t('sports')}` : null}</p>
+            {categories.length > 1 ? (
+                <div role="group" aria-label={t('Filter by category')} className="mt-5 flex flex-wrap items-center gap-2">
+                    <button type="button" onClick={() => setCategory('')} aria-pressed={category === ''} className={chipClass(category === '')}>{t('All')}</button>
+                    {categories.map(([name, count]) => (
+                        <button
+                            key={name}
+                            type="button"
+                            onClick={() => setCategory(previous => (previous === name ? '' : name))}
+                            aria-pressed={category === name}
+                            className={chipClass(category === name)}
+                        >
+                            {name}
+                            <span className={`tabular-nums ${category === name ? 'text-white/70' : 'text-[var(--public-dark-faint)]'}`}>{count}</span>
+                        </button>
+                    ))}
+                </div>
+            ) : null}
+
+            <p aria-live="polite" className="mt-6 text-xs font-bold text-[var(--public-dark-faint)]">{`${t('Showing')} ${filtered.length} ${t('of')} ${sports_catalog.length} ${t('sports')}`}</p>
 
             <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map(sport => <SportCard key={sport.name} sport={sport} t={t} />)}
@@ -105,8 +143,15 @@ function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEn
 
 function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) => string }) {
     const labels = sport.categories.length > 0 ? sport.categories : sport.events.map(event => stripEventPrefix(event.name));
+    const documents = sport.documents ?? [];
+
     return (
-        <article className="flex h-full flex-col rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]">
+        <article className="group relative flex h-full flex-col rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]">
+            <Link
+                href={route('public.schedule', { sport: sport.name })}
+                aria-label={`${sport.name} — ${t('View fixtures')}`}
+                className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-primary)]/40"
+            />
             <div className="flex items-start justify-between gap-3">
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><SportIcon name={sport.name} className="text-2xl leading-none" /></span>
                 <span className="rounded-full bg-[var(--public-dark-soft)] px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[var(--public-dark-faint)] tabular-nums">{sport.events.length} {t('events')}</span>
@@ -115,7 +160,27 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
             <div className="mt-3 flex flex-wrap gap-1.5">
                 {labels.map(label => <span key={label} className="rounded-md border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] px-2 py-0.5 text-[11px] font-bold text-[var(--public-primary)]">{label}</span>)}
             </div>
-            <p className="mt-auto pt-4 text-xs text-[var(--public-dark-faint)]">{sport.events.length > 1 ? `${sport.events.length} ${t('events')} ${t('scheduled')}` : `1 ${t('event')} ${t('scheduled')}`}</p>
+            {documents.length > 0 ? (
+                <ul className="relative z-10 mt-3 space-y-1.5">
+                    {documents.map(document => (
+                        <li key={document.url}>
+                            <a
+                                href={document.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--public-primary)] underline-offset-2 hover:underline"
+                            >
+                                <FileText className="size-3.5 shrink-0" />
+                                {document.title}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            ) : null}
+            <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+                <p className="text-xs text-[var(--public-dark-faint)]">{sport.events.length > 1 ? `${sport.events.length} ${t('events')} ${t('scheduled')}` : `1 ${t('event')} ${t('scheduled')}`}</p>
+                <span className="inline-flex items-center gap-1 text-xs font-black text-[var(--public-primary)]">{t('View fixtures')}<ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span>
+            </div>
         </article>
     );
 }

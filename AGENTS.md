@@ -15,11 +15,13 @@ Before performing any task, **always** read the following files in order:
 3. `CURRENT_STATE.md` (root) — honest snapshot of what is actually built vs the target
 4. `ROADMAP.md`
 5. `TODOS.md`
-6. `docs/adr/*`
-7. `docs/architecture/*`
-8. `docs/database/*`
+6. `CHANGELOG.md`
+7. `docs/README.md` — documentation index and source-of-truth rules
+8. `docs/adr/*`
+9. `docs/architecture/*`
+10. `docs/database/*`
 
-Documentation takes precedence over assumptions.
+Documentation takes precedence over assumptions. Docs marked as historical/superseded (`docs/PLAN.md`, `docs/FINDING.md`, `docs/AUDIT_REPORT_AND_RECOMMENDATIONS.md`, `TODOSUIUX.md`, `STMS_HARDENING_PLAN.md`, dated `docs/audits/*`) must not be used as evidence of current status.
 
 ## Core Rules for AI Agents
 

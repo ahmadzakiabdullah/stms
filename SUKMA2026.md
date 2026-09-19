@@ -1,5 +1,7 @@
 # Susun Atur UI/UX — Sistem Keputusan SUKMA Selangor 2026
 
+> **Rujukan reka bentuk sahaja — bukan sistem semasa.** Dokumen ini ialah input/spec untuk portal keputusan SUKMA Selangor 2026 (rujukan luar). Ia menerangkan sasaran UI/UX, bukan pelaksanaan STMS/SAF. Keadaan sistem sebenar: [`CURRENT_STATE.md`](CURRENT_STATE.md).
+
 ## 1. Objektif Portal
 
 Portal ini berfungsi sebagai sistem rasmi untuk:

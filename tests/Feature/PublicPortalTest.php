@@ -13,6 +13,7 @@ use App\Models\Session;
 use App\Models\Setting;
 use App\Models\Sport;
 use App\Models\SportCategory;
+use App\Models\SportDocument;
 use App\Models\SquadMember;
 use App\Models\Tournament;
 use App\Services\PublicPortalService;
@@ -115,12 +116,21 @@ class PublicPortalTest extends TestCase
 
         $this->get(route('public.athletes'))->assertOk()->assertDontSee('RAHSIA-123')->assertDontSee('0129999999')->assertInertia(fn (Assert $page) => $page
             ->component('Public/Athletes')
+            ->where('view', 'teams')
             ->where('stats.teams', 1)
             ->where('stats.athletes', 1)
-            ->where('rosters.0.name', 'Fakulti Sukan')
-            ->where('rosters.0.members.0.name', 'Atlet Awam')
-            ->where('athletes.0.name', 'Atlet Awam')
-            ->where('athletes.0.faculty', 'Fakulti Sukan')
+            ->where('rosters.data.0.name', 'Fakulti Sukan')
+            ->where('rosters.data.0.members.0.name', 'Atlet Awam')
+            ->where('athletes', null)
+            ->missing('upcoming')
+            ->missing('medals'));
+
+        $this->get(route('public.athletes', ['view' => 'athletes']))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Athletes')
+            ->where('view', 'athletes')
+            ->where('athletes.data.0.name', 'Atlet Awam')
+            ->where('athletes.data.0.faculty', 'Fakulti Sukan')
+            ->where('rosters', null)
             ->missing('upcoming')
             ->missing('medals'));
 
@@ -132,6 +142,116 @@ class PublicPortalTest extends TestCase
                 ->where('stats.matches', 1)
                 ->where('stats.wins', 1)
                 ->where('matches.0.opponent', 'Fakulti Lawan'));
+    }
+
+    public function test_public_athletes_directory_filters_by_search_letter_and_sport(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $sport = Sport::factory()->create(['organization_id' => $organization->id, 'name' => 'Badminton']);
+        $event = Event::factory()->forTournament($tournament)->create(['sport_id' => $sport->id]);
+        $faculty = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Sukan', 'is_active' => true]);
+        $registration = EventParticipant::factory()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'participant_id' => $faculty->id, 'status' => 'confirmed']);
+
+        foreach (['Ahmad Zaki', 'Bakar Ali', 'Chong Wei'] as $name) {
+            SquadMember::factory()->create(['organization_id' => $organization->id, 'event_participant_id' => $registration->id, 'name' => $name, 'role' => 'athlete_male', 'is_active' => true]);
+        }
+
+        $this->get(route('public.athletes', ['view' => 'athletes', 'q' => 'Bakar']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('athletes.total', 1)
+                ->where('athletes.data.0.name', 'Bakar Ali'));
+
+        $this->get(route('public.athletes', ['view' => 'athletes', 'letter' => 'C']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('athletes.total', 1)
+                ->where('athletes.data.0.name', 'Chong Wei'));
+
+        $this->get(route('public.athletes', ['view' => 'athletes', 'sport' => 'Badminton']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('athletes.total', 3));
+
+        $this->get(route('public.athletes', ['view' => 'athletes', 'sport' => 'Football']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('athletes.total', 0));
+
+        $this->get(route('public.athletes', ['view' => 'athletes', 'faculty' => 'Fakulti Sukan']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('athletes.total', 3)
+                ->where('faculties.0', 'Fakulti Sukan'));
+
+        $this->get(route('public.athletes', ['view' => 'athletes', 'faculty' => 'Fakulti Lain']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('athletes.total', 0));
+
+        $this->get(route('public.athletes', ['view' => 'athletes', 'sort' => 'name_desc']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('athletes.data.0.name', 'Chong Wei'));
+    }
+
+    public function test_public_athletes_directory_paginates_large_rosters(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $event = Event::factory()->forTournament($tournament)->create();
+        $faculty = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Sukan', 'is_active' => true]);
+        $registration = EventParticipant::factory()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'participant_id' => $faculty->id, 'status' => 'confirmed']);
+
+        foreach (range(1, 25) as $index) {
+            SquadMember::factory()->create(['organization_id' => $organization->id, 'event_participant_id' => $registration->id, 'name' => sprintf('Atlet %02d', $index), 'role' => 'athlete_male', 'is_active' => true]);
+        }
+
+        $this->get(route('public.athletes', ['view' => 'athletes']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('athletes.total', 25)
+                ->where('athletes.per_page', 24)
+                ->where('athletes.last_page', 2)
+                ->has('athletes.data', 24));
+
+        $this->get(route('public.athletes', ['view' => 'athletes', 'page' => 2]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('athletes.current_page', 2)
+                ->has('athletes.data', 1));
+    }
+
+    public function test_public_sports_directory_lists_only_published_sport_documents(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $sport = Sport::factory()->create(['organization_id' => $organization->id, 'name' => 'Badminton']);
+        $category = SportCategory::factory()->forSport($sport)->create(['name' => 'Campuran']);
+        Event::factory()->forTournament($tournament)->create(['sport_id' => $sport->id, 'sport_category_id' => $category->id]);
+
+        $base = [
+            'organization_id' => $organization->id,
+            'sport_id' => $sport->id,
+            'session_id' => $session->id,
+            'file_path' => 'documents/'.$organization->id.'/'.$session->id.'/sports/badminton/peraturan.pdf',
+            'file_name' => 'peraturan.pdf',
+            'mime_type' => 'application/pdf',
+            'file_size' => 1024,
+        ];
+
+        SportDocument::create([...$base, 'title' => 'Peraturan Badminton', 'is_published' => true]);
+        SportDocument::create([...$base, 'title' => 'Draf Dalaman', 'is_published' => false]);
+
+        $this->get(route('public.sports'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Directory')
+            ->where('section', 'sports')
+            ->has('sports_catalog', 1)
+            ->has('sports_catalog.0.documents', 1)
+            ->where('sports_catalog.0.documents.0.title', 'Peraturan Badminton'));
     }
 
     public function test_public_schedule_includes_sport_categories_for_filtering(): void

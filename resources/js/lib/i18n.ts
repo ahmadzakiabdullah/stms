@@ -2112,6 +2112,7 @@ Object.assign(en, {
     'Search sports and events': 'Search sports and events',
     'Clear search': 'Clear search',
     'No sports match your search.': 'No sports match your search.',
+    'View fixtures': 'View fixtures',
 
     // Schedule
     'Competition Schedule': 'Competition Schedule',
@@ -2152,6 +2153,7 @@ Object.assign(ms, {
     'Search sports and events': 'Cari sukan dan acara',
     'Clear search': 'Padam carian',
     'No sports match your search.': 'Tiada sukan sepadan dengan carian anda.',
+    'View fixtures': 'Lihat perlawanan',
 
     // Schedule
     'Competition Schedule': 'Jadual Pertandingan',
@@ -2184,6 +2186,35 @@ Object.assign(ms, {
     'Semi-Final': 'Semi-Final',
     'Final': 'Final',
     'Group': 'Kumpulan',
+});
+
+Object.assign(en, {
+    'All': 'All',
+    'Jump to letter': 'Jump to letter',
+    'Previous': 'Previous',
+    'Navigate pages': 'Navigate pages',
+    'All Faculties': 'All Faculties',
+    'Filter by faculty': 'Filter by faculty',
+    'Sort': 'Sort',
+    'Name A–Z': 'Name A–Z',
+    'Name Z–A': 'Name Z–A',
+    'By faculty': 'By faculty',
+    'Clear filters': 'Clear filters',
+    'Loading…': 'Loading…',
+});
+Object.assign(ms, {
+    'All': 'Semua',
+    'Jump to letter': 'Lompat ke huruf',
+    'Previous': 'Sebelum',
+    'Navigate pages': 'Navigasi halaman',
+    'All Faculties': 'Semua Fakulti',
+    'Filter by faculty': 'Tapis mengikut fakulti',
+    'Sort': 'Susun',
+    'Name A–Z': 'Nama A–Z',
+    'Name Z–A': 'Nama Z–A',
+    'By faculty': 'Mengikut fakulti',
+    'Clear filters': 'Kosongkan penapis',
+    'Loading…': 'Memuatkan…',
 });
 
 const dictionaries: Record<string, Translations> = { en, ms };

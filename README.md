@@ -6,9 +6,9 @@ STMS ialah platform pengurusan kejohanan sukan multi-tenant. Repository ini meng
 
 MVP produk beroperasi dan quality gate repository semasa hijau. Deployment production masih menunggu tindakan operator/owner:
 
-- 148 routes, 65 migrations, 39 controllers, 43 Inertia pages dan 94 PHP test files.
-- PHPUnit 439/439 (1,948 assertions), Pint, TypeScript, Vite build, bundle budget dan tenant-bypass check lulus.
-- Composer/npm audit bersih selepas Guzzle/PSR-7 security update.
+- 153 application routes, 66 migration files, 39 controller files, 43 Inertia pages dan 99 PHP test files.
+- PHPUnit 506/506 (2,345 assertions), Pint, TypeScript, Vite build, bundle budget dan tenant-bypass check lulus.
+- Composer/npm audit 0 advisory/vulnerability selepas remediasi dependensi (league/commonmark 2.10.1, maatwebsite/excel 3.1.70, regenerasi lockfile npm).
 - Playwright/axe lulus 8/8 pada desktop/mobile menggunakan SQLite terasing.
 - Runtime workspace `production` tidak sepadan dengan baseline Redis/session/verification/CSP yang didokumenkan.
 - Tiada release tag.

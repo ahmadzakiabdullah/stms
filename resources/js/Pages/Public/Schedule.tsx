@@ -19,6 +19,11 @@ type Props = {
 
 type TabType = 'all' | 'live' | 'upcoming' | 'completed';
 
+const initialQueryParam = (key: string): string => {
+    if (typeof window === 'undefined') return '';
+    return new URLSearchParams(window.location.search).get(key)?.trim() ?? '';
+};
+
 const formatDateTime = (value: string | null, locale: string) => {
     if (!value) return '';
     return new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', {
@@ -40,8 +45,8 @@ const tabs: { key: TabType; label: string; icon: typeof CalendarDays }[] = [
 export default function SchedulePage({ app_name, competition, upcoming = [], completed = [], sports_catalog = [], venues = [], updated_at }: Props) {
     const { t, locale } = useI18n();
     const [activeTab, setActiveTab] = useState<TabType>('all');
-    const [sportFilter, setSportFilter] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('');
+    const [sportFilter, setSportFilter] = useState(() => initialQueryParam('sport'));
+    const [categoryFilter, setCategoryFilter] = useState(() => initialQueryParam('category'));
     const [venueFilter, setVenueFilter] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
 

@@ -112,6 +112,13 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 - npm audit memaparkan 7 vulnerability (1 low/3 moderate/3 high) dalam toolchain build transitif (`browserslist`, `fast-uri`, `js-yaml`, `qs`, `postcss-selector-parser`, `hono`, `baseline-browser-mapping`). `npm install` di persekitaran npm 10.9.8 Windows/network-drive gagal dengan bug arborist `Tracker "idealTree" already exists` (npm/cli#4273, npm/cli#7596); workaround: regenerasi lockfile + node_modules di drive tempatan (npm 12.0.2) dan salin balik — audited **0 vulnerability**, typecheck/build/budget kekal hijau. `vite` dan `@vitejs/plugin-react` di-pin kepada `8.0.16`/`6.0.2` dalam `package.json` (menggantikan `"latest"`).
 - Pint `--test` mendedahkan gaya tertunda dalam fail Fasa A (`EventParticipants` actions/requests, `EventParticipantImport`, request/settings/services, config dan 3 fail test); `vendor/bin/pint` digunakan dan difailkan sebagai commit `7a43b37e`. Fail yang dikecualikan (UTeM normalize seeders, deployment/runbook docs) dibiarkan unstaged.
 
+## Capability Tambahan 17 September 2026 — Public Athlete Directory Pagination
+
+- `/athletes` kini menapis (carian, sport, kategori) dan menyediakan A–Z serta pagination (24 atlet/12 pasukan) di server, dengan state kekal dalam URL; hanya satu halaman kad berada dalam DOM supaya senarai tidak memanjang apabila peserta bertambah.
+- `PublicPortalService::athleteDirectory()` memulangkan paginator `rosters`/`athletes` berserta `counts`; cache dinaikkan ke `public-athletes:v2`.
+- Kemasan UX P0: segmented Teams/Athletes dengan kiraan, chip sukan berikon, penapis fakulti + susunan, skeleton/loading dengan `aria-busy`, dan empty state boleh tindak.
+- Suite penuh **508/508** (2,478 assertions); ujian pagination/filter/fakulti/susunan dalam `PublicPortalTest`.
+
 ## Capability Tambahan 9 September 2026 — Bulk Import Peserta/Kontinjen (Session-level)
 
 - Import pukal peserta/kontinjen aras session melalui dua langkah preview→confirm: `POST /participants/import/preview` mem-parse CSV/XLSX, menjalankan per-row validation (name wajib, participant_type/status/is_active enum, email format, duplicate name/slug dalam organisasi), menyimpan baris sah dalam Cache 30 min dengan token UUID, dan memaparkan validation report.

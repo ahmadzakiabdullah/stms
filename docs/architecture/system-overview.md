@@ -1,6 +1,6 @@
 # System Overview
 
-> Current route inventory is 148 application routes and 43 Inertia pages. Public athlete profiles and scorer events are implemented; `/schedule` is the canonical public match/results view and `/results/manage` is the authenticated result workflow.
+> Current route inventory is 153 application routes and 43 Inertia pages. Public athlete profiles and scorer events are implemented; `/schedule` is the canonical public match/results view and `/results/manage` is the authenticated result workflow.
 
 > **Current implementation update — 21 August 2026:** Public athlete profiles, configurable individual scoring events and participant-grouped public scorer display are implemented. See `CURRENT_STATE.md` for release status.
 
@@ -72,20 +72,22 @@ Current canonical public workflows: `/schedule` renders the schedule/results dir
 
 `PublicPortalController` merender:
 
-- `/` -> `Public/Index` (homepage dengan anchor sections Sports, Schedule, Results dan Medal standings).
-- `/matches` -> `Public/Matches` — semua jadual perlawanan dan keputusan terkini.
-- `/sports`, `/schedule`, `/results`, `/faculties`, `/venues` dan `/live` -> `Public/Directory` (seksyen disahkan di controller).
+- `/` -> `Public/Index` (homepage dengan anchor sections Sports, Schedule, Results dan Medal standings); `/portal` dan `/index.php` redirect 301 ke `/`.
+- `/schedule` -> `Public/Schedule` (satu-satunya halaman awam jadual/keputusan).
+- `/sports`, `/faculties` dan `/venues` -> `Public/Directory` (seksyen disahkan di controller).
+- `/athletes` dan `/athletes/{id}` -> `Public/Athletes`/`Public/Athlete`.
+- `/matches`, `/results` dan `/live` -> redirect 301 ke `/schedule`.
 - `/news`, `/downloads`, `/faq` dan `/about` -> `Public/Info`.
 - `/contact-us` -> `Public/Contact`.
 - `/sitemap.xml` -> sitemap public.
 
-Navigator dan footer kongsi disediakan oleh `PublicHeader`/`PublicFooter`. `/manage/matches` dan `/manage/sports` ialah halaman pengurusan dalaman yang dilindungi auth; `/matches` dan `/sports` kekal awam. `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud.
+Navigator dan footer kongsi disediakan oleh `PublicHeader`/`PublicFooter`. `/manage/matches` dan `/manage/sports` ialah halaman pengurusan dalaman yang dilindungi auth; `/sports` kekal awam manakala `/matches` redirect ke `/schedule`. `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud.
 
 `PublicPortalService` memilih organization/session melalui `PUBLIC_ORG_SLUG` + `PUBLIC_SESSION_SLUG`, menggunakan explicit organization predicates, cache dua minit dan query fixture upcoming/completed berasingan.
 
 ## Route and Runtime Summary
 
-- 148 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
+- 153 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
 - Email verification ditentukan ketika route bootstrap melalui `EMAIL_VERIFICATION_REQUIRED`.
 - `/health` boleh dilindungi token dan menyamar sebagai 404; `/up` ialah Laravel liveness asas.
 - Runtime workspace audit: production env, debug off, database cache/queue, file session, email verification off, CSP report-only, enforcement off.

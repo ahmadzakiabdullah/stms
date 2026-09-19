@@ -1,53 +1,89 @@
 # Changelog
 
-## Unreleased — dashboard attention queue
+All notable changes to the STMS project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### 19 September 2026 — Public sports directory UX and rulebook links
+
+- Sports directory cards now deep-link to the schedule filtered by sport (`/schedule?sport=...`); `Public/Schedule` reads `sport` and `category` from the URL on load, so `/sports` is no longer a dead-end list. Cards use a stretched-link overlay so the whole card is clickable while inline document links stay usable.
+- Added category filter chips (derived from the sports catalogue) and an always-visible "Showing X of Y sports" count to the `/sports` page.
+- The public `/sports` payload now includes published per-sport rulebook documents scoped to the active session and organization; the directory renders them as PDF/Markdown links. Cache bumped to `public-portal:v10`, `forget()` clears `v9`/`v10`, and sport document upload/delete now invalidates the public portal cache.
+- Fixed a pre-existing TypeScript error in `resources/js/Pages/Events/Index.tsx` (`EventRow` now omits `sport_category`) that surfaced once `origin/master` was merged in.
+- Added `PublicPortalTest::test_public_sports_directory_lists_only_published_sport_documents`.
+
+### Dashboard attention queue
 
 - Events without fixtures are now counted as requiring attention only when they have at least one participant registration. Empty events no longer keep the dashboard alert active after registration/match reset.
 
-## Unreleased — migration hygiene
+### 17 September 2026 — Public athlete directory UX clarity (P0)
+
+- Reworked the `/athletes` toolbar for clarity: a segmented Teams/Athletes control with live counts, sport chips using the shared `SportIcon` glyphs, and new faculty plus sort (Name A–Z / Name Z–A / By faculty) filters; every control persists in the URL alongside search, category, letter and page.
+- Added a loading state (skeleton grid, disabled controls, `aria-busy`) during Inertia filter visits, plus an actionable empty state ("Clear filters"); `PublicEmptyState` now accepts an optional action slot.
+- Backend `athleteDirectory()` now supports `faculty`/`sort` filters and returns a sorted `faculties` list; feature assertions added for faculty and descending-name sorting. Full suite **508/508** (2,478 assertions).
+
+### 17 September 2026 — Public athlete directory filtering and pagination
+
+- Reworked `/athletes` to filter and paginate on the server instead of rendering every confirmed athlete/team as one long card grid: search, sport, category and A–Z letter filters now run over the cached directory payload and return a Laravel paginator (24 athletes or 12 teams per page) with URL-preserved state (`?view=&q=&sport=&category=&letter=&page=`).
+- Added an A–Z jump rail for the athlete view and public-styled Prev/page/Next controls, keeping only one page of cards in the DOM so the page stays short as participation grows; the teams and athletes payload is now split (`rosters`/`athletes` paginators plus filtered `counts`) while `stats` remains the overall totals.
+- Cache key bumped to `public-athletes:v2` (invalidated alongside v1) and two feature tests added for filter/letter/sport matching and pagination; full suite now 508/508 (2,443 assertions).
+
+### 17 September 2026 — Canonical documentation alignment
+
+- Aligned `README.md`, `docs/README.md` and `docs/architecture/system-overview.md` with `CURRENT_STATE.md`: inventory is now `153 application routes / 66 migration files / 39 controller files / 43 Inertia pages / 99 PHP test files`, PHPUnit 506/506 (2,345 assertions) and dependency audits at 0.
+- Corrected the public portal route map: `/schedule` is the canonical schedule/results page, `/sports` + `/faculties` + `/venues` render `Public/Directory`, `/athletes` + `/athletes/{id}` render the athlete pages, and `/matches` + `/results` + `/live` redirect 301 to `/schedule` (removed the stale `Public/Matches` reference).
+- Consolidated the stacked status banners in `docs/database/schema.md` into one current snapshot (66 migrations).
+- Labelled `SUKMA2026.md` and `SUKMA2026UIUX.md` as external design references, not current implementation.
+- Extended `scripts/check-project-inventory.mjs` so `npm run check:inventory` now also validates `README.md` and `docs/architecture/system-overview.md` against the live route/migration/controller/test-file counts, and updated the `AGENTS.md` mandatory reading order.
+- Normalized this changelog to a single `## [Unreleased]` container with dated `###` subsections, moved the Keep a Changelog/SemVer preamble to the top, folded the duplicated legacy and trailing unreleased blocks into the same container as labelled history, and removed a stray `ok` artifact.
+
+### Migration hygiene
 
 - Resolved the `2026_06_12_000002` duplicate timestamp by renaming `create_tournament_sport_table` to `2026_06_12_000003`; its `up()` now guards with `Schema::hasTable()` so already-deployed databases treat the renamed migration as a no-op. Documented in `docs/database/migration-guidelines.md`.
 
-## 15 September 2026 — Malay i18n coverage for error/profile screens + root-domain alignment
+### 15 September 2026 — Malay i18n coverage for error/profile screens + root-domain alignment
 
 - Completed frontend i18n coverage: all pages now use `useI18n()` (including `Error.tsx` and the three Profile partials) and the 20 missing English/Malay keys were added to `resources/js/lib/i18n.ts`.
 - Aligned deployment artifacts with the canonical root domain: `APP_URL=https://saf.utem.edu.my` in `.env.example`, root `<loc>` in `public/sitemap.xml`, and updated `config/session.php` / `public/index.php` comments.
 - Fixed a latent `config/session.php` defect where the `'path'` entry was accidentally commented out by a literal `\r\n` embedded in a `//` line; the session cookie path configuration is active again.
 - Raised the CSS bundle budget from 100 KB to 120 KB (`scripts/check-bundle-budget.mjs`) and updated `docs/architecture/performance.md` with the measured ~102 KB baseline, restoring a green `build:budget` gate after the intentional variable-font and feature growth.
 
-## 9 September 2026 — Full local quality-gate certification + dependency remediation
+### 9 September 2026 — Full local quality-gate certification + dependency remediation
 
 - Certified the complete local gate suite against the committed tree: PHPUnit **506/506 (2,345 assertions)**, Pint `--test` green repo-wide, inventory `153 / 66 / 39 / 43 / 99`, tenant-bypass allowlist, TypeScript, Vite build and bundle budget all green.
 - Remediated 5 new Composer advisories by upgrading `league/commonmark` 2.9.0 → **2.10.1** (4 DoS/XSS advisories in the Attributes/SmartPunct extensions) and `maatwebsite/excel` 3.1.69 → **3.1.70** (CVE-2026-84374, export write outside configured disk); `composer audit` now reports 0 advisories and the full PHPUnit suite remains 506/506.
 - Remediated 7 npm vulnerabilities (browserslist, fast-uri, js-yaml, qs, postcss-selector-parser, hono, baseline-browser-mapping) by regenerating `package-lock.json` + `node_modules` on a local drive. npm 10.9.8 on this Windows network-drive workspace fails with the arborist `Tracker "idealTree" already exists` bug (npm/cli #4273/#7596); regenerating on a local drive with npm 12.0.2 and copying back resolves it — `npm audit` now reports **0 vulnerabilities**. Pinned `vite` to `8.0.16` and `@vitejs/plugin-react` to `6.0.2` in `package.json` (previously `"latest"`).
 - Applied Pint formatting across pre-existing Fasa A files (actions, requests, imports, services, config and 3 test files) as commit `7a43b37e`.
 
-## Unreleased - Bulk participant/kontinjen import (9 September 2026)
+### Bulk participant/kontinjen import (9 September 2026)
 
 - Added session-level bulk import of participants/kontinjen as a two-step preview → confirm flow: `POST /participants/import/preview` parses CSV/XLSX, runs per-row validation (required name, participant_type/status/is_active enums, email format, in-organization duplicate name/slug detection), stages valid rows in the cache under a UUID token (30-minute TTL) and returns a validation report; `POST /participants/import/confirm` creates all staged rows inside a single DB transaction (all-or-nothing rollback) and forgets the token on success or failure.
 - Expired or unknown tokens produce a clear error without mutating data; session selection is optional and cross-organization session ids are rejected at the Form Request level.
 - Added a downloadable import template at `participants.import.template` and an Import dialog on the Participants page that shows the valid/error row summary before confirmation.
 - Added 8 feature tests in `ParticipantImportTest` (preview parsing, invalid-row reporting, cross-org session rejection, confirm creation, expired-token rejection, transactional rollback, template download, authorization). Full suite now 506/506 green (routes 153, testFiles 99); all CI gates (typecheck, build, bundle budget, inventory, tenant-bypass allowlist) pass.
 
-## Unreleased - Print-friendly result sheet (8 September 2026)
+### Print-friendly result sheet (8 September 2026)
 
 - Added a print-friendly official result sheet PDF (`exports.resultSheet`) alongside the existing match sheet, with final score, winner, approval status, submitted/approved-by metadata and signature lines.
 - The result sheet is tenant-scoped, authorized via the `export-data` gate and surfaced as a print button on each Result row in the Results workspace.
 - Added 2 feature tests (success + cross-organization 404); full suite now 498/498 green (routes 150).
 
-## Unreleased - Match schedule conflict validation (8 September 2026)
+### Match schedule conflict validation (8 September 2026)
 
 - Added `MatchScheduleConflictValidator` that detects overlapping-time clashes before a match is created or updated: same venue on the same day within a 120-minute window, or a participant scheduled in more than one match in the same window.
 - Gated `MatchController::store` and `update` on the validator; conflicting submissions are rejected with a clear schedule-clash error rather than persisted.
 - Added 6 feature tests covering venue, participant, cross-day, self-edit and controller-request blocking; full suite now 496/496 green (testFiles 98).
 
-## Unreleased - Medal tally exports (8 September 2026)
+### Medal tally exports (8 September 2026)
 
 - Added per-session medal tally PDF and XLSX exports (`exports.medals.pdf` / `exports.medals.excel`) with a dedicated `MedalTallyExport` Excel export and session-scoped ranking computation, surfaced as buttons on the Rankings admin page.
 - Export endpoints are tenant-scoped (session must belong to the caller's organization) and authorized via the existing `export-data` permission gate.
 - Fixed the stale `ExampleTest::test_public_shell_is_self_hosted_and_has_basic_search_metadata` assertion that expected the guest shell to not include `activity-logs.index`; the complete Ziggy route map is intentionally embedded (documented in `app.blade.php`) to support Inertia login transitions, with authorization enforced server-side. This closes the last known suite failure — full suite now 490/490 green.
 
-## Unreleased - Event Participant registration workflows Fasa A (8 September 2026)
+### Event Participant registration workflows Fasa A (8 September 2026)
 
 - Added an explicit registration status state machine (`pending → confirmed/rejected/withdrawn/disqualified`, `confirmed → withdrawn/disqualified`, `rejected → confirmed/withdrawn`) with a validated `EventParticipant::canTransitionTo()` guard on every transition.
 - Added batch approve/reject of pending or rejected registrations via `event-participants.batch-status` with Form Request authorization, reject-notes requirements and tenant scoping.
@@ -57,182 +93,182 @@
 - Hardened `EventParticipantPolicy` so same-organization non-admin users without persisted permission rows no longer hit a 500 during `viewAny`.
 - Reworked the Event Participants workshop page: bulk-select toolbar, withdraw action, conflict badge, import button and dialogs; TypeScript typecheck, Vite build, bundle budget, inventory and tenant-bypass CI gates all pass.
 
-## Unreleased - Production monitoring and operations runbook (21 August 2026)
+### Production monitoring and operations runbook (21 August 2026)
 
 - Added a production monitoring matrix covering availability, errors, latency, database/cache, queue, disk, backups, certificates and CSP reports with starting thresholds and evidence requirements.
 - Added an operations runbook for incident triage, rollback, backup alerts and worker/scheduler recovery, while keeping external activation and named ownership as release evidence requirements.
 
-## Unreleased - Public homepage first-paint optimization (21 August 2026)
+### Public homepage first-paint optimization (21 August 2026)
 
 - Deferred below-the-fold portal layout/paint work and participant logo decoding/loading to reduce initial homepage rendering cost; production Lighthouse remeasurement remains required before claiming an LCP improvement.
 
-## Unreleased - Public portal stale-while-revalidate cache (21 August 2026)
+### Public portal stale-while-revalidate cache (21 August 2026)
 
 - Added stale-while-revalidate caching for public portal and athlete-directory payloads to avoid blocking requests on cache-expiry rebuilds.
 - Documented the two-minute fresh and ten-minute stale windows and the Redis production requirement.
 
-## Unreleased - Public performance baseline (21 August 2026)
+### Public performance baseline (21 August 2026)
 
 - Recorded Lighthouse production baselines for `/` and `/schedule`, including FCP, LCP, TBT and CLS.
 - Identified LCP as the next public performance optimization target.
 
-## Unreleased - Public portal responsive and locale smoke coverage (21 August 2026)
+### Public portal responsive and locale smoke coverage (21 August 2026)
 
 - Added production E2E coverage for horizontal overflow, invalid date output and locale switching across public pages.
 - Verified the official public contact email, phone, address and social links are populated; operating hours/content owner remain an owner confirmation item.
 
-## Unreleased - Public portal accessibility contrast (21 August 2026)
+### Public portal accessibility contrast (21 August 2026)
 
 - Increased public fixture category badge contrast from `text-red-600` to `text-red-700`; production desktop axe smoke now has a concrete contrast remediation target.
 
-## Unreleased - Admin list search coverage (21 August 2026)
+### Admin list search coverage (21 August 2026)
 
 - Added server-side search across Sports, Sessions, Tournaments, Users and Activity Logs, preserving existing tenant scoping and pagination.
 - Added consistent search controls and context-aware empty states across the remaining admin list pages.
 
-## Unreleased - Competition list pagination (21 August 2026)
+### Competition list pagination (21 August 2026)
 
 - Added query-string-preserving Laravel pagination to the all-match and recorded-result workspaces.
 - Pagination controls reuse the existing Inertia component and preserve active search/status/event filters while navigating pages.
 
-## Unreleased - Competition list search filters (21 August 2026)
+### Competition list search filters (21 August 2026)
 
 - Added server-side search parameters for match venue, notes, number, event, pool and participant fields, with status filtering preserved for the Matches workspace.
 - Added server-side search and event filtering for Results while retaining the existing grouped result-entry workflow and clear/empty states.
 
-## Unreleased - Preserve Ziggy routes across Inertia authentication (21 August 2026)
+### Preserve Ziggy routes across Inertia authentication (21 August 2026)
 
 - Render the complete Ziggy route map in the application shell so an Inertia login transition does not retain the guest-only route list.
 - Added regression coverage confirming `reports.index` is available from the login shell.
 
-## Unreleased - Admin list search and empty states (21 August 2026)
+### Admin list search and empty states (21 August 2026)
 
 - Added tenant-scoped server-side search across participant name/team/contact fields and event name/slug/tournament/sport fields.
 - Added search controls, clear actions and context-aware empty states to the Participants and Events admin lists while preserving pagination query strings.
 
-## Unreleased - Application log retention and access controls (21 August 2026)
+### Application log retention and access controls (21 August 2026)
 
 - Added a production operator control record covering activity/application-log retention, named access, export/deletion approvals and review cadence.
 - Documented restrictions against copying logs to personal devices or shared channels and required evidence for sensitive exports.
 
-## Unreleased — Activity history visibility (21 August 2026)
+### Activity history visibility (21 August 2026)
 
 - Activity Logs now show event type and changed field names alongside description, model and actor.
 - Added regression coverage for score and participant field changes; draw snapshots and result approval transitions remain auditable through their existing activity/draw-version records.
 
-## Unreleased — Result approval and locking workflow (21 August 2026)
+### Result approval and locking workflow (21 August 2026)
 
 - Added backward-compatible result statuses: `draft`, `submitted`, `approved` and `locked`.
 - New results are submitted for approval; org-admin/super-admin users can approve, lock and unlock results according to policy.
 - Locked results cannot be edited or deleted, and public rankings/schedules exclude unapproved results while preserving completed fixtures without a result.
 - Added audit activity for workflow transitions and regression coverage for tenant/role access and locked-result protection.
 
-## Unreleased — Standard activity audit metadata (21 August 2026)
+### Standard activity audit metadata (21 August 2026)
 
 - Added a custom activity model that records actor, action, subject, organization and request correlation metadata under `properties.audit`.
 - Documented activity/application log retention and access responsibilities in the logging architecture guide.
 - Added feature coverage for tenant-aware activity metadata.
 
-## Unreleased — Logging PII protection (21 August 2026)
+### Logging PII protection (21 August 2026)
 
 - Added global Monolog context redaction for email, phone, password, token, cookie and authorization values, including nested context.
 - Request correlation logging now clears shared context in a `finally` block to prevent leakage across long-lived PHP requests.
 - Added unit and feature coverage for redaction and request correlation behavior.
 
-## Unreleased — CI secret scanning (21 August 2026)
+### CI secret scanning (21 August 2026)
 
 - Added a read-only Gitleaks job to CI for detecting accidentally committed secrets.
 - Kept Composer and npm dependency audits as part of the regular CI security checks.
 
-## Unreleased — Password reset rate limiting (21 August 2026)
+### Password reset rate limiting (21 August 2026)
 
 - Added throttling to password-reset request and password-reset submission routes.
 - Added feature coverage confirming excessive password-reset requests receive HTTP 429.
 
-## Unreleased — Result score editor UX (21 August 2026)
+### Result score editor UX (21 August 2026)
 
 - Score editing now uses a focused team-versus-team editor with larger score fields and accessible increment/decrement controls.
 - Match context and score guidance are clearer, while scorer entry remains available below the score for configured sports.
 - Scorer entry now shows only participants with a score above zero, with a per-team scorer limit and roster-only athlete selection.
 
-## Unreleased — Individual scoring events (21 August 2026)
+### Individual scoring events (21 August 2026)
 
 - Added configurable `scoring_mode` on sports and tenant-scoped `match_scoring_events` for athlete-level goals.
 - Results management can record the confirmed roster athlete, team, minute and second for each goal.
 - Scorer events are validated against the match roster and aggregate home/away scores, then shown on public completed match cards.
 - Schedule cards group scorer names beneath their respective home and away participants, including a mobile stacked layout.
 
-## Unreleased — Public match card redesign (21 August 2026)
+### Public match card redesign (21 August 2026)
 
 - Homepage and schedule match cards now share a responsive event, venue, metadata, team and score/time layout inspired by the supplied reference.
 - Match cards are now focused on essential match information; secondary Watch live and Match centre actions were removed to reduce mobile clutter.
 
-## Unreleased — Public homepage UX refactor (20 August 2026)
+### Public homepage UX refactor (20 August 2026)
 
 - Added a direct Athletes & Teams CTA to the hero and a clearer live-status signal.
 - Overview cards now use a consistent responsive grid without staggered offsets.
 - Homepage sports are capped with a clear “more” link, and faculty tiles now show names beneath their logos.
 - Live matches receive a prominent callout linking to the full schedule.
 
-## Unreleased — Faculty registration count isolation (20 August 2026)
+### Faculty registration count isolation (20 August 2026)
 
 - Faculty representative accounts now receive event-participant counts only for their mapped faculty.
 - An unmapped faculty account fails closed with zero registrations instead of falling back to organization-wide counts.
 - Status count payloads always include pending, confirmed and rejected keys for a stable UI.
 
-## Unreleased — Public athlete payload optimisation (20 August 2026)
+### Public athlete payload optimisation (20 August 2026)
 
 - `/athletes` and athlete profiles now use a lightweight public context instead of loading the full homepage payload.
 - Athlete filters persist in the URL, faculty logos are reused in athlete cards, and pages show the latest data timestamp.
 - Athlete performance is explicitly labelled as registered faculty team performance.
 
-## Unreleased — Athlete performance profiles (20 August 2026)
+### Athlete performance profiles (20 August 2026)
 
 - Added public athlete profile pages with confirmed participation details, official match history, scores, opponents and win/draw/loss summary.
 - Performance is derived from official team/event results; individual medal attribution remains deferred until the data model supports it explicitly.
 
-## Unreleased — Athlete directory profiles (20 August 2026)
+### Athlete directory profiles (20 August 2026)
 
 - Added an individual Athlete Directory view with search, sport/category filters, faculty context and event details.
 - The existing Teams & Rosters view remains available as the default view.
 
-## Unreleased — Public athletes and teams directory (20 August 2026)
+### Public athletes and teams directory (20 August 2026)
 
 - Added `/athletes` with confirmed faculty rosters, athlete/official counts, sport and category filters, search, and expandable roster details.
 - Public roster data excludes identification numbers, phone numbers and inactive squad members.
 
-## Unreleased — Schedule filters sidebar (20 August 2026)
+### Schedule filters sidebar (20 August 2026)
 
 - Desktop `/schedule` now presents search, sport, category and venue filters in a sticky sidebar, leaving the match timeline wider and easier to scan.
 - Filter controls remain responsive on smaller screens and preserve the existing filtering behaviour.
 
-## Unreleased — Public portal accessibility fixes (20 August 2026)
+### Public portal accessibility fixes (20 August 2026)
 
 - Section eyebrows on light backgrounds now use the primary colour instead of the light accent, which failed WCAG AA colour contrast (2.15:1) with the default theme.
 - The derived `--public-dark-faint` muted text colour is darkened (alpha 0.55 → 0.7) so body and caption text reaches ≥ 4.5:1 contrast on light backgrounds.
 - Faculty logo tiles on the public home page now carry an `aria-label` per faculty, giving the image-only links a discernible accessible name.
 
-## Unreleased — Tighter matchup cards on the public schedule (20 August 2026)
+### Tighter matchup cards on the public schedule (20 August 2026)
 
 - The match cards on `/schedule` now center the whole home–score–away matchup with a compact gap, bringing each team's logo and name close to the score instead of stretching them to the card edges.
 
-## Unreleased — Draw Result shows match scores (20 August 2026)
+### Draw Result shows match scores (20 August 2026)
 
 - The "Full match schedule" section on the Draw Result page now loads and displays each fixture's result: the center VS pill becomes the score for completed matches, and the winning team is highlighted.
 - Added a feature test asserting completed fixtures expose their result scores on the Draw Result page.
 
-## Unreleased — Schedule date limited to the event window (20 August 2026)
+### Schedule date limited to the event window (20 August 2026)
 
 - The "Scheduled At" picker in `/manage/matches` now restricts selectable dates to the selected event's `start_date`–`end_date` range (`min`/`max` on the datetime input).
 - The events payload for the match page now includes `start_date` and `end_date`.
 
-## Unreleased — Sport category filter on the schedule (20 August 2026)
+### Sport category filter on the schedule (20 August 2026)
 
 - The `/schedule` page now has a "Category" filter alongside Sport and Venue; selecting a sport narrows the category list to that sport's categories, and counts are shown per category.
 - Public match data now carries the event's sport category (`category`), used by the new filter; portal cache bumped to `v8`.
 - Added a feature test covering category presence in match data and the sports catalog.
 
-## Unreleased — Multiple venues per event (20 August 2026)
+### Multiple venues per event (20 August 2026)
 
 - Replaced the single event `venue` with a JSON list of venues (`events.venues`, migration `2026_08_20_000002`) so an event can offer several locations; the first venue is the default used when creating matches.
 - The Event dialog now lets organisers add/remove any number of venues; blank entries are discarded on save.
@@ -241,18 +277,18 @@
 - Existing matches without a venue are backfilled with the event's default (first) venue whenever the event venues are saved, so already-created matches use the venue entered on the event.
 - Updated store/update validation and feature tests for multi-venue events, backfill and public venue inheritance.
 
-## Unreleased — Event-level venue (20 August 2026)
+### Event-level venue (20 August 2026)
 
 - Added a tenant-scoped `venue` field on Events (via `events.venue`, migration `2026_08_20_000001`), editable from the Event dialog in `/events`.
 - Public fixtures now inherit the event venue when the match has none, and the public venue list combines event venues with match-assigned venues (schedule filter, venue directory, match cards).
 - The match dialog in `/manage/matches` pre-fills the venue from the selected event when creating/editing a match, and can still be overridden per match.
 - Added validation on store/update Event requests plus feature tests for event venue persistence and public venue inheritance.
 
-## Unreleased — Public schedule ordering fix (20 August 2026)
+### Public schedule ordering fix (20 August 2026)
 
 - Public fixtures now order by `match_number` within the same `scheduled_at`, so knockout matches display in play order (group → semi-final 1 → semi-final 2 → bronze → final) instead of insertion order. Applies to the homepage "Live competition updates" columns and the `/schedule` page (upcoming and completed lists).
 
-## Unreleased — Consolidated public match pages (20 August 2026)
+### Consolidated public match pages (20 August 2026)
 
 - `/schedule` is now the single public page for all fixtures and results, with All / Live / Upcoming / Completed tabs, filters and search.
 - `/matches`, `/results` and `/live` redirect (301) to `/schedule`; removed the duplicate `Public/Matches` and `Public/Results` pages and their controller methods.
@@ -260,39 +296,39 @@
 - Trimmed the Sports directory to the sports, faculties and venues sections, and removed the matches/results/live sitemap entries (redirects avoid duplicate content).
 - Added a feature test covering the 301 redirects and updated the schedule/directory public route tests.
 
-## Unreleased — Dark mode organisation logo (20 August 2026)
+### Dark mode organisation logo (20 August 2026)
 
 - Added a tenant-scoped `inverse_logo_url` setting uploadable from Settings ("Dark Mode Logo"), stored through the existing safe asset pipeline (SVG sanitized, PNG/JPG/SVG/WebP up to 2MB).
 - The public portal header and footer now prefer the inverse (dark-mode) logo on their dark surfaces, falling back to the standard organisation logo.
 - Added validation, a feature test for the inverse logo upload and English/Malay UI translations.
 
-## Unreleased — Sport icons switched to Icons8 PNG (19 August 2026)
+### Sport icons switched to Icons8 PNG (19 August 2026)
 
 - Replaced the Flaticon Uicons sport icons with self-hosted Icons8 PNGs (512px, iOS style) rendered via CSS mask + `currentColor`, so glyphs inherit the accent colour and adapt to dark mode automatically.
 - All 24 sport chips, sports directory cards, match cards and next-fixture hero now show real sport glyphs; unmapped sports fall back to a trophy icon.
 - Removed the Uicons stylesheet link, the `uicons-bold-rounded` @font-face/field-hockey rule and the self-hosted `public/uicons/` directory (no longer referenced anywhere).
 - Added `icons8` to the IIS `web.config` static-file allow-list; PNGs are stored under `public/icons8/` together with the required Icons8 attribution.
 
-## Unreleased — Single current temperature weather (19 August 2026)
+### Single current temperature weather (19 August 2026)
 
 - Replaced the data.gov.my daily min/max forecast with a single Open-Meteo current temperature for the public announcement bar, keeping the stale/last-good fallback and the broken-CA-bundle retry.
 
-## Unreleased — Documentation sync (19 August 2026)
+### Documentation sync (19 August 2026)
 
 - Synced documentation with the current working tree: updated `system-overview.md` (41 pages, 137 routes, split public portal), the public portal description in `CURRENT_STATE.md` and the product decision in `TODOS.md`.
 - Marked `TODOSUIUX.md` as a superseded 17 August baseline following the standalone public page decision.
 - Refreshed the workspace data snapshot in `docs/database/schema.md` from a read-only 19 August query (3 tournaments, 1 result, 4 queued jobs, 898 activity logs).
 
-## Unreleased — Public portal page expansion (19 August 2026)
+### Public portal page expansion (19 August 2026)
 
 - Added public Sports, Schedule, Results, Faculties, Venues and Live pages backed by the configured public session.
 - Added public News, Downloads, FAQ and About information pages, shared Cosmic navigation/footer, sitemap entries and public route tests.
 
-## Unreleased — Public matches page (19 August 2026)
+### Public matches page (19 August 2026)
 
 - Added the tenant-scoped public `/matches` page for all official fixtures and latest results; moved authenticated match management to `/manage/matches` while retaining its route names and permissions.
 
-## Unreleased — Release checklist and controller orchestration (18 August 2026)
+### Release checklist and controller orchestration (18 August 2026)
 
 - Added portable Predis support, hardened the production Docker runtime requirements, and added an isolated production-like staging Compose stack.
 - Fixed two deployment-image defects found by the staging drill: PECL Redis could not compile without a build toolchain, and Supervisor's log directory was absent.
@@ -307,7 +343,7 @@
 - Added a reusable sanitized release-evidence template covering CI, mail, DB grants, backup/restore, load, alerts, deployment smoke checks and GO/NO-GO approval.
 - Revalidated the working tree locally: PHPUnit 439/439 (1,948 assertions), Pint, TypeScript, inventory, tenant bypass, dependency audits, Vite build/budget and Playwright/axe 8/8 all pass.
 
-## Unreleased — Audit remediation (17 August 2026)
+### Audit remediation (17 August 2026)
 
 - Restored the complete quality gate: 434/434 PHPUnit tests (1,937 assertions), Pint, TypeScript, tenant guard, Vite build/budget, clean dependency audits and 8/8 isolated desktop/mobile Playwright/axe journeys.
 - Enforced policy-backed read authorization across sensitive indexes and added a six-role manual-URL matrix plus real tenant payload assertions.
@@ -321,7 +357,7 @@
 - Upgraded `actions/checkout`, `actions/setup-node` and `actions/upload-artifact` to official v7 releases using the Node.js 24 action runtime; CI #105 passed with no Node.js 20 deprecation annotations.
 - Added tenant-editable public contact settings for the official address, email, phone, Facebook, Instagram, TikTok and YouTube channels; validated and safely filtered values now render on the public Contact page.
 
-## Unreleased — Documentation and production audit baseline (17 August 2026)
+### Documentation and production audit baseline (17 August 2026)
 
 - Audited the repository, runtime workspace, database state and public production portal; recorded the evidence in `docs/audits/2026-08-17-full-project-and-production-audit.md`.
 - Reconciled canonical Markdown with the current 125-route / 60-migration / 39-controller / 38-page / 92-test-file inventory.
@@ -329,7 +365,7 @@
 - Recorded the current NO-GO release state: 420 of 422 PHPUnit tests pass, Pint reports six files, the working tree is not clean, and no version tag exists.
 - Documented runtime production-baseline drift, read-authorization gaps, ranking configurability debt, and UUID/soft-delete exceptions without changing application behavior.
 
-## Unreleased — Cosmic-inspired public portal (14 August 2026)
+### Cosmic-inspired public portal (14 August 2026)
 
 - Added an optional inverse logo for every participant, including sanitized SVG/raster upload, independent replace/remove controls, light/dark previews, public payload support, and a shared surface-aware renderer that falls back safely when one variant is missing.
 - Increased faculty logos from 36px to 48px in public fixture/result cards and from 48px to 56px in medal-standing cards; the faculty dashboard now shows the same logo at 48px on mobile and 56px on larger screens, while draw-result matchups use 48px logos and compact group rosters use 40px logos.
@@ -354,25 +390,25 @@
 - Replaced the condensed display face with an all–Plus Jakarta Sans typographic system that approximates the Premier League site's clean regular/bold hierarchy without copying its proprietary PremierLeague font files.
 - Preserved live tenant-safe SAF data, locale switching, automatic partial refreshes, public contact navigation, and the existing authenticated application design.
 
-## Unreleased — Draw result workspace UX (13 August 2026)
+### Draw result workspace UX (13 August 2026)
 
 - Refactored the draw result page into a clear three-step competition workflow with contextual primary actions, responsive group cards, mobile fixture cards, safer pending-change feedback, and a compact expandable audit history.
 - Added a consolidated event-wide match schedule ordered by match number, with centered team-logo matchups and shared venue/time context; pool cards now focus on group membership without duplicating fixtures.
 - Added English and Bahasa Malaysia labels for the new workflow and status guidance.
 
-## Unreleased — Public portal typography (13 August 2026)
+### Public portal typography (13 August 2026)
 
 - Changed public portal heading typography to Noto Sans Variable and removed the unused Sora font dependency.
 
-## Unreleased — Competition overview cards (13 August 2026)
+### Competition overview cards (13 August 2026)
 
 - Reworked the public homepage Competition Overview section into responsive statistic cards with icons, hover elevation, and clearer visual hierarchy.
 
-## Unreleased — Public portal header refresh (13 August 2026)
+### Public portal header refresh (13 August 2026)
 
 - Updated the public portal header hover/focus state with a navy-to-teal gradient, gold accent border, clearer navigation hover treatment, and stronger contrast for logo and navigation text.
 
-## Unreleased — Audit P0 remediation (12 August 2026)
+### Audit P0 remediation (12 August 2026)
 
 - Closed an org-admin privilege-escalation and cross-tenant user-management path with policy-authorized Form Requests, tenant-aware organization/participant/sport validation, explicit `super-admin` role rejection, and controller/service defense-in-depth.
 - Added user-management regression tests for foreign tenants, foreign participant/sport relations, and forbidden super-admin assignment.
@@ -383,7 +419,7 @@
 
 - Completed a broad EN/BM localization pass across administration and competition pages, forced page remounts after locale switching, added locale-aware date/number helpers, removed duplicate dictionary keys, and verified that all statically referenced translation keys exist in both dictionaries.
 
-## Unreleased
+### Locale, IIS subfolder, and dashboard fixes (pre-7 August 2026)
 
 - Fixed guest and authenticated header logo/name links to resolve the public home route under the deployed `/saf/portal/` subfolder.
 - Fixed the public portal header and `index.php` canonicalization to use the generated public-home URL instead of hardcoded `/portal/` paths.
@@ -410,7 +446,7 @@
 - Restored the production public portal dataset by configuring its explicit UTeM organization and SAF 2026 session selectors.
 - Displayed scheduled fixtures without assigned dates on the public portal, using the existing to-be-determined date state.
 
-## Unreleased — Hardening follow-up (7 August 2026)
+### Hardening follow-up (7 August 2026)
 
 - Changed `TenantContext` to a container-scoped lifecycle and added fail-closed tenant-aware queue middleware.
 - Made the public portal resolve `PUBLIC_ORG_SLUG` before `PUBLIC_SESSION_SLUG`, with safe empty states and duplicate-slug isolation tests.
@@ -423,9 +459,9 @@
 - Updated PHP and npm lock files to remove all currently reported dependency advisories.
 - Made Redis the production cache, queue and session backend and enabled the PHP Redis extension in the container image.
 
-## 5 August 2026
+### 5 August 2026
 
-### Operational assurance evidence
+#### Operational assurance evidence
 
 - Recorded a successful connected-CI Playwright/axe run for all six desktop/mobile journeys on commit `ae42a50`.
 - Completed an isolated AES-256 MySQL restore using a sanitized 3.47 MB dataset, larger than the measured 2.66 MB production schema. Restore completed in 2.977 seconds with all 56 migrations, health checks, and key row counts verified.
@@ -434,14 +470,18 @@
 - Documented that `stms:restore --force` still prompts interactively and that a real production-backup/off-site restore remains outstanding.
 - Removed all temporary validation databases, archives, containers, and application servers after the drills.
 
-All notable changes to the STMS project will be documented in this file.
+### Public portal route expansion (August 2026)
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+- Added public Sports programme page at `/sports-programme`, improved medal tally dashboard, and documented the route separation from authenticated `/sports`.
+- Fixed public portal data compatibility so existing `sports` string payloads remain stable while the Sports page consumes `sports_catalog`.
+- Refreshed registration, draw-result, and results-management workflows with clearer operational actions.
+- Refreshed the event registration workspace with accurate all-registration totals and a clearer administrator quick-registration callout.
+- Refactored event participant registration to support selecting and submitting multiple events in one administrator workflow.
+- Fixed rankings for legacy tournaments with a missing `organization_id` by safely resolving the tenant from the owning session and preventing a production 500.
+- Refactored the public homepage medal standings into a podium-led medal tally with responsive top-six ranking cards and participant branding.
+- Added a shared public match-status badge with consistent Live, Scheduled, Completed, Cancelled and Postponed states, plus accessible public empty states.
 
----
-
-## [Unreleased]
+### Legacy implementation backlog (June–August 2026)
 
 - Hardened the multi-tenant context lifecycle (P0): `TenantContext` state now lives on a container-scoped singleton instead of process-global statics, so it can never leak across requests, queue workers, or long-running servers (e.g. Octane). `SetTenantContext` resets the context before every request, records super-admin and guest requests as an explicit auditable bypass (with a reason), and always cleans up in a `finally` block plus a `terminate` hook. Added `TenantContext::setBypass`/`isBypassing`/`bypassReason`/`isInitialized`/`requireOrganization` (fail-closed when a tenant-required operation has no organization), and fixed `isConsole`/`isQueue` to reflect the recorded context only. Added `TenantContextLifecycleTest` covering sequential-request isolation, super-admin/guest non-inheritance, exception cleanup, queue-context isolation, and fail-closed behavior.
 
@@ -502,18 +542,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed RBAC bootstrap seeding from an empty database by clearing Spatie's permission cache before role assignment, then restored and verified the complete SAF 2026 dataset without overwriting the administrator's changed password.
 - Updated the public welcome header and favicon markup to use organization branding uploaded through Settings, with the built-in trophy/favicon retained only as fallbacks.
 
-### Documentation
+#### Documentation
 - Added a dated enterprise audit with evidence-backed architecture, security, performance, database, testing, DevOps, and documentation findings.
 - Corrected implementation drift in current-state, roadmap, authentication, security, audit-logging, database-schema, and sports-engine documentation.
 - Added production-hardening work to the current maintenance focus and ignored environment backup files to reduce accidental secret exposure.
 
-### Operations
+#### Operations
 - Added encrypted database/public-upload backups with checksums, retention, guarded restore, daily scheduling, and an automated SQLite restore drill.
 - Expanded health monitoring to database, cache read/write, queue backlog/failed jobs, disk space, component latency, and non-sensitive degraded responses.
 - Added supervised Laravel Scheduler lifecycle, daily log rotation defaults, backup/restore runbook, RPO/RTO targets, and safer release rollback guidance.
 - Added Composer and npm vulnerability audit gates to CI and restored a clean repository-wide Pint result.
 
-### Assurance and Performance
+#### Assurance and Performance
 - Added PCOV/Clover coverage reporting, Playwright desktop/mobile critical journeys, axe WCAG checks, and failure artifacts to CI.
 - Fixed dean verification authorization to require the seeded `dean` role, and added policy regression tests.
 - Fixed guest-logo accessible naming and dashboard color contrast findings discovered by the Playwright/axe suite.
@@ -522,7 +562,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the Tailwind 3/4 stylesheet mismatch and replaced v4-only dialog/sheet utilities with native Tailwind 3 state animations; production builds no longer emit Lightning CSS warnings.
 - Verified Composer and npm dependency audits locally with zero known vulnerabilities.
 
-### Fixed
+#### Fixed
 - Hardened tenant onboarding: public registration now defaults off in production and fails closed when `DEFAULT_ORG_SLUG` is missing or invalid.
 - Replaced wildcard trusted-proxy configuration with explicit `TRUSTED_PROXIES` IP/CIDR configuration.
 - Prevented routine production seeding from creating predictable demo/SAF accounts; direct SAF demo seeding now requires explicit production approval.
@@ -538,7 +578,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standardized frontend component imports and directory casing to `resources/js/components`.
 - Updated documentation drift around notifications, test database configuration, current module counts, and test status.
 
-### Added
+#### Added
 - **Flexible athlete quota modes**: Sport categories now support gender-based, open-total, and mixed-total athlete quotas with max total athletes and optional minimum male/female requirements. Faculty squad add/import flows share the same `SquadQuotaService` validation, enabling cases like E-Sport (Mobile Legends) Open with 6 total players.
 - **SAF 2026 Complete Data Seeding**: Created `SAF2026DataSeeder.php` with all SAF 2026 data — Organization UTeM, Session (1-30 Sept), 2 Tournaments (Fasa 1: 11-13 Sept, Fasa 2: 25-27 Sept), 24 sports in English, 30 events/categories with quota fields, 8 faculties (FTKEK, FTKE, FTKM, FTKIP, FTMK, FPTT, FAIX, STEP), 16 users (faculty reps + deans). Dean role created with permissions. Integrated into `DatabaseSeeder`.
 - **Navigation Restructured**: Flow-based sidebar with sections: Main → Setup → Administration → Registration → Competition → Reports. English labels throughout. Role-based visibility.
@@ -551,7 +591,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Draw/Group Allocation + Auto Fixture Generation**: `Pool` model, `DrawService`, `DrawController`. Draw button (super-admin) on Events page with confirmation dialog. Round-robin via Circle Method. Format & pool size on events.
 - **Dean Role**: New `dean` role with event participant management permissions. Each faculty dean user created with dean@*.utem.edu.my.
 
-### Changed
+#### Changed
 - **SAF 2026 category seed**: Sport categories now seed from the current 30-category SAF set, including detailed athlete/official quotas and open-total E-Sport categories.
 - **SAF 2026 sport seed**: The default database seed now includes the full 24-sport SAF master list before SAF categories/events are seeded.
 - **SAF 2026 documentation**: Markdown docs now reflect the current seed counts and re-seed behavior for 24 sports and 30 categories/events.
@@ -563,20 +603,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Column existence checks**: Added `Schema::hasColumn()` guards to `registration_deadline` and `logo_path` migrations.
 - **EventParticipant model**: Added `BelongsToOrganization` trait + `organization_id` fillable + new migration `2026_07_03_000001_add_organization_id_to_event_participants`.
 
-### Added
+#### Added
 - **Artisan command**: `event-participants:backfill-org` — backfill null `organization_id` on existing EventParticipant records from related Event. Supports `--dry-run`.
 
-### Fixed
+#### Fixed
 - Restored full match CRUD controls on the Matches page, added pool/round management and per-event match-number validation, and refactored matchups to Name–Logo–VS–Logo–Name without circular logo frames.
 - **Soft-delete slug collision**: Added `->whereNull('deleted_at')` to `Rule::unique` in all Store FormRequests (Tournament, Event, Session, Sport, Participant, SportCategory). Prevents "slug has already been taken" when a soft-deleted record uses the same slug.
 
-### Fixed (Known Issues)
+#### Fixed (Known Issues)
 - **EventParticipant model**: Added `SoftDeletes` trait to match migration's `softDeletes()` column.
 - **SquadMember model**: Added `BelongsToOrganization` trait for multi-tenant scoping (already had `organization_id`).
 - **ParticipantFactory**: Removed dropped columns (`identification_number`, `gender`, `date_of_birth`) that caused test warnings.
 - **Duplicate Factory**: Deleted `MatchFactory.php` (identical to `FixtureFactory.php` — both target `Fixture` model).
 
-### Added / Improved (Fasa 3: DevOps & Production)
+#### Added / Improved (Fasa 3: DevOps & Production)
 - **Docker setup**: `Dockerfile` (PHP 8.3 FPM + Nginx), `docker-compose.yml` (app + MySQL 8 + Redis), nginx config, supervisor config, `.dockerignore`.
 - **CI/CD pipeline**: `.github/workflows/ci.yml` with Pint lint, PHPUnit test (MySQL service), npm build + artifact upload.
 - **Sentry error tracking**: Installed `sentry/sentry-laravel`, published config, added `SENTRY_DSN` to `.env.example`, conditional init in frontend `app.tsx`.
@@ -584,7 +624,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Production env config**: `.env.production.example` with secure defaults.
 - **Tests**: 215 → 217 (+2 HealthCheckTest), 582 → 589 assertions, 0 failures.
 
-### Added / Improved (Fasa 2: UX & Testing)
+#### Added / Improved (Fasa 2: UX & Testing)
 - **Dead frontend code removed**: Deleted `NavLink.jsx`, `ResponsiveNavLink.jsx`, `Dropdown.jsx`, `DataTable.tsx`, `useInertiaForm.ts`.
 - **Action method naming standardized**: `execute()` → `handle()` in all 6 Match/Result Action files + controllers.
 - **Profile pages restyled**: `bg-white` → `Card` component with `bg-card`/`text-foreground`/`text-muted-foreground`.
@@ -594,7 +634,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TournamentService enhanced**: Added `updateWithSports()` and `deleteWithSports()` methods.
 - **Tests**: 160 → 215 (+55 tests), 481 → 582 assertions, 0 failures.
 
-### Added / Improved (Fasa 1: Code Quality & Documentation)
+#### Added / Improved (Fasa 1: Code Quality & Documentation)
 - **Dashboard route → controller**: Created `DashboardController` with all dashboard logic moved out of `routes/web.php` closure.
 - **Double authorization removed**: `Gate::authorize()` removed from all 6 Match/Result Action classes (controllers already authorize before calling actions).
 - **Service-layer logging**: Added `Log::info()` for successful CRUD operations and `Log::error()` for exceptions across all 12 service files (User, Tournament, Sport, SportCategory, Session, Result, Registration, Ranking, Participant, Organization, Match, Event).
@@ -603,7 +643,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **README.md**: Updated tech stack from "planned" to "implemented" for Spatie, UUID, multi-tenancy.
 - **CURRENT_STATE.md**: Updated to reflect latest post-audit state.
 
-### Added / Improved (Frontend Modernization)
+#### Added / Improved (Frontend Modernization)
 - **TypeScript migration**: All page components converted from `.jsx` to `.tsx`. Created `resources/js/types/index.ts` with full type definitions for all domain models (Organization, User, Sport, Session, Tournament, Event, Participant, Registration, Fixture, Result, RankingEntry, Paginated, Flash, Auth, PageProps).
 - **React Hook Form + Zod**: All form pages migrated from Inertia `useForm` to `react-hook-form` + `zod` + `@hookform/resolvers`. Zod schemas for every form with proper validation rules.
 - **TanStack Table**: Created reusable `DataTable.tsx` component using `@tanstack/react-table` with sorting support, pagination integration, and generic typing.
@@ -613,7 +653,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Profile pages**: Converted to TypeScript with proper form validation.
 - **New packages**: `typescript`, `@types/react`, `@types/react-dom`, `react-hook-form`, `@hookform/resolvers`, `@tanstack/react-table`, `zod`.
 
-### Added / Improved (M6: Export, Reporting & Print)
+#### Added / Improved (M6: Export, Reporting & Print)
 - **PDF exports**: `FixtureExport`, `ResultExport`, `RankingExport` using `barryvdh/laravel-dompdf`. Generates formatted PDFs with tables, headers, and footer.
 - **Excel exports**: `FixtureExport`, `ResultExport`, `RankingExport` using `maatwebsite/excel`. Generates `.xlsx` files with auto-sized columns and styled headers.
 - **Printable match sheet**: `match-sheet.blade.php` — single fixture view with score boxes, official lines, team representative signatures.
@@ -624,7 +664,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar**: Added "Reports & Analytics" under "Reports" section.
 - **New packages**: `barryvdh/laravel-dompdf`, `maatwebsite/excel`.
 
-### Added / Improved (M5: Basic Ranking Engine)
+#### Added / Improved (M5: Basic Ranking Engine)
 - **M5 Ranking module (complete)**: RankingService with 3 strategies (Points, Win Rate, Medal Tally) computed on-the-fly from match results. No separate rankings table — computed dynamically.
 - **M5 migration**: Added `ranking_strategy` column to tournaments table (default: 'points').
 - **M5 RankingController**: index (view rankings per tournament), updateStrategy (change ranking strategy per tournament).
@@ -632,7 +672,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **M5 sidebar**: "Rankings" menu item added under Match Scheduling section.
 - **M5 tests**: RankingServiceTest (3 tests), RankingTest (4 tests).
 
-### Added / Improved (M4: Match Scheduling & Result Entry)
+#### Added / Improved (M4: Match Scheduling & Result Entry)
 - **M4 Match module (complete)**: Model renamed to `Fixture` (PHP 8 reserved keyword `match`), table stays `matches`. UUID, org scoping, soft deletes, event FK, home/away participant FKs, venue, scheduled_at, status enum. Service, Actions (Store/Update/Delete), FormRequests (Store/Update), Policy, Controller, Inertia page, Factory, Routes, Seeder data.
 - **M4 Result module (complete)**: Model + migration (UUID, org scoping, soft deletes, match FK unique, score_home/score_away, winner FK). Service, Actions, FormRequests, Policy, Controller, Inertia page (Index.jsx with match selector, score inputs, winner selector), Factory, Routes, Seeder data.
 - **M4 sidebar**: New "Match Scheduling" section with Matches and Results menu items (Scale + Trophy icons).
@@ -641,7 +681,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **M4 tests**: MatchTest (5 tests), ResultTest (5 tests), MatchServiceTest (3 tests), ResultServiceTest (3 tests), MatchPolicyTest (4 tests), ResultPolicyTest (4 tests).
 - **M4 AppServiceProvider**: Match and Result policies registered via Gate::policy.
 
-### Added / Improved (M3: Participant & Registration + M1/M2 Gap Fixes)
+#### Added / Improved (M3: Participant & Registration + M1/M2 Gap Fixes)
 - **M3 Participant module (complete)**: Model + migration (UUID, org scoping, soft deletes, slug per org), Service, Actions (Create/Update/Delete), FormRequests (Store/Update), Policy, Controller (thin, uses Actions), Inertia page (Index.jsx with full CRUD via modals, pagination), Factory, Routes, Seeder data.
 - **M3 Registration module (complete)**: Model + migration (UUID, org scoping, soft deletes, unique tournament+participant), Service, Actions, FormRequests, Policy, Controller, Inertia page (Index.jsx with tournament/participant selectors, status tracking), Factory, Routes, Seeder data.
 - **M1 gap fix**: Added `SoftDeletes` trait to User model + migration `2026_06_25_000001_add_soft_deletes_to_users_table.php` — users are now soft-deleted consistently with all other domain models.
@@ -669,7 +709,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Verification: All other list pages already clean on classic stack. Scoping trait, policies (7), actions (21), Form Requests (16), factories, tests (policy + feature + service), models (HasUuids+SoftDeletes+BelongsToOrganization), routes, and defensive dashboard code untouched and correct.
 - Reminder: Focused exclusively on current MVP (M1/M2). No future phases. Package.json left without RHF/TanStack (user can add later for full modernization if desired). Docs (this CHANGELOG + TODOS) to be further synced.
 
-### Previous Audit Implementation Pass (history)
+#### Previous Audit Implementation Pass (history)
 - Automatic multi-tenant global scoping via `BelongsToOrganization` trait (Sport, SportCategory, Session, Tournament, Event, User). Removed duplicated manual scoping in controllers.
 - Per-organization slug uniqueness (migration + updated validation rules) — fixes multi-tenant collision risk.
 - Pagination backend on all major resources + reusable `Pagination` component + compatibility updates on list pages.
@@ -687,13 +727,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend modernization started: RHF+Zod structure in Sports form (packages needed); TanStack Table prep.
 - Added IMPLEMENTATION_STATUS.md for current vs target.
 
-### Changed
+#### Changed
 - Controllers for Sports/Sessions/Tournaments/etc. now use `paginate()` and rely on global scope.
 - Form Request unique rules updated for org-scoped slugs.
 - Sidebar now includes Events.
 - User model route key uses uuid for consistency.
 
-### Added
+#### Added
 - Initial project structure and documentation setup.
 - Created comprehensive Architecture Decision Records (ADR-001 to ADR-008).
 - Established documentation structure (`docs/architecture`, `docs/database`, `docs/api`, `docs/design-system`).
@@ -725,21 +765,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Sidebar: "Sukan" menu item already present with Trophy icon.
   - Soft deletes supported on Sport (additive migration).
 
-### Changed
+#### Changed
 - Updated multiple architecture documents to reflect actual current state (Inertia React instead of Blade, JSX foundation instead of full TypeScript, Laravel 13).
 - Clarified "Current Implementation" vs target architecture in authentication.md and frontend.md.
 
-### Deprecated
+#### Deprecated
 - N/A
 
-### Removed
+#### Removed
 - N/A
 
-### Fixed
+#### Fixed
 - Restored full match CRUD controls on the Matches page, added pool/round management and per-event match-number validation, and refactored matchups to Name–Logo–VS–Logo–Name without circular logo frames.
 - Corrected inaccurate descriptions in docs (Breeze Blade claim, version numbers, assumed stack libraries not yet present).
 
-### Documentation
+#### Documentation
 - Comprehensive alignment pass across **all major documentation** (architecture/*, database/*, design-system/*, api/overview.md) based on full system review.
 - Added "Current Status / Target" disclaimers consistently so the gap between vision and current scaffold (early Inertia + partial shadcn UI only) is clear.
 - Updated navigation.md, error-handling.md, tables.md, forms.md, dashboard.md, sports-engine.md, and more.
@@ -748,10 +788,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added consistent "Current Status / Target Architecture" disclaimers to multi-tenant.md, authorization.md, testing.md, domain-model.md, security.md, sports-engine.md, schema.md, erd.md, migration-guidelines.md, design-system files, tables.md, forms.md, dashboard.md, frontend.md, and api/overview.md.
 - Made documentation honest about scaffold state while preserving all vision, rules, and mandatory requirements from CLAUDE.md and AGENTS.md.
 
-### Security
+#### Security
 - N/A
-
----
 
 ## [0.1.0] - 2026-06-03
 
@@ -761,15 +799,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial Architecture Decision Records.
 - Design system foundation using shadcn/ui.
 
----
-
 ## Versioning Guide
 
 - **Major** (`1.0.0`): Breaking changes or major feature releases.
 - **Minor** (`0.1.0`): New features that are backward compatible.
 - **Patch** (`0.0.1`): Bug fixes and minor improvements.
-
----
 
 ## Types of Changes
 
@@ -779,14 +813,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Removed` — Removed features
 - `Fixed` — Bug fixes
 - `Security` — Security-related fixes
-ok
-# Unreleased
-
-- Added public Sports programme page at `/sports-programme`, improved medal tally dashboard, and documented the route separation from authenticated `/sports`.
-- Fixed public portal data compatibility so existing `sports` string payloads remain stable while the Sports page consumes `sports_catalog`.
-- Refreshed registration, draw-result, and results-management workflows with clearer operational actions.
-- Refreshed the event registration workspace with accurate all-registration totals and a clearer administrator quick-registration callout.
-- Refactored event participant registration to support selecting and submitting multiple events in one administrator workflow.
-- Fixed rankings for legacy tournaments with a missing `organization_id` by safely resolving the tenant from the owning session and preventing a production 500.
-- Refactored the public homepage medal standings into a podium-led medal tally with responsive top-six ranking cards and participant branding.
-- Added a shared public match-status badge with consistent Live, Scheduled, Completed, Cancelled and Postponed states, plus accessible public empty states.

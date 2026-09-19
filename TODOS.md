@@ -1,5 +1,13 @@
 # TODOS
 
+## Public directory UX (selesai 19 September 2026)
+
+- [x] Kad sukan `/sports` kini deep-link ke `/schedule?sport=...`; halaman Schedule membaca penapis `sport`/`category` dari URL semasa muat.
+- [x] Tambah filter kategori (chip) dan kiraan hasil yang sentiasa kelihatan pada direktori sukan.
+- [x] Dedahkan dokumen peraturan per-sukan (published, scoped kepada session/organization aktif) dalam `sports_catalog` dan papar sebagai pautan PDF/Markdown dalam kad; cache dinaikkan ke `public-portal:v10` dan upload/delete dokumen kini invalidasi cache portal.
+- [x] Betulkan ralat TypeScript pre-existing `resources/js/Pages/Events/Index.tsx` yang timbul selepas merge `origin/master`; `PublicPortalTest` 22/22 hijau (492 assertions).
+- [ ] Nota: empat ujian pre-existing gagal pada `origin/master` bersih (`DashboardTest::test_empty_events_are_not_counted_as_events_needing_fixtures`, dua `EventParticipantStatusTest`, `NotificationTest::test_super_admin_defaults_to_unread_action_required_notifications`) — belum ditangani, di luar skop perubahan direktori awam.
+
 ## Export — Medal Tally (selesai 8 September 2026)
 
 - [x] Export medal tally per-session ke PDF dan XLSX (`exports.medals.pdf`/`exports.medals.excel`, `MedalTallyExport`) dengan tenant scoping (session mesti milik organisasi pemanggil) dan authorization `export-data`; butang ditambah pada halaman admin Rankings.
@@ -111,6 +119,8 @@ Dokumen repository untuk monitoring matrix, ownership, threshold, escalation, in
 
 - [x] Tambah public Athletes & Teams directory dan profile performance rasmi.
 - [x] Tambah scorer events untuk sport `scoring_mode=individual`: roster confirmed, score reconciliation, participant-grouped public display dan score editor UX.
+- [x] `/athletes` guna carian/filter server-side + pagination (24 atlet/12 pasukan) dan A–Z rail supaya senarai tidak memanjang apabila peserta bertambah; state kekal dalam URL (`view`, `q`, `sport`, `category`, `letter`, `page`).
+- [x] `/athletes` P0 UX: segmented Teams/Athletes dengan kiraan, chip sukan berikon, penapis fakulti + susunan, skeleton/loading & `aria-busy`, empty state boleh tindak ("Clear filters").
 
 - [x] Kekalkan portal awam homepage single-page sebagai landasan; halaman berasingan (`/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about`, `/matches`) ditambah dan memerlukan penilaian change request jika mahu dikembangkan lagi.
 - [x] Gabungkan halaman perlawanan awam yang bertindih menjadi satu: `/schedule` ialah satu-satunya halaman jadual/keputusan (tab All/Live/Upcoming/Completed + filter); `/matches`, `/results` dan `/live` redirect 301 ke `/schedule`; nav portal diringkaskan kepada Home/Sports/Schedule/Contact.

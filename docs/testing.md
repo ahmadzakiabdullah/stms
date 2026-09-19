@@ -6,8 +6,8 @@
 
 ## Keadaan Semasa
 
-- Repositori mengandungi **94 fail ujian PHP**.
-- PHPUnit menjalankan **439 ujian / 1,948 assertions** pada working tree 18 Ogos dan semuanya lulus.
+- Repositori mengandungi **99 fail ujian PHP**.
+- PHPUnit menjalankan **508 ujian / 2,478 assertions** pada working tree 17 September 2026 dan semuanya lulus.
 - Pint, TypeScript, Vite build, bundle budget, inventory/tenant guards dan dependency audits lulus.
 - Playwright/axe menjalankan **8/8 journeys** pada desktop/mobile menggunakan SQLite terasing.
 - Connected [CI #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726) pada commit `4b04c46` mengesahkan dependency audit, lint, test, 75.03% PCOV statement coverage, build dan browser E2E semuanya lulus.

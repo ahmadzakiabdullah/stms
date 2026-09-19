@@ -25,17 +25,30 @@ const inventory = {
     pages: countFiles('resources/js/Pages', '.tsx'),
     testFiles: countFiles('tests', '.php'),
 };
-const state = readFileSync('CURRENT_STATE.md', 'utf8');
-const expectedPhrases = [
+const inventoryPhrases = [
     `${inventory.routes} application routes`,
     `${inventory.migrations} migration files`,
     `${inventory.controllers} controller files`,
     `${inventory.testFiles} PHP test files`,
 ];
-const missing = expectedPhrases.filter((phrase) => !state.includes(phrase));
+
+const checks = [
+    { file: 'CURRENT_STATE.md', phrases: inventoryPhrases },
+    { file: 'README.md', phrases: inventoryPhrases },
+    { file: 'docs/architecture/system-overview.md', phrases: [`${inventory.routes} application routes`] },
+];
+
+const failures = [];
+for (const { file, phrases } of checks) {
+    const content = readFileSync(file, 'utf8');
+    const missing = phrases.filter((phrase) => !content.includes(phrase));
+    if (missing.length) {
+        failures.push(`${file} inventory is stale:\n${missing.join('\n')}`);
+    }
+}
 
 console.log(JSON.stringify(inventory));
-if (missing.length) {
-    console.error(`CURRENT_STATE.md inventory is stale:\n${missing.join('\n')}`);
+if (failures.length) {
+    console.error(failures.join('\n\n'));
     process.exit(1);
 }

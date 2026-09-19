@@ -1,10 +1,6 @@
 # Database Schema
 
-> **Approval workflow update (21 August 2026):** Migration `2026_08_21_130000` adds result statuses `draft`, `submitted`, `approved` and `locked`, plus approval/lock actor timestamps. The repository now contains 66 migrations.
-
-> **Current update — 21 August 2026:** Migrations 65/65 are present in the repository; the latest two add `sports.scoring_mode` and `match_scoring_events` for athlete-level scoring.
-
-> Snapshot 17 Ogos 2026: **61 migration files**. Migrasi baharu menambah `ranking_rules` JSON pada session/tournament; fresh SQLite migration 61/61 lulus. Runtime production memerlukan migrasi melalui release runbook.
+> **Status semasa (21 Ogos 2026):** Repositori mengandungi **66 migration files**. Migrasi terkini menambah: `ranking_rules` JSON pada session/tournament; `sports.scoring_mode` + `match_scoring_events` untuk individual scoring; dan status result `draft`/`submitted`/`approved`/`locked` (`2026_08_21_130000`) bersama actor timestamps. Runtime production memerlukan migrasi melalui release runbook.
 
 ## Domain dan Tenancy (20 jadual)
 
