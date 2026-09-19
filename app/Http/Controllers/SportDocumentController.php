@@ -6,12 +6,12 @@ use App\Http\Requests\Sport\StoreSportDocumentRequest;
 use App\Models\Sport;
 use App\Models\SportDocument;
 use App\Services\PublicPortalService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 
 class SportDocumentController extends Controller
 {
@@ -22,6 +22,7 @@ class SportDocumentController extends Controller
         abort_unless(preg_match('/^\d{4}$/', $year) === 1, 422);
         $root = storage_path('app/public/documents/'.$year.'/sports');
         $files = File::isDirectory($root) ? collect(File::files($root))->filter(fn ($file) => in_array(strtolower($file->getExtension()), ['pdf', 'md', 'markdown'], true))->map(fn ($file) => ['name' => $file->getFilename(), 'path' => 'documents/'.$year.'/sports/'.$file->getFilename()])->values() : collect();
+
         return response()->json(['files' => $files]);
     }
 
@@ -55,11 +56,13 @@ class SportDocumentController extends Controller
     {
         Gate::authorize('update', $sport);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'session_id' => ['required', 'uuid', 'exists:event_sessions,id'], 'file_path' => ['required', 'string'], 'year' => ['required', 'regex:/^\d{4}$/']]);
+        abort_if(str_contains($data['file_path'], '..'), 422);
         $prefix = 'documents/'.$data['year'].'/sports/';
         abort_unless(str_starts_with($data['file_path'], $prefix) && Storage::disk('public')->exists($data['file_path']), 422);
         $absolute = Storage::disk('public')->path($data['file_path']);
         $file = new \SplFileInfo($absolute);
         SportDocument::create(['organization_id' => $sport->organization_id, 'sport_id' => $sport->id, 'session_id' => $data['session_id'], 'title' => $data['title'], 'file_path' => $data['file_path'], 'file_name' => $file->getFilename(), 'mime_type' => File::mimeType($absolute), 'file_size' => $file->getSize(), 'is_published' => true, 'created_by' => $request->user()->uuid]);
+
         return back()->with('success', 'Sport document linked successfully.');
     }
 }

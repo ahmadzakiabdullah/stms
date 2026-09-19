@@ -131,6 +131,7 @@ class ParticipantController extends Controller
                     if ($currentPath && $currentPath !== $selectedPath) {
                         $pathsToDelete[] = $currentPath;
                     }
+
                     continue;
                 }
 

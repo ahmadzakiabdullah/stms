@@ -14,7 +14,18 @@ class SessionSport extends Model
 
     protected $casts = ['is_active' => 'boolean'];
 
-    public function session() { return $this->belongsTo(Session::class); }
-    public function sport() { return $this->belongsTo(Sport::class); }
-    public function categories() { return $this->hasMany(SessionSportCategory::class); }
+    public function session()
+    {
+        return $this->belongsTo(Session::class);
+    }
+
+    public function sport()
+    {
+        return $this->belongsTo(Sport::class);
+    }
+
+    public function categories()
+    {
+        return $this->hasMany(SessionSportCategory::class);
+    }
 }

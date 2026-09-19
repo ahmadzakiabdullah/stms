@@ -1,6 +1,6 @@
 # System Overview
 
-> Current route inventory is 160 application routes and 43 Inertia pages. Public athlete profiles and scorer events are implemented; `/schedule` is the canonical public match/results view and `/results/manage` is the authenticated result workflow.
+> Current route inventory is 162 application routes and 43 Inertia pages. Public athlete profiles and scorer events are implemented; `/schedule` is the canonical public match/results view and `/results/manage` is the authenticated result workflow.
 
 > **Current implementation update — 21 August 2026:** Public athlete profiles, configurable individual scoring events and participant-grouped public scorer display are implemented. See `CURRENT_STATE.md` for release status.
 
@@ -87,7 +87,7 @@ Navigator dan footer kongsi disediakan oleh `PublicHeader`/`PublicFooter`. `/man
 
 ## Route and Runtime Summary
 
-- 160 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
+- 162 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
 - Email verification ditentukan ketika route bootstrap melalui `EMAIL_VERIFICATION_REQUIRED`.
 - `/health` boleh dilindungi token dan menyamar sebagai 404; `/up` ialah Laravel liveness asas.
 - Runtime workspace audit: production env, debug off, database cache/queue, file session, email verification off, CSP report-only, enforcement off.

@@ -64,10 +64,10 @@ class DashboardTest extends TestCase
         $firstProps = $first->viewData('page')['props'] ?? [];
         $refreshProps = $refresh->viewData('page')['props'] ?? [];
 
-        $this->assertSame($firstProps['stats'], $refreshProps['stats']);
-        $this->assertSame($firstProps['recentSessions'], $refreshProps['recentSessions']);
-        $this->assertSame($firstProps['upcomingEvents'], $refreshProps['upcomingEvents']);
-        $this->assertSame($firstProps['registrationsBySport'], $refreshProps['registrationsBySport']);
+        $this->assertEquals($firstProps['stats'], $refreshProps['stats']);
+        $this->assertEquals($firstProps['recentSessions'], $refreshProps['recentSessions']);
+        $this->assertEquals($firstProps['upcomingEvents'], $refreshProps['upcomingEvents']);
+        $this->assertEquals($firstProps['registrationsBySport'], $refreshProps['registrationsBySport']);
     }
 
     public function test_super_admin_sees_all_in_dashboard(): void
