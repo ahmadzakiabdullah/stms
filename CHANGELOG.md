@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 19 September 2026 — Adopt shared PageHeader on four admin pages
+
+- Migrated `Settings`, `Tournaments`, `Users` and `Sport Categories` header blocks to the shared `PageHeader` component, removing per-page title/description markup and gaining the consistent responsive header layout.
+- Baseline verification with Playwright/axe: **10/10** critical-journey tests pass on desktop and mobile (run with `APP_LOCALE=en`; the local `.env` ships `APP_LOCALE=ms` while the specs assert English labels).
+
 ### 19 September 2026 — Design tokens on public and print surfaces
 
 - Replaced the remaining raw Tailwind `slate`/`white` utilities with theme tokens across the public pages/components (`Schedule`, `Athletes`, `Athlete`, `Contact`, `Public/Index`, `PublicFixtureCard`, `PublicMatchStatus`, `ParticipantLogo`) and the app/print screens (`Participants`, `ParticipationConfirmations`, `TeamRegistrationForms`); a `slate-` scan of `resources/js/**/*.tsx` is now empty.

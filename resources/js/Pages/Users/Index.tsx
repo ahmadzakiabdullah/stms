@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -307,30 +308,29 @@ export default function UsersIndex({ users: usersProp, roles, organizations, par
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Users')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Manage users and roles (M1 - RBAC)')}
-                        </p>
-                    </div>
+                <PageHeader
+                    title={t('Users')}
+                    description={t('Manage users and roles (M1 - RBAC)')}
+                    actions={
+                        <>
+                            <Button onClick={() => setDialogMode('create')}>
+                                <Plus className="mr-2 size-4" />
+                                {t('Add User')}
+                            </Button>
 
-                    <Button onClick={() => setDialogMode('create')}>
-                        <Plus className="mr-2 size-4" />
-                        {t('Add User')}
-                    </Button>
-
-                    {dialogMode && (
-                        <UserFormDialog
-                            key={dialogMode === 'create' ? 'create' : dialogMode.id}
-                            onClose={() => setDialogMode(null)}
-                            editingUser={dialogMode === 'create' ? null : dialogMode}
-                            roles={roles}
-                            participants={participants}
-                            sports={sports}
-                        />
-                    )}
-                </div>
+                            {dialogMode && (
+                                <UserFormDialog
+                                    key={dialogMode === 'create' ? 'create' : dialogMode.id}
+                                    onClose={() => setDialogMode(null)}
+                                    editingUser={dialogMode === 'create' ? null : dialogMode}
+                                    roles={roles}
+                                    participants={participants}
+                                    sports={sports}
+                                />
+                            )}
+                        </>
+                    }
+                />
             }
         >
             <Head title={t('Users')} />

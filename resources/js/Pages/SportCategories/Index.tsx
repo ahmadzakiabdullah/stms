@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -208,15 +209,12 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Sport Categories')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Manage categories for each sport')}
-                        </p>
-                    </div>
-
-                    {isSuperAdmin && (
+                <PageHeader
+                    title={t('Sport Categories')}
+                    description={t('Manage categories for each sport')}
+                    actions={
+                        <>
+                            {isSuperAdmin && (
                     <Dialog open={open} onOpenChange={(isOpen) => {
                         if (!isOpen) closeDialog();
                         else setOpen(true);
@@ -411,7 +409,9 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                         </DialogContent>
                     </Dialog>
                     )}
-                </div>
+                        </>
+                    }
+                />
             }
         >
             <Head title={t('Sport Categories')} />

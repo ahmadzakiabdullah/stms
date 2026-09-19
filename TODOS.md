@@ -16,7 +16,8 @@
 - [x] Skala tipografi minimum 12px: 84 kejadian `text-[9px]`/`[10px]`/`[11px]` diganti `text-xs` merentas 27 fail.
 - [x] `Dashboard.tsx` guna komponen `EmptyState` kongsi (buang definisi tempatan) dan radius kad diselaraskan ke `rounded-xl` (hero `rounded-2xl`).
 - [x] Bersihkan semua baki kelas `slate`/`white` mentah ke token tema pada permukaan awam (`Schedule`, `Athletes`, `Athlete`, `Contact`, `Index`, `PublicFixtureCard`, `PublicMatchStatus`, `ParticipantLogo`) dan skrin cetak/app (`Participants`, `ParticipationConfirmations`, `TeamRegistrationForms`); sapuan `slate-` pada `resources/js/**/*.tsx` kini kosong.
-- [ ] Belum: adopsi meluas `PageHeader` (15/43) dan `ConfirmDialog` (11/43) ke halaman selebihnya — kerja per-halaman.
+- [x] Adopsi `PageHeader` pada `Settings`, `Tournaments`, `Users`, `SportCategories`; baseline e2e/axe 10/10 lulus (desktop + mobile, `APP_LOCALE=en`).
+- [ ] Belum: adopsi `PageHeader` pada halaman baki (`Faculty/Dashboard` perlukan sokongan logo; `Profile/Edit`, `TeamRegistrationForms/Show` dinilai berasingan) dan `ConfirmDialog` (11/43).
 
 ## Public directory UX (selesai 19 September 2026)
 
