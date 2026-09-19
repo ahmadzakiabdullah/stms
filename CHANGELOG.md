@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a pre-existing TypeScript error in `resources/js/Pages/Events/Index.tsx` (`EventRow` now omits `sport_category`) that surfaced once `origin/master` was merged in.
 - Trimmed the duplicated `/sports` section heading (the eyebrow and description repeated the page hero) and derived fallback category labels from `event.category`, removing the brittle event-name-splitting helper.
 - Added `PublicPortalTest::test_public_sports_directory_lists_only_published_sport_documents`.
+- Aligned the SAF 2026 demo seed with the official window: `SAF2026DataSeeder` now creates one tournament — `Sukan Antara Fakulti Ke-20 2026`, 13–25 October 2026 — and retires the legacy `saf-2026-fasa-1`/`saf-2026-fasa-2` phases; the dependent futsal and football dummy seeders now target that tournament. Added `ProductionSeedingTest::test_saf_demo_seeder_creates_one_tournament_for_the_official_window`.
 
 ### Dashboard attention queue
 
