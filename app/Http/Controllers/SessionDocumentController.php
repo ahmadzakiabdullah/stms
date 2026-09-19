@@ -36,6 +36,7 @@ class SessionDocumentController extends Controller
     {
         Gate::authorize('update', $session);
         $data = $request->validate(['title'=>['required','string','max:255'],'file_path'=>['required','string']]);
+        abort_if(str_contains($data['file_path'], '..'), 422);
         $year = $session->start_date?->format('Y') ?? now()->format('Y');
         $prefix = 'documents/'.$year.'/general/';
         abort_unless(str_starts_with($data['file_path'], $prefix) && Storage::disk('public')->exists($data['file_path']), 422);

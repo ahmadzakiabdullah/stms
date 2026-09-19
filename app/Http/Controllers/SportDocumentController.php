@@ -55,6 +55,7 @@ class SportDocumentController extends Controller
     {
         Gate::authorize('update', $sport);
         $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'session_id' => ['required', 'uuid', 'exists:event_sessions,id'], 'file_path' => ['required', 'string'], 'year' => ['required', 'regex:/^\d{4}$/']]);
+        abort_if(str_contains($data['file_path'], '..'), 422);
         $prefix = 'documents/'.$data['year'].'/sports/';
         abort_unless(str_starts_with($data['file_path'], $prefix) && Storage::disk('public')->exists($data['file_path']), 422);
         $absolute = Storage::disk('public')->path($data['file_path']);
