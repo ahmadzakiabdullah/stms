@@ -13,3 +13,6 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+## 2026-09-19 - [O(N*M) Loop Collection Allocations]
+**Learning:** Found hidden performance overhead in loop-based aggregation (e.g. `foreach ($items as $item) { $sum += $item->relation->where('type', 'x')->count(); }`). Instantiating new collections sequentially via `where()` filters in a loop consumes significant memory and processing time compared to a single pass lookup.
+**Action:** Replace `where()->count()` loops on loaded relations with single-pass grouping operations such as `$items->flatMap->relation->countBy('type')`. Also ensure that optimizations include required inline comments as requested by prompt constraints.

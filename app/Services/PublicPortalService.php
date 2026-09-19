@@ -459,7 +459,7 @@ class PublicPortalService
             ];
         })->values();
 
-        return [
+        $payload = [
             'athlete' => [
                 'id' => $member->id,
                 'name' => $member->name,
@@ -471,15 +471,23 @@ class PublicPortalService
                 'category' => $entry->event?->sportCategory?->name,
                 'event' => $entry->event?->name,
             ],
-            'stats' => [
-                'matches' => $matches->where('status', 'completed')->count(),
-                'wins' => $matches->where('outcome', 'win')->count(),
-                'draws' => $matches->where('outcome', 'draw')->count(),
-                'losses' => $matches->where('outcome', 'loss')->count(),
-            ],
-            'matches' => $matches->all(),
-            'updated_at' => (($fixtures->max('updated_at') ?: $session->updated_at))->toIso8601String(),
         ];
+
+        // ⚡ Bolt: Optimize collection aggregation.
+        // Replaced multiple where()->count() passes with a single pass dictionary lookup via countBy().
+        $outcomes = $matches->countBy('outcome');
+
+        $payload['stats'] = [
+            'matches' => $matches->countBy('status')->get('completed', 0),
+            'wins' => $outcomes->get('win', 0),
+            'draws' => $outcomes->get('draw', 0),
+            'losses' => $outcomes->get('loss', 0),
+        ];
+
+        $payload['matches'] = $matches->all();
+        $payload['updated_at'] = (($fixtures->max('updated_at') ?: $session->updated_at))->toIso8601String();
+
+        return $payload;
     }
 
     private function buildData(Session $session, ?int $limit): array
