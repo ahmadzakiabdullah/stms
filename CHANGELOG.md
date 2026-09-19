@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 19 September 2026 — Design tokens on public and print surfaces
+
+- Replaced the remaining raw Tailwind `slate`/`white` utilities with theme tokens across the public pages/components (`Schedule`, `Athletes`, `Athlete`, `Contact`, `Public/Index`, `PublicFixtureCard`, `PublicMatchStatus`, `ParticipantLogo`) and the app/print screens (`Participants`, `ParticipationConfirmations`, `TeamRegistrationForms`); a `slate-` scan of `resources/js/**/*.tsx` is now empty.
+- Fixed two sub-12px labels (`text-[8px]`, `text-[12px]`) missed by the phase 3 typography pass.
+- Gates: TypeScript, Vite build and bundle budget pass.
+
 ### 19 September 2026 — UI/UX refactor phase 3 (typography, card radius, shared empty state)
 
 - Raised every sub-12px label to the 12px `text-xs` minimum across 27 public and authenticated components/pages (84 arbitrary `text-[9px]`/`text-[10px]`/`text-[11px]` occurrences removed).

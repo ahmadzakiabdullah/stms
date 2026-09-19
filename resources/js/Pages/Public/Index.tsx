@@ -176,7 +176,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
 function PodiumCard({ row, t }: { row: MedalRow; t: Translate }) {
     const isWinner = row.rank === 1;
-    const medalTone = row.rank === 1 ? 'bg-[var(--public-highlight)] text-[var(--public-dark)]' : row.rank === 2 ? 'bg-slate-200 text-slate-700' : 'bg-amber-700 text-white';
+    const medalTone = row.rank === 1 ? 'bg-[var(--public-highlight)] text-[var(--public-dark)]' : row.rank === 2 ? 'bg-[var(--public-dark-border)] text-[var(--public-text)]' : 'bg-amber-700 text-white';
 
     return <article className={`flex min-w-0 flex-col items-center text-center ${isWinner ? 'order-2' : row.rank === 2 ? 'order-1' : 'order-3'}`}>
         <div className={`relative flex ${isWinner ? 'size-20 sm:size-24' : 'size-16 sm:size-20'} items-center justify-center rounded-[1.5rem] ${medalTone} shadow-lg`}>

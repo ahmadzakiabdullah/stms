@@ -167,7 +167,7 @@ export default function PublicContact({ app_name, contact }: Props) {
                                                 <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Icon className="size-5" /></span>
                                                 <span className="text-sm font-black text-[var(--public-text)]">{link.label}</span>
                                             </div>
-                                            <ChevronRight className="size-4 text-slate-400 transition group-hover:text-[var(--public-primary)]" />
+                                            <ChevronRight className="size-4 text-[var(--public-dark-faint)] transition group-hover:text-[var(--public-primary)]" />
                                         </Link>
                                     );
                                 })}

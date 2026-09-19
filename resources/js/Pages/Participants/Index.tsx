@@ -279,7 +279,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                         <ParticipantLogo participant={viewParticipant} size="xl" alt="" />
                                         <div><p className="font-medium">{t('Standard logo')}</p><p className="text-xs text-muted-foreground">{t('For light backgrounds')}</p></div>
                                     </div>
-                                    <div className="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-950 p-3 text-white">
+                                    <div className="flex items-center gap-3 rounded-lg border border-border bg-foreground p-3 text-background">
                                         <ParticipantLogo participant={viewParticipant} surface="dark" size="xl" alt="" />
                                         <div><p className="font-medium">{t('Inverse logo')}</p><p className="text-xs text-white/60">{t('For dark backgrounds')}</p></div>
                                     </div>
@@ -610,7 +610,7 @@ function ParticipantFormDialog({ participant, sessions, availableLogos, onClose 
                     <div><Label>{t('Logo / Crest')}</Label><p className="mt-1 text-xs text-muted-foreground">{t('Upload separate official variants for light and dark backgrounds.')}</p></div>
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div className="rounded-xl border bg-white p-3">
-                            <div className="flex min-h-24 items-center justify-center rounded-lg border border-dashed bg-slate-50 p-3">
+                            <div className="flex min-h-24 items-center justify-center rounded-lg border border-dashed bg-muted/50 p-3">
                                 <ParticipantLogo participant={{ name: formData.name, logo_url: logoPreview }} size="xl" alt={t('Standard logo preview')} />
                             </div>
                             <div className="mt-3"><p className="text-sm font-semibold">{t('Standard logo')}</p><p className="text-xs text-muted-foreground">{t('For light backgrounds')}</p></div>
@@ -624,7 +624,7 @@ function ParticipantFormDialog({ participant, sessions, availableLogos, onClose 
                             {errors.logo && <p className="mt-2 text-sm text-destructive">{errors.logo}</p>}
                         </div>
 
-                        <div className="rounded-xl border border-slate-700 bg-slate-950 p-3 text-white">
+                        <div className="rounded-xl border border-border bg-foreground p-3 text-background">
                             <div className="flex min-h-24 items-center justify-center rounded-lg border border-dashed border-white/20 bg-white/5 p-3">
                                 <ParticipantLogo participant={{ name: formData.name, inverse_logo_url: inverseLogoPreview }} surface="dark" size="xl" alt={t('Inverse logo preview')} />
                             </div>

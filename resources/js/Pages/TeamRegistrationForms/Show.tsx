@@ -103,13 +103,13 @@ export default function Show(props: Props) {
                         <span className="font-bold">{t('Competition Dates')}</span><span>: {props.event.period}</span>
                     </div>
 
-                    <h3 className="mt-3 border border-black bg-slate-100 px-2 py-1 font-bold uppercase">A. {t('Team Officials')}</h3>
+                    <h3 className="mt-3 border border-black bg-muted px-2 py-1 font-bold uppercase">A. {t('Team Officials')}</h3>
                     <table className="form-table w-full border-collapse">
                         <thead><tr><th className="w-8 border border-black p-1">{t('No.')}</th><th className="border border-black p-1 text-left">{t('Full Name')}</th><th className="w-28 border border-black p-1 text-left">{t('Role')}</th><th className="w-32 border border-black p-1">{t('ID / Passport No.')}</th><th className="w-28 border border-black p-1">{t('Phone No.')}</th></tr></thead>
                         <tbody>{officialRows.map((member, index) => <tr key={member.id}><td className="border border-black p-1 text-center">{index + 1}</td><td className="border border-black p-1 font-medium">{member.name}</td><td className="border border-black p-1">{roleLabels[member.role] || ''}</td><td className="border border-black p-1 text-center">{member.identification_no}</td><td className="border border-black p-1 text-center">{member.phone}</td></tr>)}</tbody>
                     </table>
 
-                    <h3 className="mt-3 border border-black bg-slate-100 px-2 py-1 font-bold uppercase">B. {t('Players / Athletes')}</h3>
+                    <h3 className="mt-3 border border-black bg-muted px-2 py-1 font-bold uppercase">B. {t('Players / Athletes')}</h3>
                     <table className="form-table w-full border-collapse">
                         <thead><tr><th className="w-8 border border-black p-1">{t('No.')}</th><th className="border border-black p-1 text-left">{t('Full Name')}</th><th className="w-28 border border-black p-1">{t('Matrix No.')}</th><th className="w-32 border border-black p-1">{t('ID / Passport No.')}</th><th className="w-24 border border-black p-1">{t('Gender')}</th></tr></thead>
                         <tbody>{athleteRows.map((member, index) => <tr key={member.id}><td className="border border-black p-1 text-center">{index + 1}</td><td className="border border-black p-1 font-medium">{member.name}</td><td className="border border-black p-1 text-center">{member.matrix_no}</td><td className="border border-black p-1 text-center">{member.identification_no}</td><td className="border border-black p-1 text-center">{member.role === 'athlete_male' ? t('Male') : member.role === 'athlete_female' ? t('Female') : ''}</td></tr>)}</tbody>
@@ -122,7 +122,7 @@ export default function Show(props: Props) {
                             <div><div className="border-b border-black" /><p className="mt-1">{t('Dean / Head of Contingent Verification')}</p><p className="mt-2">{t('Name:')} __________________________________</p><p className="mt-2">{t('Official Stamp:')}</p></div>
                         </div>
                     </div>
-                    <p className="mt-2 text-[8px] text-slate-600">{t('This form is generated from STMS registration records...')}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{t('This form is generated from STMS registration records...')}</p>
                 </section>
             </div>
         </AuthenticatedLayout>

@@ -75,7 +75,7 @@ export default function PublicFixtureCard({ match, mode }: Props) {
                 <div className="flex min-w-0 items-center justify-end gap-3 text-right"><span className="line-clamp-2 text-sm font-black leading-tight text-[var(--public-text)] sm:text-base">{match.home?.name || t('TBD')}</span><ParticipantLogo participant={match.home} size="lg" alt="" /></div>
                 <div className="flex flex-col items-center text-center">
                     <span className="text-xs font-bold text-[var(--public-dark-faint)]">{isResult ? t('Final') : isLive ? t('Live') : t('Your Time')}</span>
-                    <span className={`mt-1 rounded-lg px-3 py-1 text-xl font-black tracking-tight ${isLive ? 'bg-red-600 text-white' : isResult ? 'bg-[var(--public-dark)] text-white' : 'bg-slate-100 text-[var(--public-text)]'}`}>{isResult || isLive ? score : parts?.time || '—'}</span>
+                    <span className={`mt-1 rounded-lg px-3 py-1 text-xl font-black tracking-tight ${isLive ? 'bg-red-600 text-white' : isResult ? 'bg-[var(--public-dark)] text-white' : 'bg-[var(--public-dark-soft)] text-[var(--public-text)]'}`}>{isResult || isLive ? score : parts?.time || '—'}</span>
                     <span className="mt-1 text-xs font-semibold text-[var(--public-dark-faint)]">{secondary}</span>
                 </div>
                 <div className="flex min-w-0 items-center gap-3"><ParticipantLogo participant={match.away} size="lg" alt="" /><span className="line-clamp-2 text-sm font-black leading-tight text-[var(--public-text)] sm:text-base">{match.away?.name || t('TBD')}</span></div>
