@@ -180,7 +180,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                                             href={route(item.href)}
                                             onClick={onNavigate}
                                             className={
-                                                'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ' +
+                                                'group relative flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ' +
                                                 (isActive
                                                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                                                     : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground')
@@ -205,7 +205,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                         method="post"
                         as="button"
                         onClick={onNavigate}
-                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     >
                         <LogOut className="size-4" />
                         <span>{t('Logout')}</span>

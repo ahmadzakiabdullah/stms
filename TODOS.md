@@ -5,8 +5,13 @@
 - [x] Buang CSS mati `.public-portal`/`.public-campaign` dan import font Manrope/Noto Sans yang tidak digunakan (`resources/css/app.css`).
 - [x] Ganti kelas `slate`/`white` mentah dengan token shadcn pada `Dashboard.tsx` dan `DrawResult/Index.tsx` (`bg-card`, `border-border`, `text-foreground`, `text-muted-foreground`, `bg-primary`).
 - [x] Kukuhkan a11y `PublicMobileMenu`: Escape, klik/luar, focus trap + pulih fokus, `aria-haspopup`, import di atas, saiz sentuh 44px.
-- [ ] Fasa 2 (belum): saiz sentuh butang/nav, fokus seragam pada butang kustom.
+
+## UI/UX Refactor (Fasa 2 — selesai 19 September 2026)
+
+- [x] Saiz sentuh lalai 44px pada mobile untuk `Button` shadcn (`min-h-11 min-w-11`, reset di `sm`), nav/logout sidebar app, `LocaleSwitcher`, butang log masuk awam dan tab `/schedule` + `/athletes`.
+- [x] Tambah outline `:focus-visible` asas untuk pautan/butang/summary natif yang tiada ring sendiri.
 - [ ] Fasa 3 (belum): skala tipografi min 12px, adopsi `PageHeader`/`EmptyState`/`ConfirmDialog`, selaras radius.
+- [ ] Susulan: `Schedule.tsx`/`Athletes.tsx` masih campur kelas `slate`/`bg-white` pada permukaan awam — selaraskan ke token `--public-*`.
 
 ## Public directory UX (selesai 19 September 2026)
 

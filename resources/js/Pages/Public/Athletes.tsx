@@ -94,7 +94,7 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
 
                         <div role="tablist" aria-label={t('Athletes & Teams')} className="mt-7 inline-flex flex-wrap gap-1 rounded-2xl border border-[var(--public-dark-border)] bg-[var(--public-dark-soft)] p-1">
                             {(['teams', 'athletes'] as const).map(option => (
-                                <button key={option} type="button" role="tab" aria-selected={view === option} onClick={() => applyFilters({ view: option, letter: '' })} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition ${view === option ? 'bg-[var(--public-primary)] text-white shadow-sm' : 'text-[var(--public-dark-faint)] hover:text-[var(--public-primary)]'}`}>
+                                <button key={option} type="button" role="tab" aria-selected={view === option} onClick={() => applyFilters({ view: option, letter: '' })} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition ${view === option ? 'bg-[var(--public-primary)] text-white shadow-sm' : 'text-[var(--public-dark-faint)] hover:text-[var(--public-primary)]'}`}>
                                     {option === 'teams' ? t('Teams & Rosters') : t('Athlete Directory')}
                                     <span className={`rounded-md px-1.5 py-0.5 text-[11px] tabular-nums ${view === option ? 'bg-white/20' : 'bg-[var(--public-dark-border)]'}`}>{option === 'teams' ? counts.teams : counts.athletes}</span>
                                 </button>

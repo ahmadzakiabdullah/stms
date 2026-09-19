@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 19 September 2026 — UI/UX refactor phase 2 (touch targets + focus)
+
+- The shared shadcn `Button` now enforces a 44px minimum hit area on small screens (`min-h-11 min-w-11`, reset at the `sm` breakpoint), covering toolbars, pagination and icon buttons; the authenticated sidebar nav and logout links, the locale switcher, the public login button, and the public schedule/athletes tab controls received the same touch sizing.
+- Added a base `:focus-visible` outline for native anchors, buttons and summaries that do not ship their own ring, so keyboard focus is visible app-wide without touching every component.
+- Gates: TypeScript, Vite build and bundle budget pass.
+
 ### 19 September 2026 — UI/UX refactor phase 1 (design-system consistency + a11y)
 
 - Removed the dead `.public-portal`/`.public-campaign` CSS override layer from `resources/css/app.css` (~75 lines of `!important` remaps) and dropped the now-unused Manrope and Noto Sans font imports; public styling runs solely through the `--public-*` theme tokens plus the `.public-cosmic` display font.

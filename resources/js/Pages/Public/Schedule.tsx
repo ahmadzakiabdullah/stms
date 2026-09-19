@@ -202,7 +202,7 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                                         <button
                                             key={tab.key}
                                             onClick={() => setActiveTab(tab.key)}
-                                            className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-black transition-all ${
+                                            className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-black transition-all ${
                                                 activeTab === tab.key
                                                     ? 'border-[var(--public-primary)] bg-[var(--public-primary)] text-white shadow-sm'
                                                     : 'border-slate-200 bg-white text-slate-600 hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]'

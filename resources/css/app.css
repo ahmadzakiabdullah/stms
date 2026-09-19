@@ -80,6 +80,11 @@
     @apply border-border;
     outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
   }
+  /* Visible keyboard focus for native controls that do not ship their own ring. */
+  :where(a, button, summary, [role='button']):not([data-slot]):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
   body {
     @apply bg-background text-foreground;
   }
