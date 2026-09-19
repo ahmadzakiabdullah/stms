@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added category filter chips (derived from the sports catalogue) and an always-visible "Showing X of Y sports" count to the `/sports` page.
 - The public `/sports` payload now includes published per-sport rulebook documents scoped to the active session and organization; the directory renders them as PDF/Markdown links. Cache bumped to `public-portal:v10`, `forget()` clears `v9`/`v10`, and sport document upload/delete now invalidates the public portal cache.
 - Fixed a pre-existing TypeScript error in `resources/js/Pages/Events/Index.tsx` (`EventRow` now omits `sport_category`) that surfaced once `origin/master` was merged in.
+- Trimmed the duplicated `/sports` section heading (the eyebrow and description repeated the page hero) and derived fallback category labels from `event.category`, removing the brittle event-name-splitting helper.
 - Added `PublicPortalTest::test_public_sports_directory_lists_only_published_sport_documents`.
 
 ### Dashboard attention queue

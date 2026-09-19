@@ -44,11 +44,6 @@ function DirectoryContent({ section, sports_catalog, faculties, venues, t }: { s
     return <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{venues.map(venue => <article key={venue} className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-6 shadow-sm"><MapPin className="size-6 text-[var(--public-primary)]" /><h2 className="mt-4 text-lg font-black">{venue}</h2><p className="mt-2 text-sm text-[var(--public-dark-faint)]">{t('Official competition venue')}</p></article>)}</div>;
 }
 
-const stripEventPrefix = (name: string): string => {
-    const parts = name.split(' - ');
-    return parts.length > 1 ? parts[parts.length - 1].trim() : name.trim();
-};
-
 function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEntry[]; t: (key: string) => string }) {
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('');
@@ -85,7 +80,7 @@ function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEn
     return (
         <section>
             <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-                <PublicSectionHeading eyebrow={t('Sports programme')} title={t('Explore the sports')} description={t('Every official sport and event in the competition.')} />
+                <PublicSectionHeading title={t('Explore the sports')} />
                 <Link href={route('public.schedule')} className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] sm:self-auto">{t('View full schedule')}<ArrowRight className="size-4" /></Link>
             </div>
 
@@ -142,7 +137,9 @@ function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEn
 }
 
 function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) => string }) {
-    const labels = sport.categories.length > 0 ? sport.categories : sport.events.map(event => stripEventPrefix(event.name));
+    const labels = sport.categories.length > 0
+        ? sport.categories
+        : Array.from(new Set(sport.events.map(event => event.category).filter((category): category is string => Boolean(category))));
     const documents = sport.documents ?? [];
 
     return (
