@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Printer } from 'lucide-react';
@@ -63,16 +64,17 @@ export default function Show(props: Props) {
             `}</style>
 
             <div className="mx-auto max-w-5xl space-y-5 p-4 sm:p-6 lg:p-8">
-                <div className="print-hidden flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{t('Team Registration Form')}</h1>
-                        <p className="text-sm text-muted-foreground">{props.participant.name} - {props.event.sport} ({props.event.category})</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button asChild variant="outline"><Link href={route('event-participants.index')}><ArrowLeft className="mr-2 size-4" />{t('Back to Event Registrations')}</Link></Button>
-                        <Button onClick={() => window.print()}><Printer className="mr-2 size-4" />{t('Print Form')}</Button>
-                    </div>
-                </div>
+                <PageHeader
+                    className="print-hidden"
+                    title={t('Team Registration Form')}
+                    description={`${props.participant.name} - ${props.event.sport} (${props.event.category})`}
+                    actions={
+                        <>
+                            <Button asChild variant="outline"><Link href={route('event-participants.index')}><ArrowLeft className="mr-2 size-4" />{t('Back to Event Registrations')}</Link></Button>
+                            <Button onClick={() => window.print()}><Printer className="mr-2 size-4" />{t('Print Form')}</Button>
+                        </>
+                    }
+                />
 
                 <section className="team-form-sheet rounded-sm border bg-white px-8 py-6 text-xs leading-tight text-black shadow-sm">
                     <header className="grid grid-cols-[92px_1fr_92px] items-start gap-3">

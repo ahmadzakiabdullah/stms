@@ -17,7 +17,9 @@
 - [x] `Dashboard.tsx` guna komponen `EmptyState` kongsi (buang definisi tempatan) dan radius kad diselaraskan ke `rounded-xl` (hero `rounded-2xl`).
 - [x] Bersihkan semua baki kelas `slate`/`white` mentah ke token tema pada permukaan awam (`Schedule`, `Athletes`, `Athlete`, `Contact`, `Index`, `PublicFixtureCard`, `PublicMatchStatus`, `ParticipantLogo`) dan skrin cetak/app (`Participants`, `ParticipationConfirmations`, `TeamRegistrationForms`); sapuan `slate-` pada `resources/js/**/*.tsx` kini kosong.
 - [x] Adopsi `PageHeader` pada `Settings`, `Tournaments`, `Users`, `SportCategories`; baseline e2e/axe 10/10 lulus (desktop + mobile, `APP_LOCALE=en`).
-- [ ] Belum: adopsi `PageHeader` pada halaman baki (`Faculty/Dashboard` perlukan sokongan logo; `Profile/Edit`, `TeamRegistrationForms/Show` dinilai berasingan) dan `ConfirmDialog` (11/43).
+- [x] `PageHeader` ditambah slot `leading`; digunakan pada `Faculty/Dashboard` (logo), `Profile/Edit`, `TeamRegistrationForms/Show`.
+- [x] `ConfirmDialog` destrukif digunakan pada `SportCategories` & `Tournaments` (ganti dialog buatan).
+- [ ] Belum: `ConfirmDialog` untuk `window.confirm` dalam `Sessions`/`Sports` (padam dokumen); adopsi `PageHeader` pada `Dashboard` (hero tersendiri) dinilai berasingan.
 
 ## Public directory UX (selesai 19 September 2026)
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 19 September 2026 — PageHeader leading slot and ConfirmDialog for deletes
+
+- `PageHeader` gained an optional `leading` slot; applied to `Faculty Dashboard` (contingent logo), `Profile`, and the printable `Team Registration Form` (kept `print-hidden`).
+- Replaced the hand-rolled delete dialogs in `Sport Categories` and `Tournaments` with the shared destructive `ConfirmDialog`.
+- Verified with Playwright/axe: 10/10 critical journeys pass on desktop and mobile.
+
 ### 19 September 2026 — Adopt shared PageHeader on four admin pages
 
 - Migrated `Settings`, `Tournaments`, `Users` and `Sport Categories` header blocks to the shared `PageHeader` component, removing per-page title/description markup and gaining the consistent responsive header layout.

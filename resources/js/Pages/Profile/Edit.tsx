@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { PageHeader } from '@/components/PageHeader';
 import { Head } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -16,12 +17,7 @@ export default function Edit({ mustVerifyEmail, status }: EditProps) {
     const { t } = useI18n();
     return (
         <AuthenticatedLayout
-            header={
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">{t('Profile')}</h1>
-                    <p className="text-sm text-muted-foreground">{t('Manage your account settings')}</p>
-                </div>
-            }
+            header={<PageHeader title={t('Profile')} description={t('Manage your account settings')} />}
         >
             <Head title={t('Profile')} />
 

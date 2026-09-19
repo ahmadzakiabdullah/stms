@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -245,28 +246,24 @@ export default function FacultyDashboard({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                        {participant && <ParticipantLogo participant={participant} size="lg" className="sm:size-14" alt="" />}
-                        <div className="min-w-0">
-                            <h1 className="text-2xl font-semibold tracking-tight">{t('Faculty Dashboard')}</h1>
-                            <p className="truncate text-sm text-muted-foreground">
-                                {participant ? participant.name : t('No faculty profile linked')}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                    <Button asChild variant="outline" disabled={!participant}>
-                        <Link href={route('faculty.register-events')}>
-                            {t('Register Events Page')}
-                        </Link>
-                    </Button>
-                    <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
-                        <Plus className="mr-2 size-4" />
-                        {t('Register for Events')}
-                    </Button>
-                    </div>
-                </div>
+                <PageHeader
+                    title={t('Faculty Dashboard')}
+                    description={participant ? participant.name : t('No faculty profile linked')}
+                    leading={participant ? <ParticipantLogo participant={participant} size="lg" className="sm:size-14" alt="" /> : undefined}
+                    actions={
+                        <>
+                            <Button asChild variant="outline" disabled={!participant}>
+                                <Link href={route('faculty.register-events')}>
+                                    {t('Register Events Page')}
+                                </Link>
+                            </Button>
+                            <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
+                                <Plus className="mr-2 size-4" />
+                                {t('Register for Events')}
+                            </Button>
+                        </>
+                    }
+                />
             }
         >
             <Head title={t('Faculty Dashboard')} />

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
@@ -219,24 +220,16 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                 <Pagination paginator={tournamentsProp} />
             </Card>
 
-            <Dialog open={!!deleteTournament} onOpenChange={(isOpen) => !isOpen && setDeleteTournament(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Delete Tournament?')}</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteTournament?.name}</strong>? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteTournament(null)}>
-                            {t('Cancel')}
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={false}>
-                            {t('Yes, Delete')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteTournament}
+                onOpenChange={(isOpen) => !isOpen && setDeleteTournament(null)}
+                title={t('Delete Tournament?')}
+                description={<>Are you sure you want to delete <strong>{deleteTournament?.name}</strong>? This action cannot be undone.</>}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={handleDelete}
+            />
         </AuthenticatedLayout>
     );
 }
