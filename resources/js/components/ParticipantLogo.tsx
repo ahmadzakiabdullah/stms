@@ -70,7 +70,7 @@ export default function ParticipantLogo({
                     decoding="async"
                 />
             ) : (
-                <span aria-hidden="true" className="text-[10px] font-semibold uppercase">
+                <span aria-hidden="true" className="text-xs font-semibold uppercase">
                     {initials(participant?.name)}
                 </span>
             )}

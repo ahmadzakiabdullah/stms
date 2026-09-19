@@ -164,22 +164,22 @@ function MatchupPreview({ match, t }: { match?: MatchOption; t: (key: string) =>
                     <TeamMark participant={match.home_participant} />
                     <span className="truncate text-sm font-semibold" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
                     {participantFullName(match.home_participant) !== participantName(match.home_participant) && (
-                        <span className="line-clamp-1 max-w-40 text-[10px] leading-tight text-muted-foreground" title={participantFullName(match.home_participant)}>
+                        <span className="line-clamp-1 max-w-40 text-xs leading-tight text-muted-foreground" title={participantFullName(match.home_participant)}>
                             {participantFullName(match.home_participant)}
                         </span>
                     )}
-                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('Home')}</span>
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground">{t('Home')}</span>
                 </div>
                 <span className="shrink-0 text-sm font-bold text-muted-foreground">VS</span>
                 <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
                     <TeamMark participant={match.away_participant} />
                     <span className="truncate text-sm font-semibold" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
                     {participantFullName(match.away_participant) !== participantName(match.away_participant) && (
-                        <span className="line-clamp-1 max-w-40 text-[10px] leading-tight text-muted-foreground" title={participantFullName(match.away_participant)}>
+                        <span className="line-clamp-1 max-w-40 text-xs leading-tight text-muted-foreground" title={participantFullName(match.away_participant)}>
                             {participantFullName(match.away_participant)}
                         </span>
                     )}
-                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('Away')}</span>
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground">{t('Away')}</span>
                 </div>
             </div>
         </div>

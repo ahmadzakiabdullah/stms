@@ -210,7 +210,7 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                                         >
                                             <Icon className="size-4" />
                                             <span>{t(tab.label)}</span>
-                                            <span className={`inline-flex size-5 items-center justify-center rounded-full text-[10px] font-black ${
+                                            <span className={`inline-flex size-5 items-center justify-center rounded-full text-xs font-black ${
                                                 activeTab === tab.key
                                                     ? 'bg-white/20 text-white'
                                                     : 'bg-slate-100 text-slate-500'

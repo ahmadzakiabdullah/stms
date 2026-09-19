@@ -10,7 +10,12 @@
 
 - [x] Saiz sentuh lalai 44px pada mobile untuk `Button` shadcn (`min-h-11 min-w-11`, reset di `sm`), nav/logout sidebar app, `LocaleSwitcher`, butang log masuk awam dan tab `/schedule` + `/athletes`.
 - [x] Tambah outline `:focus-visible` asas untuk pautan/butang/summary natif yang tiada ring sendiri.
-- [ ] Fasa 3 (belum): skala tipografi min 12px, adopsi `PageHeader`/`EmptyState`/`ConfirmDialog`, selaras radius.
+
+## UI/UX Refactor (Fasa 3 — sebahagian, 19 September 2026)
+
+- [x] Skala tipografi minimum 12px: 84 kejadian `text-[9px]`/`[10px]`/`[11px]` diganti `text-xs` merentas 27 fail.
+- [x] `Dashboard.tsx` guna komponen `EmptyState` kongsi (buang definisi tempatan) dan radius kad diselaraskan ke `rounded-xl` (hero `rounded-2xl`).
+- [ ] Belum: adopsi meluas `PageHeader` (15/43) dan `ConfirmDialog` (11/43) ke halaman selebihnya — kerja per-halaman.
 - [ ] Susulan: `Schedule.tsx`/`Athletes.tsx` masih campur kelas `slate`/`bg-white` pada permukaan awam — selaraskan ke token `--public-*`.
 
 ## Public directory UX (selesai 19 September 2026)

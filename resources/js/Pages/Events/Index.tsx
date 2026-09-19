@@ -620,7 +620,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                                 {event.registrations_count ?? 0}/{event.participants_count ?? 0}
                                             </span>
                                             {(event.pending_participants_count ?? 0) > 0 && (
-                                                <span className="text-[10px] text-muted-foreground">{event.pending_participants_count} menunggu pengesahan</span>
+                                                <span className="text-xs text-muted-foreground">{event.pending_participants_count} menunggu pengesahan</span>
                                             )}
                                         </div>
                                     </TableCell>
@@ -640,7 +640,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                                             style={{ width: `${ep.pct}%` }}
                                                         />
                                                     </div>
-                                                    <span className="text-[10px] tabular-nums text-muted-foreground">
+                                                    <span className="text-xs tabular-nums text-muted-foreground">
                                                         {event.completed_matches_count ?? 0}/{event.matches_count ?? 0}
                                                     </span>
                                                 </div>

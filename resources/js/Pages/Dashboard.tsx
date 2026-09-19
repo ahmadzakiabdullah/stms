@@ -1,3 +1,4 @@
+import { EmptyState } from '@/components/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -209,12 +210,12 @@ export default function Dashboard({
 
             <main className="-m-4 min-h-[calc(100vh-4rem)] bg-muted/40 p-4 sm:-m-6 sm:p-6">
                 <div className="mx-auto max-w-[1600px] space-y-6">
-                    <section className="relative overflow-hidden rounded-3xl bg-primary px-6 py-7 text-primary-foreground shadow-xl shadow-black/10 sm:px-8 sm:py-9">
+                    <section className="relative overflow-hidden rounded-xl bg-primary px-6 py-7 text-primary-foreground shadow-xl shadow-black/10 sm:px-8 sm:py-9">
                         <div className="pointer-events-none absolute -right-20 -top-28 size-80 rounded-full bg-primary-foreground/10 blur-3xl" />
                         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                             <div className="max-w-3xl">
                                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                                    <span className="rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[.18em] text-primary-foreground">{t('System overview')}</span>
+                                    <span className="rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-bold uppercase tracking-[.18em] text-primary-foreground">{t('System overview')}</span>
                                     <span className="text-xs text-primary-foreground/70">{t(roleLabels[primaryRole] ?? 'System User')}</span>
                                 </div>
                                 <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{t('Welcome back')}, {user.name}</h1>
@@ -229,7 +230,7 @@ export default function Dashboard({
                     </section>
 
                     {isAdministrator && pending > 0 && (
-                        <section className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+                        <section className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-start gap-3"><div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-100"><ShieldCheck className="size-5 text-amber-700" /></div><div><p className="font-semibold">{pending} {pending === 1 ? t('registration need attention') : t('registrations need attention')}</p><p className="text-sm text-amber-800">{t('Review pending teams before competition preparation continues.')}</p></div></div>
                             <Button asChild size="sm" variant="outline" className="border-amber-300 bg-card text-amber-900 hover:bg-amber-100"><Link href={route('event-participants.index', { status: 'pending' })}>{t('Review now')}</Link></Button>
                         </section>
@@ -247,12 +248,12 @@ export default function Dashboard({
                             </div>
 
                             <div className="grid gap-4 xl:grid-cols-[1.5fr_.75fr]">
-                                <Card className="overflow-hidden rounded-2xl border-border bg-card shadow-sm">
+                                <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
                                     <CardHeader className="border-b border-border"><CardTitle>{t('Competition lifecycle')}</CardTitle><CardDescription>{t('End-to-end progress from platform setup to official results')}</CardDescription></CardHeader>
-                                    <CardContent className="p-0"><div className="grid md:grid-cols-5">{lifecycle.map((step, index) => { const Icon = step.icon; const progress = percentage(step.value, step.total); return <div key={step.label} className="relative border-b border-border p-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"><div className="mb-5 flex items-center justify-between"><div className={`flex size-10 items-center justify-center rounded-xl ${progress === 100 && step.total > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}><Icon className="size-5"/></div><span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">0{index + 1}</span></div><p className="text-sm font-bold text-foreground">{t(step.label)}</p><p className="mt-1 text-xs tabular-nums text-muted-foreground">{step.value}/{step.total} · {progress}%</p><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${progress === 100 && step.total > 0 ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${progress}%` }}/></div></div>; })}</div></CardContent>
+                                    <CardContent className="p-0"><div className="grid md:grid-cols-5">{lifecycle.map((step, index) => { const Icon = step.icon; const progress = percentage(step.value, step.total); return <div key={step.label} className="relative border-b border-border p-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"><div className="mb-5 flex items-center justify-between"><div className={`flex size-10 items-center justify-center rounded-xl ${progress === 100 && step.total > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}`}><Icon className="size-5"/></div><span className="text-xs font-black uppercase tracking-wider text-muted-foreground">0{index + 1}</span></div><p className="text-sm font-bold text-foreground">{t(step.label)}</p><p className="mt-1 text-xs tabular-nums text-muted-foreground">{step.value}/{step.total} · {progress}%</p><div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${progress === 100 && step.total > 0 ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${progress}%` }}/></div></div>; })}</div></CardContent>
                                 </Card>
 
-                                <Card className="rounded-2xl border-border bg-card shadow-sm">
+                                <Card className="rounded-xl border-border bg-card shadow-sm">
                                     <CardHeader><div className="flex items-start justify-between"><div><CardTitle>{t('Attention queue')}</CardTitle><CardDescription>{t('Operational blockers requiring action')}</CardDescription></div><CircleAlert className={`size-5 ${operationalIssues > 0 ? 'text-amber-600' : 'text-emerald-600'}`}/></div></CardHeader>
                                     <CardContent className="space-y-2">
                                         <AttentionItem label={t('Pending registrations')} value={pending} href={route('event-participants.index', { status: 'pending' })}/>
@@ -268,12 +269,12 @@ export default function Dashboard({
                     <section aria-labelledby="system-kpis">
                         <div className="mb-4 flex items-end justify-between px-1"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-700">{t('Overview')}</p><h2 id="system-kpis" className="mt-1 text-xl font-bold tracking-tight text-foreground">{t('System at a glance')}</h2></div><span className="hidden text-xs text-muted-foreground sm:block">{t('Current tenant data')}</span></div>
                         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                            {loading ? Array.from({ length: 4 }).map((_, i) => <Card key={i} className="rounded-2xl border-border bg-card shadow-sm"><CardHeader className="flex flex-row items-start justify-between pb-2"><div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-8 w-16" /></div><Skeleton className="size-11 rounded-xl" /></CardHeader><CardContent><Skeleton className="h-4 w-full" /></CardContent></Card>) : primaryMetrics.map((metric) => { const Icon = metric.icon; return <Card key={metric.label} className="rounded-2xl border-border bg-card shadow-sm"><CardHeader className="flex flex-row items-start justify-between pb-2"><div><CardDescription>{t(metric.label)}</CardDescription><CardTitle className="mt-1 text-3xl tabular-nums text-foreground">{metric.value}</CardTitle></div><div className={`flex size-11 items-center justify-center rounded-xl ring-1 ${metric.tone}`}><Icon className="size-5" /></div></CardHeader><CardContent><p className="text-xs text-muted-foreground">{metric.note}</p></CardContent></Card>; })}
+                            {loading ? Array.from({ length: 4 }).map((_, i) => <Card key={i} className="rounded-xl border-border bg-card shadow-sm"><CardHeader className="flex flex-row items-start justify-between pb-2"><div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-8 w-16" /></div><Skeleton className="size-11 rounded-xl" /></CardHeader><CardContent><Skeleton className="h-4 w-full" /></CardContent></Card>) : primaryMetrics.map((metric) => { const Icon = metric.icon; return <Card key={metric.label} className="rounded-xl border-border bg-card shadow-sm"><CardHeader className="flex flex-row items-start justify-between pb-2"><div><CardDescription>{t(metric.label)}</CardDescription><CardTitle className="mt-1 text-3xl tabular-nums text-foreground">{metric.value}</CardTitle></div><div className={`flex size-11 items-center justify-center rounded-xl ring-1 ${metric.tone}`}><Icon className="size-5" /></div></CardHeader><CardContent><p className="text-xs text-muted-foreground">{metric.note}</p></CardContent></Card>; })}
                         </div>
                     </section>
 
                     <section className="grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
-                        <Card className="rounded-2xl border-border bg-card shadow-sm">
+                        <Card className="rounded-xl border-border bg-card shadow-sm">
                             <CardHeader><div className="flex items-start justify-between gap-4"><div><CardTitle>{t('Operational readiness')}</CardTitle><CardDescription>{t('Completion across the most important workflows')}</CardDescription></div><div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Activity className="size-5" /></div></div></CardHeader>
                             <CardContent className="space-y-6">
                                 {readiness.map((item) => { const progress = percentage(item.value, item.total); return <div key={item.label}><div className="mb-2 flex items-center justify-between gap-4 text-sm"><span className="font-medium text-foreground">{t(item.label)}</span><span className="tabular-nums text-muted-foreground">{item.value}/{item.total} · {progress}%</span></div><div className="h-2.5 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full transition-all ${item.tone}`} style={{ width: `${progress}%` }} /></div></div>; })}
@@ -286,7 +287,7 @@ export default function Dashboard({
                             </CardContent>
                         </Card>
 
-                        <Card className="rounded-2xl border-border bg-card shadow-sm">
+                        <Card className="rounded-xl border-border bg-card shadow-sm">
                             <CardHeader><CardTitle>{t('Registration pipeline')}</CardTitle><CardDescription>{t('Current event-registration approval status')}</CardDescription></CardHeader>
                             <CardContent>
                                 <div className="flex h-3 overflow-hidden rounded-full bg-muted" role="img" aria-label={t('Registration pipeline')}>
@@ -307,21 +308,21 @@ export default function Dashboard({
                     </section>
 
                     <section className="grid gap-6 xl:grid-cols-[1fr_1fr_.8fr]">
-                        <Card className="rounded-2xl border-border bg-card shadow-sm">
+                        <Card className="rounded-xl border-border bg-card shadow-sm">
                             <CardHeader><CardTitle>{t('Upcoming Events')}</CardTitle><CardDescription>{t('Next active competition dates')}</CardDescription></CardHeader>
                             <CardContent className="space-y-3">
-                                {safeEvents.length === 0 ? <EmptyState icon={CalendarClock} text={t('No upcoming events.')} /> : safeEvents.map((event) => <div key={event.id} className="flex items-center gap-3 rounded-xl border border-border p-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><Target className="size-5" /></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-foreground">{event.name}</p><p className="truncate text-xs text-muted-foreground">{event.sport?.name ?? t('Sport')} · {event.tournament?.name ?? t('Tournament')}</p></div><div className="shrink-0 text-right"><p className="text-xs font-medium">{formatDate(event.start_date, locale, t)}</p><p className="text-[10px] text-muted-foreground">{event.registration_count} {t('teams')}</p></div></div>)}
+                                {safeEvents.length === 0 ? <EmptyState icon={CalendarClock} description={t('No upcoming events.')} className="min-h-36" /> : safeEvents.map((event) => <div key={event.id} className="flex items-center gap-3 rounded-xl border border-border p-3"><div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><Target className="size-5" /></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-foreground">{event.name}</p><p className="truncate text-xs text-muted-foreground">{event.sport?.name ?? t('Sport')} · {event.tournament?.name ?? t('Tournament')}</p></div><div className="shrink-0 text-right"><p className="text-xs font-medium">{formatDate(event.start_date, locale, t)}</p><p className="text-xs text-muted-foreground">{event.registration_count} {t('teams')}</p></div></div>)}
                             </CardContent>
                         </Card>
 
-                        <Card className="rounded-2xl border-border bg-card shadow-sm">
+                        <Card className="rounded-xl border-border bg-card shadow-sm">
                             <CardHeader><CardTitle>{t('Registrations by Sport')}</CardTitle><CardDescription>{t('Highest participation across configured sports')}</CardDescription></CardHeader>
                             <CardContent>
-                                {safeSports.length === 0 ? <EmptyState icon={LayoutGrid} text={t('No registration data.')} /> : <div className="space-y-4">{safeSports.map((item, index) => <div key={item.name}><div className="mb-1.5 flex items-center justify-between gap-3 text-sm"><span className="flex min-w-0 items-center gap-2 font-medium"><span className="w-5 text-xs tabular-nums text-muted-foreground">{index + 1}</span><span className="truncate">{item.name}</span></span><span className="tabular-nums text-muted-foreground">{item.total}</span></div><div className="ml-7 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-cyan-500" style={{ width: `${percentage(Number(item.total), maxSportRegistrations)}%` }} /></div></div>)}</div>}
+                                {safeSports.length === 0 ? <EmptyState icon={LayoutGrid} description={t('No registration data.')} className="min-h-36" /> : <div className="space-y-4">{safeSports.map((item, index) => <div key={item.name}><div className="mb-1.5 flex items-center justify-between gap-3 text-sm"><span className="flex min-w-0 items-center gap-2 font-medium"><span className="w-5 text-xs tabular-nums text-muted-foreground">{index + 1}</span><span className="truncate">{item.name}</span></span><span className="tabular-nums text-muted-foreground">{item.total}</span></div><div className="ml-7 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-cyan-500" style={{ width: `${percentage(Number(item.total), maxSportRegistrations)}%` }} /></div></div>)}</div>}
                             </CardContent>
                         </Card>
 
-                        <Card className="rounded-2xl border-border bg-card shadow-sm">
+                        <Card className="rounded-xl border-border bg-card shadow-sm">
                             <CardHeader><CardTitle>{t('Quick Actions')}</CardTitle><CardDescription>{t('Actions available for your role')}</CardDescription></CardHeader>
                             <CardContent className="space-y-2">
                                 {actions.map((action) => { const Icon = action.icon; return <Link key={action.label} href={route(action.route)} className="group flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary/30 hover:bg-muted/50"><div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4" /></div><div className="min-w-0 flex-1"><p className="text-sm font-medium">{t(action.label)}</p><p className="truncate text-xs text-muted-foreground">{t(action.description)}</p></div><ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" /></Link>; })}
@@ -331,8 +332,8 @@ export default function Dashboard({
 
                     {(safeSessions.length > 0 || safeTournaments.length > 0) && (
                         <section className="grid gap-6 xl:grid-cols-2">
-                            <Card className="rounded-2xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Sessions')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeSessions.slice(0, 4).map((session) => <div key={session.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{session.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDate(session.start_date, locale, t)} — {formatDate(session.end_date, locale, t)}</p></div><Badge variant={session.is_active ? 'default' : 'secondary'}>{session.is_active ? t('Active') : t('Inactive')}</Badge></div>)}</CardContent></Card>
-                            <Card className="rounded-2xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Tournaments')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeTournaments.slice(0, 4).map((tournament) => <div key={tournament.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{tournament.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{tournament.session?.name ?? t('Session')}</p></div><CheckCircle2 className="size-4 shrink-0 text-emerald-600" /></div>)}</CardContent></Card>
+                            <Card className="rounded-xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Sessions')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeSessions.slice(0, 4).map((session) => <div key={session.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{session.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDate(session.start_date, locale, t)} — {formatDate(session.end_date, locale, t)}</p></div><Badge variant={session.is_active ? 'default' : 'secondary'}>{session.is_active ? t('Active') : t('Inactive')}</Badge></div>)}</CardContent></Card>
+                            <Card className="rounded-xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Tournaments')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeTournaments.slice(0, 4).map((tournament) => <div key={tournament.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{tournament.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{tournament.session?.name ?? t('Session')}</p></div><CheckCircle2 className="size-4 shrink-0 text-emerald-600" /></div>)}</CardContent></Card>
                         </section>
                     )}
                 </div>
@@ -349,12 +350,8 @@ function StatusStat({ label, value, tone }: { label: string; value: number; tone
     return <div className={`rounded-xl border p-3 ${tone}`}><p className="text-xs font-medium">{label}</p><p className="mt-1 text-2xl font-bold tabular-nums">{value}</p></div>;
 }
 
-function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
-    return <div className="flex min-h-36 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40 px-4 text-center"><Icon className="mb-2 size-5 text-muted-foreground" /><p className="text-sm text-muted-foreground">{text}</p></div>;
-}
-
 function ControlMetric({ icon: Icon, label, value, detail, href, tone }: { icon: LucideIcon; label: string; value: number; detail: string; href: string; tone: string }) {
-    return <Link href={route(href)} className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"><div className="flex items-start justify-between"><div className={`flex size-11 items-center justify-center rounded-xl ${tone}`}><Icon className="size-5"/></div><ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground"/></div><p className="mt-5 text-3xl font-black tabular-nums text-foreground">{value}</p><p className="mt-1 text-sm font-bold text-foreground">{label}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></Link>;
+    return <Link href={route(href)} className="group rounded-xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"><div className="flex items-start justify-between"><div className={`flex size-11 items-center justify-center rounded-xl ${tone}`}><Icon className="size-5"/></div><ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground"/></div><p className="mt-5 text-3xl font-black tabular-nums text-foreground">{value}</p><p className="mt-1 text-sm font-bold text-foreground">{label}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></Link>;
 }
 
 function AttentionItem({ label, value, href }: { label: string; value: number; href: string }) {

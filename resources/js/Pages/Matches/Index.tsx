@@ -700,7 +700,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                                         <span className="inline-block h-1 w-16 overflow-hidden rounded-full bg-gray-200">
                                                             <span className={`block h-full ${progress.bar}`} style={{ width: `${progress.pct}%` }} />
                                                         </span>
-                                                        <span className="text-[10px] tabular-nums">{completed}/{eventFixtures.length}</span>
+                                                        <span className="text-xs tabular-nums">{completed}/{eventFixtures.length}</span>
                                                     </span>
                                                 </CardDescription>
                                             </div>

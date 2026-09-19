@@ -86,9 +86,9 @@ function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEn
 
             <div className="mt-8 flex flex-col gap-5 rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex items-center gap-7">
-                    <div><b className="block text-3xl font-black tracking-[-.04em] tabular-nums">{sports_catalog.length}</b><span className="mt-1 block text-[10px] font-black uppercase tracking-[.16em] text-[var(--public-dark-faint)]">{t('sports')}</span></div>
+                    <div><b className="block text-3xl font-black tracking-[-.04em] tabular-nums">{sports_catalog.length}</b><span className="mt-1 block text-xs font-black uppercase tracking-[.16em] text-[var(--public-dark-faint)]">{t('sports')}</span></div>
                     <div aria-hidden="true" className="h-10 w-px bg-[var(--public-dark-border)]" />
-                    <div><b className="block text-3xl font-black tracking-[-.04em] tabular-nums">{totalEvents}</b><span className="mt-1 block text-[10px] font-black uppercase tracking-[.16em] text-[var(--public-dark-faint)]">{t('events')}</span></div>
+                    <div><b className="block text-3xl font-black tracking-[-.04em] tabular-nums">{totalEvents}</b><span className="mt-1 block text-xs font-black uppercase tracking-[.16em] text-[var(--public-dark-faint)]">{t('events')}</span></div>
                 </div>
                 <div className="relative w-full lg:max-w-sm">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--public-dark-faint)]" />
@@ -151,11 +151,11 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
             />
             <div className="flex items-start justify-between gap-3">
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><SportIcon name={sport.name} className="text-2xl leading-none" /></span>
-                <span className="rounded-full bg-[var(--public-dark-soft)] px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[var(--public-dark-faint)] tabular-nums">{sport.events.length} {t('events')}</span>
+                <span className="rounded-full bg-[var(--public-dark-soft)] px-2.5 py-1 text-xs font-black uppercase tracking-wider text-[var(--public-dark-faint)] tabular-nums">{sport.events.length} {t('events')}</span>
             </div>
             <h2 className="mt-4 text-lg font-black leading-tight tracking-[-.02em]">{sport.name}</h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
-                {labels.map(label => <span key={label} className="rounded-md border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] px-2 py-0.5 text-[11px] font-bold text-[var(--public-primary)]">{label}</span>)}
+                {labels.map(label => <span key={label} className="rounded-md border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] px-2 py-0.5 text-xs font-bold text-[var(--public-primary)]">{label}</span>)}
             </div>
             {documents.length > 0 ? (
                 <ul className="relative z-10 mt-3 space-y-1.5">

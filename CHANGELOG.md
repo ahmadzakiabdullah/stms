@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 19 September 2026 — UI/UX refactor phase 3 (typography, card radius, shared empty state)
+
+- Raised every sub-12px label to the 12px `text-xs` minimum across 27 public and authenticated components/pages (84 arbitrary `text-[9px]`/`text-[10px]`/`text-[11px]` occurrences removed).
+- Dashboard now uses the shared `EmptyState` component instead of a local duplicate, and its cards/hero use the standard `rounded-xl`/`rounded-2xl` radius instead of the outlier `rounded-2xl`/`rounded-3xl`.
+- Gates: TypeScript, Vite build and bundle budget pass.
+
 ### 19 September 2026 — UI/UX refactor phase 2 (touch targets + focus)
 
 - The shared shadcn `Button` now enforces a 44px minimum hit area on small screens (`min-h-11 min-w-11`, reset at the `sm` breakpoint), covering toolbars, pagination and icon buttons; the authenticated sidebar nav and logout links, the locale switcher, the public login button, and the public schedule/athletes tab controls received the same touch sizing.

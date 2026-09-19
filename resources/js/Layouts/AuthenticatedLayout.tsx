@@ -165,7 +165,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                     return (
                         <div key={sectionIdx}>
                             {section.title && (
-                                <div className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground/70">
+                                <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-[0.5px] text-muted-foreground/70">
                                     {t(section.title)}
                                 </div>
                             )}
@@ -339,7 +339,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                     <Button variant="ghost" size="icon" onClick={toggleNotif} className="relative" aria-label={t('Toggle notifications')}>
                                         <Bell className="size-5" />
                                         {notifCount > 0 && (
-                                            <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
+                                            <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
                                                 {notifCount > 9 ? '9+' : notifCount}
                                             </span>
                                         )}
@@ -354,7 +354,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                                         <button
                                                             type="button"
                                                             onClick={() => { router.post(route('notifications.mark-all-read'), {}, { preserveScroll: true }); setNotifCount(0); setNotifOpen(false); }}
-                                                            className="text-[10px] text-primary hover:underline"
+                                                            className="text-xs text-primary hover:underline"
                                                         >
                                                             {t('Mark all read')}
                                                         </button>
@@ -376,7 +376,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                                                             className={`w-full rounded-md px-2 py-2 text-left text-xs transition hover:bg-muted ${!n.read_at ? 'bg-muted/50 font-medium' : ''}`}
                                                         >
                                                             <p>{n.data?.message || t('Notification')}</p>
-                                                            <p className="mt-0.5 text-[10px] text-muted-foreground">{n.created_at}</p>
+                                                            <p className="mt-0.5 text-xs text-muted-foreground">{n.created_at}</p>
                                                         </button>
                                                     ))}
                                                 </div>

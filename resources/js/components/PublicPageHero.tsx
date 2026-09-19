@@ -16,7 +16,7 @@ export default function PublicPageHero({ eyebrow, title, intro, icon, children }
             <div aria-hidden="true" className="public-cosmic-orbit absolute -right-28 top-24 -z-10 size-[28rem] rounded-full border border-white/10" />
             <div className="mx-auto max-w-7xl px-4 pb-16 pt-32 sm:px-6 sm:pt-40 lg:pb-20">
                 {icon ? (
-                    <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[.24em] text-[var(--public-accent)]">
+                    <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.24em] text-[var(--public-accent)]">
                         {icon}{eyebrow}
                     </p>
                 ) : null}

@@ -96,7 +96,7 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                             {(['teams', 'athletes'] as const).map(option => (
                                 <button key={option} type="button" role="tab" aria-selected={view === option} onClick={() => applyFilters({ view: option, letter: '' })} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition ${view === option ? 'bg-[var(--public-primary)] text-white shadow-sm' : 'text-[var(--public-dark-faint)] hover:text-[var(--public-primary)]'}`}>
                                     {option === 'teams' ? t('Teams & Rosters') : t('Athlete Directory')}
-                                    <span className={`rounded-md px-1.5 py-0.5 text-[11px] tabular-nums ${view === option ? 'bg-white/20' : 'bg-[var(--public-dark-border)]'}`}>{option === 'teams' ? counts.teams : counts.athletes}</span>
+                                    <span className={`rounded-md px-1.5 py-0.5 text-xs tabular-nums ${view === option ? 'bg-white/20' : 'bg-[var(--public-dark-border)]'}`}>{option === 'teams' ? counts.teams : counts.athletes}</span>
                                 </button>
                             ))}
                         </div>
@@ -165,7 +165,7 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
 }
 
 function Stat({ value, label }: { value: number; label: string }) {
-    return <div><b className="block text-3xl font-black tracking-[-.04em] tabular-nums">{value}</b><span className="mt-1 block text-[10px] font-black uppercase tracking-[.16em] text-[var(--public-dark-faint)]">{label}</span></div>;
+    return <div><b className="block text-3xl font-black tracking-[-.04em] tabular-nums">{value}</b><span className="mt-1 block text-xs font-black uppercase tracking-[.16em] text-[var(--public-dark-faint)]">{label}</span></div>;
 }
 
 function Chip({ active, onClick, disabled, children }: { active: boolean; onClick: () => void; disabled?: boolean; children: React.ReactNode }) {
@@ -198,7 +198,7 @@ function AthleteCard({ athlete, t }: { athlete: Athlete; t: (key: string) => str
             <ParticipantLogo participant={{ name: athlete.faculty, logo_url: athlete.faculty_logo_url, inverse_logo_url: athlete.faculty_inverse_logo_url }} size="md" />
             <div className="min-w-0"><h2 className="truncate text-sm font-black">{athlete.name}</h2><p className="mt-1 truncate text-xs font-semibold text-[var(--public-dark-faint)]">{athlete.faculty || t('Faculty')}</p></div>
         </div>
-        <div className="mt-4 flex flex-wrap gap-1.5">{athlete.events.map(event => <span key={`${event.name}-${event.category}`} className="rounded-md bg-[var(--public-primary-soft)] px-2 py-1 text-[11px] font-bold text-[var(--public-primary)]">{event.sport}{event.category ? ` · ${event.category}` : ''}</span>)}</div>
+        <div className="mt-4 flex flex-wrap gap-1.5">{athlete.events.map(event => <span key={`${event.name}-${event.category}`} className="rounded-md bg-[var(--public-primary-soft)] px-2 py-1 text-xs font-bold text-[var(--public-primary)]">{event.sport}{event.category ? ` · ${event.category}` : ''}</span>)}</div>
         <Link href={route('public.athletes.show', athlete.id)} className="mt-4 inline-flex min-h-10 items-center text-xs font-black text-[var(--public-primary)] hover:underline">{t('View athlete profile')} →</Link>
     </article>;
 }
@@ -217,11 +217,11 @@ function RosterCard({ roster, t }: { roster: Roster; t: (key: string) => string 
                 <ParticipantLogo participant={roster} size="lg" />
                 <div className="min-w-0 flex-1">
                     <h2 className="truncate text-lg font-black">{roster.name}</h2>
-                    <div className="mt-2 flex flex-wrap gap-1.5">{roster.events.map(event => <span key={`${event.name}-${event.category}`} className="rounded-md bg-[var(--public-primary-soft)] px-2 py-1 text-[11px] font-bold text-[var(--public-primary)]">{event.sport}{event.category ? ` · ${event.category}` : ''}</span>)}</div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">{roster.events.map(event => <span key={`${event.name}-${event.category}`} className="rounded-md bg-[var(--public-primary-soft)] px-2 py-1 text-xs font-bold text-[var(--public-primary)]">{event.sport}{event.category ? ` · ${event.category}` : ''}</span>)}</div>
                 </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 border-y border-[var(--public-dark-border)] py-3 text-xs font-bold text-[var(--public-dark-faint)]"><span><strong className="text-base text-[var(--public-text)]">{athletes.length}</strong> {t('athletes')}</span><span><strong className="text-base text-[var(--public-text)]">{officials.length}</strong> {t('officials')}</span></div>
-            <details className="mt-4 group"><summary className="cursor-pointer list-none text-sm font-black text-[var(--public-primary)] group-open:mb-3 [&::-webkit-details-marker]:hidden">{t('View roster')}</summary><div className="space-y-2">{roster.members.map(member => <div key={`${member.name}-${member.role}`} className="flex items-center justify-between gap-3 rounded-lg bg-[var(--public-dark-soft)] px-3 py-2 text-sm"><span className="font-bold">{member.name}</span><span className="text-[11px] font-semibold text-[var(--public-dark-faint)]">{roleLabel(member.role, t)}</span></div>)}</div></details>
+            <details className="mt-4 group"><summary className="cursor-pointer list-none text-sm font-black text-[var(--public-primary)] group-open:mb-3 [&::-webkit-details-marker]:hidden">{t('View roster')}</summary><div className="space-y-2">{roster.members.map(member => <div key={`${member.name}-${member.role}`} className="flex items-center justify-between gap-3 rounded-lg bg-[var(--public-dark-soft)] px-3 py-2 text-sm"><span className="font-bold">{member.name}</span><span className="text-xs font-semibold text-[var(--public-dark-faint)]">{roleLabel(member.role, t)}</span></div>)}</div></details>
         </article>
     );
 }

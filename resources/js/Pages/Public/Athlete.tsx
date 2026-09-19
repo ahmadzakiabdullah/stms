@@ -44,7 +44,7 @@ function formatUpdatedAt(value: string, locale: string) {
 }
 
 function PerformanceStat({ value, label, tone = 'text-[var(--public-text)]' }: { value: number; label: string; tone?: string }) {
-    return <div><strong className={`block text-2xl font-black tabular-nums ${tone}`}>{value}</strong><span className="mt-1 block text-[10px] font-black uppercase tracking-[.14em] text-[var(--public-dark-faint)]">{label}</span></div>;
+    return <div><strong className={`block text-2xl font-black tabular-nums ${tone}`}>{value}</strong><span className="mt-1 block text-xs font-black uppercase tracking-[.14em] text-[var(--public-dark-faint)]">{label}</span></div>;
 }
 
 function MatchRow({ match, locale, t }: { match: Match; locale: string; t: (key: string) => string }) {

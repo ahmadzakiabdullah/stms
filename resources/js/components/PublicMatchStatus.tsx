@@ -20,7 +20,7 @@ export default function PublicMatchStatus({ status, compact = false }: Props) {
 
     return (
         <span
-            className={`inline-flex min-h-7 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${config.className} ${compact ? 'min-h-6 px-2 text-[9px]' : ''}`}
+            className={`inline-flex min-h-7 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-black uppercase tracking-wider ${config.className} ${compact ? 'min-h-6 px-2 text-xs' : ''}`}
             aria-label={label}
         >
             <span className={`size-1.5 rounded-full ${config.dot}`} aria-hidden="true" />

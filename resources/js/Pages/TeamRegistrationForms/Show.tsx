@@ -74,14 +74,14 @@ export default function Show(props: Props) {
                     </div>
                 </div>
 
-                <section className="team-form-sheet rounded-sm border bg-white px-8 py-6 text-[10px] leading-tight text-black shadow-sm">
+                <section className="team-form-sheet rounded-sm border bg-white px-8 py-6 text-xs leading-tight text-black shadow-sm">
                     <header className="grid grid-cols-[92px_1fr_92px] items-start gap-3">
                         <div className="text-center">
                             {props.organization.logo_url && <img src={props.organization.logo_url} alt={t('Organization logo')} className="mx-auto h-14 w-20 object-contain" />}
                         </div>
                         <div className="whitespace-pre-line text-center">
-                            <p className="text-[11px] font-bold uppercase">{props.organization.name}</p>
-                            <p className="mt-1 text-[9px] font-semibold uppercase">{props.branding.secretariat_address}</p>
+                            <p className="text-xs font-bold uppercase">{props.organization.name}</p>
+                            <p className="mt-1 text-xs font-semibold uppercase">{props.branding.secretariat_address}</p>
                         </div>
                         <div className="text-center">
                             {props.branding.tournament_logo_url ? <img src={props.branding.tournament_logo_url} alt={t('Tournament logo')} className="mx-auto h-14 w-20 object-contain" /> : <div className="h-14" />}

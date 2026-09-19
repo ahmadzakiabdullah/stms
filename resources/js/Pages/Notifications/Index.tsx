@@ -196,7 +196,7 @@ export default function NotificationsIndex({
                                         className={`flex w-full items-start gap-3 px-4 py-4 text-left transition hover:bg-muted/50 ${!notification.read_at ? 'bg-muted/30' : ''}`}
                                         onClick={() => !notification.read_at && markAsRead(notification.id)}
                                     >
-                                        <span className={`mt-0.5 rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${severityStyles[severity]}`}>
+                                        <span className={`mt-0.5 rounded-full px-2 py-0.5 text-xs font-medium capitalize ${severityStyles[severity]}`}>
                                             {severity}
                                         </span>
                                         <span className="min-w-0 flex-1">

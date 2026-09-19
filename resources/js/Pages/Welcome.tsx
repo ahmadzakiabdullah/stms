@@ -116,7 +116,7 @@ export default function Welcome() {
                                 <span className="block text-sm font-semibold tracking-tight">
                                     {app?.name || 'SAF'}
                                 </span>
-                                <span className="block text-[11px] text-muted-foreground">
+                                <span className="block text-xs text-muted-foreground">
                                     {t('Tournament Portal')}
                                 </span>
                             </div>

@@ -259,7 +259,7 @@ function AddEventDialog({
                                 <div key={groupName}>
                                     <div className="sticky top-0 bg-muted/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur flex items-center gap-2">
                                         <span className={`inline-block size-2 rounded-full ${tournamentColors[gi % tournamentColors.length]}`} />
-                                        {groupName} <span className="font-normal text-[10px]">({evts.length})</span>
+                                        {groupName} <span className="font-normal text-xs">({evts.length})</span>
                                     </div>
                                     {evts.map((evt) => (
                                         <label key={evt.id}
@@ -422,7 +422,7 @@ const SQUAD_ROLE_KEYS = ['manager', 'assistant_manager', 'coach', 'physio', 'ath
 function Field({ label, children }: { label: string; children: ReactNode }) {
     return (
         <div className="grid gap-1">
-            <Label className="text-[11px] font-medium text-muted-foreground">{label}</Label>
+            <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
             {children}
         </div>
     );
@@ -455,7 +455,7 @@ function SquadAddForm({ epId }: { epId: string }) {
                 <div className="flex items-center gap-2 text-sm font-semibold">
                     <UserPlus className="size-4 text-primary" /> {t('Add Squad Member')}
                 </div>
-                <span className="text-[11px] text-muted-foreground">{t('Phone number is required for officials.')}</span>
+                <span className="text-xs text-muted-foreground">{t('Phone number is required for officials.')}</span>
             </div>
             <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-6">
                 <div className="sm:col-span-2"><Field label={t('Full Name')}><Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('e.g. Ali bin Ahmad')} required /></Field></div>
@@ -811,7 +811,7 @@ export default function EventParticipantsIndex({
                             </span>
                             <span className="min-w-0">
                                 <span className="block text-xl font-semibold leading-none tabular-nums">{card.count}</span>
-                                <span className="mt-1 block truncate text-[11px] font-medium text-muted-foreground">{card.label}</span>
+                                <span className="mt-1 block truncate text-xs font-medium text-muted-foreground">{card.label}</span>
                             </span>
                         </button>
                     );
@@ -822,7 +822,7 @@ export default function EventParticipantsIndex({
                     </span>
                     <span className="min-w-0">
                         <span className="block text-xl font-semibold leading-none tabular-nums">{events.length}</span>
-                        <span className="mt-1 block truncate text-[11px] font-medium text-muted-foreground">Events</span>
+                        <span className="mt-1 block truncate text-xs font-medium text-muted-foreground">Events</span>
                     </span>
                 </div>
             </div>
@@ -850,14 +850,14 @@ export default function EventParticipantsIndex({
                     <button onClick={() => setActiveTab('registrations')}
                         className={`inline-flex items-center gap-1.5 rounded-md px-3.5 py-2 text-sm font-medium transition ${activeTab === 'registrations' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}>
                         {tabLabel.registrations}
-                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${activeTab === 'registrations' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                        <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${activeTab === 'registrations' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                             {registrationRows.length}
                         </span>
                     </button>
                     <button onClick={() => setActiveTab('events')}
                         className={`inline-flex items-center gap-1.5 rounded-md px-3.5 py-2 text-sm font-medium transition ${activeTab === 'events' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}>
                         {tabLabel.events}
-                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${activeTab === 'events' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                        <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums ${activeTab === 'events' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                             {eventRegistry.length}
                         </span>
                     </button>
@@ -1035,7 +1035,7 @@ export default function EventParticipantsIndex({
                                                     {!isFacultyRepresentative && (
                                                         <TableCell>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                                                                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                                                                     {initialsOf(participant.name)}
                                                                 </span>
                                                                 <span className="truncate text-sm">{participant.name}</span>
@@ -1061,13 +1061,13 @@ export default function EventParticipantsIndex({
                                                     )}
                                                     <TableCell>
                                                         <div className="flex flex-col items-start gap-1">
-                                                            <Badge variant={cfg.variant} className="gap-1.5 px-2 py-0.5 text-[11px] font-medium">
+                                                            <Badge variant={cfg.variant} className="gap-1.5 px-2 py-0.5 text-xs font-medium">
                                                                 <span className={`size-1.5 rounded-full ${statusDot[ep.status] ?? 'bg-muted-foreground'}`} />
                                                                 {cfg.label}
                                                             </Badge>
                                                             {conflicts[ep.id]?.length > 0 && (
                                                                 <span title={conflictSummary(conflicts[ep.id])}
-                                                                    className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                                                    className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
                                                                     <AlertTriangle className="size-3" />
                                                                     {conflicts[ep.id].length} clash{conflicts[ep.id].length !== 1 ? 'es' : ''}
                                                                 </span>
@@ -1117,9 +1117,9 @@ export default function EventParticipantsIndex({
                                                                     <div className="flex items-center gap-2">
                                                                         <Users className="size-4 text-primary" />
                                                                         <span className="text-sm font-semibold">Squad Members</span>
-                                                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary tabular-nums">{members.length}</span>
+                                                                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary tabular-nums">{members.length}</span>
                                                                     </div>
-                                                                    <div className="flex items-center gap-1.5 text-[11px] font-medium">
+                                                                    <div className="flex items-center gap-1.5 text-xs font-medium">
                                                                         <span className="rounded-full bg-blue-100 px-2 py-0.5 text-blue-700">{maleCount} Male</span>
                                                                         <span className="rounded-full bg-pink-100 px-2 py-0.5 text-pink-700">{femaleCount} Female</span>
                                                                         <span className="rounded-full bg-purple-100 px-2 py-0.5 text-purple-700">{officialCount} Official{officialCount !== 1 ? 's' : ''}</span>
@@ -1139,7 +1139,7 @@ export default function EventParticipantsIndex({
                                                                             }
                                                                             return (
                                                                                 <div key={m.id} className="group flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
-                                                                                    <span className={`w-28 shrink-0 rounded-full px-2 py-0.5 text-center text-[10px] font-semibold ${rc.class}`}>{rc.label}</span>
+                                                                                    <span className={`w-28 shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold ${rc.class}`}>{rc.label}</span>
                                                                                     <span className="text-sm font-medium">{m.name}</span>
                                                                                     {m.matrix_no && <span className="tabular-nums text-xs text-muted-foreground">{m.matrix_no}</span>}
                                                                                     {m.phone && <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Phone className="size-3" />{m.phone}</span>}
@@ -1251,7 +1251,7 @@ export default function EventParticipantsIndex({
                                         <span className="text-lg shrink-0">{getSportIcon(evt.sport?.name)}</span>
                                         <div className="min-w-0 flex-1 leading-tight">
                                             <div className="text-sm font-semibold truncate">{evt.name}</div>
-                                            <div className="text-[11px] text-muted-foreground truncate">{evt.sport?.name}{evt.sport_category?.name ? ` · ${evt.sport_category.name}` : ''}</div>
+                                            <div className="text-xs text-muted-foreground truncate">{evt.sport?.name}{evt.sport_category?.name ? ` · ${evt.sport_category.name}` : ''}</div>
                                         </div>
                                         {isFacultyRepresentative ? (
                                             !isRegistered && !deadlinePassed && (
@@ -1272,7 +1272,7 @@ export default function EventParticipantsIndex({
                                                 return (
                                                     <div key={ep.id} className="flex items-center gap-2 py-1 text-xs group">
                                                         <span className="truncate flex-1 min-w-0 font-medium">{p.name}</span>
-                                                        <Badge variant={cfg.variant} className="gap-1 h-4 text-[9px] px-1 shrink-0">
+                                                        <Badge variant={cfg.variant} className="gap-1 h-4 text-xs px-1 shrink-0">
                                                             <span className={`size-1 rounded-full ${statusDot[ep.status] ?? 'bg-muted-foreground'}`} />
                                                             {cfg.label}
                                                         </Badge>

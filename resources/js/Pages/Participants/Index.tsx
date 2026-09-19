@@ -620,7 +620,7 @@ function ParticipantFormDialog({ participant, sessions, availableLogos, onClose 
                             </div>
                             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={handleLogoChange} />
                             {participant && <div className="mt-2 grid max-h-32 grid-cols-6 gap-2 overflow-y-auto rounded-md border p-2">{availableLogos.map(item => <button key={item.path} type="button" title={item.path} onClick={() => { setSelectedLogoPath(item.path); setLogoFile(null); setLogoPreview(item.url); }} className={`flex aspect-square items-center justify-center rounded border p-1 ${selectedLogoPath === item.path ? 'border-primary ring-2 ring-primary/30' : 'border-muted'}`}><img src={item.url} alt="" className="size-full object-contain" /></button>)}</div>}
-                            {logoFile && <p className="mt-2 truncate text-[10px] text-muted-foreground">{logoFile.name}</p>}
+                            {logoFile && <p className="mt-2 truncate text-xs text-muted-foreground">{logoFile.name}</p>}
                             {errors.logo && <p className="mt-2 text-sm text-destructive">{errors.logo}</p>}
                         </div>
 
@@ -635,11 +635,11 @@ function ParticipantFormDialog({ participant, sessions, availableLogos, onClose 
                             </div>
                             <input ref={inverseFileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={handleInverseLogoChange} />
                             {participant && <div className="mt-2 grid max-h-32 grid-cols-6 gap-2 overflow-y-auto rounded-md border border-white/20 bg-white/5 p-2">{availableLogos.map(item => <button key={item.path} type="button" title={item.path} onClick={() => { setSelectedInverseLogoPath(item.path); setInverseLogoFile(null); setInverseLogoPreview(item.url); }} className={`flex aspect-square items-center justify-center rounded border p-1 ${selectedInverseLogoPath === item.path ? 'border-white ring-2 ring-white/40' : 'border-white/20'}`}><img src={item.url} alt="" className="size-full object-contain" /></button>)}</div>}
-                            {inverseLogoFile && <p className="mt-2 truncate text-[10px] text-white/60">{inverseLogoFile.name}</p>}
+                            {inverseLogoFile && <p className="mt-2 truncate text-xs text-white/60">{inverseLogoFile.name}</p>}
                             {errors.inverse_logo && <p className="mt-2 text-sm text-rose-300">{errors.inverse_logo}</p>}
                         </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">{t('JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.')}</p>
+                    <p className="text-xs text-muted-foreground">{t('JPEG, PNG, GIF, WebP or SVG. Maximum 2 MB.')}</p>
                 </div>
             </div>
 
