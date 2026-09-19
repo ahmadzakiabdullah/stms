@@ -1,5 +1,13 @@
 # TODOS
 
+## UI/UX Refactor (Fasa 1 — selesai 19 September 2026)
+
+- [x] Buang CSS mati `.public-portal`/`.public-campaign` dan import font Manrope/Noto Sans yang tidak digunakan (`resources/css/app.css`).
+- [x] Ganti kelas `slate`/`white` mentah dengan token shadcn pada `Dashboard.tsx` dan `DrawResult/Index.tsx` (`bg-card`, `border-border`, `text-foreground`, `text-muted-foreground`, `bg-primary`).
+- [x] Kukuhkan a11y `PublicMobileMenu`: Escape, klik/luar, focus trap + pulih fokus, `aria-haspopup`, import di atas, saiz sentuh 44px.
+- [ ] Fasa 2 (belum): saiz sentuh butang/nav, fokus seragam pada butang kustom.
+- [ ] Fasa 3 (belum): skala tipografi min 12px, adopsi `PageHeader`/`EmptyState`/`ConfirmDialog`, selaras radius.
+
 ## Public directory UX (selesai 19 September 2026)
 
 - [x] Kad sukan `/sports` kini deep-link ke `/schedule?sport=...`; halaman Schedule membaca penapis `sport`/`category` dari URL semasa muat.

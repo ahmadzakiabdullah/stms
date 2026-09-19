@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 19 September 2026 — UI/UX refactor phase 1 (design-system consistency + a11y)
+
+- Removed the dead `.public-portal`/`.public-campaign` CSS override layer from `resources/css/app.css` (~75 lines of `!important` remaps) and dropped the now-unused Manrope and Noto Sans font imports; public styling runs solely through the `--public-*` theme tokens plus the `.public-cosmic` display font.
+- Replaced raw Tailwind `slate`/`white` utilities with shadcn design tokens on the Dashboard and Draw Result pages (`bg-card`, `bg-muted`, `border-border`, `text-foreground`, `text-muted-foreground`, `bg-primary`), so those screens follow the shared theme instead of a parallel palette.
+- Hardened `PublicMobileMenu`: Escape-to-close, click/touch-outside dismissal, a focus trap that restores focus to the trigger, `aria-haspopup`, imports moved to the top, and a 44px touch target.
+- Gates: TypeScript, Vite build and bundle budget pass.
+
 ### 19 September 2026 — Public sports directory UX and rulebook links
 
 - Corrected the recorded SAF 2026 competition dates from 1–31 October to the product-owner-confirmed **13–25 October 2026** in `CURRENT_STATE.md`, `ROADMAP.md` and `TODOS.md`; the earlier date was stale.

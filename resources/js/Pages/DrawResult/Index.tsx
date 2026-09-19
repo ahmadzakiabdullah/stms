@@ -50,14 +50,14 @@ interface DrawResultProps {
 }
 
 const statusStyles: Record<string, { label: string; className: string }> = {
-    scheduled: { label: 'Scheduled', className: 'border-slate-200 bg-slate-50 text-slate-600' },
+    scheduled: { label: 'Scheduled', className: 'border-border bg-muted/50 text-muted-foreground' },
     in_progress: { label: 'In Progress', className: 'border-blue-200 bg-blue-50 text-blue-700' },
     completed: { label: 'Completed', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
     cancelled: { label: 'Cancelled', className: 'border-red-200 bg-red-50 text-red-700' },
 };
 
 const statusBadge = (status: string, t: (key: string) => string) => {
-    const s = statusStyles[status] || { label: status, className: 'border-slate-200 bg-slate-50 text-slate-600' };
+    const s = statusStyles[status] || { label: status, className: 'border-border bg-muted/50 text-muted-foreground' };
     return <Badge variant="outline" className={`border ${s.className}`}>{t(s.label)}</Badge>;
 };
 
@@ -87,19 +87,19 @@ const Matchup = ({ home, away, result }: { home?: Participant; away?: Participan
     return (
         <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
             <div className="flex min-w-0 items-center justify-end gap-2 text-right">
-                <span className={`truncate text-sm font-semibold ${isWinner(home?.id) ? 'font-black text-emerald-700' : 'text-slate-800'}`} title={participantFullName(home)}>{participantName(home)}</span>
+                <span className={`truncate text-sm font-semibold ${isWinner(home?.id) ? 'font-black text-emerald-700' : 'text-foreground'}`} title={participantFullName(home)}>{participantName(home)}</span>
                 <ParticipantAvatar participant={home} variant="matchup" />
             </div>
             {hasScore ? (
-                <span className="rounded-lg bg-slate-900 px-2.5 py-1 text-sm font-black tabular-nums text-white">
+                <span className="rounded-lg bg-primary px-2.5 py-1 text-sm font-black tabular-nums text-primary-foreground">
                     {result.score_home ?? '-'} - {result.score_away ?? '-'}
                 </span>
             ) : (
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">VS</span>
+                <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">VS</span>
             )}
             <div className="flex min-w-0 items-center gap-2 text-left">
                 <ParticipantAvatar participant={away} variant="matchup" />
-                <span className={`truncate text-sm font-semibold ${isWinner(away?.id) ? 'font-black text-emerald-700' : 'text-slate-800'}`} title={participantFullName(away)}>{participantName(away)}</span>
+                <span className={`truncate text-sm font-semibold ${isWinner(away?.id) ? 'font-black text-emerald-700' : 'text-foreground'}`} title={participantFullName(away)}>{participantName(away)}</span>
             </div>
         </div>
     );
@@ -113,7 +113,7 @@ interface StatTileProps {
 }
 
 const StatTile = ({ icon: Icon, label, value, accent }: StatTileProps) => (
-    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm sm:px-4">
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 shadow-sm sm:px-4">
         <span className={`flex size-9 items-center justify-center rounded-lg ${accent}`}>
             <Icon className="size-5" />
         </span>
@@ -263,7 +263,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
             <Head title={`${t('Draw Result')} · ${event.name}`} />
 
             <div className="space-y-5 sm:space-y-6">
-                <Card className="overflow-hidden border-slate-200 shadow-sm">
+                <Card className="overflow-hidden border-border shadow-sm">
                     <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400" />
                     <CardHeader className="p-4 sm:p-6">
                         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -279,12 +279,12 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                     {pools.length} {t('Pools')} · {totalParticipants} {t('Participants')} · {totalFixtures} {t('Fixtures')}
                                 </CardDescription>
                             </div>
-                            <div className="w-full rounded-xl bg-slate-50 p-3 sm:max-w-xs">
+                            <div className="w-full rounded-xl bg-muted/50 p-3 sm:max-w-xs">
                                 <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
                                     <span className="flex items-center gap-1"><CheckCircle2 className="size-3.5 text-emerald-500" /> {t('Completion')}</span>
-                                    <span className="font-semibold text-slate-700">{completion}%</span>
+                                    <span className="font-semibold text-foreground">{completion}%</span>
                                 </div>
-                                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                                <div className="h-2 overflow-hidden rounded-full bg-muted">
                                     <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${completion}%` }} />
                                 </div>
                                 <p className="mt-1.5 text-xs text-muted-foreground">
@@ -301,10 +301,10 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                     </CardHeader>
                 </Card>
 
-                <section aria-labelledby="draw-workflow-title" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                <section aria-labelledby="draw-workflow-title" className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-5">
                     <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
                         <div>
-                            <h3 id="draw-workflow-title" className="font-semibold text-slate-900">{t('Competition setup')}</h3>
+                            <h3 id="draw-workflow-title" className="font-semibold text-foreground">{t('Competition setup')}</h3>
                             <p className="text-sm text-muted-foreground">{t('Follow these steps to prepare and monitor the event.')}</p>
                         </div>
                         <Badge variant="secondary">{t('Step')} {currentStep} {t('of')} 3</Badge>
@@ -322,21 +322,21 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                         active
                                             ? 'border-emerald-300 bg-emerald-50'
                                             : complete
-                                                ? 'border-slate-200 bg-slate-50'
-                                                : 'border-slate-200 bg-white'
+                                                ? 'border-border bg-muted/50'
+                                                : 'border-border bg-card'
                                     }`}
                                 >
                                     <span className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                                         complete
-                                            ? 'bg-emerald-600 text-white'
+                                            ? 'bg-emerald-600 text-primary-foreground'
                                             : active
                                                 ? 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300'
-                                                : 'bg-slate-100 text-slate-500'
+                                                : 'bg-muted text-muted-foreground'
                                     }`}>
                                         {complete ? <Check className="size-4" /> : step.number}
                                     </span>
                                     <div className="min-w-0">
-                                        <p className={`text-sm font-semibold ${active ? 'text-emerald-900' : 'text-slate-800'}`}>{step.label}</p>
+                                        <p className={`text-sm font-semibold ${active ? 'text-emerald-900' : 'text-foreground'}`}>{step.label}</p>
                                         <p className="truncate text-xs text-muted-foreground">{step.description}</p>
                                     </div>
                                 </li>
@@ -374,39 +374,39 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                     <section aria-labelledby="full-schedule-title">
                         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
                             <div>
-                                <h3 id="full-schedule-title" className="text-lg font-semibold text-slate-900">{t('Full match schedule')}</h3>
+                                <h3 id="full-schedule-title" className="text-lg font-semibold text-foreground">{t('Full match schedule')}</h3>
                                 <p className="text-sm text-muted-foreground">{t('All groups in official match order for shared venue scheduling.')}</p>
                             </div>
                             <Badge variant="outline">{allFixtures.length} {t('Fixtures')}</Badge>
                         </div>
-                        <Card className="overflow-hidden border-slate-200 shadow-sm">
-                            <div className="divide-y divide-slate-100">
+                        <Card className="overflow-hidden border-border shadow-sm">
+                            <div className="divide-y divide-border">
                                 {allFixtures.map((fixture) => (
                                     <article
                                         key={fixture.id}
-                                        className="grid gap-3 p-4 transition-colors hover:bg-slate-50/70 lg:grid-cols-[9rem_minmax(18rem,1fr)_12rem] lg:items-center lg:px-5"
+                                        className="grid gap-3 p-4 transition-colors hover:bg-muted/40 lg:grid-cols-[9rem_minmax(18rem,1fr)_12rem] lg:items-center lg:px-5"
                                     >
                                         <div className="flex items-center justify-between gap-3 lg:block">
                                             <div className="flex items-center gap-2">
-                                                <span className="flex size-8 items-center justify-center rounded-lg bg-slate-900 text-xs font-bold text-white">
+                                                <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
                                                     {fixture.match_number}
                                                 </span>
                                                 <div>
-                                                    <p className="text-sm font-semibold text-slate-800">{fixture.poolName}</p>
+                                                    <p className="text-sm font-semibold text-foreground">{fixture.poolName}</p>
                                                     <p className="text-xs text-muted-foreground">{t('Round')} {fixture.round ?? '-'}</p>
                                                 </div>
                                             </div>
                                             <div className="lg:hidden">{statusBadge(fixture.status, t)}</div>
                                         </div>
 
-                                        <div className="rounded-xl border border-slate-100 bg-white px-2 py-3 sm:px-4">
+                                        <div className="rounded-xl border border-border bg-card px-2 py-3 sm:px-4">
                                             <Matchup home={fixture.home_participant} away={fixture.away_participant} result={fixture.result} />
                                         </div>
 
                                         <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground lg:block lg:text-right">
                                             <div className="hidden lg:mb-1 lg:block">{statusBadge(fixture.status, t)}</div>
                                             <p>{fixture.scheduled_at ? formatDateTime(fixture.scheduled_at, locale) : t('Time TBD')}</p>
-                                            <p className="mt-0.5 font-medium text-slate-600">{fixture.venue || t('Venue TBD')}</p>
+                                            <p className="mt-0.5 font-medium text-muted-foreground">{fixture.venue || t('Venue TBD')}</p>
                                         </div>
                                     </article>
                                 ))}
@@ -421,11 +421,11 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                         const poolProgress = pool.fixtures.length > 0 ? Math.round((poolCompleted / pool.fixtures.length) * 100) : 0;
 
                         return (
-                            <Card key={pool.id} className="flex min-w-0 flex-col overflow-hidden border-slate-200 shadow-sm">
-                                <CardHeader className="border-b border-slate-100 bg-slate-50/60 p-4 sm:p-6">
+                            <Card key={pool.id} className="flex min-w-0 flex-col overflow-hidden border-border shadow-sm">
+                                <CardHeader className="border-b border-border bg-muted/40 p-4 sm:p-6">
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div className="flex items-center gap-2.5">
-                                            <span className="flex size-8 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
+                                            <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
                                                 {String(index + 1).padStart(2, '0')}
                                             </span>
                                             <div>
@@ -439,8 +439,8 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-slate-700">{poolCompleted}/{pool.fixtures.length}</span>
-                                            <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-200">
+                                            <span className="text-sm font-bold text-foreground">{poolCompleted}/{pool.fixtures.length}</span>
+                                            <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
                                                 <div className={`h-full rounded-full transition-all ${poolProgress === 100 ? 'bg-emerald-500' : 'bg-sky-500'}`} style={{ width: `${poolProgress}%` }} />
                                             </div>
                                         </div>
@@ -465,12 +465,12 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                                                         <div
                                                             key={ep.id}
                                                             className={`flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2 transition-colors sm:flex-nowrap ${
-                                                                willMove ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'
+                                                                willMove ? 'border-amber-300 bg-amber-50' : 'border-border bg-card'
                                                             }`}
                                                         >
                                                             <ParticipantAvatar participant={ep.participant} />
                                                             <div className="min-w-0 flex-1">
-                                                                <p className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                                                                <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                                                                     {shortName}
                                                                     {fullName !== shortName && (
                                                                         <span className="truncate text-xs font-normal text-muted-foreground" title={fullName}>
@@ -529,11 +529,11 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                     })}
                 </div>
 
-                <Card className="border-slate-200 shadow-sm">
+                <Card className="border-border shadow-sm">
                     <details>
                         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-6">
                             <span className="flex min-w-0 items-center gap-3">
-                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                                     <History className="size-4" />
                                 </span>
                                 <span className="min-w-0">
@@ -543,7 +543,7 @@ export default function DrawResult({ event, pools: initialPools, canEdit, drawVe
                             </span>
                             <Badge variant="outline">{t('View history')}</Badge>
                         </summary>
-                        <CardContent className="border-t border-slate-100 pt-4 sm:pt-6">
+                        <CardContent className="border-t border-border pt-4 sm:pt-6">
                             <p className="mb-4 text-sm text-muted-foreground">{t('Versioned allocation and fixture snapshots for audit and rollback.')}</p>
                         {drawVersions.length === 0 ? (
                             <p className="text-sm text-muted-foreground">{t('No draw versions recorded yet.')}</p>
