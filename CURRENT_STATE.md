@@ -160,7 +160,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
-Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us`. Product owner mengesahkan SAF 2026 berlangsung 1–31 Oktober 2026 dengan satu tournament, 30 acara dan 8 kontinjen. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
+Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us`. Product owner mengesahkan SAF 2026 berlangsung 13–25 Oktober 2026 dengan satu tournament, 30 acara dan 8 kontinjen. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
 
 ## Baki Sebelum Release Production
 

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 19 September 2026 — Public sports directory UX and rulebook links
 
+- Corrected the recorded SAF 2026 competition dates from 1–31 October to the product-owner-confirmed **13–25 October 2026** in `CURRENT_STATE.md`, `ROADMAP.md` and `TODOS.md`; the earlier date was stale.
+
 - Sports directory cards now deep-link to the schedule filtered by sport (`/schedule?sport=...`); `Public/Schedule` reads `sport` and `category` from the URL on load, so `/sports` is no longer a dead-end list. Cards use a stretched-link overlay so the whole card is clickable while inline document links stay usable.
 - Added category filter chips (derived from the sports catalogue) and an always-visible "Showing X of Y sports" count to the `/sports` page.
 - The public `/sports` payload now includes published per-sport rulebook documents scoped to the active session and organization; the directory renders them as PDF/Markdown links. Cache bumped to `public-portal:v10`, `forget()` clears `v9`/`v10`, and sport document upload/delete now invalidates the public portal cache.
