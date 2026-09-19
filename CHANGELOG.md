@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 19 September 2026 — Fix pre-existing dashboard and notification regressions
+
+- `RegisterParticipantToEvent` now dispatches `EventParticipantNotificationService::notifyRegistration()` after a successful registration, covering both the single and batch flows, so org-admins and deans receive `NewEventRegistration` again.
+- `EventParticipantNotificationService` resolves recipients via `whereHas('roles')` instead of Spatie's `role()` scope, so it no longer throws when roles are not yet provisioned.
+- `NotificationController` computes the real `counts.action_required` (unread `new_registration` notifications) instead of returning a hardcoded 0.
+- Corrected `DashboardTest` to assert the actual `systemOverview` prop name.
+- Full PHPUnit suite is now **511/511** (2,491 assertions); Playwright/axe **10/10**.
+
 ### 19 September 2026 — Replace window.confirm with ConfirmDialog
 
 - Sport and session document deletion in `Sports` and `Sessions` now uses the shared destructive `ConfirmDialog` instead of the native `window.confirm` prompt, keeping confirmation styling and accessibility consistent with the rest of the app.

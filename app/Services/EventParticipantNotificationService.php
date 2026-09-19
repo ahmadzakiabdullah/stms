@@ -12,12 +12,12 @@ final class EventParticipantNotificationService
     {
         $deanUsers = User::query()
             ->where('participant_id', $eventParticipant->participant_id)
-            ->role('dean')
+            ->whereHas('roles', fn ($query) => $query->where('name', 'dean'))
             ->get();
 
         $adminUsers = User::query()
             ->where('organization_id', $eventParticipant->organization_id)
-            ->role(['super-admin', 'org-admin'])
+            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['super-admin', 'org-admin']))
             ->get();
 
         foreach ($deanUsers->concat($adminUsers)->unique('uuid') as $recipient) {

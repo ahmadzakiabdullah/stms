@@ -29,7 +29,7 @@
 - [x] Dedahkan dokumen peraturan per-sukan (published, scoped kepada session/organization aktif) dalam `sports_catalog` dan papar sebagai pautan PDF/Markdown dalam kad; cache dinaikkan ke `public-portal:v10` dan upload/delete dokumen kini invalidasi cache portal.
 - [x] Betulkan ralat TypeScript pre-existing `resources/js/Pages/Events/Index.tsx` yang timbul selepas merge `origin/master`; `PublicPortalTest` 22/22 hijau (492 assertions).
 - [x] Selaraskan seeder demo `SAF2026DataSeeder` dengan tarikh rasmi: satu tournament `Sukan Antara Fakulti Ke-20 2026` (13–25 Oktober 2026), Fasa 1/Fasa 2 lama dinyahaktifkan; seeder dummy futsal/bola sepak dikemas kini; `ProductionSeedingTest` 5/5 hijau.
-- [ ] Nota: empat ujian pre-existing gagal pada `origin/master` bersih (`DashboardTest::test_empty_events_are_not_counted_as_events_needing_fixtures`, dua `EventParticipantStatusTest`, `NotificationTest::test_super_admin_defaults_to_unread_action_required_notifications`) — belum ditangani, di luar skop perubahan direktori awam.
+- [x] Betulkan empat kegagalan pre-existing: `RegisterParticipantToEvent` kini hantar `NewEventRegistration` (single + batch), `EventParticipantNotificationService` guna `whereHas('roles')` (tahan role belum wujud), `NotificationController` kira `counts.action_required` sebenar, dan `DashboardTest` guna prop `systemOverview`. Suite PHPUnit kini **511/511** (2,491 assertions).
 
 ## Export — Medal Tally (selesai 8 September 2026)
 
