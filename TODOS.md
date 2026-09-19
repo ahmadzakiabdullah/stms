@@ -19,7 +19,8 @@
 - [x] Adopsi `PageHeader` pada `Settings`, `Tournaments`, `Users`, `SportCategories`; baseline e2e/axe 10/10 lulus (desktop + mobile, `APP_LOCALE=en`).
 - [x] `PageHeader` ditambah slot `leading`; digunakan pada `Faculty/Dashboard` (logo), `Profile/Edit`, `TeamRegistrationForms/Show`.
 - [x] `ConfirmDialog` destrukif digunakan pada `SportCategories` & `Tournaments` (ganti dialog buatan).
-- [ ] Belum: `ConfirmDialog` untuk `window.confirm` dalam `Sessions`/`Sports` (padam dokumen); adopsi `PageHeader` pada `Dashboard` (hero tersendiri) dinilai berasingan.
+- [x] `window.confirm` pada `Sessions` & `Sports` (padam dokumen) diganti `ConfirmDialog` destrukif.
+- [ ] Belum: adopsi `PageHeader` pada `Dashboard` (hero tersendiri) dinilai berasingan.
 
 ## Public directory UX (selesai 19 September 2026)
 

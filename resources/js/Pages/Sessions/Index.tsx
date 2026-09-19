@@ -72,13 +72,15 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
     const [documentTitle, setDocumentTitle] = useState('');
     const [documentFile, setDocumentFile] = useState<string>('');
     const [availableFiles, setAvailableFiles] = useState<{name: string; path: string}[]>([]);
+    const [deleteDocumentTarget, setDeleteDocumentTarget] = useState<SportDocument | null>(null);
 
     const sessions = Array.isArray(sessionsProp) ? sessionsProp : (sessionsProp?.data ?? []);
     const applySearch = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); router.get(route('sessions.index'), search.trim() ? { search: search.trim() } : {}, { preserveState: true, preserveScroll: true, replace: true }); };
     const clearSearch = () => { setSearch(''); router.get(route('sessions.index'), {}, { preserveState: true, preserveScroll: true, replace: true }); };
     useEffect(() => { if (documentSession) fetch(route('sessions.documents.available', documentSession.slug)).then((response) => response.json()).then((data) => setAvailableFiles(data.files ?? [])); }, [documentSession]);
     const uploadDocument = (event: FormEvent) => { event.preventDefault(); if (!documentSession || !documentFile) return; router.post(route('sessions.documents.select', documentSession.slug), { title: documentTitle, file_path: documentFile }, { onSuccess: () => { setDocumentSession(null); setDocumentTitle(''); setDocumentFile(''); router.reload({ only: ['sessions'] }); } }); };
-    const deleteDocument = (document: SportDocument) => { if (window.confirm(`Delete ${document.title}?`)) router.delete(route('sessions.documents.destroy', document.id), { preserveScroll: true }); };
+    const deleteDocument = (document: SportDocument) => setDeleteDocumentTarget(document);
+    const confirmDeleteDocument = () => { if (!deleteDocumentTarget) return; router.delete(route('sessions.documents.destroy', deleteDocumentTarget.id), { preserveScroll: true, onFinish: () => setDeleteDocumentTarget(null) }); };
 
     const { control, register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SessionForm>({
         resolver: zodResolver(sessionSchema),
@@ -388,6 +390,17 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                 destructive
                 processing={isSubmitting}
                 onConfirm={handleDelete}
+            />
+
+            <ConfirmDialog
+                open={!!deleteDocumentTarget}
+                onOpenChange={(open) => !open && setDeleteDocumentTarget(null)}
+                title={t('Delete Document?')}
+                description={<>{t('Are you sure you want to delete')} <strong>{deleteDocumentTarget?.title}</strong>? {t('This action cannot be undone.')}</>}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={confirmDeleteDocument}
             />
 
             <div className="mt-6 text-xs text-muted-foreground">

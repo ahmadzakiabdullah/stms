@@ -83,6 +83,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
     const [documentTitle, setDocumentTitle] = useState('');
     const [documentSession, setDocumentSession] = useState('');
     const [documentFile, setDocumentFile] = useState<File | null>(null);
+    const [deleteDocumentTarget, setDeleteDocumentTarget] = useState<SportDocument | null>(null);
 
     // ── Category dialog state ──
     const [catOpen, setCatOpen] = useState(false);
@@ -284,7 +285,8 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
         setExpandedId(expandedId === id ? null : id);
     };
     const uploadDocument = (event: FormEvent) => { event.preventDefault(); if (!documentSport || !documentFile) return; const fd = new FormData(); fd.append('title', documentTitle); fd.append('session_id', documentSession); fd.append('document', documentFile); fd.append('is_published', '1'); router.post(route('sports.documents.store', documentSport.slug), fd, { forceFormData: true, onSuccess: () => { setDocumentSport(null); router.reload({ only: ['sports'] }); } }); };
-    const deleteDocument = (document: SportDocument) => { if (window.confirm(`Delete ${document.title}?`)) router.delete(route('sports.documents.destroy', document.id), { preserveScroll: true }); };
+    const deleteDocument = (document: SportDocument) => setDeleteDocumentTarget(document);
+    const confirmDeleteDocument = () => { if (!deleteDocumentTarget) return; router.delete(route('sports.documents.destroy', deleteDocumentTarget.id), { preserveScroll: true, onFinish: () => setDeleteDocumentTarget(null) }); };
 
     return (
         <AuthenticatedLayout
@@ -531,6 +533,17 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                 destructive
                 processing={isSubmitting}
                 onConfirm={handleDelete}
+            />
+
+            <ConfirmDialog
+                open={!!deleteDocumentTarget}
+                onOpenChange={(open) => !open && setDeleteDocumentTarget(null)}
+                title={t('Delete Document?')}
+                description={<>{t('Are you sure you want to delete')} <strong>{deleteDocumentTarget?.title}</strong>? {t('This action cannot be undone.')}</>}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={confirmDeleteDocument}
             />
 
             {/* ── Category CRUD dialogs ── */}

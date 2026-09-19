@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 19 September 2026 — Replace window.confirm with ConfirmDialog
+
+- Sport and session document deletion in `Sports` and `Sessions` now uses the shared destructive `ConfirmDialog` instead of the native `window.confirm` prompt, keeping confirmation styling and accessibility consistent with the rest of the app.
+- Playwright/axe: 10/10 critical journeys pass.
+
 ### 19 September 2026 — PageHeader leading slot and ConfirmDialog for deletes
 
 - `PageHeader` gained an optional `leading` slot; applied to `Faculty Dashboard` (contingent logo), `Profile`, and the printable `Team Registration Form` (kept `print-hidden`).
