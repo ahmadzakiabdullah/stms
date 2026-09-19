@@ -22,7 +22,7 @@ export default function PublicAnnouncementBar() {
 
     return (
         <div className="bg-[var(--public-dark)] text-white/75">
-            <div className="mx-auto flex min-h-10 max-w-7xl items-center justify-between gap-3 px-4 text-[10px] font-bold sm:px-6 sm:text-xs">
+            <div className="mx-auto flex min-h-10 max-w-7xl items-center justify-between gap-3 px-4 text-xs font-bold sm:px-6 sm:text-xs">
                 <time dateTime={new Date().toISOString().slice(0, 10)} className="capitalize">{date}</time>
                 <div className="flex items-center gap-2">
                     <MapPin aria-hidden="true" className="size-3.5 text-[var(--public-accent)]" />

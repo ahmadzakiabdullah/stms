@@ -55,7 +55,7 @@ export default function ParticipantLogo({
                 'flex shrink-0 items-center justify-center overflow-hidden rounded-lg',
                 sizeClasses[size],
                 imageUrl
-                    ? usesContrastTile && (surface === 'dark' ? 'bg-white/95 p-1' : 'bg-slate-950 p-1')
+                    ? usesContrastTile && (surface === 'dark' ? 'bg-white/95 p-1' : 'bg-foreground p-1')
                     : surface === 'dark'
                         ? 'border border-white/15 bg-white/10 text-white'
                         : 'border bg-muted text-muted-foreground',
@@ -71,7 +71,7 @@ export default function ParticipantLogo({
                     decoding="async"
                 />
             ) : (
-                <span aria-hidden="true" className="text-[10px] font-semibold uppercase">
+                <span aria-hidden="true" className="text-xs font-semibold uppercase">
                     {initials(participant?.name)}
                 </span>
             )}

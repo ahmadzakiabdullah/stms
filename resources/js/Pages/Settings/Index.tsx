@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -75,7 +76,7 @@ export default function SettingsIndex({ settings }: Props) {
     };
 
     return (
-        <AuthenticatedLayout header={<h1 className="text-2xl font-semibold tracking-tight">{t('Settings')}</h1>}>
+        <AuthenticatedLayout header={<PageHeader title={t('Settings')} />}>
             <Head title={t('Settings')} />
 
             {Object.keys(errors ?? {}).length > 0 && (

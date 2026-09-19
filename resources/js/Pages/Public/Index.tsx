@@ -98,7 +98,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                     <CosmicBackground />
                     <div className="mx-auto grid min-h-[520px] max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.08fr_.92fr] xl:gap-20">
                         <div className="relative z-10 max-w-3xl">
-                            <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[.24em] text-[var(--public-accent)] sm:text-xs">
+                            <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.24em] text-[var(--public-accent)] sm:text-xs">
                                 <span className="h-px w-8 bg-[var(--public-accent)]" />
                                 {competition?.organization || t('Universiti Teknikal Malaysia Melaka')}
                             </p>
@@ -110,23 +110,23 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                                 <Link href={route('public.athletes')} className="inline-flex min-h-11 items-center rounded-xl border border-white/15 bg-white/5 px-5 text-sm font-bold text-white transition hover:bg-white/10">{t('Athletes & Teams')}</Link>
                             </div>
                             <div className="mt-8 flex flex-wrap items-center gap-3">
-                                {competition?.start_date && <div className="inline-flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-white/10 text-[var(--public-highlight)]"><CalendarDays className="size-4" /></span><span><small className="block text-[9px] font-black uppercase tracking-[.16em] text-white/75">{t('Competition dates')}</small>{formatDate(competition.start_date, locale)}{competition.end_date && ` — ${formatDate(competition.end_date, locale)}`}</span></div>}
-                                {countdown && <div className="inline-flex items-center gap-3 rounded-xl border border-[var(--public-highlight)]/25 bg-[var(--public-highlight)]/10 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-[var(--public-highlight)]/15 text-[var(--public-highlight)]"><Clock3 className="size-4" /></span><span><small className="block text-[9px] font-black uppercase tracking-[.16em] text-[var(--public-highlight)]">{t('Starts in')}</small><b className="font-black tabular-nums text-white">{countdown.days}d {countdown.hours}h {countdown.minutes}m</b></span></div>}
+                                {competition?.start_date && <div className="inline-flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-white/10 text-[var(--public-highlight)]"><CalendarDays className="size-4" /></span><span><small className="block text-xs font-black uppercase tracking-[.16em] text-white/75">{t('Competition dates')}</small>{formatDate(competition.start_date, locale)}{competition.end_date && ` — ${formatDate(competition.end_date, locale)}`}</span></div>}
+                                {countdown && <div className="inline-flex items-center gap-3 rounded-xl border border-[var(--public-highlight)]/25 bg-[var(--public-highlight)]/10 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-[var(--public-highlight)]/15 text-[var(--public-highlight)]"><Clock3 className="size-4" /></span><span><small className="block text-xs font-black uppercase tracking-[.16em] text-[var(--public-highlight)]">{t('Starts in')}</small><b className="font-black tabular-nums text-white">{countdown.days}d {countdown.hours}h {countdown.minutes}m</b></span></div>}
                             </div>
                         </div>
 
                         <aside className="relative mx-auto w-full max-w-lg rounded-[1.75rem] border border-white/15 bg-white/[.07] p-3 shadow-2xl backdrop-blur-md">
                             <div className="rounded-[1.35rem] border border-white/10 bg-black/15 p-5 sm:p-7">
                                 <div className="flex items-start justify-between gap-5">
-                                    <div><p className="text-[10px] font-black uppercase tracking-[.2em] text-[var(--public-accent)]">{t('Competition progress')}</p><p className="public-display mt-3 text-6xl font-extrabold tracking-[-.04em] sm:text-7xl">{progress}%</p></div>
+                                    <div><p className="text-xs font-black uppercase tracking-[.2em] text-[var(--public-accent)]">{t('Competition progress')}</p><p className="public-display mt-3 text-6xl font-extrabold tracking-[-.04em] sm:text-7xl">{progress}%</p></div>
                                     <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-highlight)] text-[var(--public-dark)]"><Activity className="size-5" /></span>
                                 </div>
                                 <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-label={t('Competition progress')} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-gradient-to-r from-[var(--public-primary)] via-[var(--public-accent)] to-[var(--public-highlight)]" style={{ width: `${progress}%` }} /></div>
                                 <div className="mt-6 grid grid-cols-2 gap-3"><ProgressMetric value={stats.completed_matches} label={t('Fixtures completed')} icon={CheckCircle2} /><ProgressMetric value={stats.total_matches} label={t('Total Matches')} icon={Trophy} /></div>
 
                                 <div className="mt-5 border-t border-white/10 pt-5">
-                                    <div className="flex items-center justify-between gap-3"><p className="text-[10px] font-black uppercase tracking-[.18em] text-white/75">{t('Next fixture')}</p><Clock3 className="size-4 text-[var(--public-accent)]" /></div>
-                                    {nextMatch ? <div className="mt-4"><p className="truncate text-xs font-bold text-[var(--public-accent)]"><span className="inline-flex items-center gap-1.5"><SportIcon name={nextMatch.sport || ''} className="text-sm leading-none" />{nextMatch.sport} · {nextMatch.event}</span></p><div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3"><PublicTeamRow team={nextMatch.home} surface="dark" size="lg" /><span className="rounded-lg bg-white/10 px-2.5 py-1.5 text-[10px] font-black">VS</span><PublicTeamRow team={nextMatch.away} surface="dark" size="lg" right /></div><p className="mt-3 flex items-center gap-1.5 text-xs text-white/75"><CalendarDays className="size-3.5" />{nextMatch.scheduled_at ? formatDate(nextMatch.scheduled_at, locale, true) : nextMeta || t('To be determined')}</p></div> : <p className="mt-3 text-sm text-white/75">{t('Schedule will be shown after publication.')}</p>}
+                                    <div className="flex items-center justify-between gap-3"><p className="text-xs font-black uppercase tracking-[.18em] text-white/75">{t('Next fixture')}</p><Clock3 className="size-4 text-[var(--public-accent)]" /></div>
+                                    {nextMatch ? <div className="mt-4"><p className="truncate text-xs font-bold text-[var(--public-accent)]"><span className="inline-flex items-center gap-1.5"><SportIcon name={nextMatch.sport || ''} className="text-sm leading-none" />{nextMatch.sport} · {nextMatch.event}</span></p><div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3"><PublicTeamRow team={nextMatch.home} surface="dark" size="lg" /><span className="rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-black">VS</span><PublicTeamRow team={nextMatch.away} surface="dark" size="lg" right /></div><p className="mt-3 flex items-center gap-1.5 text-xs text-white/75"><CalendarDays className="size-3.5" />{nextMatch.scheduled_at ? formatDate(nextMatch.scheduled_at, locale, true) : nextMeta || t('To be determined')}</p></div> : <p className="mt-3 text-sm text-white/75">{t('Schedule will be shown after publication.')}</p>}
                                 </div>
                             </div>
                         </aside>
@@ -189,11 +189,11 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                         {hasMedals ? (
                             <div className="mt-10 grid gap-4 lg:grid-cols-[1.1fr_.9fr]">
                                 <div className="rounded-[1.75rem] border border-[var(--public-dark-border)] bg-white p-5 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] sm:p-7">
-                                    <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[.18em] text-[var(--public-primary)]">{t('Leading contingents')}</p><h3 className="mt-2 text-2xl font-black tracking-tight">{t('The podium')}</h3></div><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-highlight-soft)] text-[var(--public-highlight)]"><Trophy className="size-5" /></span></div>
+                                    <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.18em] text-[var(--public-primary)]">{t('Leading contingents')}</p><h3 className="mt-2 text-2xl font-black tracking-tight">{t('The podium')}</h3></div><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-highlight-soft)] text-[var(--public-highlight)]"><Trophy className="size-5" /></span></div>
                                     <div className="mt-8 grid grid-cols-3 items-end gap-2 sm:gap-4">{medals.slice(0, 3).map(row => <PodiumCard key={row.participant_name} row={row} t={t} />)}</div>
                                 </div>
                                 <div className="rounded-[1.75rem] border border-white/10 bg-[var(--public-dark)] p-5 text-white shadow-[0_24px_70px_-48px_rgba(0,0,0,.9)] sm:p-7">
-                                    <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[.18em] text-[var(--public-accent)]">{t('Current table')}</p><h3 className="mt-2 text-2xl font-black tracking-tight">{t('Medal tally')}</h3></div><Medal className="size-5 text-[var(--public-highlight)]" /></div>
+                                    <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.18em] text-[var(--public-accent)]">{t('Current table')}</p><h3 className="mt-2 text-2xl font-black tracking-tight">{t('Medal tally')}</h3></div><Medal className="size-5 text-[var(--public-highlight)]" /></div>
                                     <div className="mt-7 divide-y divide-white/10">{medals.slice(3, 6).map(row => <MedalListRow key={row.participant_name} row={row} t={t} />)}</div>
                                     {medals.length > 6 && <p className="mt-5 text-xs font-semibold text-white/55">{t('Showing the top six standings')}</p>}
                                 </div>
@@ -208,7 +208,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
 function PodiumCard({ row, t }: { row: MedalRow; t: Translate }) {
     const isWinner = row.rank === 1;
-    const medalTone = row.rank === 1 ? 'bg-[var(--public-highlight)] text-[var(--public-dark)]' : row.rank === 2 ? 'bg-slate-200 text-slate-700' : 'bg-amber-700 text-white';
+    const medalTone = row.rank === 1 ? 'bg-[var(--public-highlight)] text-[var(--public-dark)]' : row.rank === 2 ? 'bg-[var(--public-dark-border)] text-[var(--public-text)]' : 'bg-amber-700 text-white';
 
     return <article className={`flex min-w-0 flex-col items-center text-center ${isWinner ? 'order-2' : row.rank === 2 ? 'order-1' : 'order-3'}`}>
         <div className={`relative flex ${isWinner ? 'size-20 sm:size-24' : 'size-16 sm:size-20'} items-center justify-center rounded-[1.5rem] ${medalTone} shadow-lg`}>

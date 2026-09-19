@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -96,35 +98,32 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Tournaments')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Manage tournaments within sessions')}
-                        </p>
-                    </div>
-
-                    <Dialog open={open} onOpenChange={(isOpen) => {
-                        if (!isOpen) closeDialog();
-                        else setOpen(true);
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button onClick={() => { setEditingTournament(null); setOpen(true); }} disabled={sessions.length === 0}>
-                                <Plus className="mr-2 size-4" />
-                                {t('Add Tournament')}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                            <TournamentFormDialog t={t}
-                                key={editingTournament?.id ?? 'create'}
-                                tournament={editingTournament}
-                                sessions={sessions}
-                                allSports={sports}
-                                onClose={closeDialog}
-                            />
-                        </DialogContent>
-                    </Dialog>
-                </div>
+                <PageHeader
+                    title={t('Tournaments')}
+                    description={t('Manage tournaments within sessions')}
+                    actions={
+                        <Dialog open={open} onOpenChange={(isOpen) => {
+                            if (!isOpen) closeDialog();
+                            else setOpen(true);
+                        }}>
+                            <DialogTrigger asChild>
+                                <Button onClick={() => { setEditingTournament(null); setOpen(true); }} disabled={sessions.length === 0}>
+                                    <Plus className="mr-2 size-4" />
+                                    {t('Add Tournament')}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                                <TournamentFormDialog t={t}
+                                    key={editingTournament?.id ?? 'create'}
+                                    tournament={editingTournament}
+                                    sessions={sessions}
+                                    allSports={sports}
+                                    onClose={closeDialog}
+                                />
+                            </DialogContent>
+                        </Dialog>
+                    }
+                />
             }
         >
             <Head title={t('Tournaments')} />
@@ -221,24 +220,16 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                 <Pagination paginator={tournamentsProp} />
             </Card>
 
-            <Dialog open={!!deleteTournament} onOpenChange={(isOpen) => !isOpen && setDeleteTournament(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Delete Tournament?')}</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteTournament?.name}</strong>? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteTournament(null)}>
-                            {t('Cancel')}
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={false}>
-                            {t('Yes, Delete')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <ConfirmDialog
+                open={!!deleteTournament}
+                onOpenChange={(isOpen) => !isOpen && setDeleteTournament(null)}
+                title={t('Delete Tournament?')}
+                description={<>Are you sure you want to delete <strong>{deleteTournament?.name}</strong>? This action cannot be undone.</>}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={handleDelete}
+            />
         </AuthenticatedLayout>
     );
 }

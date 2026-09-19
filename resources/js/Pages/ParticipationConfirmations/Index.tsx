@@ -121,7 +121,7 @@ export default function Index(props: Props) {
                     </CardContent>
                 </Card>
 
-                <section className="participation-print-sheet rounded-sm border bg-white px-8 py-7 text-[12px] leading-snug text-black shadow-sm">
+                <section className="participation-print-sheet rounded-sm border bg-white px-8 py-7 text-xs leading-snug text-black shadow-sm">
                     <header className="form-header grid grid-cols-[105px_1fr_105px] items-start gap-4">
                         <div className="flex flex-col items-center text-center">
                             <div className="form-header-logo flex h-20 items-start justify-center">
@@ -133,20 +133,20 @@ export default function Index(props: Props) {
                                     className="block h-16 w-[100px] object-contain"
                                 />
                             </div>
-                            <div className="text-[8px] font-medium">https://www.utem.edu.my</div>
-                            <div className="mt-1.5 w-full border border-black px-1 py-1 text-[9px] font-bold uppercase">{t('Received on')}</div>
+                            <div className="text-xs font-medium">https://www.utem.edu.my</div>
+                            <div className="mt-1.5 w-full border border-black px-1 py-1 text-xs font-bold uppercase">{t('Received on')}</div>
                         </div>
-                        <div className="whitespace-pre-line text-center text-[11px] leading-relaxed">
+                        <div className="whitespace-pre-line text-center text-xs leading-relaxed">
                             <p className="font-bold uppercase">{props.branding.secretariat_address}</p>
                         </div>
                         <div className="flex flex-col items-center text-center">
                             <div className="form-header-logo flex h-20 items-start justify-center">
                                 {props.branding.tournament_logo_url ? (
                                     <img src={props.branding.tournament_logo_url} alt="SAF logo" className="max-h-16 max-w-[100px] object-contain" />
-                                ) : <div className="mt-2 text-[10px] text-slate-500">SAF Logo</div>}
+                                ) : <div className="mt-2 text-xs text-muted-foreground">SAF Logo</div>}
                             </div>
-                            <div className="text-[8px] font-medium">https://saf.utem.edu.my</div>
-                            <div className="mt-1.5 w-full border border-black px-1 py-1 text-[9px] font-bold uppercase">SAF 03/05</div>
+                            <div className="text-xs font-medium">https://saf.utem.edu.my</div>
+                            <div className="mt-1.5 w-full border border-black px-1 py-1 text-xs font-bold uppercase">SAF 03/05</div>
                         </div>
                     </header>
 
@@ -155,7 +155,7 @@ export default function Index(props: Props) {
                         <p className="mt-1 font-bold uppercase">{selectedSession?.name ?? 'No session selected'}</p>
                     </div>
 
-                    <div className="form-meta mt-4 grid grid-cols-[150px_1fr] gap-y-1 text-[12px]">
+                    <div className="form-meta mt-4 grid grid-cols-[150px_1fr] gap-y-1 text-xs">
                         <span className="font-bold">{t('Faculty / Participant')}</span><span>: {props.participant?.name ?? '-'}</span>
                         <span className="font-bold">{t('Session Period')}</span><span>: {selectedSession?.period ?? '-'}</span>
                     </div>
@@ -167,9 +167,9 @@ export default function Index(props: Props) {
                             <div key={phase.id} className="phase-section">
                                 <div className="phase-heading mb-1 flex items-end justify-between font-bold uppercase">
                                     <h3>{phase.name || `Phase ${phaseIndex + 1}`}</h3>
-                                    <span className="text-[10px] font-normal normal-case">{phase.period}</span>
+                                    <span className="text-xs font-normal normal-case">{phase.period}</span>
                                 </div>
-                                <table className="phase-table w-full border-collapse text-[11px]">
+                                <table className="phase-table w-full border-collapse text-xs">
                                     <thead>
                                         <tr>
                                             <th rowSpan={2} className="w-11 border border-black px-2 py-1.5 text-center">{t('No.')}</th>
@@ -205,7 +205,7 @@ export default function Index(props: Props) {
                                 <div className="grid grid-cols-[125px_1fr] items-end"><span>Signature</span><span className="signature-space h-10 border-b border-black">:</span></div>
                                 <div className="grid grid-cols-[125px_1fr] items-end"><span>Date</span><span className="border-b border-black px-2 pb-1">: {props.generatedDate}</span></div>
                             </div>
-                            <div className="stamp-box flex h-28 items-center justify-center border border-black text-center text-[10px] uppercase text-slate-500">Official Stamp</div>
+                            <div className="stamp-box flex h-28 items-center justify-center border border-black text-center text-xs uppercase text-muted-foreground">Official Stamp</div>
                         </div>
                     </div>
                 </section>

@@ -104,7 +104,7 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($super)->get(route('dashboard'));
         $props = $response->viewData('page')['props'] ?? [];
 
-        $this->assertSame(0, $props['system']['eventsWithoutFixtures'] ?? null);
+        $this->assertSame(0, $props['systemOverview']['eventsWithoutFixtures'] ?? null);
     }
 
     public function test_dashboard_includes_registration_overview_for_admins(): void

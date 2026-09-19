@@ -15,7 +15,7 @@ export default function PublicDesktopNav({ links }: { links: PublicMenuLink[] })
                     key={`${link.href}-${link.label}`}
                     href={link.href}
                     aria-current={link.current ? 'page' : undefined}
-                    className={`relative whitespace-nowrap rounded-lg px-3 py-2 text-[11px] font-black transition ${link.current ? 'bg-white/10 text-white shadow-sm' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}
+                    className={`relative whitespace-nowrap rounded-lg px-3 py-2 text-xs font-black transition ${link.current ? 'bg-white/10 text-white shadow-sm' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}
                 >
                     {link.label}
                     {link.current && <span aria-hidden="true" className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-[var(--public-highlight)]" />}

@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -208,15 +210,12 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">{t('Sport Categories')}</h1>
-                        <p className="text-sm text-muted-foreground">
-                            {t('Manage categories for each sport')}
-                        </p>
-                    </div>
-
-                    {isSuperAdmin && (
+                <PageHeader
+                    title={t('Sport Categories')}
+                    description={t('Manage categories for each sport')}
+                    actions={
+                        <>
+                            {isSuperAdmin && (
                     <Dialog open={open} onOpenChange={(isOpen) => {
                         if (!isOpen) closeDialog();
                         else setOpen(true);
@@ -411,7 +410,9 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                         </DialogContent>
                     </Dialog>
                     )}
-                </div>
+                        </>
+                    }
+                />
             }
         >
             <Head title={t('Sport Categories')} />
@@ -478,24 +479,17 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
             </Card>
 
             {isSuperAdmin && (
-            <Dialog open={!!deleteCategory} onOpenChange={(isOpen) => !isOpen && setDeleteCategory(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('Delete Category?')}</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete <strong>{deleteCategory?.name}</strong>? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteCategory(null)}>
-                            {t('Cancel')}
-                        </Button>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-                            {t('Yes, Delete')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                <ConfirmDialog
+                    open={!!deleteCategory}
+                    onOpenChange={(isOpen) => !isOpen && setDeleteCategory(null)}
+                    title={t('Delete Category?')}
+                    description={<>Are you sure you want to delete <strong>{deleteCategory?.name}</strong>? This action cannot be undone.</>}
+                    confirmLabel={t('Yes, Delete')}
+                    cancelLabel={t('Cancel')}
+                    destructive
+                    processing={isSubmitting}
+                    onConfirm={handleDelete}
+                />
             )}
 
             <div className="mt-6 text-xs text-muted-foreground">

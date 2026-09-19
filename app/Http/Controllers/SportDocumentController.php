@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\File;
 
 class SportDocumentController extends Controller
 {
-<<<<<<< HEAD
     public function available(Sport $sport, Request $request): JsonResponse
     {
         Gate::authorize('view', $sport);
@@ -26,10 +25,7 @@ class SportDocumentController extends Controller
         return response()->json(['files' => $files]);
     }
 
-    public function store(StoreSportDocumentRequest $request, Sport $sport): RedirectResponse
-=======
     public function store(StoreSportDocumentRequest $request, Sport $sport, PublicPortalService $publicPortal): RedirectResponse
->>>>>>> 1b8468511f678de7f393962e9869331c4e79d98d
     {
         Gate::authorize('update', $sport);
         $file = $request->file('document');

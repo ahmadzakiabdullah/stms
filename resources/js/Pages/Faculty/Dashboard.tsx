@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -245,28 +246,24 @@ export default function FacultyDashboard({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                        {participant && <ParticipantLogo participant={participant} size="lg" className="sm:size-14" alt="" />}
-                        <div className="min-w-0">
-                            <h1 className="text-2xl font-semibold tracking-tight">{t('Faculty Dashboard')}</h1>
-                            <p className="truncate text-sm text-muted-foreground">
-                                {participant ? participant.name : t('No faculty profile linked')}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                    <Button asChild variant="outline" disabled={!participant}>
-                        <Link href={route('faculty.register-events')}>
-                            {t('Register Events Page')}
-                        </Link>
-                    </Button>
-                    <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
-                        <Plus className="mr-2 size-4" />
-                        {t('Register for Events')}
-                    </Button>
-                    </div>
-                </div>
+                <PageHeader
+                    title={t('Faculty Dashboard')}
+                    description={participant ? participant.name : t('No faculty profile linked')}
+                    leading={participant ? <ParticipantLogo participant={participant} size="lg" className="sm:size-14" alt="" /> : undefined}
+                    actions={
+                        <>
+                            <Button asChild variant="outline" disabled={!participant}>
+                                <Link href={route('faculty.register-events')}>
+                                    {t('Register Events Page')}
+                                </Link>
+                            </Button>
+                            <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
+                                <Plus className="mr-2 size-4" />
+                                {t('Register for Events')}
+                            </Button>
+                        </>
+                    }
+                />
             }
         >
             <Head title={t('Faculty Dashboard')} />
@@ -339,16 +336,16 @@ export default function FacultyDashboard({
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="font-medium truncate">{reg.event?.name}</span>
-                                                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium leading-none ${scfg.class}`}>
+                                                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium leading-none ${scfg.class}`}>
                                                                     {scfg.label}
                                                                 </span>
                                                                  {squadIncomplete && (
-                                                                     <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium leading-none text-amber-700">
+                                                                     <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium leading-none text-amber-700">
                                                                          {t('Squad incomplete — add athletes')}
                                                                      </span>
                                                                  )}
                                                                  {squadComplete && (
-                                                                     <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium leading-none text-emerald-700">
+                                                                     <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium leading-none text-emerald-700">
                                                                          {t('Squad complete ✓')}
                                                                      </span>
                                                                  )}
@@ -500,7 +497,7 @@ export default function FacultyDashboard({
                                         <div className="sticky top-0 bg-muted/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur flex items-center gap-2">
                                             <span className="inline-block size-2 rounded-full bg-primary/60" />
                                             {tournamentName}
-                                            <span className="font-normal text-[10px]">({evts.length})</span>
+                                            <span className="font-normal text-xs">({evts.length})</span>
                                         </div>
                                         {evts.map((evt) => {
                                             const deadlinePassed = (evt as any).registration_deadline
@@ -531,7 +528,7 @@ export default function FacultyDashboard({
                                                         <div className="truncate">{evt.sport?.name} — {evt.sport_category?.name}</div>
                                                         <div className="text-xs text-muted-foreground truncate">{evt.name}</div>
                                                         {deadlinePassed && (
-                                                            <span className="text-[10px] text-destructive">(Deadline passed)</span>
+                                                            <span className="text-xs text-destructive">(Deadline passed)</span>
                                                         )}
                                                     </div>
                                                 </label>

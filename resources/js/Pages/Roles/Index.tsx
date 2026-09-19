@@ -142,10 +142,10 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
                                             {role.permissions.slice(0, 5).map((p) => (
-                                                <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>
+                                                <Badge key={p} variant="secondary" className="text-xs">{p}</Badge>
                                             ))}
                                             {role.permissions.length > 5 && (
-                                                <Badge variant="outline" className="text-[10px]">+{role.permissions.length - 5}</Badge>
+                                                <Badge variant="outline" className="text-xs">+{role.permissions.length - 5}</Badge>
                                             )}
                                         </div>
                                     </TableCell>
@@ -195,7 +195,7 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                                             <button
                                                 type="button"
                                                 onClick={() => selectAllInGroup(perms, !perms.every(p => selectedPerms.has(p)))}
-                                                className="text-[10px] text-primary hover:underline"
+                                                className="text-xs text-primary hover:underline"
                                             >
                                                 {perms.every(p => selectedPerms.has(p)) ? t('Deselect all') : t('Select all')}
                                             </button>

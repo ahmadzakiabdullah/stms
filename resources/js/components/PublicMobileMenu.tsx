@@ -1,31 +1,89 @@
+import LocaleSwitcher from '@/components/LocaleSwitcher';
+import PublicLoginButton from '@/components/PublicLoginButton';
 import { useI18n } from '@/lib/i18n';
 import { Link } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export type PublicMenuLink = { href: string; label: string; current?: boolean };
 
 export default function PublicMobileMenu({ links }: { links: PublicMenuLink[] }) {
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const panelRef = useRef<HTMLElement>(null);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const focusableSelector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                setOpen(false);
+                buttonRef.current?.focus();
+
+                return;
+            }
+
+            if (event.key !== 'Tab' || !panelRef.current) return;
+
+            const focusable = panelRef.current.querySelectorAll<HTMLElement>(focusableSelector);
+            if (focusable.length === 0) return;
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+
+        const onPointerDown = (event: MouseEvent | TouchEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setOpen(false);
+            }
+        };
+
+        document.addEventListener('keydown', onKeyDown);
+        document.addEventListener('mousedown', onPointerDown);
+        document.addEventListener('touchstart', onPointerDown);
+
+        panelRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus();
+
+        return () => {
+            document.removeEventListener('keydown', onKeyDown);
+            document.removeEventListener('mousedown', onPointerDown);
+            document.removeEventListener('touchstart', onPointerDown);
+        };
+    }, [open]);
 
     return (
-        <div className="relative xl:hidden">
+        <div ref={containerRef} className="relative xl:hidden">
             <button
+                ref={buttonRef}
                 type="button"
                 aria-label={open ? t('Close menu') : t('Open menu')}
                 aria-expanded={open}
+                aria-haspopup="true"
                 aria-controls="public-mobile-navigation"
                 onClick={() => setOpen(current => !current)}
-                className="flex size-9 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]"
+                className="flex size-11 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]"
             >
-                {open ? <X aria-hidden="true" className="size-4" /> : <Menu aria-hidden="true" className="size-4" />}
+                {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
             </button>
             {open && (
                 <nav
+                    ref={panelRef}
                     id="public-mobile-navigation"
                     aria-label={t('Public navigation')}
-                    className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-2xl border border-white/15 bg-[var(--public-dark)] p-2 text-white shadow-2xl"
+                    className="absolute right-0 top-14 z-50 w-72 overflow-hidden rounded-2xl border border-white/15 bg-[var(--public-dark)] p-2 text-white shadow-2xl"
                 >
                     {links.map(link => (
                         <Link
@@ -47,5 +105,3 @@ export default function PublicMobileMenu({ links }: { links: PublicMenuLink[] })
         </div>
     );
 }
-import LocaleSwitcher from '@/components/LocaleSwitcher';
-import PublicLoginButton from '@/components/PublicLoginButton';

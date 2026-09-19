@@ -82,9 +82,8 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
     const [documentSport, setDocumentSport] = useState<Sport | null>(null);
     const [documentTitle, setDocumentTitle] = useState('');
     const [documentSession, setDocumentSession] = useState('');
-    const [availableFiles, setAvailableFiles] = useState<{ name: string; path: string }[]>([]);
-    const [documentFile, setDocumentFile] = useState('');
-    useEffect(() => { if (documentSport && documentSession) fetch(`${route('sports.documents.available', documentSport.slug)}?year=${encodeURIComponent(sessions.find(s => s.id === documentSession)?.start_date?.slice(0, 4) ?? new Date().getFullYear())}`).then((response) => response.json()).then((data) => setAvailableFiles(data.files ?? [])); }, [documentSport, documentSession, sessions]);
+    const [documentFile, setDocumentFile] = useState<File | null>(null);
+    const [deleteDocumentTarget, setDeleteDocumentTarget] = useState<SportDocument | null>(null);
 
     // ── Category dialog state ──
     const [catOpen, setCatOpen] = useState(false);
@@ -285,8 +284,9 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
     const toggleExpand = (id: string) => {
         setExpandedId(expandedId === id ? null : id);
     };
-    const uploadDocument = (event: FormEvent) => { event.preventDefault(); if (!documentSport || !documentFile) return; router.post(route('sports.documents.select', documentSport.slug), { title: documentTitle, session_id: documentSession, file_path: documentFile, year: sessions.find(s => s.id === documentSession)?.start_date?.slice(0, 4) ?? new Date().getFullYear() }, { onSuccess: () => { setDocumentSport(null); setDocumentTitle(''); setDocumentSession(''); setDocumentFile(''); router.reload({ only: ['sports'] }); } }); };
-    const deleteDocument = (document: SportDocument) => { if (window.confirm(`Delete ${document.title}?`)) router.delete(route('sports.documents.destroy', document.id), { preserveScroll: true }); };
+    const uploadDocument = (event: FormEvent) => { event.preventDefault(); if (!documentSport || !documentFile) return; const fd = new FormData(); fd.append('title', documentTitle); fd.append('session_id', documentSession); fd.append('document', documentFile); fd.append('is_published', '1'); router.post(route('sports.documents.store', documentSport.slug), fd, { forceFormData: true, onSuccess: () => { setDocumentSport(null); router.reload({ only: ['sports'] }); } }); };
+    const deleteDocument = (document: SportDocument) => setDeleteDocumentTarget(document);
+    const confirmDeleteDocument = () => { if (!deleteDocumentTarget) return; router.delete(route('sports.documents.destroy', deleteDocumentTarget.id), { preserveScroll: true, onFinish: () => setDeleteDocumentTarget(null) }); };
 
     return (
         <AuthenticatedLayout
@@ -404,7 +404,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                                         )}
                                                     </div>
                                                     <div className="mb-4 rounded-lg border bg-background p-3">
-                                                        <div className="mb-2 flex items-center justify-between"><h5 className="flex items-center gap-2 text-sm font-medium"><FileText className="size-4" /> {t('Documents')}</h5>{isSuperAdmin && <Button size="sm" variant="outline" onClick={() => setDocumentSport(sport)}><FileText className="mr-1 size-3" /> {t('Select Document')}</Button>}</div>
+                                                        <div className="mb-2 flex items-center justify-between"><h5 className="flex items-center gap-2 text-sm font-medium"><FileText className="size-4" /> {t('Documents')}</h5>{isSuperAdmin && <Button size="sm" variant="outline" onClick={() => setDocumentSport(sport)}><Upload className="mr-1 size-3" /> {t('Upload')}</Button>}</div>
                                                         {(sport.documents?.length ?? 0) === 0 ? <p className="text-sm text-muted-foreground">{t('No documents yet.')}</p> : sport.documents?.map((doc) => <div key={doc.id} className="flex items-center justify-between border-t py-2 text-sm"><span><span className="font-medium">{doc.title}</span><span className="ml-2 text-xs text-muted-foreground">{doc.file_name}</span></span><span className="flex gap-1"><a href={doc.url} target="_blank" rel="noreferrer"><Button type="button" size="sm" variant="ghost"><ExternalLink className="mr-1 size-3" />{t('View')}</Button></a>{isSuperAdmin && <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => deleteDocument(doc)}><Trash2 className="size-3" /></Button>}</span></div>)}
                                                     </div>
                                                     {(sport.categories?.length ?? 0) === 0 ? (
@@ -450,7 +450,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
             {isSuperAdmin && (
                 <>
             <Dialog open={!!documentSport} onOpenChange={(open) => !open && setDocumentSport(null)}>
-                <DialogContent><form onSubmit={uploadDocument}><DialogHeader><DialogTitle>{t('Select Sport Document')}</DialogTitle><DialogDescription>{documentSport?.name}</DialogDescription></DialogHeader><div className="grid gap-4 py-4"><div className="grid gap-2"><Label htmlFor="document-title">{t('Title')}</Label><Input id="document-title" value={documentTitle} onChange={(e) => setDocumentTitle(e.target.value)} required /></div><div className="grid gap-2"><Label>{t('Session')}</Label><Select value={documentSession} onValueChange={setDocumentSession}><SelectTrigger><SelectValue placeholder={t('Select session')} /></SelectTrigger><SelectContent>{sessions.map((session) => <SelectItem key={session.id} value={session.id}>{session.name}</SelectItem>)}</SelectContent></Select></div><div className="grid gap-2"><Label>{t('PDF or Markdown file')}</Label><Select value={documentFile} onValueChange={setDocumentFile}><SelectTrigger><SelectValue placeholder={t('Select existing PDF or Markdown file')} /></SelectTrigger><SelectContent>{availableFiles.map((file) => <SelectItem key={file.path} value={file.path}>{file.name}</SelectItem>)}</SelectContent></Select></div></div><DialogFooter><Button type="button" variant="outline" onClick={() => setDocumentSport(null)}>{t('Cancel')}</Button><Button type="submit" disabled={!documentFile || !documentTitle || !documentSession}><FileText className="mr-2 size-4" />{t('Link Document')}</Button></DialogFooter></form></DialogContent>
+                <DialogContent><form onSubmit={uploadDocument}><DialogHeader><DialogTitle>{t('Upload Sport Document')}</DialogTitle><DialogDescription>{documentSport?.name}</DialogDescription></DialogHeader><div className="grid gap-4 py-4"><div className="grid gap-2"><Label htmlFor="document-title">{t('Title')}</Label><Input id="document-title" value={documentTitle} onChange={(e) => setDocumentTitle(e.target.value)} required /></div><div className="grid gap-2"><Label>{t('Session')}</Label><Select value={documentSession} onValueChange={setDocumentSession}><SelectTrigger><SelectValue placeholder={t('Select session')} /></SelectTrigger><SelectContent>{sessions.map((session) => <SelectItem key={session.id} value={session.id}>{session.name}</SelectItem>)}</SelectContent></Select></div><div className="grid gap-2"><Label htmlFor="document-file">{t('PDF or Markdown file')}</Label><Input id="document-file" type="file" accept=".pdf,.md,.markdown,application/pdf,text/markdown" onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)} required /><p className="text-xs text-muted-foreground">Maximum 10 MB.</p></div></div><DialogFooter><Button type="button" variant="outline" onClick={() => setDocumentSport(null)}>{t('Cancel')}</Button><Button type="submit" disabled={!documentFile || !documentTitle || !documentSession}><Upload className="mr-2 size-4" />{t('Upload')}</Button></DialogFooter></form></DialogContent>
             </Dialog>
             {/* ── Sport CRUD dialogs ── */}
             <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) closeDialog(); }}>
@@ -533,6 +533,17 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                 destructive
                 processing={isSubmitting}
                 onConfirm={handleDelete}
+            />
+
+            <ConfirmDialog
+                open={!!deleteDocumentTarget}
+                onOpenChange={(open) => !open && setDeleteDocumentTarget(null)}
+                title={t('Delete Document?')}
+                description={<>{t('Are you sure you want to delete')} <strong>{deleteDocumentTarget?.title}</strong>? {t('This action cannot be undone.')}</>}
+                confirmLabel={t('Yes, Delete')}
+                cancelLabel={t('Cancel')}
+                destructive
+                onConfirm={confirmDeleteDocument}
             />
 
             {/* ── Category CRUD dialogs ── */}

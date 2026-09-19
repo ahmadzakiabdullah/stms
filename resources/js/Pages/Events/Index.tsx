@@ -59,7 +59,7 @@ const eventSchema = z.object({
 
 type EventForm = z.infer<typeof eventSchema>;
 
-interface EventRow extends Omit<Event, 'tournament' | 'sport'> {
+interface EventRow extends Omit<Event, 'tournament' | 'sport' | 'sport_category'> {
     tournament?: { name: string } | null;
     sport?: { name: string } | null;
     sport_category?: { name: string } | null;
@@ -620,7 +620,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                                 {event.registrations_count ?? 0}/{event.participants_count ?? 0}
                                             </span>
                                             {(event.pending_participants_count ?? 0) > 0 && (
-                                                <span className="text-[10px] text-muted-foreground">{event.pending_participants_count} menunggu pengesahan</span>
+                                                <span className="text-xs text-muted-foreground">{event.pending_participants_count} menunggu pengesahan</span>
                                             )}
                                         </div>
                                     </TableCell>
@@ -640,7 +640,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                                             style={{ width: `${ep.pct}%` }}
                                                         />
                                                     </div>
-                                                    <span className="text-[10px] tabular-nums text-muted-foreground">
+                                                    <span className="text-xs tabular-nums text-muted-foreground">
                                                         {event.completed_matches_count ?? 0}/{event.matches_count ?? 0}
                                                     </span>
                                                 </div>

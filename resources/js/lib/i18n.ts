@@ -2095,15 +2095,6 @@ Object.assign(en, {
     'Explore the sports': 'Explore the sports',
     'Every official sport and event in the competition.': 'Every official sport and event in the competition.',
     'View all sports': 'View all sports',
-    'Official banner': 'Official banner',
-    'Watch now': 'Watch now',
-    'Fixtures and results will appear here once published by the secretariat.': 'Fixtures and results will appear here once published by the secretariat.',
-    'The competition starts on': 'The competition starts on',
-    Secretariat: 'Secretariat',
-    Address: 'Address',
-    'Saturday & Sunday': 'Saturday & Sunday',
-    Closed: 'Closed',
-    'Contact details will be updated by the secretariat.': 'Contact details will be updated by the secretariat.',
     Contingents: 'Contingents',
 });
 Object.assign(ms, {
@@ -2111,15 +2102,6 @@ Object.assign(ms, {
     'Explore the sports': 'Terokai sukan',
     'Every official sport and event in the competition.': 'Setiap sukan dan acara rasmi dalam pertandingan ini.',
     'View all sports': 'Lihat semua sukan',
-    'Official banner': 'Sepanduk rasmi',
-    'Watch now': 'Tonton sekarang',
-    'Fixtures and results will appear here once published by the secretariat.': 'Jadual dan keputusan akan dipaparkan di sini apabila diterbitkan oleh urus setia.',
-    'The competition starts on': 'Pertandingan bermula pada',
-    Secretariat: 'Urus Setia',
-    Address: 'Alamat',
-    'Saturday & Sunday': 'Sabtu & Ahad',
-    Closed: 'Tutup',
-    'Contact details will be updated by the secretariat.': 'Maklumat perhubungan akan dikemas kini oleh urus setia.',
     Contingents: 'Kontinjen',
 });
 
@@ -2130,15 +2112,7 @@ Object.assign(en, {
     'Search sports and events': 'Search sports and events',
     'Clear search': 'Clear search',
     'No sports match your search.': 'No sports match your search.',
-    'Official rules': 'Official rules',
-    'Read rules': 'Read rules',
-    'Download rules': 'Download rules',
-    'Download PDF': 'Download PDF',
-    'Official rules not available yet.': 'Official rules not available yet.',
-    'Filter by rules availability': 'Filter by rules availability',
-    'Rules available': 'Rules available',
-    'Rules not yet available': 'Rules not yet available',
-    'View schedule': 'View schedule',
+    'View fixtures': 'View fixtures',
 
     // Schedule
     'Competition Schedule': 'Competition Schedule',
@@ -2179,15 +2153,7 @@ Object.assign(ms, {
     'Search sports and events': 'Cari sukan dan acara',
     'Clear search': 'Padam carian',
     'No sports match your search.': 'Tiada sukan sepadan dengan carian anda.',
-    'Official rules': 'Peraturan rasmi',
-    'Read rules': 'Baca peraturan',
-    'Download rules': 'Muat turun peraturan',
-    'Download PDF': 'Muat turun PDF',
-    'Official rules not available yet.': 'Peraturan rasmi belum tersedia lagi.',
-    'Filter by rules availability': 'Tapis mengikut ketersediaan peraturan',
-    'Rules available': 'Peraturan tersedia',
-    'Rules not yet available': 'Peraturan belum tersedia',
-    'View schedule': 'Lihat jadual',
+    'View fixtures': 'Lihat perlawanan',
 
     // Schedule
     'Competition Schedule': 'Jadual Pertandingan',
@@ -2222,6 +2188,35 @@ Object.assign(ms, {
     'Group': 'Kumpulan',
 });
 
+Object.assign(en, {
+    'All': 'All',
+    'Jump to letter': 'Jump to letter',
+    'Previous': 'Previous',
+    'Navigate pages': 'Navigate pages',
+    'All Faculties': 'All Faculties',
+    'Filter by faculty': 'Filter by faculty',
+    'Sort': 'Sort',
+    'Name A–Z': 'Name A–Z',
+    'Name Z–A': 'Name Z–A',
+    'By faculty': 'By faculty',
+    'Clear filters': 'Clear filters',
+    'Loading…': 'Loading…',
+});
+Object.assign(ms, {
+    'All': 'Semua',
+    'Jump to letter': 'Lompat ke huruf',
+    'Previous': 'Sebelum',
+    'Navigate pages': 'Navigasi halaman',
+    'All Faculties': 'Semua Fakulti',
+    'Filter by faculty': 'Tapis mengikut fakulti',
+    'Sort': 'Susun',
+    'Name A–Z': 'Nama A–Z',
+    'Name Z–A': 'Nama Z–A',
+    'By faculty': 'Mengikut fakulti',
+    'Clear filters': 'Kosongkan penapis',
+    'Loading…': 'Memuatkan…',
+});
+
 const dictionaries: Record<string, Translations> = { en, ms };
 
 export function translate(locale: string, key: string): string {
@@ -2241,7 +2236,6 @@ export function formatDate(value: string | Date | null | undefined, locale: stri
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
-        timeZone: 'Asia/Kuala_Lumpur',
     }).format(value instanceof Date ? value : new Date(value));
 }
 
@@ -2253,7 +2247,6 @@ export function formatDateTime(value: string | Date | null | undefined, locale: 
     return new Intl.DateTimeFormat(localeTag(locale), {
         dateStyle: 'medium',
         timeStyle: 'short',
-        timeZone: 'Asia/Kuala_Lumpur',
     }).format(value instanceof Date ? value : new Date(value));
 }
 

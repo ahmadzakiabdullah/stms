@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Session;
+use App\Models\Tournament;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DummyFootballMensResultsSeeder;
 use Database\Seeders\DummyFutsalMenSeeder;
@@ -35,6 +37,25 @@ class ProductionSeedingTest extends TestCase
         $this->expectException(RuntimeException::class);
 
         app(SAF2026DataSeeder::class)->run();
+    }
+
+    public function test_saf_demo_seeder_creates_one_tournament_for_the_official_window(): void
+    {
+        config()->set('app.seed_demo_data', true);
+
+        $this->seed(DatabaseSeeder::class);
+
+        $session = Session::where('slug', 'saf-2026')->firstOrFail();
+        $this->assertSame('2026-10-13', $session->start_date->toDateString());
+        $this->assertSame('2026-10-25', $session->end_date->toDateString());
+
+        $tournaments = Tournament::where('session_id', $session->id)->get();
+        $this->assertCount(1, $tournaments);
+        $this->assertSame('Sukan Antara Fakulti Ke-20 2026', $tournaments->first()->name);
+        $this->assertSame('2026-10-13', $tournaments->first()->start_date->toDateString());
+        $this->assertSame('2026-10-25', $tournaments->first()->end_date->toDateString());
+        $this->assertDatabaseMissing('tournaments', ['slug' => 'saf-2026-fasa-1']);
+        $this->assertDatabaseMissing('tournaments', ['slug' => 'saf-2026-fasa-2']);
     }
 
     public function test_futsal_dummy_seeder_requires_explicit_production_override(): void
