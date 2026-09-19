@@ -33,11 +33,13 @@ Jika nombor atau status bercanggah, sumber bertarikh paling baharu menang; dakwa
 ## Portal Awam Semasa
 
 - `/` — homepage dengan anchor sections Sports, Schedule, Results dan Medal standings.
-- `/matches` — halaman awam semua jadual perlawanan dan keputusan terkini.
-- `/sports`, `/schedule`, `/results`, `/faculties`, `/venues` dan `/live` — halaman kandungan pertandingan awam.
+- `/schedule` — satu-satunya halaman awam jadual/keputusan (tab All/Live/Upcoming/Completed dan filter).
+- `/sports`, `/faculties` dan `/venues` — halaman kandungan pertandingan awam.
+- `/athletes` dan `/athletes/{id}` — directory roster dan profil prestasi atlet.
 - `/news`, `/downloads`, `/faq` dan `/about` — halaman maklumat awam tambahan.
 - `/contact-us` — halaman hubungan.
 - `/login` — login.
+- `/matches`, `/results` dan `/live` — redirect 301 ke `/schedule`.
 
 `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud pada production semasa. `GET /results` bukan public results page.
 

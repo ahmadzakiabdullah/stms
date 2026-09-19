@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\PublicPortalService;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,11 +35,11 @@ class PublicPortalController extends Controller
         return Inertia::render('Public/Schedule', $data);
     }
 
-    public function athletes(PublicPortalService $service): Response
+    public function athletes(Request $request, PublicPortalService $service): Response
     {
         return Inertia::render('Public/Athletes', [
             ...$service->publicContext(),
-            ...$service->athleteDirectory(),
+            ...$service->athleteDirectory($request->only(['view', 'q', 'sport', 'category', 'faculty', 'letter', 'sort', 'page'])),
         ]);
     }
 

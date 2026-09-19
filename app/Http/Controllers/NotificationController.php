@@ -50,7 +50,16 @@ class NotificationController extends Controller
         }
 
         $notifications = $query->paginate(20)->withQueryString();
-        $actionRequiredCount = 0;
+
+        $actionRequiredQuery = $user->notifications()
+            ->where('data->type', 'new_registration')
+            ->whereNull('read_at');
+
+        if ($isSuperAdmin && ! empty($filters['organization_id'])) {
+            $actionRequiredQuery->where('data->organization_id', $filters['organization_id']);
+        }
+
+        $actionRequiredCount = $actionRequiredQuery->count();
 
         if (request()->wantsJson()) {
             return response()->json([

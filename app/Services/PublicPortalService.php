@@ -9,10 +9,15 @@ use App\Models\Participant;
 use App\Models\Session;
 use App\Models\Setting;
 use App\Models\SquadMember;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 
 class PublicPortalService
 {
+    private const ATHLETES_PER_PAGE = 24;
+
+    private const TEAMS_PER_PAGE = 12;
+
     public function __construct(
         private readonly RankingService $rankingService,
         private readonly PublicWeatherService $weatherService,
@@ -25,7 +30,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v9:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v10:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::flexible($cacheKey, [120, 600], function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -70,8 +75,11 @@ class PublicPortalService
                 Cache::forget('public-portal:v6:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v7:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v8:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v9:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v10:'.$sessionId.':'.$limit);
             }
             Cache::forget('public-athletes:v1:'.$sessionId);
+            Cache::forget('public-athletes:v2:'.$sessionId);
 
             return;
         }
@@ -91,97 +99,303 @@ class PublicPortalService
         }
     }
 
-    public function athleteDirectory(): array
+    public function athleteDirectory(array $filters = []): array
     {
+        $view = ($filters['view'] ?? 'teams') === 'athletes' ? 'athletes' : 'teams';
+        $q = trim((string) ($filters['q'] ?? ''));
+        $sport = trim((string) ($filters['sport'] ?? ''));
+        $category = trim((string) ($filters['category'] ?? ''));
+        $faculty = trim((string) ($filters['faculty'] ?? ''));
+        $letter = mb_strtoupper(trim((string) ($filters['letter'] ?? '')));
+        $sort = (string) ($filters['sort'] ?? 'name');
+        $page = max(1, (int) ($filters['page'] ?? 1));
+
         $session = $this->publicSession();
         if (! $session) {
-            return ['rosters' => [], 'athletes' => [], 'sports' => [], 'categories' => [], 'stats' => ['teams' => 0, 'athletes' => 0, 'officials' => 0], 'updated_at' => now()->toIso8601String()];
+            return $this->emptyAthleteDirectory($view, $q, $sport, $category, $faculty, $letter, $sort);
         }
 
-        $cacheKey = 'public-athletes:v1:'.$session->id;
+        $base = Cache::flexible('public-athletes:v2:'.$session->id, [120, 600], fn (): array => $this->buildAthleteDirectory($session));
 
-        return Cache::flexible($cacheKey, [120, 600], function () use ($session): array {
-            $tournamentIds = $session->tournaments()->pluck('id');
-            $registrations = EventParticipant::query()
-                ->where('organization_id', $session->organization_id)
-                ->where('status', 'confirmed')
-                ->whereHas('participant', fn ($query) => $query->where('session_id', $session->id)->where('is_active', true))
-                ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds)->where('organization_id', $session->organization_id))
-                ->with([
-                    'participant:id,name,logo_path,inverse_logo_path',
-                    'event:id,name,sport_id,sport_category_id',
-                    'event.sport:id,name',
-                    'event.sportCategory:id,name',
-                    'squadMembers' => fn ($query) => $query->where('is_active', true)->ordered(),
-                ])->get();
+        $athletes = $this->sortRows($this->filterAthleteRows($base['athletes'], $q, $sport, $category, $faculty, $letter), $sort);
+        $rosters = $this->sortRows($this->filterRosterRows($base['rosters'], $q, $sport, $category, $faculty, $letter), $sort);
 
-            $rosters = $registrations->groupBy('participant_id')->map(function ($entries) {
-                $participant = $entries->first()->participant;
-                $members = $entries->flatMap->squadMembers
-                    ->unique(fn (SquadMember $member) => $member->name.'|'.$member->role)
-                    ->sortBy(fn (SquadMember $member) => $member->role === 'athlete_male' || $member->role === 'athlete_female' ? '1'.$member->name : '0'.$member->name)
-                    ->values();
+        $perPage = $view === 'athletes' ? self::ATHLETES_PER_PAGE : self::TEAMS_PER_PAGE;
+        $total = $view === 'athletes' ? count($athletes) : count($rosters);
 
-                return [
-                    'id' => $participant?->id,
-                    'name' => $participant?->name,
-                    'logo_url' => $participant?->logo_url,
-                    'inverse_logo_url' => $participant?->inverse_logo_url,
-                    'events' => $entries->map(fn (EventParticipant $entry) => [
-                        'name' => $entry->event?->name,
-                        'sport' => $entry->event?->sport?->name,
-                        'category' => $entry->event?->sportCategory?->name,
-                    ])->unique(fn (array $event) => implode('|', [$event['name'], $event['sport'], $event['category']]))->sortBy('name')->values()->all(),
-                    'members' => $members->map(fn (SquadMember $member) => [
-                        'name' => $member->name,
-                        'role' => $member->role,
-                    ])->values()->all(),
-                ];
-            })->filter(fn (array $roster) => filled($roster['name']))->sortBy('name')->values();
+        $paginator = new LengthAwarePaginator(
+            array_slice($view === 'athletes' ? $athletes : $rosters, ($page - 1) * $perPage, $perPage),
+            $total,
+            $perPage,
+            $page,
+            [
+                'path' => route('public.athletes'),
+                'query' => array_filter([
+                    'view' => $view === 'athletes' ? 'athletes' : null,
+                    'q' => $q !== '' ? $q : null,
+                    'sport' => $sport !== '' ? $sport : null,
+                    'category' => $category !== '' ? $category : null,
+                    'faculty' => $faculty !== '' ? $faculty : null,
+                    'letter' => $letter !== '' ? $letter : null,
+                    'sort' => $sort !== 'name' ? $sort : null,
+                ], fn ($value) => $value !== null),
+            ],
+        );
 
-            $members = $rosters->flatMap(fn (array $roster) => $roster['members']);
-            $athletes = $registrations->flatMap(function (EventParticipant $entry) {
-                $participant = $entry->participant;
+        return [
+            'view' => $view,
+            'filters' => ['q' => $q, 'sport' => $sport, 'category' => $category, 'faculty' => $faculty, 'letter' => $letter, 'sort' => $sort],
+            'letters' => $this->availableLetters($base['athletes'], $q, $sport, $category, $faculty),
+            'athletes' => $view === 'athletes' ? $paginator : null,
+            'rosters' => $view === 'teams' ? $paginator : null,
+            'counts' => ['teams' => count($rosters), 'athletes' => count($athletes)],
+            'faculties' => $base['faculties'],
+            'sports' => $base['sports'],
+            'categories' => $base['categories'],
+            'stats' => $base['stats'],
+            'updated_at' => $base['updated_at'],
+        ];
+    }
 
-                return $entry->squadMembers->whereIn('role', SquadMember::ATHLETE_ROLES)->map(fn (SquadMember $member) => [
-                    'id' => $member->id,
-                    'key' => $participant?->id.'|'.$member->name,
-                    'name' => $member->name,
-                    'faculty' => $participant?->name,
-                    'faculty_logo_url' => $participant?->logo_url,
-                    'faculty_inverse_logo_url' => $participant?->inverse_logo_url,
-                    'events' => [[
-                        'name' => $entry->event?->name,
-                        'sport' => $entry->event?->sport?->name,
-                        'category' => $entry->event?->sportCategory?->name,
-                    ]],
-                ]);
-            })->groupBy('key')->map(function ($entries) {
-                $athlete = $entries->first();
+    private function buildAthleteDirectory(Session $session): array
+    {
+        $tournamentIds = $session->tournaments()->pluck('id');
+        $registrations = EventParticipant::query()
+            ->where('organization_id', $session->organization_id)
+            ->where('status', 'confirmed')
+            ->whereHas('participant', fn ($query) => $query->where('session_id', $session->id)->where('is_active', true))
+            ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds)->where('organization_id', $session->organization_id))
+            ->with([
+                'participant:id,name,logo_path,inverse_logo_path',
+                'event:id,name,sport_id,sport_category_id',
+                'event.sport:id,name',
+                'event.sportCategory:id,name',
+                'squadMembers' => fn ($query) => $query->where('is_active', true)->ordered(),
+            ])->get();
 
-                return [
-                    'id' => $athlete['id'],
-                    'name' => $athlete['name'],
-                    'faculty' => $athlete['faculty'],
-                    'faculty_logo_url' => $athlete['faculty_logo_url'],
-                    'faculty_inverse_logo_url' => $athlete['faculty_inverse_logo_url'],
-                    'events' => $entries->flatMap(fn (array $entry) => $entry['events'])->unique(fn (array $event) => implode('|', [$event['name'], $event['sport'], $event['category']]))->sortBy('name')->values()->all(),
-                ];
-            })->sortBy('name')->values();
+        $rosters = $registrations->groupBy('participant_id')->map(function ($entries) {
+            $participant = $entries->first()->participant;
+            $members = $entries->flatMap->squadMembers
+                ->unique(fn (SquadMember $member) => $member->name.'|'.$member->role)
+                ->sortBy(fn (SquadMember $member) => $member->role === 'athlete_male' || $member->role === 'athlete_female' ? '1'.$member->name : '0'.$member->name)
+                ->values();
 
             return [
-                'rosters' => $rosters->all(),
-                'athletes' => $athletes->all(),
-                'sports' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sport?->name)->filter()->unique()->sort()->values()->all(),
-                'categories' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sportCategory?->name)->filter()->unique()->sort()->values()->all(),
-                'stats' => [
-                    'teams' => $rosters->count(),
-                    'athletes' => $athletes->count(),
-                    'officials' => $members->whereIn('role', SquadMember::OFFICIAL_ROLES)->unique('name')->count(),
-                ],
-                'updated_at' => ($registrations->max('updated_at') ?: $session->updated_at)->toIso8601String(),
+                'id' => $participant?->id,
+                'name' => $participant?->name,
+                'logo_url' => $participant?->logo_url,
+                'inverse_logo_url' => $participant?->inverse_logo_url,
+                'events' => $entries->map(fn (EventParticipant $entry) => [
+                    'name' => $entry->event?->name,
+                    'sport' => $entry->event?->sport?->name,
+                    'category' => $entry->event?->sportCategory?->name,
+                ])->unique(fn (array $event) => implode('|', [$event['name'], $event['sport'], $event['category']]))->sortBy('name')->values()->all(),
+                'members' => $members->map(fn (SquadMember $member) => [
+                    'name' => $member->name,
+                    'role' => $member->role,
+                ])->values()->all(),
             ];
+        })->filter(fn (array $roster) => filled($roster['name']))->sortBy('name')->values();
+
+        $members = $rosters->flatMap(fn (array $roster) => $roster['members']);
+        $athletes = $registrations->flatMap(function (EventParticipant $entry) {
+            $participant = $entry->participant;
+
+            return $entry->squadMembers->whereIn('role', SquadMember::ATHLETE_ROLES)->map(fn (SquadMember $member) => [
+                'id' => $member->id,
+                'key' => $participant?->id.'|'.$member->name,
+                'name' => $member->name,
+                'faculty' => $participant?->name,
+                'faculty_logo_url' => $participant?->logo_url,
+                'faculty_inverse_logo_url' => $participant?->inverse_logo_url,
+                'events' => [[
+                    'name' => $entry->event?->name,
+                    'sport' => $entry->event?->sport?->name,
+                    'category' => $entry->event?->sportCategory?->name,
+                ]],
+            ]);
+        })->groupBy('key')->map(function ($entries) {
+            $athlete = $entries->first();
+
+            return [
+                'id' => $athlete['id'],
+                'name' => $athlete['name'],
+                'faculty' => $athlete['faculty'],
+                'faculty_logo_url' => $athlete['faculty_logo_url'],
+                'faculty_inverse_logo_url' => $athlete['faculty_inverse_logo_url'],
+                'events' => $entries->flatMap(fn (array $entry) => $entry['events'])->unique(fn (array $event) => implode('|', [$event['name'], $event['sport'], $event['category']]))->sortBy('name')->values()->all(),
+            ];
+        })->sortBy('name')->values();
+
+        return [
+            'rosters' => $rosters->all(),
+            'athletes' => $athletes->all(),
+            'faculties' => $athletes->pluck('faculty')->filter()->unique()->sort()->values()->all(),
+            'sports' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sport?->name)->filter()->unique()->sort()->values()->all(),
+            'categories' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sportCategory?->name)->filter()->unique()->sort()->values()->all(),
+            'stats' => [
+                'teams' => $rosters->count(),
+                'athletes' => $athletes->count(),
+                'officials' => $members->whereIn('role', SquadMember::OFFICIAL_ROLES)->unique('name')->count(),
+            ],
+            'updated_at' => ($registrations->max('updated_at') ?: $session->updated_at)->toIso8601String(),
+        ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $athletes
+     * @return array<int, array<string, mixed>>
+     */
+    private function filterAthleteRows(array $athletes, string $q, string $sport, string $category, string $faculty, string $letter): array
+    {
+        $needle = mb_strtolower($q);
+
+        return array_values(array_filter($athletes, function (array $athlete) use ($needle, $sport, $category, $faculty, $letter): bool {
+            if ($needle !== '') {
+                $haystack = array_merge(
+                    [$athlete['name'] ?? null, $athlete['faculty'] ?? null],
+                    array_map(fn (array $event) => $event['name'] ?? null, $athlete['events'] ?? []),
+                );
+
+                if (! $this->containsNeedle($haystack, $needle)) {
+                    return false;
+                }
+            }
+
+            if ($faculty !== '' && (string) ($athlete['faculty'] ?? '') !== $faculty) {
+                return false;
+            }
+
+            return $this->matchesEventFilters($athlete['events'] ?? [], $sport, $category)
+                && $this->matchesLetter((string) ($athlete['name'] ?? ''), $letter);
+        }));
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rosters
+     * @return array<int, array<string, mixed>>
+     */
+    private function filterRosterRows(array $rosters, string $q, string $sport, string $category, string $faculty, string $letter): array
+    {
+        $needle = mb_strtolower($q);
+
+        return array_values(array_filter($rosters, function (array $roster) use ($needle, $sport, $category, $faculty, $letter): bool {
+            if ($needle !== '') {
+                $haystack = array_merge(
+                    [$roster['name'] ?? null],
+                    array_map(fn (array $member) => $member['name'] ?? null, $roster['members'] ?? []),
+                    array_map(fn (array $event) => $event['name'] ?? null, $roster['events'] ?? []),
+                );
+
+                if (! $this->containsNeedle($haystack, $needle)) {
+                    return false;
+                }
+            }
+
+            if ($faculty !== '' && (string) ($roster['name'] ?? '') !== $faculty) {
+                return false;
+            }
+
+            return $this->matchesEventFilters($roster['events'] ?? [], $sport, $category)
+                && $this->matchesLetter((string) ($roster['name'] ?? ''), $letter);
+        }));
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function sortRows(array $rows, string $sort): array
+    {
+        usort($rows, function (array $a, array $b) use ($sort): int {
+            if ($sort === 'faculty') {
+                $facultyCompare = strcasecmp((string) ($a['faculty'] ?? ''), (string) ($b['faculty'] ?? ''));
+                if ($facultyCompare !== 0) {
+                    return $facultyCompare;
+                }
+            }
+
+            $compare = strcasecmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+
+            return $sort === 'name_desc' ? -$compare : $compare;
         });
+
+        return $rows;
+    }
+
+    private function containsNeedle(array $values, string $needle): bool
+    {
+        foreach ($values as $value) {
+            if (filled($value) && mb_strpos(mb_strtolower((string) $value), $needle) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function matchesEventFilters(array $events, string $sport, string $category): bool
+    {
+        if ($sport !== '' && ! collect($events)->contains(fn (array $event) => ($event['sport'] ?? null) === $sport)) {
+            return false;
+        }
+
+        if ($category !== '' && ! collect($events)->contains(fn (array $event) => ($event['category'] ?? null) === $category)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function matchesLetter(string $name, string $letter): bool
+    {
+        if ($letter === '') {
+            return true;
+        }
+
+        $initial = mb_strtoupper(mb_substr(trim($name), 0, 1));
+
+        if ($letter === '#') {
+            return preg_match('/[A-Z]/', $initial) !== 1;
+        }
+
+        return $initial === $letter;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $athletes
+     * @return array<int, string>
+     */
+    private function availableLetters(array $athletes, string $q, string $sport, string $category, string $faculty): array
+    {
+        $letters = [];
+
+        foreach ($this->filterAthleteRows($athletes, $q, $sport, $category, $faculty, '') as $athlete) {
+            $initial = mb_strtoupper(mb_substr(trim((string) ($athlete['name'] ?? '')), 0, 1));
+            $letters[preg_match('/[A-Z]/', $initial) === 1 ? $initial : '#'] = true;
+        }
+
+        $keys = array_keys($letters);
+        sort($keys);
+
+        return $keys;
+    }
+
+    private function emptyAthleteDirectory(string $view, string $q, string $sport, string $category, string $faculty, string $letter, string $sort): array
+    {
+        return [
+            'view' => $view,
+            'filters' => ['q' => $q, 'sport' => $sport, 'category' => $category, 'faculty' => $faculty, 'letter' => $letter, 'sort' => $sort],
+            'letters' => [],
+            'athletes' => null,
+            'rosters' => null,
+            'counts' => ['teams' => 0, 'athletes' => 0],
+            'faculties' => [],
+            'sports' => [],
+            'categories' => [],
+            'stats' => ['teams' => 0, 'athletes' => 0, 'officials' => 0],
+            'updated_at' => now()->toIso8601String(),
+        ];
     }
 
     public function athleteProfile(string $squadMemberId): ?array
@@ -323,7 +537,18 @@ class PublicPortalService
             'stats' => ['sports' => (clone $eventQuery)->distinct()->count('sport_id'), 'events' => (clone $eventQuery)->count(),
                 'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()->count(),
                 'completed_matches' => $completedFixtures->count(), 'total_matches' => $playableCount],
+<<<<<<< HEAD
             'sports_catalog' => (clone $eventQuery)->with(['sport:id,name', 'sport.documents' => fn ($query) => $query->where('session_id', $session->id)->where('is_published', true)->select(['id', 'sport_id', 'title', 'file_name', 'file_path', 'mime_type', 'file_size'])], 'sportCategory:id,name')->get()
+=======
+            'sports_catalog' => (clone $eventQuery)->with([
+                'sport:id,name',
+                'sportCategory:id,name',
+                'sport.documents' => fn ($query) => $query
+                    ->where('organization_id', $organizationId)
+                    ->where('session_id', $session->id)
+                    ->where('is_published', true),
+            ])->get()
+>>>>>>> 1b8468511f678de7f393962e9869331c4e79d98d
                 ->groupBy('sport_id')->map(fn ($events) => [
                     'name' => $events->first()->sport?->name,
                     'documents' => $events->first()->sport?->documents->map(fn ($document) => [
@@ -338,6 +563,13 @@ class PublicPortalService
                         'name' => $event->name,
                         'category' => $event->sportCategory?->name,
                     ])->sortBy('name')->values()->all(),
+                    'documents' => ($events->first()->sport?->documents ?? collect())->map(fn ($document) => [
+                        'title' => $document->title,
+                        'url' => $document->url,
+                        'file_name' => $document->file_name,
+                        'mime_type' => $document->mime_type,
+                        'file_size' => $document->file_size,
+                    ])->values()->all(),
                 ])->filter(fn ($sport) => filled($sport['name']))->sortBy('name')->values()->all(),
             'sports' => (clone $eventQuery)->with('sport:id,name')->get()->pluck('sport.name')->filter()->unique()->sort()->values()->all(),
             'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()

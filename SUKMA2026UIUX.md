@@ -1,5 +1,7 @@
 # Design UI/UX — Sistem Keputusan SUKMA 2026
 
+> **Rujukan reka bentuk sahaja — bukan sistem semasa.** Dokumen ini ialah input/spec reka bentuk untuk SUKMA 2026 (rujukan luar), bukan pelaksanaan STMS/SAF. Keadaan sistem sebenar: [`CURRENT_STATE.md`](CURRENT_STATE.md).
+
 ## 1. Konsep Design
 
 - Gaya: moden, rasmi dan berorientasikan data

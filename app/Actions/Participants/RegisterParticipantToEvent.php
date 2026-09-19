@@ -5,6 +5,7 @@ namespace App\Actions\Participants;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Participant;
+use App\Services\EventParticipantNotificationService;
 use App\Services\ParticipantService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -15,7 +16,7 @@ class RegisterParticipantToEvent
     {
         $s = $s ?? app(ParticipantService::class);
 
-        return DB::transaction(function () use ($p, $eventId, $d, $s) {
+        $eventParticipant = DB::transaction(function () use ($p, $eventId, $d, $s) {
             $event = Event::findOrFail($eventId);
 
             if ($event->registration_deadline && now()->greaterThan($event->registration_deadline)) {
@@ -24,5 +25,9 @@ class RegisterParticipantToEvent
 
             return $s->registerToEvent($p, $eventId, $d);
         });
+
+        app(EventParticipantNotificationService::class)->notifyRegistration($eventParticipant);
+
+        return $eventParticipant;
     }
 }

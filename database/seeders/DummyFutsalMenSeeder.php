@@ -29,7 +29,7 @@ class DummyFutsalMenSeeder extends Seeder
         }
 
         $event = Event::query()
-            ->whereHas('tournament', fn ($query) => $query->where('name', 'SAF 2026 Fasa 2'))
+            ->whereHas('tournament', fn ($query) => $query->where('name', 'Sukan Antara Fakulti Ke-20 2026'))
             ->whereHas('sport', fn ($query) => $query->where('slug', 'futsal'))
             ->whereHas('sportCategory', fn ($query) => $query->where('slug', 'futsal-men-s'))
             ->firstOrFail();

@@ -1,8 +1,11 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use App\Http\Requests\Sport\StoreSportDocumentRequest;
 use App\Models\Sport;
 use App\Models\SportDocument;
+use App\Services\PublicPortalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +15,7 @@ use Illuminate\Support\Facades\File;
 
 class SportDocumentController extends Controller
 {
+<<<<<<< HEAD
     public function available(Sport $sport, Request $request): JsonResponse
     {
         Gate::authorize('view', $sport);
@@ -23,6 +27,9 @@ class SportDocumentController extends Controller
     }
 
     public function store(StoreSportDocumentRequest $request, Sport $sport): RedirectResponse
+=======
+    public function store(StoreSportDocumentRequest $request, Sport $sport, PublicPortalService $publicPortal): RedirectResponse
+>>>>>>> 1b8468511f678de7f393962e9869331c4e79d98d
     {
         Gate::authorize('update', $sport);
         $file = $request->file('document');
@@ -31,15 +38,20 @@ class SportDocumentController extends Controller
         }
         $path = $file->store('documents/'.($sport->organization?->slug ?? $sport->organization_id).'/'.$request->session_id.'/sports/'.$sport->slug, 'public');
         SportDocument::create([...$request->safe()->except('document'), 'organization_id' => $sport->organization_id, 'sport_id' => $sport->id, 'file_path' => $path, 'file_name' => $file->getClientOriginalName(), 'mime_type' => $file->getMimeType(), 'file_size' => $file->getSize(), 'created_by' => $request->user()->uuid]);
+        $publicPortal->forget($request->session_id);
+
         return back()->with('success', 'Sport document uploaded successfully.');
     }
-    public function destroy(SportDocument $sportDocument): RedirectResponse
+
+    public function destroy(SportDocument $sportDocument, PublicPortalService $publicPortal): RedirectResponse
     {
         Gate::authorize('update', $sportDocument->sport);
         if (preg_match('#^documents/\d{4}/sports/[^/]+$#', $sportDocument->file_path) !== 1) {
             Storage::disk('public')->delete($sportDocument->file_path);
         }
         $sportDocument->delete();
+        $publicPortal->forget($sportDocument->session_id);
+
         return back()->with('success', 'Sport document deleted successfully.');
     }
 

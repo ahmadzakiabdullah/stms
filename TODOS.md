@@ -1,5 +1,36 @@
 # TODOS
 
+## UI/UX Refactor (Fasa 1 — selesai 19 September 2026)
+
+- [x] Buang CSS mati `.public-portal`/`.public-campaign` dan import font Manrope/Noto Sans yang tidak digunakan (`resources/css/app.css`).
+- [x] Ganti kelas `slate`/`white` mentah dengan token shadcn pada `Dashboard.tsx` dan `DrawResult/Index.tsx` (`bg-card`, `border-border`, `text-foreground`, `text-muted-foreground`, `bg-primary`).
+- [x] Kukuhkan a11y `PublicMobileMenu`: Escape, klik/luar, focus trap + pulih fokus, `aria-haspopup`, import di atas, saiz sentuh 44px.
+
+## UI/UX Refactor (Fasa 2 — selesai 19 September 2026)
+
+- [x] Saiz sentuh lalai 44px pada mobile untuk `Button` shadcn (`min-h-11 min-w-11`, reset di `sm`), nav/logout sidebar app, `LocaleSwitcher`, butang log masuk awam dan tab `/schedule` + `/athletes`.
+- [x] Tambah outline `:focus-visible` asas untuk pautan/butang/summary natif yang tiada ring sendiri.
+
+## UI/UX Refactor (Fasa 3 — sebahagian, 19 September 2026)
+
+- [x] Skala tipografi minimum 12px: 84 kejadian `text-[9px]`/`[10px]`/`[11px]` diganti `text-xs` merentas 27 fail.
+- [x] `Dashboard.tsx` guna komponen `EmptyState` kongsi (buang definisi tempatan) dan radius kad diselaraskan ke `rounded-xl` (hero `rounded-2xl`).
+- [x] Bersihkan semua baki kelas `slate`/`white` mentah ke token tema pada permukaan awam (`Schedule`, `Athletes`, `Athlete`, `Contact`, `Index`, `PublicFixtureCard`, `PublicMatchStatus`, `ParticipantLogo`) dan skrin cetak/app (`Participants`, `ParticipationConfirmations`, `TeamRegistrationForms`); sapuan `slate-` pada `resources/js/**/*.tsx` kini kosong.
+- [x] Adopsi `PageHeader` pada `Settings`, `Tournaments`, `Users`, `SportCategories`; baseline e2e/axe 10/10 lulus (desktop + mobile, `APP_LOCALE=en`).
+- [x] `PageHeader` ditambah slot `leading`; digunakan pada `Faculty/Dashboard` (logo), `Profile/Edit`, `TeamRegistrationForms/Show`.
+- [x] `ConfirmDialog` destrukif digunakan pada `SportCategories` & `Tournaments` (ganti dialog buatan).
+- [x] `window.confirm` pada `Sessions` & `Sports` (padam dokumen) diganti `ConfirmDialog` destrukif.
+- [ ] Belum: adopsi `PageHeader` pada `Dashboard` (hero tersendiri) dinilai berasingan.
+
+## Public directory UX (selesai 19 September 2026)
+
+- [x] Kad sukan `/sports` kini deep-link ke `/schedule?sport=...`; halaman Schedule membaca penapis `sport`/`category` dari URL semasa muat.
+- [x] Tambah filter kategori (chip) dan kiraan hasil yang sentiasa kelihatan pada direktori sukan.
+- [x] Dedahkan dokumen peraturan per-sukan (published, scoped kepada session/organization aktif) dalam `sports_catalog` dan papar sebagai pautan PDF/Markdown dalam kad; cache dinaikkan ke `public-portal:v10` dan upload/delete dokumen kini invalidasi cache portal.
+- [x] Betulkan ralat TypeScript pre-existing `resources/js/Pages/Events/Index.tsx` yang timbul selepas merge `origin/master`; `PublicPortalTest` 22/22 hijau (492 assertions).
+- [x] Selaraskan seeder demo `SAF2026DataSeeder` dengan tarikh rasmi: satu tournament `Sukan Antara Fakulti Ke-20 2026` (13–25 Oktober 2026), Fasa 1/Fasa 2 lama dinyahaktifkan; seeder dummy futsal/bola sepak dikemas kini; `ProductionSeedingTest` 5/5 hijau.
+- [x] Betulkan empat kegagalan pre-existing: `RegisterParticipantToEvent` kini hantar `NewEventRegistration` (single + batch), `EventParticipantNotificationService` guna `whereHas('roles')` (tahan role belum wujud), `NotificationController` kira `counts.action_required` sebenar, dan `DashboardTest` guna prop `systemOverview`. Suite PHPUnit kini **511/511** (2,491 assertions).
+
 ## Export — Medal Tally (selesai 8 September 2026)
 
 - [x] Export medal tally per-session ke PDF dan XLSX (`exports.medals.pdf`/`exports.medals.excel`, `MedalTallyExport`) dengan tenant scoping (session mesti milik organisasi pemanggil) dan authorization `export-data`; butang ditambah pada halaman admin Rankings.
@@ -29,7 +60,7 @@
 - [x] Audit 17 users/17 role assignments dan tenant relations; proses 32 queued database notifications kepada 0 pending/0 failed.
 - [x] Quality gate tempatan 18 Ogos lulus: PHPUnit 439/439 (1,948 assertions), Pint, TypeScript, inventory, tenant guard, build/budget, dependency audits dan Playwright/axe 8/8.
 - [x] Connected CI [#112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726) lulus pada `4b04c46`: dependency audit, lint, PHPUnit/inventory, 75.03% PCOV coverage, build dan browser E2E.
-- [x] Product owner mengesahkan SAF 2026 ialah 1–31 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan navigation single-page; rekod pertandingan boleh dikemas kini kemudian jika maklumat rasmi berubah.
+- [x] Product owner mengesahkan SAF 2026 ialah 13–25 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan navigation single-page; rekod pertandingan boleh dikemas kini kemudian jika maklumat rasmi berubah.
 - [x] Lengkapkan alamat, e-mel, telefon dan empat pautan media sosial rasmi Pusat Sukan sebagai tetapan tenant yang boleh diedit; data workspace UTeM telah dikemas kini dan cache portal dibersihkan.
 
 ### Repository handoff yang selesai
@@ -111,6 +142,8 @@ Dokumen repository untuk monitoring matrix, ownership, threshold, escalation, in
 
 - [x] Tambah public Athletes & Teams directory dan profile performance rasmi.
 - [x] Tambah scorer events untuk sport `scoring_mode=individual`: roster confirmed, score reconciliation, participant-grouped public display dan score editor UX.
+- [x] `/athletes` guna carian/filter server-side + pagination (24 atlet/12 pasukan) dan A–Z rail supaya senarai tidak memanjang apabila peserta bertambah; state kekal dalam URL (`view`, `q`, `sport`, `category`, `letter`, `page`).
+- [x] `/athletes` P0 UX: segmented Teams/Athletes dengan kiraan, chip sukan berikon, penapis fakulti + susunan, skeleton/loading & `aria-busy`, empty state boleh tindak ("Clear filters").
 
 - [x] Kekalkan portal awam homepage single-page sebagai landasan; halaman berasingan (`/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about`, `/matches`) ditambah dan memerlukan penilaian change request jika mahu dikembangkan lagi.
 - [x] Gabungkan halaman perlawanan awam yang bertindih menjadi satu: `/schedule` ialah satu-satunya halaman jadual/keputusan (tab All/Live/Upcoming/Completed + filter); `/matches`, `/results` dan `/live` redirect 301 ke `/schedule`; nav portal diringkaskan kepada Home/Sports/Schedule/Contact.

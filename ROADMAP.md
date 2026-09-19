@@ -27,13 +27,13 @@ Repository ialah release candidate, tetapi deployment production kekal **NO-GO**
 3. Authenticated staging load test, external alert receipt dan production reset-password delivery dibuktikan.
 4. Smoke test deployment serta Playwright/axe production lulus dan tag versi pertama dicipta selepas semua bukti tersedia.
 
-Product owner telah mengesahkan tarikh 1–31 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan IA single-page. Remediation juga telah dikomit dan connected CI hijau; rekod pertandingan kekal boleh diedit jika maklumat rasmi berubah.
+Product owner telah mengesahkan tarikh 13–25 Oktober 2026, satu tournament, 30 acara, 8 kontinjen dan IA single-page. Remediation juga telah dikomit dan connected CI hijau; rekod pertandingan kekal boleh diedit jika maklumat rasmi berubah.
 
 ## Portal Production Semasa
 
 Production <https://saf.utem.edu.my/> memaparkan satu homepage dengan anchor sections untuk Sports, Schedule, Results dan Medal standings, halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues` dan `/live`, serta halaman maklumat `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us`. Route lama `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud.
 
-Competition awam kini bertarikh **1–31 Oktober 2026**, dengan 23 sukan aktif, 30 event, 8 fakulti dan 12 match belum selesai pada masa audit.
+Competition awam kini bertarikh **13–25 Oktober 2026**, dengan 23 sukan aktif, 30 event, 8 fakulti dan 12 match belum selesai pada masa audit.
 
 ## Selepas Release Stabil
 
