@@ -89,8 +89,12 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString("object-src 'none'", $policy);
         $this->assertStringNotContainsString("'unsafe-eval'", $policy);
         $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
+        $this->assertStringNotContainsString("style-src 'self' 'unsafe-inline'", $policy);
+        $this->assertStringContainsString("style-src-attr 'unsafe-inline';", $policy);
         $this->assertStringNotContainsString('fonts.bunny.net', $policy);
         $this->assertMatchesRegularExpression("/script-src 'self' 'nonce-[A-Za-z0-9+\\/=]+'; /", $policy);
+        $this->assertStringNotContainsString("style-src 'self' 'unsafe-inline'", $policy);
+        $this->assertStringContainsString("style-src-attr 'unsafe-inline';", $policy);
         preg_match("/'nonce-([^']+)'/", $policy, $matches);
         $this->assertNotEmpty($matches[1] ?? null);
         $this->assertStringContainsString('nonce="'.$matches[1].'"', $response->getContent());

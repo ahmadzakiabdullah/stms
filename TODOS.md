@@ -21,7 +21,7 @@
 - [ ] Sediakan worker queue yang diselia process manager serta scheduler yang dipantau.
 - [ ] Tukar mailer daripada `log` kepada provider SMTP/API sebenar dan uji penghantaran email.
 - [ ] Aktifkan email verification dan lengkapkan end-to-end flow reset password.
-- [ ] Tukar CSP daripada Report-Only kepada enforcing selepas semua violation diperiksa; kurangkan `unsafe-inline` secara berperingkat. Nonce untuk inline Ziggy dan polisi font self-hosted kini disediakan; `style-src unsafe-inline` masih menunggu refactor style runtime.
+- [ ] Tukar CSP daripada Report-Only kepada enforcing selepas semua violation diperiksa; kurangkan `unsafe-inline` secara berperingkat. Nonce untuk inline Ziggy/style elements dan polisi font self-hosted kini disediakan; `style-src-attr unsafe-inline` masih diperlukan untuk style attributes dinamik.
 - [x] Matikan public registration secara eksplisit melalui `PUBLIC_REGISTRATION_ENABLED=false`.
 
 ### Backup, restore dan monitoring

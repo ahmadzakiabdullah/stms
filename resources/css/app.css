@@ -159,3 +159,124 @@
   mask-size: contain;
   vertical-align: -0.125em;
 }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .participation-print-sheet,
+  .participation-print-sheet * {
+    visibility: visible !important;
+  }
+
+  .participation-print-sheet {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    font-size: 8px !important;
+    line-height: 1.05 !important;
+  }
+
+  .team-form-sheet,
+  .team-form-sheet * {
+    visibility: visible !important;
+  }
+
+  .team-form-sheet {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  .print-avoid-break,
+  .signature-block {
+    break-inside: avoid;
+  }
+
+  .form-header {
+    gap: 6px !important;
+  }
+
+  .form-header-logo {
+    height: 48px !important;
+  }
+
+  .form-header-logo img {
+    height: 44px !important;
+  }
+
+  .form-title {
+    margin-top: 4px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+
+  .form-meta,
+  .form-instruction {
+    margin-top: 6px !important;
+  }
+
+  .phase-list {
+    margin-top: 6px !important;
+    gap: 5px !important;
+  }
+
+  .phase-heading {
+    margin-bottom: 1px !important;
+  }
+
+  .phase-table {
+    font-size: 8px !important;
+  }
+
+  .phase-table th,
+  .phase-table td {
+    padding: 1px 4px !important;
+    height: 14px !important;
+    line-height: 1 !important;
+  }
+
+  .confirmation-mark {
+    width: 11px !important;
+    height: 11px !important;
+  }
+
+  .confirmation-footer {
+    margin-top: 8px !important;
+  }
+
+  .confirmation-footer-grid {
+    margin-top: 8px !important;
+    gap: 20px !important;
+  }
+
+  .signature-space {
+    height: 22px !important;
+  }
+
+  .stamp-box {
+    height: 64px !important;
+  }
+
+  .form-table th,
+  .form-table td {
+    padding: 2px 4px !important;
+    height: 18px !important;
+  }
+}

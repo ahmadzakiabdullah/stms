@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Result Sheet - Match {{ $fixture->match_number ?? 'N/A' }}</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
         h1 { font-size: 16px; margin-bottom: 5px; }
         .info-row { display: flex; justify-content: space-between; margin-bottom: 5px; }

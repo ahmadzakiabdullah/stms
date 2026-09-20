@@ -3,10 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>Match Sheet - {{ $fixture->match_number ?? 'N/A' }}</title>
-    <style>
+    <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
         h1 { font-size: 16px; margin-bottom: 5px; }
         .info-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .info-row-spaced { margin-top: 10px; }
         .label { font-weight: bold; }
         .match-box { border: 2px solid #333; padding: 15px; margin: 15px 0; text-align: center; }
         .teams { display: flex; justify-content: space-around; align-items: center; }
@@ -67,7 +68,7 @@
             <span><span class="label">Referee:</span> _________________________</span>
             <span><span class="label">2nd Referee:</span> _________________________</span>
         </div>
-        <div class="info-row" style="margin-top: 10px;">
+        <div class="info-row info-row-spaced">
             <span><span class="label">Timekeeper:</span> _________________________</span>
             <span><span class="label">Scorekeeper:</span> _________________________</span>
         </div>

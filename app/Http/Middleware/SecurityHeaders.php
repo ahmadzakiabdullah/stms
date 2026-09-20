@@ -33,9 +33,7 @@ class SecurityHeaders
             $nonce = (string) $request->attributes->get('csp_nonce', '');
             $scriptSrc = "script-src 'self'".($nonce !== '' ? " 'nonce-{$nonce}'" : '').'; ';
 
-            $styleSrc = $isReportOnly
-                ? "style-src 'self' 'unsafe-inline'; "
-                : "style-src 'self' 'unsafe-inline'; ";
+            $styleSrc = "style-src 'self'".($nonce !== '' ? " 'nonce-{$nonce}'" : '').'; ';
 
             $fontSrc = $isReportOnly
                 ? "font-src 'self' data:; "
@@ -50,6 +48,7 @@ class SecurityHeaders
                 "default-src 'self'; ".
                 $scriptSrc.
                 $styleSrc.
+                "style-src-attr 'unsafe-inline'; " .
                 "img-src 'self' data: blob:; ".
                 $fontSrc.
                 "connect-src 'self'; ".

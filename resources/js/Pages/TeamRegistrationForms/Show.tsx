@@ -51,18 +51,6 @@ export default function Show(props: Props) {
     return (
         <AuthenticatedLayout>
             <Head title={`${t('Team Registration Form')} - ${props.event.sport}`} />
-            <style>{`
-                @media print {
-                    @page { size: A4 portrait; margin: 8mm 10mm; }
-                    body * { visibility: hidden !important; }
-                    .team-form-sheet, .team-form-sheet * { visibility: visible !important; }
-                    .team-form-sheet { position: absolute; inset: 0; width: 100%; border: 0 !important; box-shadow: none !important; padding: 0 !important; }
-                    .print-hidden { display: none !important; }
-                    .form-table th, .form-table td { padding: 2px 4px !important; height: 18px !important; }
-                    .signature-block { break-inside: avoid; }
-                }
-            `}</style>
-
             <div className="mx-auto max-w-5xl space-y-5 p-4 sm:p-6 lg:p-8">
                 <PageHeader
                     className="print-hidden"
