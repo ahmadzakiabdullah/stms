@@ -76,3 +76,21 @@ test('public pages avoid horizontal overflow and support locale switching', asyn
     await ms.click();
     await expect(page.locator('html')).toHaveAttribute('lang', /ms/i);
 });
+
+test('public pages emit no CSP violations in the browser console', async ({ page }) => {
+    const violations: string[] = [];
+
+    page.on('console', (message) => {
+        if (/content security policy|violates the following directive|refused to/i.test(message.text())) {
+            violations.push(message.text());
+        }
+    });
+
+    for (const path of ['/', '/schedule', '/contact-us']) {
+        const response = await page.goto(path);
+        expect(response?.status(), path).toBeLessThan(400);
+        await expect(page.locator('main')).toBeVisible();
+    }
+
+    expect(violations).toEqual([]);
+});

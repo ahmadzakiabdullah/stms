@@ -22,6 +22,7 @@
 - [ ] Tukar mailer daripada `log` kepada provider SMTP/API sebenar dan uji penghantaran email.
 - [ ] Aktifkan email verification dan lengkapkan end-to-end flow reset password.
 - [ ] Tukar CSP daripada Report-Only kepada enforcing selepas semua violation diperiksa; kurangkan `unsafe-inline` secara berperingkat. Nonce untuk inline Ziggy/style elements dan polisi font self-hosted kini disediakan; `style-src-attr unsafe-inline` masih diperlukan untuk style attributes dinamik.
+- [ ] Bina dan deploy semula `public/build` selepas perubahan CSP/style, kemudian luluskan Playwright CSP smoke test pada asset live; test semasa masih mengesan bundle lama yang mempunyai inline style.
 - [x] Matikan public registration secara eksplisit melalui `PUBLIC_REGISTRATION_ENABLED=false`.
 
 ### Backup, restore dan monitoring
