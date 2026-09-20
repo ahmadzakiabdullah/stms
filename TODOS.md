@@ -74,6 +74,7 @@
 
 - [x] Reconcile inventory sebenar: 162 routes, 70 migrations, 41 controllers, 43 Inertia pages dan 100 test files; `npm run check:inventory` lulus.
 - [x] Kemas kini `CURRENT_STATE.md`, `README.md`, `docs/architecture/system-overview.md` dan inventory checks supaya tidak lagi menunjukkan angka lama; `docs/database/schema.md` tiada matriks inventori untuk dikemas kini.
+- [x] Selaraskan arahan Composer production mengikut subcommand (`install --optimize-autoloader`, `dump-autoload --optimize`) dan tambah recovery langkah untuk stale package metadata/provider.
 - [ ] Review working tree dan asingkan/commit perubahan UI atau package yang tidak berkaitan dengan release ini.
 - [ ] Pulihkan dependency development lengkap supaya PHPUnit dan build native boleh dijalankan dalam environment CI yang konsisten.
 - [ ] Jadikan gate release wajib: `php artisan test`, Pint, typecheck, inventory, tenant-bypass check, production build, budget, E2E, `composer audit` dan `npm audit`.

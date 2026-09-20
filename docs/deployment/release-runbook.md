@@ -35,7 +35,7 @@ git tag --list
 > **Windows/IIS live-share guard:** production executes this application as `E:\others\saf`. Never run Composer against the live `vendor/` directory through another drive alias or UNC path; optimized classmaps may embed the wrong absolute path and cause HTTP 500. Build an immutable artifact, or validate `php -r "echo getcwd();"` returns exactly `E:\others\saf` before any live Composer command.
 
 ```bash
-composer install --no-interaction --prefer-dist
+composer install --optimize-autoloader --no-interaction --prefer-dist
 npm ci
 php vendor/bin/pint --test
 php artisan test
@@ -48,6 +48,26 @@ composer audit --locked --no-interaction
 npm audit --audit-level=high
 php artisan route:list --except-vendor
 ```
+
+Jika production pernah dibina dengan dependency development atau Composer dijalankan
+melalui path/drive yang berbeza, bina semula metadata vendor dari working directory
+production yang sebenar. `packages.php` yang lama boleh mendaftarkan provider seperti
+Laravel Pail selepas package development sudah tiada:
+
+```powershell
+Remove-Item bootstrap\cache\packages.php -Force -ErrorAction SilentlyContinue
+Remove-Item bootstrap\cache\services.php -Force -ErrorAction SilentlyContinue
+composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+php artisan package:discover --ansi
+php artisan config:clear
+```
+
+Jika hanya perlu membina semula autoload selepas itu, gunakan subcommand yang
+berasingan: `composer dump-autoload --no-dev --optimize --no-interaction --no-scripts`.
+
+Pada Windows/IIS, jalankan arahan tersebut dari `E:\others\saf` atau artifact
+deployment yang immutable; jangan gunakan drive mapping lain untuk menjana classmap
+yang akan dibaca oleh IIS.
 
 ## 4. Deployment
 

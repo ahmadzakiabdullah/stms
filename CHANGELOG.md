@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 20 September 2026 — Harden Composer production recovery
+
+- Corrected Composer optimization flags by subcommand: `install --optimize-autoloader` and `dump-autoload --optimize`.
+- Documented the Windows/IIS recovery sequence for stale Laravel package metadata after a `--no-dev` install.
+
 ### 20 September 2026 — Select the active public session automatically
 
 - The public portal now selects the latest active session within `PUBLIC_ORG_SLUG`, so changing the competition session no longer requires updating a session slug environment variable.
