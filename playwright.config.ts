@@ -10,6 +10,7 @@ export default defineConfig({
     reporter: process.env.CI ? [['html', { open: 'never' }], ['github']] : 'list',
     use: {
         baseURL: process.env.E2E_BASE_URL ?? 'http://127.0.0.1:8000',
+        userAgent: process.env.E2E_USER_AGENT,
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',

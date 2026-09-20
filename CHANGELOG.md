@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added nonces for HTML style elements and isolated dynamic React style attributes under `style-src-attr`.
 - Removed unused Bunny Fonts sources from the CSP.
 - Disabled Inertia's runtime NProgress CSS injection and moved its styles into the bundled application stylesheet, removing the remaining un-nonced `<style>` violation.
-- Added a Playwright regression check for browser-reported CSP violations; the live bundle must be rebuilt before CSP enforcement.
+- Added a Playwright regression check for browser-reported CSP violations, with an optional `E2E_USER_AGENT` override for gateways that reject headless browser user agents; the live bundle must be rebuilt before CSP enforcement.
 
 ### 20 September 2026 — Harden Composer production recovery
 
