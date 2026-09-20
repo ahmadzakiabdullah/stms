@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 20 September 2026 — Enforce CSP after live browser verification
+
+- Enabled the enforcing `Content-Security-Policy` header in production after rebuilding the live frontend bundle and passing the public-page Playwright CSP smoke test with zero browser violations.
+
 ### 20 September 2026 — Prepare CSP for nonce-based enforcement
 
 - Added a per-response CSP nonce for the inline Ziggy route bootstrap, so enforcing `script-src 'self'` does not break route helpers.
