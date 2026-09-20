@@ -9,19 +9,20 @@
 - Production belum `GO`: preflight gagal pada konfigurasi production, database/Redis, mail, backup dan monitoring.
 - Fokus backlog ini ialah menutup risiko release dan mengukuhkan MVP. Fasa masa depan seperti accreditation, live scoring, mobile app dan AI kekal ditangguhkan.
 - Hierarki domain wajib dikekalkan: `Organization → Session → Tournament → Sport → Event → Match → Result`.
+- Keputusan operasi semasa: Redis, SMTP/API mail dan email verification ditahan atas arahan pemilik sistem; item lain diteruskan apabila tidak memerlukan credential/provider sebenar.
 
 ## P0 — Release blockers production
 
 ### Runtime, configuration dan deployment
 
 - [ ] Tetapkan `PRODUCTION_CONFIG_ENFORCE=true` dan luluskan `php artisan stms:release-preflight --json` dalam environment sebenar.
-- [ ] Tetapkan timezone production kepada `Asia/Kuala_Lumpur`.
+- [x] Tetapkan timezone production kepada `Asia/Kuala_Lumpur` dan sahkan portal live masih HTTP 200 dengan timestamp +08:00.
 - [ ] Gunakan Redis untuk session, cache dan queue; aktifkan secure session cookie.
 - [ ] Sediakan worker queue yang diselia process manager serta scheduler yang dipantau.
 - [ ] Tukar mailer daripada `log` kepada provider SMTP/API sebenar dan uji penghantaran email.
 - [ ] Aktifkan email verification dan lengkapkan end-to-end flow reset password.
 - [ ] Tukar CSP daripada Report-Only kepada enforcing selepas semua violation diperiksa; kurangkan `unsafe-inline` secara berperingkat.
-- [ ] Matikan public registration atau lindungi dengan keputusan produk yang jelas serta preflight guard.
+- [x] Matikan public registration secara eksplisit melalui `PUBLIC_REGISTRATION_ENABLED=false`.
 
 ### Backup, restore dan monitoring
 
