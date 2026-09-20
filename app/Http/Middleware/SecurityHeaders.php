@@ -48,7 +48,7 @@ class SecurityHeaders
                 "default-src 'self'; ".
                 $scriptSrc.
                 $styleSrc.
-                "style-src-attr 'unsafe-inline'; " .
+                "style-src-attr 'unsafe-inline'; ".
                 "img-src 'self' data: blob:; ".
                 $fontSrc.
                 "connect-src 'self'; ".

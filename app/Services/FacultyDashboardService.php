@@ -38,11 +38,19 @@ class FacultyDashboardService
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            foreach ($registrations as $reg) {
-                $totalMale += $reg->squadMembers->where('role', 'athlete_male')->count();
-                $totalFemale += $reg->squadMembers->where('role', 'athlete_female')->count();
-                $totalOfficials += $reg->squadMembers->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->count();
-            }
+            // Performance optimization: Flatten squad members and use a single countBy
+            // pass to avoid repetitive loop overhead.
+            $squadMembers = $registrations->reduce(function ($carry, $reg) {
+                return $carry->concat($reg->relationLoaded('squadMembers') ? $reg->squadMembers : []);
+            }, collect());
+            $counts = $squadMembers->countBy('role');
+
+            $totalMale += $counts->get('athlete_male', 0);
+            $totalFemale += $counts->get('athlete_female', 0);
+            $totalOfficials += $counts->get('assistant_manager', 0)
+                + $counts->get('manager', 0)
+                + $counts->get('coach', 0)
+                + $counts->get('physio', 0);
         }
 
         $availableEvents = Event::with(['sport', 'sportCategory', 'tournament'])
