@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 20 September 2026 — Make frontend native dependencies CI-compatible
+
+- Removed the Windows-only Lightning CSS native package as a direct dependency so Linux CI can complete `npm ci`; the package remains available through Lightning CSS's platform-aware optional dependencies.
+
 ### 20 September 2026 — Fix super-admin registration tenant derivation
 
 - Super-admin registration requests now resolve the target organization from the selected tournament before validation; focused registration coverage passes **7/7 tests**.
