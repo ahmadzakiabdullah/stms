@@ -57,6 +57,27 @@ class RegistrationTest extends TestCase
         ]);
     }
 
+    public function test_registration_creation_rejects_parent_relations_from_another_organization(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $tournament = Tournament::factory()->create(['organization_id' => $orgA->id]);
+        $participant = Participant::factory()->create(['organization_id' => $orgB->id]);
+        $super = $this->createSuperAdmin();
+
+        $response = $this->actingAs($super)->post(route('registrations.store'), [
+            'organization_id' => $orgA->id,
+            'tournament_id' => $tournament->id,
+            'participant_id' => $participant->id,
+        ]);
+
+        $response->assertSessionHasErrors('participant_id');
+        $this->assertDatabaseMissing('registrations', [
+            'tournament_id' => $tournament->id,
+            'participant_id' => $participant->id,
+        ]);
+    }
+
     public function test_org_admin_can_update_own_registration(): void
     {
         $org = Organization::factory()->create();
@@ -77,6 +98,36 @@ class RegistrationTest extends TestCase
 
         $response->assertRedirect(route('registrations.index'));
         $this->assertDatabaseHas('registrations', ['status' => 'confirmed']);
+    }
+
+    public function test_super_admin_cannot_move_registration_to_another_organization(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $tournamentA = Tournament::factory()->create(['organization_id' => $orgA->id]);
+        $participantA = Participant::factory()->create(['organization_id' => $orgA->id]);
+        $tournamentB = Tournament::factory()->create(['organization_id' => $orgB->id]);
+        $participantB = Participant::factory()->create(['organization_id' => $orgB->id]);
+        $registration = Registration::factory()->create([
+            'organization_id' => $orgA->id,
+            'tournament_id' => $tournamentA->id,
+            'participant_id' => $participantA->id,
+        ]);
+        $super = $this->createSuperAdmin();
+
+        $response = $this->actingAs($super)->put(route('registrations.update', $registration), [
+            'organization_id' => $orgB->id,
+            'tournament_id' => $tournamentB->id,
+            'participant_id' => $participantB->id,
+        ]);
+
+        $response->assertSessionHasErrors('organization_id');
+        $this->assertDatabaseHas('registrations', [
+            'id' => $registration->id,
+            'organization_id' => $orgA->id,
+            'tournament_id' => $tournamentA->id,
+            'participant_id' => $participantA->id,
+        ]);
     }
 
     public function test_non_super_admin_cannot_update_registration_in_other_org(): void

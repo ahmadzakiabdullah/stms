@@ -26,7 +26,7 @@ export interface User {
     sports?: Sport[];
     created_at: string;
     updated_at: string;
-    is_active?: boolean;
+    is_active: boolean;
 }
 
 export interface Role {

@@ -1,9 +1,16 @@
 import PublicEmptyState from '@/components/PublicEmptyState';
+import PublicErrorState from '@/components/PublicErrorState';
+import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicPageHero from '@/components/PublicPageHero';
 import PublicScheduleMatchCard, { type ScheduleMatch } from '@/components/PublicScheduleMatchCard';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useI18n } from '@/lib/i18n';
 import { Head } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { CalendarDays, Clock3, Radio, SlidersHorizontal, Trophy, Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -15,6 +22,7 @@ type Props = {
     sports_catalog: { name: string; categories: string[]; events: { name: string }[] }[];
     venues: string[];
     updated_at: string;
+    error?: string | null;
 };
 
 type TabType = 'all' | 'live' | 'upcoming' | 'completed';
@@ -42,13 +50,14 @@ const tabs: { key: TabType; label: string; icon: typeof CalendarDays }[] = [
     { key: 'completed', label: 'Completed', icon: Trophy },
 ];
 
-export default function SchedulePage({ app_name, competition, upcoming = [], completed = [], sports_catalog = [], venues = [], updated_at }: Props) {
+export default function SchedulePage({ app_name, competition, upcoming = [], completed = [], sports_catalog = [], venues = [], updated_at, error = null }: Props) {
     const { t, locale } = useI18n();
     const [activeTab, setActiveTab] = useState<TabType>('all');
     const [sportFilter, setSportFilter] = useState(() => initialQueryParam('sport'));
     const [categoryFilter, setCategoryFilter] = useState(() => initialQueryParam('category'));
     const [venueFilter, setVenueFilter] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [filtersOpen, setFiltersOpen] = useState(false);
 
     const allMatches = useMemo(() => {
         const live = upcoming.filter(m => m.status === 'in_progress');
@@ -148,8 +157,9 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
 
     return (
         <PublicLayout title={`${t('Competition Schedule')} | ${competition?.name || app_name}`} appName={app_name} current="schedule">
-            <Head><link rel="canonical" href={route('public.schedule')} /></Head>
+            <Head><meta name="description" content={t('Find official upcoming fixtures, live matches and completed results by sport, venue and time.')} /><link rel="canonical" href={route('public.schedule')} /></Head>
             <main>
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Schedule unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero
                     eyebrow={competition?.organization || t('Official competition')}
                     title={t('Competition Schedule')}
@@ -199,14 +209,12 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                                     else if (tab.key === 'completed') count = completedCount;
 
                                     return (
-                                        <button
+                                        <Button
+                                            type="button"
+                                            variant={activeTab === tab.key ? 'default' : 'outline'}
+                                            size="lg"
                                             key={tab.key}
                                             onClick={() => setActiveTab(tab.key)}
-                                            className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-black transition-all ${
-                                                activeTab === tab.key
-                                                    ? 'border-[var(--public-primary)] bg-[var(--public-primary)] text-white shadow-sm'
-                                                    : 'border-[var(--public-dark-border)] bg-white text-[var(--public-dark-faint)] hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]'
-                                            }`}
                                         >
                                             <Icon className="size-4" />
                                             <span>{t(tab.label)}</span>
@@ -217,93 +225,74 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                                             }`}>
                                                 {count}
                                             </span>
-                                        </button>
+                                        </Button>
                                     );
                                 })}
                             </div>
                         </div>
 
-                        <div className="flex flex-col gap-4 lg:hidden">
+                        <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+                            <div className="flex items-center justify-between gap-3 lg:hidden">
+                                <p className="text-sm font-bold text-[var(--public-dark-faint)]">{hasActiveFilters ? t('Filters applied') : t('Refine schedule')}</p>
+                                <SheetTrigger asChild>
+                                    <Button type="button" variant="outline" size="lg" className="shrink-0">
+                                        <SlidersHorizontal className="size-4" />
+                                        {t('Filters')}
+                                    </Button>
+                                </SheetTrigger>
+                            </div>
+                            <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
+                                <SheetHeader><SheetTitle>{t('Refine schedule')}</SheetTitle></SheetHeader>
+                                <div className="mt-6 flex flex-col gap-4">
                             <div className="relative flex-1">
                                 <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--public-dark-faint)]" />
-                                <input
+                                <Input
                                     type="search"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder={t('Search team, venue, match #...')}
                                     aria-label={t('Search team, venue, match #...')}
-                                    className="w-full rounded-xl border border-[var(--public-dark-border)] bg-white py-2.5 pl-10 pr-9 text-sm font-semibold outline-none transition placeholder:text-[var(--public-dark-faint)] focus:border-[var(--public-primary)] focus:ring-2 focus:ring-[var(--public-primary)]/15"
+                                    className="h-11 w-full rounded-xl bg-white py-2.5 pl-10 pr-9 text-sm font-semibold"
                                 />
                                 {searchQuery && (
-                                    <button
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         type="button"
                                         onClick={() => setSearchQuery('')}
                                         aria-label={t('Clear search')}
-                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 flex size-6 items-center justify-center rounded-full text-[var(--public-dark-faint)] transition hover:bg-[var(--public-dark-soft)] hover:text-[var(--public-text)]"
+                                        className="absolute right-2.5 top-1/2 size-8 -translate-y-1/2 text-[var(--public-dark-faint)]"
                                     >
                                         <X className="size-3.5" />
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
 
                             <div className="flex flex-col gap-3 sm:flex-row">
-                                <select
-                                    value={sportFilter}
-                                    onChange={(e) => {
-                                        setSportFilter(e.target.value);
+                                <Select value={sportFilter || 'all'} onValueChange={(value) => {
+                                        setSportFilter(value === 'all' ? '' : value);
                                         setCategoryFilter('');
-                                    }}
-                                    aria-label={t('Filter by sport')}
-                                    className="rounded-xl border border-[var(--public-dark-border)] bg-white px-4 py-2.5 text-sm font-semibold outline-none transition focus:border-[var(--public-primary)] focus:ring-2 focus:ring-[var(--public-primary)]/15"
-                                >
-                                    <option value="">{t('All Sports')}</option>
-                                    {sports_catalog.map(sport => (
-                                        <option key={sport.name} value={sport.name}>
-                                            {sport.name} ({sportCounts.get(sport.name) ?? 0})
-                                        </option>
-                                    ))}
-                                </select>
+                                    }}><SelectTrigger aria-label={t('Filter by sport')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue placeholder={t('All Sports')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Sports')}</SelectItem>{sports_catalog.map(sport => <SelectItem key={sport.name} value={sport.name}>{sport.name} ({sportCounts.get(sport.name) ?? 0})</SelectItem>)}</SelectContent></Select>
 
-                                <select
-                                    value={categoryFilter}
-                                    onChange={(e) => setCategoryFilter(e.target.value)}
-                                    aria-label={t('Filter by category')}
-                                    className="rounded-xl border border-[var(--public-dark-border)] bg-white px-4 py-2.5 text-sm font-semibold outline-none transition focus:border-[var(--public-primary)] focus:ring-2 focus:ring-[var(--public-primary)]/15"
-                                >
-                                    <option value="">{t('All Categories')}</option>
-                                    {categoryOptions.map(category => (
-                                        <option key={category} value={category}>
-                                            {category} ({categoryCounts.get(category) ?? 0})
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select value={categoryFilter || 'all'} onValueChange={(value) => setCategoryFilter(value === 'all' ? '' : value)}><SelectTrigger aria-label={t('Filter by category')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue placeholder={t('All Categories')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Categories')}</SelectItem>{categoryOptions.map(category => <SelectItem key={category} value={category}>{category} ({categoryCounts.get(category) ?? 0})</SelectItem>)}</SelectContent></Select>
 
-                                <select
-                                    value={venueFilter}
-                                    onChange={(e) => setVenueFilter(e.target.value)}
-                                    aria-label={t('Filter by venue')}
-                                    className="rounded-xl border border-[var(--public-dark-border)] bg-white px-4 py-2.5 text-sm font-semibold outline-none transition focus:border-[var(--public-primary)] focus:ring-2 focus:ring-[var(--public-primary)]/15"
-                                >
-                                    <option value="">{t('All Venues')}</option>
-                                    {venues.map(venue => (
-                                        <option key={venue} value={venue}>
-                                            {venue}
-                                        </option>
-                                    ))}
-                                </select>
+                                <Select value={venueFilter || 'all'} onValueChange={(value) => setVenueFilter(value === 'all' ? '' : value)}><SelectTrigger aria-label={t('Filter by venue')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue placeholder={t('All Venues')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Venues')}</SelectItem>{venues.map(venue => <SelectItem key={venue} value={venue}>{venue}</SelectItem>)}</SelectContent></Select>
 
                                 {hasActiveFilters && (
-                                    <button
+                                    <Button
+                                        variant="outline"
+                                        size="lg"
                                         type="button"
                                         onClick={clearFilters}
-                                        className="inline-flex items-center gap-2 rounded-xl border border-[var(--public-dark-border)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--public-dark-faint)] transition hover:border-red-200 hover:text-red-600"
                                     >
                                         <X className="size-4" />
                                         {t('Clear')}
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
-                        </div>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
 
                         {hasActiveFilters && (
                             <p className="text-xs font-semibold text-[var(--public-dark-faint)]">
@@ -341,9 +330,7 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                         </div>
                     )}
 
-                    <p className="mt-10 text-right text-xs text-[var(--public-dark-faint)]">
-                        {t('Updated')} {formatDateTime(updated_at, locale)}
-                    </p>
+                    <div className="mt-10 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>
                         </div>
                 </div>
                 </div>
@@ -393,18 +380,9 @@ function FilterPanel({
                     <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('Search team, venue, match #...')} aria-label={t('Search team, venue, match #...')} className={`${selectClass} pl-10 pr-9`} />
                     {searchQuery && <button type="button" onClick={() => setSearchQuery('')} aria-label={t('Clear search')} className="absolute right-2.5 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-[var(--public-dark-faint)] hover:bg-[var(--public-dark-soft)] hover:text-[var(--public-text)]"><X className="size-3.5" /></button>}
                 </div>
-                <select value={sportFilter} onChange={(e) => { setSportFilter(e.target.value); setCategoryFilter(''); }} aria-label={t('Filter by sport')} className={selectClass}>
-                    <option value="">{t('All Sports')}</option>
-                    {sportsCatalog.map(sport => <option key={sport.name} value={sport.name}>{sport.name} ({sportCounts.get(sport.name) ?? 0})</option>)}
-                </select>
-                <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} aria-label={t('Filter by category')} className={selectClass}>
-                    <option value="">{t('All Categories')}</option>
-                    {categoryOptions.map(category => <option key={category} value={category}>{category} ({categoryCounts.get(category) ?? 0})</option>)}
-                </select>
-                <select value={venueFilter} onChange={(e) => setVenueFilter(e.target.value)} aria-label={t('Filter by venue')} className={selectClass}>
-                    <option value="">{t('All Venues')}</option>
-                    {venues.map(venue => <option key={venue} value={venue}>{venue}</option>)}
-                </select>
+                <Select value={sportFilter || 'all'} onValueChange={(value) => { setSportFilter(value === 'all' ? '' : value); setCategoryFilter(''); }}><SelectTrigger aria-label={t('Filter by sport')} className={selectClass}><SelectValue placeholder={t('All Sports')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Sports')}</SelectItem>{sportsCatalog.map(sport => <SelectItem key={sport.name} value={sport.name}>{sport.name} ({sportCounts.get(sport.name) ?? 0})</SelectItem>)}</SelectContent></Select>
+                <Select value={categoryFilter || 'all'} onValueChange={(value) => setCategoryFilter(value === 'all' ? '' : value)}><SelectTrigger aria-label={t('Filter by category')} className={selectClass}><SelectValue placeholder={t('All Categories')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Categories')}</SelectItem>{categoryOptions.map(category => <SelectItem key={category} value={category}>{category} ({categoryCounts.get(category) ?? 0})</SelectItem>)}</SelectContent></Select>
+                <Select value={venueFilter || 'all'} onValueChange={(value) => setVenueFilter(value === 'all' ? '' : value)}><SelectTrigger aria-label={t('Filter by venue')} className={selectClass}><SelectValue placeholder={t('All Venues')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Venues')}</SelectItem>{venues.map(venue => <SelectItem key={venue} value={venue}>{venue}</SelectItem>)}</SelectContent></Select>
                 {hasActiveFilters && <button type="button" onClick={clearFilters} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--public-dark-border)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--public-dark-faint)] transition hover:border-red-200 hover:text-red-600"><X className="size-4" />{t('Clear')}</button>}
             </div>
         </div>

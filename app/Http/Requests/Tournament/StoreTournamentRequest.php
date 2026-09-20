@@ -23,17 +23,21 @@ class StoreTournamentRequest extends FormRequest
 
     public function rules(): array
     {
+        $user = $this->user();
+        $organizationId = $this->input('organization_id');
+
         return [
-            'organization_id' => ['required', 'uuid', 'exists:organizations,id'],
+            'organization_id' => [
+                'required',
+                'uuid',
+                $user?->hasRole('super-admin')
+                    ? Rule::exists('organizations', 'id')
+                    : Rule::in([$user?->organization_id]),
+            ],
             'session_id' => [
                 'required',
                 'uuid',
-                Rule::exists('event_sessions', 'id')->where(function ($query) {
-                    $user = $this->user();
-                    if (! $user->hasRole('super-admin')) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('event_sessions', 'id')->where('organization_id', $organizationId),
             ],
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
@@ -42,7 +46,7 @@ class StoreTournamentRequest extends FormRequest
                 'max:255',
                 'alpha_dash',
                 Rule::unique('tournaments', 'slug')
-                    ->where('organization_id', $this->user()?->organization_id)
+                    ->where('organization_id', $organizationId)
                     ->whereNull('deleted_at'),
             ],
             'description' => ['nullable', 'string', 'max:1000'],
@@ -52,12 +56,7 @@ class StoreTournamentRequest extends FormRequest
             'sports' => ['array'],
             'sports.*' => [
                 'uuid',
-                Rule::exists('sports', 'id')->where(function ($query) {
-                    $user = $this->user();
-                    if (! $user->hasRole('super-admin')) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('sports', 'id')->where('organization_id', $organizationId),
             ],
         ];
     }

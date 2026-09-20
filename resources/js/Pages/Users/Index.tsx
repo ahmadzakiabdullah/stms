@@ -47,6 +47,7 @@ const createUserSchema = z.object({
     roles: z.array(z.number()).default([]),
     participant_id: z.string().optional().default(''),
     sports: z.array(z.string()).default([]),
+    is_active: z.boolean().default(true),
 });
 
 const editUserSchema = z.object({
@@ -58,6 +59,7 @@ const editUserSchema = z.object({
     roles: z.array(z.number()).default([]),
     participant_id: z.string().optional().default(''),
     sports: z.array(z.string()).default([]),
+    is_active: z.boolean().default(true),
 });
 
 type CreateUserForm = z.infer<typeof createUserSchema>;
@@ -98,8 +100,9 @@ function UserFormDialog({
                   roles: editingUser.roles?.map(r => r.id) ?? [],
                   participant_id: editingUser.participant_id ?? '',
                   sports: editingUser.sports?.map(s => s.id) ?? [],
+                  is_active: editingUser.is_active ?? true,
               }
-            : { name: '', username: '', email: '', password: '', password_confirmation: '', roles: [], participant_id: '', sports: [] },
+            : { name: '', username: '', email: '', password: '', password_confirmation: '', roles: [], participant_id: '', sports: [], is_active: true },
         resolver: zodResolver(schema),
     });
 
@@ -186,6 +189,11 @@ function UserFormDialog({
                             <Label htmlFor="password_confirmation">{t('Confirm Password')}</Label>
                             <Input id="password_confirmation" type="password" {...register('password_confirmation', { required: !editingUser })} />
                         </div>
+
+                        <label className="flex items-center gap-2 text-sm">
+                            <input type="checkbox" {...register('is_active')} />
+                            {t('Active account')}
+                        </label>
 
                         <div className="grid gap-2">
                             <Label>{t('Roles')}</Label>

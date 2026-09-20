@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
 class UserService
@@ -113,17 +114,25 @@ class UserService
     {
         $actor = Auth::user();
 
-        if (! $actor || $actor->hasRole('super-admin')) {
-            return $data;
+        if ($actor && ! $actor->hasRole('super-admin')) {
+            $data['organization_id'] = $actor->organization_id;
         }
 
-        $data['organization_id'] = $actor->organization_id;
+        $organizationId = $data['organization_id'] ?? $actor?->organization_id;
 
         if (array_key_exists('participant_id', $data) && $data['participant_id'] !== null) {
-            $data['participant_id'] = Participant::query()
-                ->where('organization_id', $actor->organization_id)
+            $participantId = Participant::forOrganization($organizationId)
+                ->where('organization_id', $organizationId)
                 ->whereKey($data['participant_id'])
                 ->value('id');
+
+            if (! $participantId) {
+                throw ValidationException::withMessages([
+                    'participant_id' => ['The participant must belong to the selected organization.'],
+                ]);
+            }
+
+            $data['participant_id'] = $participantId;
         }
 
         if (isset($data['roles'])) {
@@ -135,11 +144,19 @@ class UserService
         }
 
         if (isset($data['sports'])) {
-            $data['sports'] = Sport::query()
-                ->where('organization_id', $actor->organization_id)
+            $sportIds = Sport::forOrganization($organizationId)
+                ->where('organization_id', $organizationId)
                 ->whereIn('id', $data['sports'])
                 ->pluck('id')
                 ->all();
+
+            if (count($sportIds) !== count(array_unique($data['sports']))) {
+                throw ValidationException::withMessages([
+                    'sports' => ['All assigned sports must belong to the selected organization.'],
+                ]);
+            }
+
+            $data['sports'] = $sportIds;
         }
 
         return $data;

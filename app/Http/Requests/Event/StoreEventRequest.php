@@ -38,29 +38,17 @@ class StoreEventRequest extends FormRequest
             'tournament_id' => [
                 'required',
                 'uuid',
-                Rule::exists('tournaments', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('tournaments', 'id')->where('organization_id', $this->input('organization_id')),
             ],
             'sport_id' => [
                 'required',
                 'uuid',
-                Rule::exists('sports', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('sports', 'id')->where('organization_id', $this->input('organization_id')),
             ],
             'sport_category_id' => [
                 'required',
                 'uuid',
-                Rule::exists('sport_categories', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('sport_categories', 'id')->where('organization_id', $this->input('organization_id')),
                 Rule::unique('events', 'sport_category_id')
                     ->where('tournament_id', $this->tournament_id)
                     ->where('sport_id', $this->sport_id)
@@ -72,7 +60,7 @@ class StoreEventRequest extends FormRequest
                 'string',
                 'max:255',
                 'alpha_dash',
-                Rule::unique('events', 'slug')->where('organization_id', $user?->organization_id)->whereNull('deleted_at'),
+                Rule::unique('events', 'slug')->where('organization_id', $this->input('organization_id'))->whereNull('deleted_at'),
             ],
             'description' => ['nullable', 'string', 'max:1000'],
             'venues' => ['nullable', 'array', 'max:20'],

@@ -25,8 +25,17 @@ class SessionService
 
         $data['is_active'] = $data['is_active'] ?? true;
 
-        if (empty($data['organization_id'])) {
+        $requestedOrganizationId = $data['organization_id'] ?? null;
+        $data['organization_id'] = $requestedOrganizationId ?: $user?->organization_id;
+
+        if ($user && ! $user->hasRole('super-admin')) {
             $data['organization_id'] = $user->organization_id;
+        }
+
+        if (blank($data['organization_id'])) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['A valid organization is required.'],
+            ]);
         }
 
         try {

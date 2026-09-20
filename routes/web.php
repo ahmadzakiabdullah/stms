@@ -106,10 +106,12 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::redirect('/faculty', '/dashboard');
 
     // Faculty squad management (faculty-representative role)
-    Route::post('/faculty/squad', [FacultyDashboardController::class, 'storeSquad'])->name('faculty.squad.store');
-    Route::post('/faculty/squad/import', [FacultyDashboardController::class, 'importSquad'])->name('faculty.squad.import');
-    Route::get('/faculty/squad/template', [FacultyDashboardController::class, 'downloadTemplate'])->name('faculty.squad.template');
-    Route::delete('/faculty/squad/{squadMember}', [FacultyDashboardController::class, 'destroySquad'])->name('faculty.squad.destroy');
+    Route::middleware('role:faculty-representative')->group(function () {
+        Route::post('/faculty/squad', [FacultyDashboardController::class, 'storeSquad'])->name('faculty.squad.store');
+        Route::post('/faculty/squad/import', [FacultyDashboardController::class, 'importSquad'])->name('faculty.squad.import');
+        Route::get('/faculty/squad/template', [FacultyDashboardController::class, 'downloadTemplate'])->name('faculty.squad.template');
+        Route::delete('/faculty/squad/{squadMember}', [FacultyDashboardController::class, 'destroySquad'])->name('faculty.squad.destroy');
+    });
 
     // Dean Verification Dashboard (rate limited for approvals)
     Route::get('/dean', [DeanVerificationController::class, 'index'])->name('dean.dashboard');

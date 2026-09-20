@@ -25,6 +25,28 @@ class FacultyDashboardControllerTest extends TestCase
 {
     use CreatesTenantUsers, RefreshDatabase;
 
+    public function test_user_without_faculty_role_cannot_manage_squad(): void
+    {
+        $org = Organization::factory()->create();
+        $user = User::factory()->create(['organization_id' => $org->id]);
+
+        $response = $this->actingAs($user)
+            ->get(route('faculty.squad.template'));
+
+        $response->assertForbidden();
+    }
+
+    public function test_faculty_role_without_linked_participant_cannot_manage_squad(): void
+    {
+        $org = Organization::factory()->create();
+        $user = $this->createFacultyUser($org);
+
+        $response = $this->actingAs($user)
+            ->get(route('faculty.squad.template'));
+
+        $response->assertForbidden();
+    }
+
     public function test_store_squad_fails_for_other_participant(): void
     {
         $org = Organization::factory()->create();

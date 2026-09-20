@@ -25,9 +25,8 @@ class RegistrationServiceTest extends TestCase
 
     public function test_create_registration(): void
     {
-        $this->actingAs(User::factory()->create());
-
         $org = Organization::factory()->create();
+        $this->actingAs(User::factory()->forOrganization($org)->create());
         $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
         $participant = Participant::factory()->create(['organization_id' => $org->id]);
 
@@ -44,7 +43,15 @@ class RegistrationServiceTest extends TestCase
 
     public function test_update_registration(): void
     {
-        $registration = Registration::factory()->create(['status' => 'pending']);
+        $org = Organization::factory()->create();
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+        $participant = Participant::factory()->create(['organization_id' => $org->id]);
+        $registration = Registration::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $tournament->id,
+            'participant_id' => $participant->id,
+            'status' => 'pending',
+        ]);
 
         $updated = $this->service->updateRegistration($registration, [
             'status' => 'confirmed',

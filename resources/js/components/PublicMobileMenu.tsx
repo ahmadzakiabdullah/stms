@@ -1,5 +1,6 @@
 import LocaleSwitcher from '@/components/LocaleSwitcher';
 import PublicLoginButton from '@/components/PublicLoginButton';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { Link } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
@@ -66,7 +67,9 @@ export default function PublicMobileMenu({ links }: { links: PublicMenuLink[] })
 
     return (
         <div ref={containerRef} className="relative xl:hidden">
-            <button
+            <Button
+                variant="ghost"
+                size="icon-lg"
                 ref={buttonRef}
                 type="button"
                 aria-label={open ? t('Close menu') : t('Open menu')}
@@ -74,10 +77,10 @@ export default function PublicMobileMenu({ links }: { links: PublicMenuLink[] })
                 aria-haspopup="true"
                 aria-controls="public-mobile-navigation"
                 onClick={() => setOpen(current => !current)}
-                className="flex size-11 items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-accent)]"
+                className="border-white/15 bg-white/5 text-white hover:bg-white/10 focus-visible:ring-[var(--public-accent)]"
             >
                 {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
-            </button>
+            </Button>
             {open && (
                 <nav
                     ref={panelRef}

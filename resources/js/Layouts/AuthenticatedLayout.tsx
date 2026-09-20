@@ -10,6 +10,7 @@ import {
     Building2,
     Calendar,
     ChevronDown,
+    ChevronRight,
     ClipboardList,
     FileCheck2,
     KeySquare,
@@ -130,6 +131,10 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
     const { settings = {} as Record<string, string> } = usePage<PageProps>().props;
     const { t } = useI18n();
     const logoUrl = (settings as Record<string, string>)?.logo_url;
+    const compactDesktop = !mobile && route().current('dashboard');
+    const [openSections, setOpenSections] = useState<Record<number, boolean>>(() => Object.fromEntries(
+        navSections.map((section, index) => [index, index === 0 || section.items.some((item) => item.active && route().current(item.active))]),
+    ));
 
     return (
         <aside className={mobile ? 'flex h-full flex-col bg-sidebar' : 'hidden h-screen w-72 shrink-0 border-r bg-sidebar lg:sticky lg:top-0 lg:flex lg:flex-col'}>            <Link
@@ -153,7 +158,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                 </div>
             </Link>
 
-            <nav className="flex-1 space-y-2 px-3 py-4 overflow-y-auto">
+            <nav className={`flex-1 overflow-y-auto px-3 ${compactDesktop ? 'space-y-1 py-3' : 'space-y-2 py-4'}`}>
                 {navSections.map((section, sectionIdx) => {
                     const userRoles = new Set(user.roles?.map((role) => role.name) ?? []);
                     const visibleItems = section.items.filter(
@@ -164,12 +169,20 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
 
                     return (
                         <div key={sectionIdx}>
-                            {section.title && (
-                                <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-[0.5px] text-muted-foreground/70">
-                                    {t(section.title)}
-                                </div>
-                            )}
-                            <div className="space-y-1">
+                            {section.title && (compactDesktop ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setOpenSections((current) => ({ ...current, [sectionIdx]: !current[sectionIdx] }))}
+                                    aria-expanded={openSections[sectionIdx]}
+                                    className="flex h-8 w-full items-center gap-2 rounded-md px-3 text-left text-xs font-semibold uppercase tracking-[0.5px] text-muted-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                >
+                                    <ChevronRight className={`size-3.5 transition-transform ${openSections[sectionIdx] ? 'rotate-90' : ''}`} aria-hidden="true" />
+                                    <span>{t(section.title)}</span>
+                                </button>
+                            ) : (
+                                <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-[0.5px] text-muted-foreground/70">{t(section.title)}</div>
+                            ))}
+                            {(!compactDesktop || openSections[sectionIdx]) && <div className={compactDesktop ? 'space-y-0.5' : 'space-y-1'}>
                                 {visibleItems.map((item) => {
                                     const Icon = item.icon;
                                     const isActive = item.active && route().current(item.active);
@@ -180,7 +193,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                                             href={route(item.href)}
                                             onClick={onNavigate}
                                             className={
-                                                'group relative flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ' +
+                                                `group relative flex ${compactDesktop ? 'min-h-10 py-1.5' : 'min-h-11 py-2'} items-center gap-3 rounded-lg px-3 text-sm font-medium transition ` +
                                                 (isActive
                                                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                                                     : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground')
@@ -194,18 +207,18 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                                         </Link>
                                     );
                                 })}
-                            </div>
+                            </div>}
                         </div>
                     );
                 })}
 
-                <div className="pt-2 mt-2 border-t border-sidebar-border">
+                <div className={`${compactDesktop ? 'mt-1 pt-1' : 'mt-2 pt-2'} border-t border-sidebar-border`}>
                     <Link
                         href={route('logout')}
                         method="post"
                         as="button"
                         onClick={onNavigate}
-                        className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        className={`flex ${compactDesktop ? 'min-h-10 py-1.5' : 'min-h-11 py-2'} w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground`}
                     >
                         <LogOut className="size-4" />
                         <span>{t('Logout')}</span>

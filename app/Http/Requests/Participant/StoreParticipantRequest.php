@@ -31,6 +31,9 @@ class StoreParticipantRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->user();
+        $organizationId = $user?->hasRole('super-admin')
+            ? $this->input('organization_id')
+            : $user?->organization_id;
 
         return [
             'organization_id' => [
@@ -39,14 +42,14 @@ class StoreParticipantRequest extends FormRequest
                     ? Rule::exists('organizations', 'id')
                     : Rule::in([$user?->organization_id]),
             ],
-            'session_id' => ['nullable', 'uuid', Rule::exists('event_sessions', 'id')->where('organization_id', $user?->organization_id)],
+            'session_id' => ['nullable', 'uuid', Rule::exists('event_sessions', 'id')->where('organization_id', $organizationId)],
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'nullable',
                 'string',
                 'max:255',
                 'alpha_dash',
-                Rule::unique('participants', 'slug')->where('organization_id', $user?->organization_id)->whereNull('deleted_at'),
+                Rule::unique('participants', 'slug')->where('organization_id', $organizationId)->whereNull('deleted_at'),
             ],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],

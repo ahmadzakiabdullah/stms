@@ -16,8 +16,8 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 160 application routes |
-| Migrations | 69 migration files |
+| Laravel routes | 162 application routes |
+| Migrations | 70 migration files |
 | Controllers | 41 controller files |
 | Form Requests | 28 |
 | Policies | 21 fail |
@@ -25,7 +25,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Services/concerns | 40 fail |
 | Models | 18 |
 | Inertia `.tsx` pages | 43 |
-| PHP tests | 99 PHP test files |
+| PHP tests | 100 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
 ## Tech Stack
@@ -63,6 +63,8 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Public athlete/team directory tersedia di `/athletes` dengan profile performance berasaskan match rasmi.
 - Match cards homepage/schedule menggunakan layout shared responsive; completed results menyokong scorer mengikut participant.
 - `Sport.scoring_mode=individual` serta `match_scoring_events` menyokong nama atlet, minit jaringan dan validasi roster/score untuk Hockey dan Football/Soccer.
+- User accounts now have the explicit `is_active` lifecycle flag; inactive accounts are excluded from login and can be managed from the Users form.
+- Tenant-owned mutation services now re-derive `organization_id` server-side and reject parent foreign keys from another organization, including super-admin mixed-tenant payloads.
 
 ## Runtime Workspace
 

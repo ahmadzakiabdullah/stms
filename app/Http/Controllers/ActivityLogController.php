@@ -28,10 +28,12 @@ class ActivityLogController extends Controller
         $activities = Activity::with('causer')
             ->when(! $isSuperAdmin, fn ($query) => $query->where(function ($scope) use ($user) {
                 $scope->whereHas('causer', fn ($causer) => $causer->where('organization_id', $user->organization_id))
-                    ->orWhereNull('causer_id');
+                    ->orWhere('properties->audit->organization_id', $user->organization_id);
             }))
-            ->when($isSuperAdmin && ! empty($filters['organization_id']), fn ($query) => $query
-                ->whereHas('causer', fn ($causer) => $causer->where('organization_id', $filters['organization_id'])))
+            ->when($isSuperAdmin && ! empty($filters['organization_id']), fn ($query) => $query->where(function ($scope) use ($filters) {
+                $scope->whereHas('causer', fn ($causer) => $causer->where('organization_id', $filters['organization_id']))
+                    ->orWhere('properties->audit->organization_id', $filters['organization_id']);
+            }))
             ->when(! empty($filters['event']), fn ($query) => $query->where('event', $filters['event']))
             ->when(! empty($filters['search']), fn ($query) => $query->where(function ($q) use ($filters) {
                 $search = trim($filters['search']);

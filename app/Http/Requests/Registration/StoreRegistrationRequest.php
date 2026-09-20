@@ -4,6 +4,7 @@ namespace App\Http\Requests\Registration;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\Tournament;
 
 class StoreRegistrationRequest extends FormRequest
 {
@@ -15,8 +16,16 @@ class StoreRegistrationRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         if (empty($this->organization_id)) {
+            $organizationId = $this->user()->organization_id;
+
+            if ($this->user()->hasRole('super-admin') && $this->filled('tournament_id')) {
+                $organizationId = Tournament::forOrganization($organizationId)
+                    ->whereKey($this->input('tournament_id'))
+                    ->value('organization_id');
+            }
+
             $this->merge([
-                'organization_id' => $this->user()->organization_id,
+                'organization_id' => $organizationId,
             ]);
         }
     }
@@ -32,20 +41,12 @@ class StoreRegistrationRequest extends FormRequest
             'tournament_id' => [
                 'required',
                 'uuid',
-                Rule::exists('tournaments', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('tournaments', 'id')->where('organization_id', $this->input('organization_id')),
             ],
             'participant_id' => [
                 'required',
                 'uuid',
-                Rule::exists('participants', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('participants', 'id')->where('organization_id', $this->input('organization_id')),
             ],
             'status' => ['nullable', 'in:pending,confirmed,rejected,cancelled'],
             'registered_at' => ['nullable', 'date'],

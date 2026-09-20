@@ -474,6 +474,34 @@ class PublicPortalTest extends TestCase
             ->where('competition.organization', $orgA->name));
     }
 
+    public function test_public_portal_uses_the_configured_session_when_multiple_sessions_are_active(): void
+    {
+        $organization = Organization::factory()->create(['slug' => 'selector-org', 'is_active' => true]);
+        Session::factory()->create([
+            'organization_id' => $organization->id,
+            'slug' => 'newer-session',
+            'name' => 'Newer Session That Must Not Be Selected',
+            'start_date' => '2026-11-01',
+            'is_active' => true,
+        ]);
+        $configuredSession = Session::factory()->create([
+            'organization_id' => $organization->id,
+            'slug' => 'configured-session',
+            'name' => 'Configured Public Session',
+            'start_date' => '2026-01-01',
+            'is_active' => true,
+        ]);
+
+        config([
+            'app.public_org_slug' => $organization->slug,
+            'app.public_session_slug' => $configuredSession->slug,
+        ]);
+
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('competition.name', 'Configured Public Session')
+            ->where('competition.organization', $organization->name));
+    }
+
     public function test_invalid_or_inactive_public_organization_returns_safe_empty_state(): void
     {
         Organization::factory()->inactive()->create(['slug' => 'inactive-org']);

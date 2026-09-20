@@ -7,6 +7,7 @@ use App\Actions\Participants\WithdrawParticipantFromEvent;
 use App\Models\Event;
 use App\Models\Organization;
 use App\Models\Participant;
+use App\Models\Session;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -160,6 +161,29 @@ class ParticipantTest extends TestCase
         ]);
 
         $response->assertNotFound();
+    }
+
+    public function test_participant_update_cannot_change_organization_or_use_another_organization_session(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($orgA);
+        $participant = Participant::factory()->create(['organization_id' => $orgA->id]);
+        $sessionB = Session::factory()->create(['organization_id' => $orgB->id]);
+
+        $response = $this->actingAs($admin)->put(route('participants.update', $participant), [
+            'organization_id' => $orgB->id,
+            'session_id' => $sessionB->id,
+            'name' => 'Cross Tenant Participant',
+            'slug' => $participant->slug,
+        ]);
+
+        $response->assertSessionHasErrors('organization_id');
+        $this->assertDatabaseHas('participants', [
+            'id' => $participant->id,
+            'organization_id' => $orgA->id,
+            'name' => $participant->name,
+        ]);
     }
 
     public function test_super_admin_can_delete_participant(): void

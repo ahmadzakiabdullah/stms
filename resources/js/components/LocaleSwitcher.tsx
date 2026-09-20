@@ -16,6 +16,11 @@ export default function LocaleSwitcher({ compact = false, showLabel = true }: Lo
             return;
         }
 
+        // Update the document language immediately so assistive technology and
+        // browser automation do not observe a stale shell during the Inertia
+        // redirect/reload transition.
+        document.documentElement.lang = value;
+
         router.post(route('locale.update'), { locale: value }, {
             preserveScroll: true,
             // Locale is page-wide. Remount so every component reads the fresh

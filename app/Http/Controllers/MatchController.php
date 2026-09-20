@@ -146,11 +146,13 @@ class MatchController extends Controller
     public function store(StoreMatchRequest $request, StoreMatch $action): RedirectResponse
     {
         $event = Event::query()->findOrFail($request->validated('event_id'));
+        $organization = $event->organization;
+        abort_unless($organization, 404);
 
         Gate::authorize('create', [Fixture::class, $event->sport_id]);
 
         $conflicts = app(MatchScheduleConflictValidator::class)
-            ->conflictsFor(auth()->user()->organization, $request->validated());
+            ->conflictsFor($organization, $request->validated());
 
         if (! empty($conflicts)) {
             return redirect()->back()
@@ -159,7 +161,7 @@ class MatchController extends Controller
         }
 
         $action->handle(
-            auth()->user()->organization,
+            $organization,
             $request->validated()
         );
 
@@ -169,9 +171,11 @@ class MatchController extends Controller
     public function update(UpdateMatchRequest $request, Fixture $match, UpdateMatch $action): RedirectResponse
     {
         Gate::authorize('update', $match);
+        $organization = $match->organization;
+        abort_unless($organization, 404);
 
         $conflicts = app(MatchScheduleConflictValidator::class)
-            ->conflictsFor(auth()->user()->organization, $request->validated(), $match->id);
+            ->conflictsFor($organization, $request->validated(), $match->id);
 
         if (! empty($conflicts)) {
             return redirect()->back()
@@ -180,7 +184,7 @@ class MatchController extends Controller
         }
 
         $action->handle(
-            auth()->user()->organization,
+            $organization,
             $match->id,
             $request->validated()
         );
@@ -191,9 +195,11 @@ class MatchController extends Controller
     public function destroy(Fixture $match, DeleteMatch $action): RedirectResponse
     {
         Gate::authorize('delete', $match);
+        $organization = $match->organization;
+        abort_unless($organization, 404);
 
         $action->handle(
-            auth()->user()->organization,
+            $organization,
             $match->id
         );
 

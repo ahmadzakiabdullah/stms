@@ -1,6 +1,7 @@
 import ParticipantLogo from '@/components/ParticipantLogo';
 import PublicEmptyState from '@/components/PublicEmptyState';
 import PublicLayout from '@/Layouts/PublicLayout';
+import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
 import { useI18n } from '@/lib/i18n';
@@ -12,7 +13,7 @@ import { type ComponentType, useMemo, useState } from 'react';
 type Team = { name: string; logo_url: string | null; inverse_logo_url: string | null } | null;
 type SportDocument = { title: string; url: string; file_name: string; mime_type: string; file_size: number };
 type SportCatalogEntry = { name: string; categories: string[]; events: { name: string; category: string | null }[]; documents?: SportDocument[] };
-type Props = { section: 'sports' | 'faculties' | 'venues'; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; sports_catalog: SportCatalogEntry[]; faculties: Team[]; venues: string[] };
+type Props = { section: 'sports' | 'faculties' | 'venues'; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; sports_catalog: SportCatalogEntry[]; faculties: Team[]; venues: string[]; error?: string | null };
 
 const labels: Record<Props['section'], { title: string; intro: string; icon: ComponentType<{ className?: string }> }> = {
     sports: { title: 'Sports Programme', intro: 'Explore the official sports and events in this competition.', icon: Trophy },
@@ -20,15 +21,16 @@ const labels: Record<Props['section'], { title: string; intro: string; icon: Com
     venues: { title: 'Venues', intro: 'Competition locations and venues used for official fixtures.', icon: MapPin },
 };
 
-export default function PublicDirectory({ section, app_name, competition, sports_catalog, faculties, venues }: Props) {
+export default function PublicDirectory({ section, app_name, competition, sports_catalog, faculties, venues, error = null }: Props) {
     const { t } = useI18n();
     const meta = labels[section];
     const Icon = meta.icon;
 
     return (
         <PublicLayout title={`${t(meta.title)} | ${competition?.name || app_name}`} appName={app_name} current={section === 'sports' ? section : undefined}>
-            <Head><link rel="canonical" href={route(`public.${section}`)} /></Head>
+            <Head><meta name="description" content={t(meta.intro)} /><link rel="canonical" href={route(`public.${section}`)} /></Head>
             <main>
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Directory unavailable')} description={error} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t(meta.title)} intro={t(meta.intro)} icon={<Icon className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
                     <DirectoryContent section={section} sports_catalog={sports_catalog} faculties={faculties} venues={venues} t={t} />

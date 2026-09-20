@@ -125,6 +125,28 @@ class EventTest extends TestCase
         $this->assertDatabaseHas('events', ['name' => 'Test Event']);
     }
 
+    public function test_event_creation_rejects_parent_relations_from_another_organization(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $tournament = Tournament::factory()->create(['organization_id' => $orgA->id]);
+        $sport = Sport::factory()->create(['organization_id' => $orgB->id]);
+        $category = SportCategory::factory()->forSport($sport)->create();
+        $super = $this->createSuperAdmin();
+
+        $response = $this->actingAs($super)->post(route('events.store'), [
+            'organization_id' => $orgA->id,
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $category->id,
+            'name' => 'Cross Tenant Event',
+            'start_date' => now()->toDateString(),
+        ]);
+
+        $response->assertSessionHasErrors('sport_id');
+        $this->assertDatabaseMissing('events', ['name' => 'Cross Tenant Event']);
+    }
+
     public function test_authorized_user_can_set_venues_on_an_event(): void
     {
         $org = Organization::factory()->create();

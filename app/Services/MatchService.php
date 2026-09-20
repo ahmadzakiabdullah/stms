@@ -3,12 +3,16 @@
 namespace App\Services;
 
 use App\Models\Fixture;
+use App\Models\Event;
 use App\Models\Organization;
+use App\Models\Participant;
+use App\Models\Pool;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class MatchService
 {
@@ -41,6 +45,7 @@ class MatchService
     {
         $match = DB::transaction(function () use ($organization, $data) {
             $data['organization_id'] = $organization->id;
+            $this->ensureRelationsBelongToOrganization($data, $organization->id);
             if (empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['match_number'] ?? Str::random(8));
             }
@@ -62,6 +67,8 @@ class MatchService
     {
         $match = DB::transaction(function () use ($organization, $id, $data) {
             $match = $this->getById($organization, $id);
+            $data['organization_id'] = $organization->id;
+            $this->ensureRelationsBelongToOrganization($data, $organization->id, $match);
             if (isset($data['slug']) && empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['match_number'] ?? Str::random(8));
             }
@@ -104,5 +111,39 @@ class MatchService
     protected function baseQuery(Organization $organization)
     {
         return Fixture::where('organization_id', $organization->id);
+    }
+
+    private function ensureRelationsBelongToOrganization(array $data, string $organizationId, ?Fixture $match = null): void
+    {
+        $eventId = $data['event_id'] ?? $match?->event_id;
+        $event = Event::forOrganization($organizationId)->whereKey($eventId)->first();
+        if (! $event || $event->organization_id !== $organizationId) {
+            throw ValidationException::withMessages([
+                'event_id' => ['The selected event must belong to the match organization.'],
+            ]);
+        }
+
+        $poolId = array_key_exists('pool_id', $data) ? $data['pool_id'] : $match?->pool_id;
+        if ($poolId !== null && ! Pool::forOrganization($organizationId)
+            ->whereKey($poolId)
+            ->where('organization_id', $organizationId)
+            ->where('event_id', $eventId)
+            ->exists()) {
+            throw ValidationException::withMessages([
+                'pool_id' => ['The selected pool must belong to the event and organization.'],
+            ]);
+        }
+
+        foreach (['home_participant_id', 'away_participant_id'] as $field) {
+            $participantId = array_key_exists($field, $data) ? $data[$field] : $match?->{$field};
+            if ($participantId !== null && ! Participant::forOrganization($organizationId)
+                ->whereKey($participantId)
+                ->where('organization_id', $organizationId)
+                ->exists()) {
+                throw ValidationException::withMessages([
+                    $field => ['The selected participant must belong to the match organization.'],
+                ]);
+            }
+        }
     }
 }

@@ -25,8 +25,17 @@ class SportService
 
         $data['is_active'] = $data['is_active'] ?? true;
 
-        if (empty($data['organization_id'])) {
+        $requestedOrganizationId = $data['organization_id'] ?? null;
+        $data['organization_id'] = $requestedOrganizationId ?: $user?->organization_id;
+
+        if ($user && ! $user->hasRole('super-admin')) {
             $data['organization_id'] = $user->organization_id;
+        }
+
+        if (blank($data['organization_id'])) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['A valid organization is required.'],
+            ]);
         }
 
         try {
@@ -54,6 +63,14 @@ class SportService
      */
     public function updateSport(Sport $sport, array $data): Sport
     {
+        if (array_key_exists('organization_id', $data) && $data['organization_id'] !== $sport->organization_id) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['A sport cannot be moved to another organization.'],
+            ]);
+        }
+
+        $data['organization_id'] = $sport->organization_id;
+
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }

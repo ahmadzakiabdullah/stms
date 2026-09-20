@@ -71,13 +71,13 @@ class CreateSuperAdmin extends Command
         }
 
         DB::transaction(function () use ($users, $name, $email, $password, $organization, $role): void {
-            $users->createUser([
+            $user = $users->createUser([
                 'name' => $name,
                 'email' => $email,
                 'password' => $password,
                 'organization_id' => $organization->id,
-                'roles' => [$role->id],
             ]);
+            $user->syncRoles([$role]);
         });
 
         $this->info("Super-admin [{$email}] created for [{$organization->name}].");

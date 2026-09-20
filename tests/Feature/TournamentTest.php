@@ -88,6 +88,44 @@ class TournamentTest extends TestCase
         $this->assertDatabaseHas('tournaments', ['name' => 'Test Tournament']);
     }
 
+    public function test_org_admin_cannot_create_tournament_for_another_organization(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($orgA);
+        $sessionB = Session::factory()->create(['organization_id' => $orgB->id]);
+
+        $response = $this->actingAs($admin)->post(route('tournaments.store'), [
+            'organization_id' => $orgB->id,
+            'session_id' => $sessionB->id,
+            'name' => 'Cross Tenant Tournament',
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addDays(7)->toDateString(),
+        ]);
+
+        $response->assertSessionHasErrors('organization_id');
+        $this->assertDatabaseMissing('tournaments', ['name' => 'Cross Tenant Tournament']);
+    }
+
+    public function test_super_admin_cannot_create_tournament_with_a_cross_organization_session(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $super = $this->createSuperAdmin();
+        $sessionB = Session::factory()->create(['organization_id' => $orgB->id]);
+
+        $response = $this->actingAs($super)->post(route('tournaments.store'), [
+            'organization_id' => $orgA->id,
+            'session_id' => $sessionB->id,
+            'name' => 'Mismatched Parent Tournament',
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addDays(7)->toDateString(),
+        ]);
+
+        $response->assertSessionHasErrors('session_id');
+        $this->assertDatabaseMissing('tournaments', ['name' => 'Mismatched Parent Tournament']);
+    }
+
     public function test_duplicate_slug_rejected_within_same_org(): void
     {
         $org = Organization::factory()->create();

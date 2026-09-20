@@ -4,6 +4,7 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import PublicMatchCard, { type PublicMatch } from '@/components/PublicMatchCard';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
 import PublicTeamRow from '@/components/PublicTeamRow';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SportIcon } from '@/lib/sportIcons';
 import { useI18n } from '@/lib/i18n';
@@ -90,6 +91,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
     return (
         <PublicLayout title={competition?.name || app_name} appName={app_name} current="home">
             <Head>
+                <meta name="description" content={competition?.description || t('Official competition schedules, results, athletes and medal standings.')} />
                 <link rel="canonical" href={route('public.index')} />
                 <link rel="preload" as="image" href="/images/banner/banner-saf-20-2026.jpeg" fetchPriority="high" />
             </Head>
@@ -105,9 +107,12 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                             <h1 className="mt-6 text-4xl font-black leading-[.98] tracking-[-.05em] sm:text-6xl xl:text-7xl">{competition?.name || app_name}</h1>
                             <p className="mt-6 max-w-xl text-base leading-7 text-white/65 sm:text-lg">{competition?.description || t('Follow schedules, latest results and medal standings in one official view.')}</p>
                             <div className="mt-8 flex flex-wrap items-center gap-3">
-                                <Link href="#schedule" className="public-cosmic-bezel inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--public-highlight)] px-5 text-sm font-black text-[var(--public-dark)] transition hover:-translate-y-0.5 hover:brightness-105">{t('View schedule')}<ArrowRight className="size-4" /></Link>
-                                <Link href="#results" className="inline-flex min-h-11 items-center rounded-xl border border-white/15 bg-white/5 px-5 text-sm font-bold text-white transition hover:bg-white/10">{t('View results')}</Link>
-                                <Link href={route('public.athletes')} className="inline-flex min-h-11 items-center rounded-xl border border-white/15 bg-white/5 px-5 text-sm font-bold text-white transition hover:bg-white/10">{t('Athletes & Teams')}</Link>
+                                <Button asChild size="lg" className="public-cosmic-bezel bg-[var(--public-highlight)] px-5 text-sm font-black text-[var(--public-dark)] hover:brightness-105">
+                                    <Link href={route('public.schedule')}>{t('View schedule & results')}<ArrowRight className="size-4" /></Link>
+                                </Button>
+                                <Button asChild variant="outline" size="lg" className="border-white/15 bg-white/5 px-5 text-sm font-bold text-white hover:bg-white/10 hover:text-white">
+                                    <Link href={route('public.athletes')}>{t('Athletes & Teams')}</Link>
+                                </Button>
                             </div>
                             <div className="mt-8 flex flex-wrap items-center gap-3">
                                 {competition?.start_date && <div className="inline-flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-white/10 text-[var(--public-highlight)]"><CalendarDays className="size-4" /></span><span><small className="block text-xs font-black uppercase tracking-[.16em] text-white/75">{t('Competition dates')}</small>{formatDate(competition.start_date, locale)}{competition.end_date && ` — ${formatDate(competition.end_date, locale)}`}</span></div>}

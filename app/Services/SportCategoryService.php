@@ -55,6 +55,8 @@ class SportCategoryService
      */
     public function updateSportCategory(SportCategory $sportCategory, array $data): SportCategory
     {
+        unset($data['organization_id'], $data['sport_id']);
+
         if (empty($data['slug'])) {
             $sportName = $sportCategory->sport?->name ?? '';
             $data['slug'] = Str::slug($sportName.' '.$data['name']);

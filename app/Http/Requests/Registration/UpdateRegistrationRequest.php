@@ -16,7 +16,7 @@ class UpdateRegistrationRequest extends FormRequest
     {
         if (empty($this->organization_id)) {
             $this->merge([
-                'organization_id' => $this->user()->organization_id,
+                'organization_id' => $this->route('registration')?->organization_id ?? $this->user()->organization_id,
             ]);
         }
     }
@@ -24,28 +24,23 @@ class UpdateRegistrationRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->user();
-        $isSuper = $user && $user->hasRole('super-admin');
-        $organizationRule = $isSuper ? Rule::exists('organizations', 'id') : Rule::in([$user?->organization_id]);
+        $registration = $this->route('registration');
+        $organizationId = $registration?->organization_id ?? $user?->organization_id;
+        $organizationRule = $user?->hasRole('super-admin')
+            ? Rule::in([$organizationId])
+            : Rule::in([$user?->organization_id]);
 
         return [
             'organization_id' => ['required', 'uuid', $organizationRule],
             'tournament_id' => [
                 'required',
                 'uuid',
-                Rule::exists('tournaments', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('tournaments', 'id')->where('organization_id', $organizationId),
             ],
             'participant_id' => [
                 'required',
                 'uuid',
-                Rule::exists('participants', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('participants', 'id')->where('organization_id', $organizationId),
             ],
             'status' => ['nullable', 'in:pending,confirmed,rejected,cancelled'],
             'registered_at' => ['nullable', 'date'],

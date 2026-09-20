@@ -38,7 +38,7 @@ class StoreSessionRequest extends FormRequest
                 'max:255',
                 'alpha_dash',
                 Rule::unique('event_sessions', 'slug')
-                    ->where('organization_id', $user?->organization_id)
+                    ->where('organization_id', $this->input('organization_id'))
                     ->whereNull('deleted_at'),
             ],
             'description' => ['nullable', 'string', 'max:1000'],

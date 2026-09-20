@@ -10,6 +10,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Spatie\Permission\Middleware\RoleMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -36,6 +37,10 @@ return Application::configure(basePath: dirname(__DIR__))
             Illuminate\Http\Middleware\TrustProxies::class,
             TrustProxies::class,
         );
+
+        $middleware->alias([
+            'role' => RoleMiddleware::class,
+        ]);
 
         // Locale is a non-sensitive preference endpoint. Exclude it from
         // CSRF validation so subfolder deployments with stale cookie paths

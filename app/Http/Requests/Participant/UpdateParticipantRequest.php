@@ -15,6 +15,8 @@ class UpdateParticipantRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $participant = $this->route('participant');
+
         foreach (['is_active', 'remove_logo', 'remove_inverse_logo'] as $field) {
             if (in_array($this->input($field), ['true', 'false'], true)) {
                 $this->merge([
@@ -25,7 +27,7 @@ class UpdateParticipantRequest extends FormRequest
 
         if (empty($this->organization_id)) {
             $this->merge([
-                'organization_id' => $this->user()->organization_id,
+                'organization_id' => $participant?->organization_id ?? $this->user()->organization_id,
             ]);
         }
     }
@@ -33,10 +35,16 @@ class UpdateParticipantRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->user();
+        $participant = $this->route('participant');
+        $organizationId = $participant?->organization_id ?? $user?->organization_id;
 
         return [
-            'organization_id' => ['required', 'uuid', 'exists:organizations,id'],
-            'session_id' => ['nullable', 'uuid', 'exists:event_sessions,id'],
+            'organization_id' => ['required', 'uuid', Rule::in([$organizationId])],
+            'session_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('event_sessions', 'id')->where('organization_id', $organizationId),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'nullable',
@@ -44,8 +52,8 @@ class UpdateParticipantRequest extends FormRequest
                 'max:255',
                 'alpha_dash',
                 Rule::unique('participants', 'slug')
-                    ->where('organization_id', $user?->organization_id)
-                    ->ignore($this->route('participant')?->id)
+                    ->where('organization_id', $organizationId)
+                    ->ignore($participant?->id)
                     ->whereNull('deleted_at'),
             ],
             'email' => ['nullable', 'email', 'max:255'],

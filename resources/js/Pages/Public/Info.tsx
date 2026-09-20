@@ -1,4 +1,5 @@
 import PublicLayout from '@/Layouts/PublicLayout';
+import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
 import { useI18n } from '@/lib/i18n';
 import { Head } from '@inertiajs/react';
@@ -6,18 +7,19 @@ import { BookOpen, CircleHelp, Download, FileText, Newspaper, Trophy } from 'luc
 import { type ComponentType } from 'react';
 
 type Section = 'news' | 'downloads' | 'faq' | 'about';
-type Props = { section: Section; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null };
+type Props = { section: Section; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; error?: string | null };
 const meta: Record<Section, { title: string; intro: string; icon: ComponentType<{ className?: string }> }> = { news: { title: 'Announcements', intro: 'Official updates and competition notices.', icon: Newspaper }, downloads: { title: 'Downloads', intro: 'Useful competition documents and resources.', icon: Download }, faq: { title: 'Frequently Asked Questions', intro: 'Answers to common questions about the competition.', icon: CircleHelp }, about: { title: 'About SAF', intro: 'Learn more about the Sports and Athletics Festival.', icon: Trophy } };
 
-export default function PublicInfo({ section, app_name, competition }: Props) {
+export default function PublicInfo({ section, app_name, competition, error = null }: Props) {
     const { t } = useI18n();
     const current = meta[section];
     const Icon = current.icon;
 
     return (
         <PublicLayout title={`${t(current.title)} | ${competition?.name || app_name}`} appName={app_name}>
-            <Head><link rel="canonical" href={route(`public.${section}`)} /></Head>
+            <Head><meta name="description" content={t(current.intro)} /><link rel="canonical" href={route(`public.${section}`)} /></Head>
             <main>
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Information unavailable')} description={error} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t(current.title)} intro={t(current.intro)} icon={<Icon className="size-4" />} />
                 <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16"><Content section={section} competitionName={competition?.name || app_name} t={t} /></div>
             </main>

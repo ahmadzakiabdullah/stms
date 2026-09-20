@@ -156,15 +156,16 @@ class ResultController extends Controller
 
     public function store(StoreResultRequest $request, StoreResult $action): RedirectResponse
     {
-        $sportId = Fixture::query()->with('event')
-            ->findOrFail($request->validated('match_id'))
-            ->event
-            ->sport_id;
+        $match = Fixture::query()->with('event')
+            ->findOrFail($request->validated('match_id'));
+        $organization = $match->organization;
+        abort_unless($organization, 404);
+        $sportId = $match->event->sport_id;
 
         Gate::authorize('create', [Result::class, $sportId]);
 
         $result = $action->handle(
-            auth()->user()->organization,
+            $organization,
             $request->validated()
         );
 
@@ -177,9 +178,11 @@ class ResultController extends Controller
     public function update(UpdateResultRequest $request, Result $result, UpdateResult $action): RedirectResponse
     {
         Gate::authorize('update', $result);
+        $organization = $result->organization;
+        abort_unless($organization, 404);
 
         $result = $action->handle(
-            auth()->user()->organization,
+            $organization,
             $result->id,
             $request->validated()
         );
@@ -193,9 +196,11 @@ class ResultController extends Controller
     public function destroy(Result $result, DeleteResult $action): RedirectResponse
     {
         Gate::authorize('delete', $result);
+        $organization = $result->organization;
+        abort_unless($organization, 404);
 
         $action->handle(
-            auth()->user()->organization,
+            $organization,
             $result->id
         );
 
@@ -208,7 +213,9 @@ class ResultController extends Controller
     public function submit(Result $result, TransitionResult $action): RedirectResponse
     {
         Gate::authorize('submit', $result);
-        $action->handle(auth()->user()->organization, $result, auth()->user(), 'submit');
+        $organization = $result->organization;
+        abort_unless($organization, 404);
+        $action->handle($organization, $result, auth()->user(), 'submit');
 
         return redirect()->route('results.index')->with('success', 'Result submitted for approval.');
     }
@@ -216,7 +223,9 @@ class ResultController extends Controller
     public function approve(Result $result, TransitionResult $action): RedirectResponse
     {
         Gate::authorize('approve', $result);
-        $action->handle(auth()->user()->organization, $result, auth()->user(), 'approve');
+        $organization = $result->organization;
+        abort_unless($organization, 404);
+        $action->handle($organization, $result, auth()->user(), 'approve');
 
         return redirect()->route('results.index')->with('success', 'Result approved successfully.');
     }
@@ -224,7 +233,9 @@ class ResultController extends Controller
     public function lock(Result $result, TransitionResult $action): RedirectResponse
     {
         Gate::authorize('lock', $result);
-        $action->handle(auth()->user()->organization, $result, auth()->user(), 'lock');
+        $organization = $result->organization;
+        abort_unless($organization, 404);
+        $action->handle($organization, $result, auth()->user(), 'lock');
 
         return redirect()->route('results.index')->with('success', 'Result locked successfully.');
     }
@@ -232,7 +243,9 @@ class ResultController extends Controller
     public function unlock(Result $result, TransitionResult $action): RedirectResponse
     {
         Gate::authorize('unlock', $result);
-        $action->handle(auth()->user()->organization, $result, auth()->user(), 'unlock');
+        $organization = $result->organization;
+        abort_unless($organization, 404);
+        $action->handle($organization, $result, auth()->user(), 'unlock');
 
         return redirect()->route('results.index')->with('success', 'Result unlocked successfully.');
     }

@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\EventParticipant;
+use App\Models\Event;
+use App\Models\Organization;
 use App\Models\Participant;
+use App\Models\Session;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +19,9 @@ class ParticipantService
 {
     public function createParticipant(array $data): Participant
     {
-        $user = Auth::user();
+        $organizationId = $this->resolveOrganizationId($data['organization_id'] ?? null);
+        $data['organization_id'] = $organizationId;
+        $this->ensureSessionBelongsToOrganization($data['session_id'] ?? null, $organizationId);
 
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
@@ -24,10 +29,6 @@ class ParticipantService
 
         $data['is_active'] = $data['is_active'] ?? true;
         $data['status'] = $data['status'] ?? 'registered';
-
-        if (empty($data['organization_id'])) {
-            $data['organization_id'] = $user->organization_id;
-        }
 
         try {
             $participant = Participant::create($data);
@@ -64,6 +65,12 @@ class ParticipantService
         $existingUser = User::where('email', $email)->first();
 
         if ($existingUser) {
+            if ($existingUser->organization_id !== ($organizationId ?? $participant->organization_id)) {
+                throw ValidationException::withMessages([
+                    'email' => ['The email already belongs to a user in another organization.'],
+                ]);
+            }
+
             if (! $existingUser->participant_id) {
                 $existingUser->update(['participant_id' => $participant->id]);
                 Log::info('Linked existing user to participant', ['user_id' => $existingUser->uuid, 'participant_id' => $participant->id]);
@@ -93,6 +100,8 @@ class ParticipantService
 
     public function updateParticipant(Participant $participant, array $data): Participant
     {
+        $this->ensureSameOrganization($participant, $data);
+
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
@@ -119,6 +128,32 @@ class ParticipantService
         }
     }
 
+    private function ensureSameOrganization(Participant $participant, array &$data): void
+    {
+        if (array_key_exists('organization_id', $data) && $data['organization_id'] !== $participant->organization_id) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['A participant cannot be moved to another organization.'],
+            ]);
+        }
+
+        $data['organization_id'] = $participant->organization_id;
+
+        if (! array_key_exists('session_id', $data) || blank($data['session_id'])) {
+            return;
+        }
+
+        $sessionBelongsToParticipantOrganization = Session::withoutOrganizationScope()
+            ->whereKey($data['session_id'])
+            ->where('organization_id', $participant->organization_id)
+            ->exists();
+
+        if (! $sessionBelongsToParticipantOrganization) {
+            throw ValidationException::withMessages([
+                'session_id' => ['The selected session must belong to the participant organization.'],
+            ]);
+        }
+    }
+
     public function deleteParticipant(Participant $participant): void
     {
         $participant->delete();
@@ -128,6 +163,13 @@ class ParticipantService
 
     public function registerToEvent(Participant $participant, string $eventId, array $data = []): EventParticipant
     {
+        $event = Event::withoutOrganizationScope()->whereKey($eventId)->first();
+        if (! $event || $event->organization_id !== $participant->organization_id) {
+            throw ValidationException::withMessages([
+                'event_id' => ['The selected event must belong to the participant organization.'],
+            ]);
+        }
+
         $existing = EventParticipant::withTrashed()
             ->withoutOrganizationScope()
             ->where('event_id', $eventId)
@@ -151,7 +193,8 @@ class ParticipantService
             ]);
         }
 
-        $registration = EventParticipant::create(array_merge([
+        $data = array_diff_key($data, array_flip(['organization_id', 'event_id', 'participant_id']));
+        $registration = EventParticipant::create(array_merge($data, [
             'event_id' => $eventId,
             'participant_id' => $participant->id,
             'organization_id' => $participant->organization_id,
@@ -162,6 +205,35 @@ class ParticipantService
         Log::info('Participant registered to event', ['participant_id' => $participant->id, 'event_id' => $eventId]);
 
         return $registration;
+    }
+
+    private function resolveOrganizationId(?string $requestedOrganizationId): string
+    {
+        $user = Auth::user();
+        $organizationId = $user?->hasRole('super-admin')
+            ? ($requestedOrganizationId ?: $user?->organization_id)
+            : $user?->organization_id;
+
+        if (blank($organizationId) || ! Organization::whereKey($organizationId)->exists()) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['A valid organization is required.'],
+            ]);
+        }
+
+        return $organizationId;
+    }
+
+    private function ensureSessionBelongsToOrganization(?string $sessionId, string $organizationId): void
+    {
+        if (blank($sessionId)) {
+            return;
+        }
+
+        if (! Session::withoutOrganizationScope()->whereKey($sessionId)->where('organization_id', $organizationId)->exists()) {
+            throw ValidationException::withMessages([
+                'session_id' => ['The selected session must belong to the participant organization.'],
+            ]);
+        }
     }
 
     public function withdrawFromEvent(Participant $participant, string $eventId): void

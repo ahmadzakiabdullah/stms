@@ -211,7 +211,11 @@ final class ReleasePreflightService
             return $this->error('PUBLIC_ORG_SLUG is required.');
         }
 
-        return $this->ok('Public organization is configured; the active session is selected automatically.');
+        if (trim((string) config('app.public_session_slug')) === '') {
+            return $this->error('PUBLIC_SESSION_SLUG is required.');
+        }
+
+        return $this->ok('Public organization and session selectors are configured explicitly.');
     }
 
     private function attempt(string $successMessage, \Closure $callback): array

@@ -1,4 +1,5 @@
 import PublicLayout from '@/Layouts/PublicLayout';
+import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
 import { useI18n } from '@/lib/i18n';
 import { Head } from '@inertiajs/react';
@@ -17,9 +18,10 @@ type Props = {
             youtube: string | null;
         };
     };
+    error?: string | null;
 };
 
-export default function PublicContact({ app_name, contact }: Props) {
+export default function PublicContact({ app_name, contact, error = null }: Props) {
     const { t } = useI18n();
     const phoneHref = contact.phone ? `tel:${contact.phone.replace(/[^\d+]/g, '')}` : null;
     const socialLinks = [
@@ -31,8 +33,9 @@ export default function PublicContact({ app_name, contact }: Props) {
 
     return (
         <PublicLayout title={t('Contact Us')} appName={app_name} current="contact">
-            <Head><link rel="canonical" href={route('public.contact')} /></Head>
+            <Head><meta name="description" content={t('Contact the official sports competition secretariat for schedules, participation and venue enquiries.')} /><link rel="canonical" href={route('public.contact')} /></Head>
             <main aria-label={t('Contact Us')}>
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Contact information unavailable')} description={error} /></div>}
                 <PublicPageHero
                     eyebrow={t('Official sports information portal')}
                     title={t('Contact Us')}

@@ -15,10 +15,22 @@ export default function PublicHeader({ appName, settings, current }: Props) {
     const logoUrl = settings.inverse_logo_url ?? settings.logo_url;
     const links = [
         { href: route('public.index'), label: t('Home'), current: current === 'home' },
-        { href: route('public.sports'), label: t('Sports'), current: current === 'sports' },
-        { href: route('public.schedule'), label: t('Schedule'), current: current === 'schedule' },
-        { href: route('public.athletes'), label: t('Athletes'), current: current === 'athletes' },
+        { href: route('public.schedule'), label: t('Schedule & Results'), current: current === 'schedule' },
+        { href: route('public.athletes'), label: t('Athletes & Teams'), current: current === 'athletes' },
         { href: route('public.contact'), label: t('Contact'), current: current === 'contact' },
+    ];
+    const groups = [
+        { label: t('Competition'), links: [
+            { href: route('public.sports'), label: t('Sports'), current: current === 'sports' },
+            { href: route('public.faculties'), label: t('Faculties') },
+            { href: route('public.venues'), label: t('Venues') },
+        ] },
+        { label: t('Information'), links: [
+            { href: route('public.news'), label: t('News') },
+            { href: route('public.downloads'), label: t('Downloads') },
+            { href: route('public.faq'), label: t('FAQ') },
+            { href: route('public.about'), label: t('About') },
+        ] },
     ];
 
     return <div className="absolute inset-x-0 top-0 z-50">
@@ -29,7 +41,7 @@ export default function PublicHeader({ appName, settings, current }: Props) {
                     {logoUrl && <img src={logoUrl} alt={t('Official portal')} className="h-11 w-auto shrink-0 object-contain" />}
                     <span className="min-w-0"><small className="block text-xs font-black uppercase tracking-[.2em] text-[var(--public-accent)]">{t('Official portal')}</small><b className="block max-w-[10rem] truncate text-sm sm:max-w-xs sm:text-base">{appName}</b></span>
                 </Link>
-                <PublicDesktopNav links={links} />
+                <PublicDesktopNav links={links} groups={groups} />
                 <div className="flex shrink-0 items-center justify-end xl:hidden"><PublicMobileMenu links={links} /></div>
                 <div className="hidden items-center justify-end gap-2 xl:flex"><span className="mr-1 h-7 w-px bg-white/10" /><LocaleSwitcher compact showLabel={false} /><PublicLoginButton /></div>
             </div>

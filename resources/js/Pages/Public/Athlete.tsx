@@ -1,6 +1,7 @@
 import ParticipantLogo from '@/components/ParticipantLogo';
 import PublicEmptyState from '@/components/PublicEmptyState';
 import PublicLayout from '@/Layouts/PublicLayout';
+import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
 import { useI18n } from '@/lib/i18n';
 import { Head, Link } from '@inertiajs/react';
@@ -8,15 +9,16 @@ import { ArrowLeft, CalendarDays, CheckCircle2, Clock3, MapPin, Trophy, Users, X
 
 type Athlete = { id: string; name: string; role: string; faculty: string | null; logo_url: string | null; inverse_logo_url: string | null; sport: string | null; category: string | null; event: string | null };
 type Match = { id: string; event: string | null; opponent: string | null; score_for: number | null; score_against: number | null; scheduled_at: string | null; venue: string | null; status: string; outcome: 'win' | 'draw' | 'loss' | null };
-type Props = { app_name: string; competition: { name: string; organization: string | null } | null; athlete: Athlete; stats: { matches: number; wins: number; draws: number; losses: number }; matches: Match[]; updated_at?: string };
+type Props = { app_name: string; competition: { name: string; organization: string | null } | null; athlete: Athlete; stats: { matches: number; wins: number; draws: number; losses: number }; matches: Match[]; updated_at?: string; error?: string | null };
 
-export default function PublicAthlete({ app_name, competition, athlete, stats, matches = [], updated_at }: Props) {
+export default function PublicAthlete({ app_name, competition, athlete, stats, matches = [], updated_at, error = null }: Props) {
     const { t, locale } = useI18n();
 
     return (
         <PublicLayout title={`${athlete.name} | ${competition?.name || app_name}`} appName={app_name} current="athletes">
-            <Head><link rel="canonical" href={route('public.athletes.show', athlete.id)} /></Head>
+            <Head><meta name="description" content={t('View the official athlete profile, competition participation and performance record.')} /><link rel="canonical" href={route('public.athletes.show', athlete.id)} /></Head>
             <main>
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Athlete profile unavailable')} description={error} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t('Athlete Profile')} intro={t('Official participation and performance record.')} icon={<Users className="size-4" />} />
                 <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
                     <Link href={route('public.athletes')} className="inline-flex min-h-10 items-center gap-2 text-sm font-black text-[var(--public-primary)] hover:underline"><ArrowLeft className="size-4" />{t('Back to athletes')}</Link>

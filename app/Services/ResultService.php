@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Fixture;
 use App\Models\MatchScoringEvent;
 use App\Models\Organization;
+use App\Models\Participant;
 use App\Models\Result;
 use App\Models\SquadMember;
 use App\Models\User;
@@ -52,6 +53,7 @@ class ResultService
     {
         $result = DB::transaction(function () use ($organization, $data) {
             $data['organization_id'] = $organization->id;
+            $this->ensureRelationsBelongToOrganization($data, $organization->id);
             $data['status'] = Result::STATUS_SUBMITTED;
             $data['submitted_by'] = auth()->id();
             $data['submitted_at'] = now();
@@ -78,6 +80,8 @@ class ResultService
         $result = DB::transaction(function () use ($organization, $id, $data) {
             $result = $this->getById($organization, $id);
             $this->assertEditable($result);
+            $data['organization_id'] = $organization->id;
+            $this->ensureRelationsBelongToOrganization($data, $organization->id, $result);
             $scoringEvents = $data['scoring_events'] ?? null;
             unset($data['scoring_events']);
             $result->update($data);
@@ -160,6 +164,30 @@ class ResultService
     protected function baseQuery(Organization $organization)
     {
         return Result::where('organization_id', $organization->id);
+    }
+
+    private function ensureRelationsBelongToOrganization(array $data, string $organizationId, ?Result $result = null): void
+    {
+        $matchId = $data['match_id'] ?? $result?->match_id;
+        $match = Fixture::forOrganization($organizationId)->whereKey($matchId)->first();
+        if (! $match || $match->organization_id !== $organizationId) {
+            throw ValidationException::withMessages([
+                'match_id' => ['The selected match must belong to the result organization.'],
+            ]);
+        }
+
+        if (array_key_exists('winner_participant_id', $data) && $data['winner_participant_id'] !== null) {
+            $winnerBelongsToOrganization = Participant::forOrganization($organizationId)
+                ->whereKey($data['winner_participant_id'])
+                ->where('organization_id', $organizationId)
+                ->exists();
+
+            if (! $winnerBelongsToOrganization) {
+                throw ValidationException::withMessages([
+                    'winner_participant_id' => ['The winner must belong to the result organization.'],
+                ]);
+            }
+        }
     }
 
     public function submit(Organization $organization, string $id, User $actor): Result

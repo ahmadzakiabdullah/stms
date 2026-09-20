@@ -7,7 +7,7 @@
 | Jadual | Tujuan utama |
 |---|---|
 | `organizations` | Root tenant dan hierarki `parent_id`. |
-| `users` | Akaun UUID (`uuid` sebagai PK), organisasi, participant, username/e-mel. |
+| `users` | Akaun UUID (`uuid` sebagai PK), organisasi, participant, username/e-mel dan status `is_active`. Akaun inactive tidak boleh log masuk. |
 | `event_sessions` | Tempoh pertandingan organisasi, default ranking strategy dan JSON rules. |
 | `sports` | Katalog sport organisasi. |
 | `sport_categories` | Kategori dan quota roster. |

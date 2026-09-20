@@ -17,6 +17,8 @@ class FacultyDashboardController extends Controller
 {
     public function storeSquad(Request $request, SquadQuotaService $quotaService): RedirectResponse
     {
+        $this->authorizeFacultyRepresentative();
+
         $validated = $request->validate([
             'event_participant_id' => ['required', 'uuid', 'exists:event_participants,id'],
             'name' => ['required', 'string', 'max:255'],
@@ -70,6 +72,8 @@ class FacultyDashboardController extends Controller
 
     public function destroySquad(SquadMember $squadMember): RedirectResponse
     {
+        $this->authorizeFacultyRepresentative();
+
         $squadMember->load('eventParticipant');
         if ($squadMember->eventParticipant->participant_id !== Auth::user()->participant_id) {
             abort(403, 'Unauthorized action.');
@@ -83,6 +87,8 @@ class FacultyDashboardController extends Controller
 
     public function importSquad(Request $request): RedirectResponse
     {
+        $this->authorizeFacultyRepresentative();
+
         $validated = $request->validate([
             'event_participant_id' => ['required', 'uuid', 'exists:event_participants,id'],
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:2048'],
@@ -120,6 +126,8 @@ class FacultyDashboardController extends Controller
 
     public function downloadTemplate()
     {
+        $this->authorizeFacultyRepresentative();
+
         $headers = ['name', 'role', 'matrix_no', 'ic_passport', 'phone'];
         $example = [
             ['Ahmad bin Jamal', 'manager', 'B062310003', '', '019-8765432'],
@@ -135,5 +143,18 @@ class FacultyDashboardController extends Controller
             }
             fclose($handle);
         }, 'squad-template.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    private function authorizeFacultyRepresentative(): void
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user
+            && $user->hasRole('faculty-representative')
+            && filled($user->participant_id),
+            403,
+            'Faculty representative access is required.',
+        );
     }
 }

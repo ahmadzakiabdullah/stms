@@ -583,7 +583,9 @@ class PublicPortalService
     private function publicSession(): ?Session
     {
         $organizationSlug = config('app.public_org_slug');
-        if (! $organizationSlug) {
+        $sessionSlug = config('app.public_session_slug');
+
+        if (! $organizationSlug || ! $sessionSlug) {
             return null;
         }
 
@@ -596,8 +598,9 @@ class PublicPortalService
 
         return Session::query()->with('organization:id,name')
             ->where('organization_id', $organization->id)
+            ->where('slug', $sessionSlug)
             ->active()
-            ->orderByDesc('start_date')->first();
+            ->first();
     }
 
     private function matchData(Fixture $fixture): array

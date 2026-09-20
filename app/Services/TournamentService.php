@@ -3,11 +3,14 @@
 namespace App\Services;
 
 use App\Models\Event;
+use App\Models\Session;
+use App\Models\Sport;
 use App\Models\Tournament;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class TournamentService
 {
@@ -18,10 +21,10 @@ class TournamentService
     public function createWithSports(array $data): Tournament
     {
         $user = Auth::user();
+        $organizationId = $data['organization_id'] ?? $user?->organization_id;
 
-        if (empty($data['organization_id'])) {
-            $data['organization_id'] = $user->organization_id;
-        }
+        $this->ensureTournamentRelationsBelongToOrganization($organizationId, $data['session_id'] ?? null, $data['sports'] ?? []);
+        $data['organization_id'] = $organizationId;
 
         $tournament = Tournament::create($data);
 
@@ -36,10 +39,32 @@ class TournamentService
 
     public function updateWithSports(Tournament $tournament, array $data): Tournament
     {
+        if (array_key_exists('organization_id', $data) && $data['organization_id'] !== $tournament->organization_id) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['A tournament cannot be moved to another organization.'],
+            ]);
+        }
+
+        if (array_key_exists('session_id', $data)) {
+            $sessionBelongsToTournamentOrganization = Session::withoutOrganizationScope()
+                ->whereKey($data['session_id'])
+                ->where('organization_id', $tournament->organization_id)
+                ->exists();
+
+            if (! $sessionBelongsToTournamentOrganization) {
+                throw ValidationException::withMessages([
+                    'session_id' => ['The selected session must belong to the tournament organization.'],
+                ]);
+            }
+        }
+
         if (array_key_exists('sports', $data)) {
+            $this->ensureSportsBelongToOrganization($tournament->organization_id, $data['sports'] ?? []);
             $tournament->sports()->sync($data['sports'] ?? []);
         }
 
+        unset($data['sports']);
+        $data['organization_id'] = $tournament->organization_id;
         $tournament->update($data);
 
         Log::info('Tournament updated', ['id' => $tournament->id, 'name' => $tournament->name]);
@@ -142,5 +167,54 @@ class TournamentService
         }
 
         return $slug;
+    }
+
+    private function ensureTournamentRelationsBelongToOrganization(?string $organizationId, ?string $sessionId, array $sportIds): void
+    {
+        if (blank($organizationId)) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['An organization is required.'],
+            ]);
+        }
+
+        $user = Auth::user();
+        if ($user && ! $user->hasRole('super-admin') && $organizationId !== $user->organization_id) {
+            throw ValidationException::withMessages([
+                'organization_id' => ['You may only manage tournaments in your organization.'],
+            ]);
+        }
+
+        $sessionExists = Session::withoutOrganizationScope()
+            ->whereKey($sessionId)
+            ->where('organization_id', $organizationId)
+            ->exists();
+
+        if (! $sessionExists) {
+            throw ValidationException::withMessages([
+                'session_id' => ['The selected session must belong to the tournament organization.'],
+            ]);
+        }
+
+        $this->ensureSportsBelongToOrganization($organizationId, $sportIds);
+    }
+
+    private function ensureSportsBelongToOrganization(string $organizationId, array $sportIds): void
+    {
+        $sportIds = collect($sportIds)->filter()->values();
+
+        if ($sportIds->isEmpty()) {
+            return;
+        }
+
+        $validCount = Sport::withoutOrganizationScope()
+            ->where('organization_id', $organizationId)
+            ->whereIn('id', $sportIds)
+            ->count();
+
+        if ($validCount !== $sportIds->unique()->count()) {
+            throw ValidationException::withMessages([
+                'sports' => ['All selected sports must belong to the tournament organization.'],
+            ]);
+        }
     }
 }

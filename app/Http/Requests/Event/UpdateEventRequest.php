@@ -25,35 +25,23 @@ class UpdateEventRequest extends FormRequest
     {
         $event = $this->route('event');
         $user = $this->user();
-        $isSuper = $user && $user->hasRole('super-admin');
+        $organizationId = $event?->organization_id ?? $user?->organization_id;
 
         return [
             'tournament_id' => [
                 'required',
                 'uuid',
-                Rule::exists('tournaments', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('tournaments', 'id')->where('organization_id', $organizationId),
             ],
             'sport_id' => [
                 'required',
                 'uuid',
-                Rule::exists('sports', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('sports', 'id')->where('organization_id', $organizationId),
             ],
             'sport_category_id' => [
                 'required',
                 'uuid',
-                Rule::exists('sport_categories', 'id')->where(function ($query) use ($isSuper, $user) {
-                    if (! $isSuper) {
-                        $query->where('organization_id', $user->organization_id);
-                    }
-                }),
+                Rule::exists('sport_categories', 'id')->where('organization_id', $organizationId),
                 Rule::unique('events', 'sport_category_id')
                     ->where('tournament_id', $this->tournament_id)
                     ->where('sport_id', $this->sport_id)

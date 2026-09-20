@@ -70,6 +70,26 @@ class ActivityLogTest extends TestCase
             );
     }
 
+    public function test_org_admin_sees_only_system_activity_with_matching_audit_organization(): void
+    {
+        Role::firstOrCreate(['name' => 'org-admin', 'guard_name' => 'web']);
+        $organizationA = Organization::factory()->create();
+        $organizationB = Organization::factory()->create();
+        $orgAdminA = User::factory()->create(['organization_id' => $organizationA->id]);
+        $orgAdminA->assignRole('org-admin');
+        $participantA = Participant::factory()->create(['organization_id' => $organizationA->id]);
+        $participantB = Participant::factory()->create(['organization_id' => $organizationB->id]);
+
+        activity()->performedOn($participantA)->event('system')->log('Tenant A system activity');
+        activity()->performedOn($participantB)->event('system')->log('Tenant B system activity');
+
+        $this->actingAs($orgAdminA)->get(route('activity-logs.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('activities.data', fn ($activities) => collect($activities)->contains('description', 'Tenant A system activity')
+                    && ! collect($activities)->contains('description', 'Tenant B system activity')));
+    }
+
     public function test_activity_records_standard_audit_metadata(): void
     {
         Role::firstOrCreate(['name' => 'org-admin', 'guard_name' => 'web']);

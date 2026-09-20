@@ -17,9 +17,9 @@ final class SquadManagementService
         $this->ensureRoleRequirements($eventParticipant, $data);
 
         return SquadMember::create([
+            ...$data,
             'event_participant_id' => $eventParticipant->id,
             'organization_id' => $eventParticipant->organization_id,
-            ...$data,
         ]);
     }
 
@@ -32,7 +32,7 @@ final class SquadManagementService
             $this->ensureRoleRequirements($eventParticipant->load('event.sportCategory'), $data, $squadMember);
         }
 
-        $squadMember->update($data);
+        $squadMember->update(array_diff_key($data, array_flip(['event_participant_id', 'organization_id'])));
 
         return $squadMember->refresh();
     }

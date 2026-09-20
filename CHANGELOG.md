@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 20 September 2026 — Use explicit tenant scopes in relation validation
+
+- Replaced service and request relation lookups that bypassed the organization scope with explicit `forOrganization($organizationId)` queries.
+- Tenant-bypass and project-inventory checks now pass with the current working tree.
+
+### 20 September 2026 — Preserve trusted service and CLI flows
+
+- Service-layer unit/console calls may use an explicitly supplied organization when no authenticated tenant exists; authenticated non-super-admin HTTP flows remain forced to their own organization.
+- The super-admin provisioning command now assigns its protected role through the trusted command transaction after user creation.
+
+### 20 September 2026 — Resolve target tenant for super-admin mutations
+
+- Super-admin match and result operations now resolve the organization from the selected event/match instead of the super-admin's empty `organization_id`.
+- Registration validation derives the organization from the selected tournament when omitted, while service-layer checks still enforce same-tenant parent relations.
+- Verified the focused tenant suites: **82/82 tests** and **260 assertions** passed.
+
+### 20 September 2026 — Harden tenant-owned mass assignment
+
+- Enforced server-side organization and parent-relation invariants across event, participant, registration, match, result, session, sport, user and squad mutations.
+- Prevented registration, event, match and result records from linking parents across organizations, including super-admin payloads.
+- Added regression coverage for mixed-tenant event/registration payloads and tightened request scoping for selected organizations.
+
+### 20 September 2026 — Complete user active-state enforcement
+
+- Added the missing `users.is_active` migration and aligned the model, factory, UI form and TypeScript contract.
+- Prevented inactive users from authenticating and added regression coverage for the inactive login path.
+
+### 20 September 2026 — Harden faculty squad authorization
+
+- Protected `/faculty/squad*` routes with the `faculty-representative` role middleware and a controller-level linked-participant guard.
+- Added regression coverage for regular authenticated users, faculty-role users without a linked participant, and cross-participant squad access.
+
+### 20 September 2026 — Harden cross-tenant mutations
+
+- Restricted non-super-admin tournament creation to the authenticated organization and required session/sport relationships to use the same organization.
+- Prevented participant updates from changing organization ownership or selecting a session from another organization.
+- Added service-layer invariant checks and HTTP regression tests for cross-tenant tournament and participant payloads.
+
+### 20 September 2026 — Enforce explicit public session selection
+
+- `PublicPortalService` now resolves the active public session by `PUBLIC_SESSION_SLUG` within `PUBLIC_ORG_SLUG` instead of selecting the newest active session automatically.
+- Release preflight now requires both public organization and session selectors.
+- Added regression coverage for multiple active sessions in one organization.
+
+### 20 September 2026 — Harden activity log tenant isolation
+
+- Replaced the tenant-wide `causer_id IS NULL` fallback with explicit matching through causer organization or `properties.audit.organization_id`.
+- Super-admin organization filters now include tenant-scoped system activity records.
+- Added regression coverage for null-causer system activity from two organizations.
+
+### 20 September 2026 — Harden document tenant isolation
+
+- Added a shared document path service with organization/session-scoped canonical directories and safe legacy-path discovery.
+- Scoped document upload, available-file listing, linking and deletion to the owning organization/session; traversal and foreign-tenant paths are rejected.
+- Added regression coverage for canonical upload paths, foreign-session/foreign-organization selection and session directory listing.
+
 ### 19 September 2026 — Fix pre-existing dashboard and notification regressions
 
 - `RegisterParticipantToEvent` now dispatches `EventParticipantNotificationService::notifyRegistration()` after a successful registration, covering both the single and batch flows, so org-admins and deans receive `NewEventRegistration` again.
@@ -866,4 +922,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Removed` — Removed features
 - `Fixed` — Bug fixes
 - `Security` — Security-related fixes
-
