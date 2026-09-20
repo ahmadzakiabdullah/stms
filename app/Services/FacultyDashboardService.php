@@ -40,9 +40,9 @@ class FacultyDashboardService
 
             // Performance optimization: Flatten squad members and use a single countBy
             // pass to avoid repetitive loop overhead.
-            $squadMembers = $registrations->flatMap(function ($reg) {
-                return $reg->squadMembers;
-            });
+            $squadMembers = $registrations->reduce(function ($carry, $reg) {
+                return $carry->concat($reg->relationLoaded('squadMembers') ? $reg->squadMembers : []);
+            }, collect());
             $counts = $squadMembers->countBy('role');
 
             $totalMale += $counts->get('athlete_male', 0);
