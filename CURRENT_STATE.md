@@ -16,7 +16,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 162 application routes |
+| Laravel routes | 163 application routes |
 | Migrations | 70 migration files |
 | Controllers | 41 controller files |
 | Form Requests | 28 |
