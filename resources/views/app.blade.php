@@ -34,7 +34,7 @@
             the guest-only map after that transition; authorization remains
             enforced by Laravel middleware and policies.
         --}}
-        @routes
+        @routes(null, request()->attributes->get('csp_nonce'))
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/Pages/{$page['component']}.tsx"])
         @inertiaHead

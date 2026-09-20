@@ -30,7 +30,7 @@
 
 ## CSP
 
-Production currently sends `Content-Security-Policy-Report-Only`. Repository assets are now self-hosted and browser/axe smoke tests pass. Enable enforcing mode only through the release runbook with post-deploy CSP console/network verification.
+Production currently sends `Content-Security-Policy-Report-Only`. The inline Ziggy route bootstrap now receives a per-response nonce, and the policy no longer allows Bunny Fonts because assets are self-hosted. `style-src 'unsafe-inline'` remains until the runtime style blocks are refactored. Enable enforcing mode only through the release runbook with post-deploy CSP console/network verification.
 
 ## Release Rule
 

@@ -88,11 +88,12 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString("default-src 'self'", $policy);
         $this->assertStringContainsString("object-src 'none'", $policy);
         $this->assertStringNotContainsString("'unsafe-eval'", $policy);
-        // During report-only mode (the default), 'unsafe-inline' is included to catch violations without breaking the app.
-        // It's only stripped when CSP_REPORT_ONLY is false. The SecurityHeaders middleware implements this logic.
-        if (config('app.csp_report_only') === false) {
-            $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
-        }
+        $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
+        $this->assertStringNotContainsString('fonts.bunny.net', $policy);
+        $this->assertMatchesRegularExpression("/script-src 'self' 'nonce-[A-Za-z0-9+\\/=]+'; /", $policy);
+        preg_match("/'nonce-([^']+)'/", $policy, $matches);
+        $this->assertNotEmpty($matches[1] ?? null);
+        $this->assertStringContainsString('nonce="'.$matches[1].'"', $response->getContent());
     }
 
     public function test_csp_enforcing_mode_uses_enforcing_header_and_removes_inline_scripts(): void
@@ -110,8 +111,11 @@ class SecurityHeadersTest extends TestCase
         $response->assertHeaderMissing('Content-Security-Policy-Report-Only');
 
         $policy = $response->headers->get('Content-Security-Policy');
-        $this->assertStringContainsString("script-src 'self';", $policy);
+        $this->assertMatchesRegularExpression("/script-src 'self' 'nonce-[A-Za-z0-9+\\/=]+'; /", $policy);
         $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
         $this->assertStringContainsString('upgrade-insecure-requests', $policy);
+        preg_match("/'nonce-([^']+)'/", $policy, $matches);
+        $this->assertNotEmpty($matches[1] ?? null);
+        $this->assertStringContainsString('nonce="'.$matches[1].'"', $response->getContent());
     }
 }

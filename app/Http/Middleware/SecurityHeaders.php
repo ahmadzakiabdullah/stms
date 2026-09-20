@@ -10,6 +10,10 @@ class SecurityHeaders
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if (app()->environment('production')) {
+            $request->attributes->set('csp_nonce', base64_encode(random_bytes(16)));
+        }
+
         $response = $next($request);
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
@@ -26,16 +30,15 @@ class SecurityHeaders
                 ? 'Content-Security-Policy-Report-Only'
                 : 'Content-Security-Policy';
 
-            $scriptSrc = $isReportOnly
-                ? "script-src 'self' 'unsafe-inline'; "
-                : "script-src 'self'; ";
+            $nonce = (string) $request->attributes->get('csp_nonce', '');
+            $scriptSrc = "script-src 'self'".($nonce !== '' ? " 'nonce-{$nonce}'" : '').'; ';
 
             $styleSrc = $isReportOnly
-                ? "style-src 'self' 'unsafe-inline' https://fonts.bunny.net; "
+                ? "style-src 'self' 'unsafe-inline'; "
                 : "style-src 'self' 'unsafe-inline'; ";
 
             $fontSrc = $isReportOnly
-                ? "font-src 'self' data: https://fonts.bunny.net; "
+                ? "font-src 'self' data:; "
                 : "font-src 'self' data:; ";
 
             $tailDirectives = $isReportOnly

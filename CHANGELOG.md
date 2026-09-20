@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 20 September 2026 — Prepare CSP for nonce-based enforcement
+
+- Added a per-response CSP nonce for the inline Ziggy route bootstrap, so enforcing `script-src 'self'` does not break route helpers.
+- Removed unused Bunny Fonts sources from the CSP; runtime inline styles remain explicitly tracked as the next hardening step.
+
 ### 20 September 2026 — Harden Composer production recovery
 
 - Corrected Composer optimization flags by subcommand: `install --optimize-autoloader` and `dump-autoload --optimize`.
