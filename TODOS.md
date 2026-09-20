@@ -57,8 +57,8 @@
 
 ### Public portal, activity log dan dokumen
 
-- [x] Gunakan `PUBLIC_SESSION_SLUG` dalam `PublicPortalService`; portal kini memilih sesi aktif berdasarkan slug dalam organisasi yang dikonfigurasi.
-- [x] Selaraskan release preflight supaya `PUBLIC_ORG_SLUG` dan `PUBLIC_SESSION_SLUG` kedua-duanya wajib dikonfigurasi secara eksplisit.
+- [x] Pilih session awam aktif terkini dalam `PUBLIC_ORG_SLUG`; pertukaran session tidak lagi memerlukan `PUBLIC_SESSION_SLUG`.
+- [x] Selaraskan release preflight supaya `PUBLIC_ORG_SLUG` wujud dan mempunyai sekurang-kurangnya satu session aktif.
 - [x] Tapis activity log tenant menggunakan `properties.audit.organization_id` untuk system activity; rekod tanpa causer yang tiada audit organization kini tidak dipaparkan kepada tenant.
 - [x] Validasi session/sport pada upload dan select dokumen terhadap organisasi yang sedang aktif.
 - [x] Simpan dan deliver dokumen mengikut partition tenant/session yang konsisten; `available`, upload dan select kini menggunakan canonical path tenant/session serta path legacy yang masih selamat.
@@ -71,8 +71,8 @@
 
 ## P1 — Quality gates dan dokumentasi
 
-- [ ] Reconcile inventory sebenar: 162 routes, 69 migrations, 41 controllers, 43 Inertia pages dan 99 test files.
-- [ ] Kemas kini `CURRENT_STATE.md`, `README.md`, `docs/architecture/system-overview.md`, `docs/database/schema.md` dan inventory checks supaya tidak lagi menunjukkan angka lama.
+- [x] Reconcile inventory sebenar: 162 routes, 70 migrations, 41 controllers, 43 Inertia pages dan 100 test files; `npm run check:inventory` lulus.
+- [x] Kemas kini `CURRENT_STATE.md`, `README.md`, `docs/architecture/system-overview.md` dan inventory checks supaya tidak lagi menunjukkan angka lama; `docs/database/schema.md` tiada matriks inventori untuk dikemas kini.
 - [ ] Review working tree dan asingkan/commit perubahan UI atau package yang tidak berkaitan dengan release ini.
 - [ ] Pulihkan dependency development lengkap supaya PHPUnit dan build native boleh dijalankan dalam environment CI yang konsisten.
 - [ ] Jadikan gate release wajib: `php artisan test`, Pint, typecheck, inventory, tenant-bypass check, production build, budget, E2E, `composer audit` dan `npm audit`.
