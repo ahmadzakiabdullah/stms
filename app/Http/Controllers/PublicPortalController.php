@@ -70,6 +70,9 @@ class PublicPortalController extends Controller
             ['location' => route('public.athletes'), 'priority' => '0.6'],
             ['location' => route('public.faculties'), 'priority' => '0.6'],
             ['location' => route('public.venues'), 'priority' => '0.5'],
+            ['location' => route('public.news'), 'priority' => '0.4'],
+            ['location' => route('public.downloads'), 'priority' => '0.4'],
+            ['location' => route('public.faq'), 'priority' => '0.4'],
             ['location' => route('public.about'), 'priority' => '0.4'],
             ['location' => route('public.contact'), 'priority' => '0.6'],
         ];
@@ -77,5 +80,28 @@ class PublicPortalController extends Controller
         $xml = view('sitemap', ['urls' => $urls])->render();
 
         return response($xml, 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
+    }
+
+    public function robots(): HttpResponse
+    {
+        $body = implode("\n", [
+            'User-agent: *',
+            'Allow: /',
+            'Disallow: /dashboard',
+            'Disallow: /manage/',
+            'Disallow: /profile',
+            'Disallow: /login',
+            'Disallow: /register',
+            'Disallow: /forgot-password',
+            'Disallow: /reset-password',
+            'Disallow: /health',
+            'Disallow: /storage/',
+            'Disallow: /portal/',
+            '',
+            'Sitemap: '.route('public.sitemap'),
+            '',
+        ]);
+
+        return response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 }

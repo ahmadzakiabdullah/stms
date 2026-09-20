@@ -7,8 +7,9 @@ import { Menu, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export type PublicMenuLink = { href: string; label: string; current?: boolean };
+export type PublicMenuGroup = { label: string; links: PublicMenuLink[] };
 
-export default function PublicMobileMenu({ links }: { links: PublicMenuLink[] }) {
+export default function PublicMobileMenu({ links, groups = [] }: { links: PublicMenuLink[]; groups?: PublicMenuGroup[] }) {
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -77,7 +78,7 @@ export default function PublicMobileMenu({ links }: { links: PublicMenuLink[] })
                 aria-haspopup="true"
                 aria-controls="public-mobile-navigation"
                 onClick={() => setOpen(current => !current)}
-                className="border-white/15 bg-white/5 text-white hover:bg-white/10 focus-visible:ring-[var(--public-accent)]"
+                className="min-h-11 min-w-11 border-white/15 bg-white/5 text-white hover:bg-white/10 focus-visible:ring-[var(--public-accent)] sm:min-h-11 sm:min-w-11"
             >
                 {open ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
             </Button>
@@ -98,6 +99,26 @@ export default function PublicMobileMenu({ links }: { links: PublicMenuLink[] })
                         >
                             {link.label}
                         </Link>
+                    ))}
+                    {groups.map(group => (
+                        <section key={group.label} className="mt-2 border-t border-white/10 pt-2" aria-labelledby={`public-mobile-${group.label.toLowerCase()}`}>
+                            <h2 id={`public-mobile-${group.label.toLowerCase()}`} className="px-3 py-2 text-xs font-black uppercase tracking-[.16em] text-[var(--public-accent)]">
+                                {group.label}
+                            </h2>
+                            <div className="space-y-0.5">
+                                {group.links.map(link => (
+                                    <Link
+                                        key={`${link.href}-${link.label}`}
+                                        href={link.href}
+                                        aria-current={link.current ? 'page' : undefined}
+                                        onClick={() => setOpen(false)}
+                                        className={`flex min-h-11 items-center rounded-xl px-3 text-sm font-bold transition hover:bg-white/10 ${link.current ? 'bg-white/10 text-[var(--public-highlight)]' : 'text-white/75 hover:text-white'}`}
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
+                            </div>
+                        </section>
                     ))}
                     <div className="mt-2 flex items-center justify-between gap-3 border-t border-white/10 p-2 pt-4">
                         <LocaleSwitcher compact showLabel={false} />

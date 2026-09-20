@@ -54,7 +54,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (app()->environment('production')) {
-            if (config('app.production_config_enforce')) {
+            // The preflight command must be able to boot far enough to report
+            // unsafe configuration; every other production process remains
+            // fail-closed when enforcement is enabled.
+            if (
+                config('app.production_config_enforce')
+                && ! $this->app->runningConsoleCommand('stms:release-preflight')
+            ) {
                 ProductionConfiguration::validate();
             }
             URL::forceRootUrl(rtrim((string) config('app.url'), '/'));

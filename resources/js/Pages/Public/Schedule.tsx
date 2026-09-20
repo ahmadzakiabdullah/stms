@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useI18n } from '@/lib/i18n';
-import { Head } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
 import { CalendarDays, Clock3, Radio, SlidersHorizontal, Trophy, Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -55,7 +54,7 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
     const [activeTab, setActiveTab] = useState<TabType>('all');
     const [sportFilter, setSportFilter] = useState(() => initialQueryParam('sport'));
     const [categoryFilter, setCategoryFilter] = useState(() => initialQueryParam('category'));
-    const [venueFilter, setVenueFilter] = useState('');
+    const [venueFilter, setVenueFilter] = useState(() => initialQueryParam('venue'));
     const [searchQuery, setSearchQuery] = useState('');
     const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -156,8 +155,7 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
     const completedCount = allMatches.completed.length;
 
     return (
-        <PublicLayout title={`${t('Competition Schedule')} | ${competition?.name || app_name}`} appName={app_name} current="schedule">
-            <Head><meta name="description" content={t('Find official upcoming fixtures, live matches and completed results by sport, venue and time.')} /><link rel="canonical" href={route('public.schedule')} /></Head>
+        <PublicLayout title={`${t('Competition Schedule')} | ${competition?.name || app_name}`} appName={app_name} current="schedule" description={t('Find official upcoming fixtures, live matches and completed results by sport, venue and time.')} canonical={route('public.schedule')}>
             <main>
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Schedule unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero

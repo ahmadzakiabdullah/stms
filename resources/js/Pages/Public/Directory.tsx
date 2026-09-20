@@ -3,9 +3,10 @@ import PublicEmptyState from '@/components/PublicEmptyState';
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
+import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
 import { useI18n } from '@/lib/i18n';
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { ArrowRight, FileText, MapPin, Search, Trophy, Users, X } from 'lucide-react';
 import { SportIcon } from '@/lib/sportIcons';
 import { type ComponentType, useMemo, useState } from 'react';
@@ -13,7 +14,7 @@ import { type ComponentType, useMemo, useState } from 'react';
 type Team = { name: string; logo_url: string | null; inverse_logo_url: string | null } | null;
 type SportDocument = { title: string; url: string; file_name: string; mime_type: string; file_size: number };
 type SportCatalogEntry = { name: string; categories: string[]; events: { name: string; category: string | null }[]; documents?: SportDocument[] };
-type Props = { section: 'sports' | 'faculties' | 'venues'; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; sports_catalog: SportCatalogEntry[]; faculties: Team[]; venues: string[]; error?: string | null };
+type Props = { section: 'sports' | 'faculties' | 'venues'; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; sports_catalog: SportCatalogEntry[]; faculties: Team[]; venues: string[]; updated_at?: string; error?: string | null };
 
 const labels: Record<Props['section'], { title: string; intro: string; icon: ComponentType<{ className?: string }> }> = {
     sports: { title: 'Sports Programme', intro: 'Explore the official sports and events in this competition.', icon: Trophy },
@@ -21,18 +22,18 @@ const labels: Record<Props['section'], { title: string; intro: string; icon: Com
     venues: { title: 'Venues', intro: 'Competition locations and venues used for official fixtures.', icon: MapPin },
 };
 
-export default function PublicDirectory({ section, app_name, competition, sports_catalog, faculties, venues, error = null }: Props) {
+export default function PublicDirectory({ section, app_name, competition, sports_catalog, faculties, venues, updated_at, error = null }: Props) {
     const { t } = useI18n();
     const meta = labels[section];
     const Icon = meta.icon;
 
     return (
-        <PublicLayout title={`${t(meta.title)} | ${competition?.name || app_name}`} appName={app_name} current={section === 'sports' ? section : undefined}>
-            <Head><meta name="description" content={t(meta.intro)} /><link rel="canonical" href={route(`public.${section}`)} /></Head>
+        <PublicLayout title={`${t(meta.title)} | ${competition?.name || app_name}`} appName={app_name} current={section === 'sports' ? section : undefined} description={t(meta.intro)} canonical={route(`public.${section}`)}>
             <main>
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Directory unavailable')} description={error} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t(meta.title)} intro={t(meta.intro)} icon={<Icon className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+                    <div className="mb-6 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>
                     <DirectoryContent section={section} sports_catalog={sports_catalog} faculties={faculties} venues={venues} t={t} />
                 </div>
             </main>
@@ -42,8 +43,68 @@ export default function PublicDirectory({ section, app_name, competition, sports
 
 function DirectoryContent({ section, sports_catalog, faculties, venues, t }: { section: Props['section']; sports_catalog: Props['sports_catalog']; faculties: Team[]; venues: string[]; t: (key: string) => string }) {
     if (section === 'sports') return <SportsDirectory sports_catalog={sports_catalog} t={t} />;
-    if (section === 'faculties') return <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{faculties.map((faculty, index) => <article key={`${faculty?.name}-${index}`} className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 text-center shadow-sm"><div className="flex justify-center"><ParticipantLogo participant={faculty} size="xl" /></div><h2 className="mt-4 text-sm font-black">{faculty?.name || 'TBC'}</h2></article>)}</div>;
-    return <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{venues.map(venue => <article key={venue} className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-6 shadow-sm"><MapPin className="size-6 text-[var(--public-primary)]" /><h2 className="mt-4 text-lg font-black">{venue}</h2><p className="mt-2 text-sm text-[var(--public-dark-faint)]">{t('Official competition venue')}</p></article>)}</div>;
+    if (section === 'faculties') return faculties.length === 0
+        ? <PublicEmptyState text={t('No faculties published yet.')} />
+        : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{faculties.map((faculty, index) => <article key={`${faculty?.name}-${index}`} className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 text-center shadow-sm"><div className="flex justify-center"><ParticipantLogo participant={faculty} size="xl" /></div><h2 className="mt-4 text-sm font-black">{faculty?.name || 'TBC'}</h2></article>)}</div>;
+    return <VenuesDirectory venues={venues} t={t} />;
+}
+
+function VenuesDirectory({ venues, t }: { venues: string[]; t: (key: string) => string }) {
+    if (venues.length === 0) {
+        return <PublicEmptyState text={t('The venue directory is not available yet.')} />;
+    }
+
+    return (
+        <section aria-label={t('Venues')}>
+            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+                <PublicSectionHeading
+                    eyebrow={t('Competition locations')}
+                    title={t('Find your competition venue')}
+                    description={t('Browse the official locations used for SAF fixtures, then open the schedule for each venue.')}
+                />
+                <Link href={route('public.schedule')} className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] sm:self-auto">
+                    {t('View full schedule')}
+                    <ArrowRight className="size-4" />
+                </Link>
+            </div>
+
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {venues.map((venue, index) => (
+                    <article key={venue} className="group relative isolate flex min-h-64 flex-col overflow-hidden rounded-3xl border border-[var(--public-dark-border)] bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]">
+                        <div aria-hidden="true" className="absolute -right-10 -top-12 -z-10 size-40 rounded-full border-[16px] border-[var(--public-primary-soft)] opacity-80 transition duration-300 group-hover:scale-110" />
+                        <div className="flex items-start justify-between gap-4">
+                            <span className="flex size-12 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]">
+                                <MapPin className="size-6" aria-hidden="true" />
+                            </span>
+                            <span className="text-xs font-black tracking-[.18em] text-[var(--public-primary)] tabular-nums">{String(index + 1).padStart(2, '0')}</span>
+                        </div>
+                        <div className="mt-auto pt-12">
+                            <p className="text-xs font-black uppercase tracking-[.16em] text-[var(--public-dark-faint)]">{t('Official competition venue')}</p>
+                            <h2 className="mt-2 text-xl font-black leading-tight tracking-[-.02em] text-[var(--public-text)]">{venue}</h2>
+                            <Link
+                                href={route('public.schedule', { venue })}
+                                className="relative z-10 mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-black text-[var(--public-primary)] transition hover:text-[var(--public-dark)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-primary)]/40"
+                            >
+                                {t('View fixtures')}
+                                <ArrowRight className="size-4 transition group-hover:translate-x-1" aria-hidden="true" />
+                            </Link>
+                        </div>
+                    </article>
+                ))}
+            </div>
+
+            <div className="mt-10 flex flex-col gap-4 rounded-3xl bg-[var(--public-dark)] p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
+                <div>
+                    <p className="text-xs font-black uppercase tracking-[.18em] text-[var(--public-accent)]">{t('Plan your visit')}</p>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">{t('Find upcoming fixtures by sport, event, venue and time.')}</p>
+                </div>
+                <Link href={route('public.schedule')} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--public-highlight)] px-4 text-sm font-black text-[var(--public-dark)] transition hover:brightness-105">
+                    {t('Explore schedule')}
+                    <ArrowRight className="size-4" />
+                </Link>
+            </div>
+        </section>
+    );
 }
 
 function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEntry[]; t: (key: string) => string }) {
@@ -167,7 +228,7 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
                                 href={document.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--public-primary)] underline-offset-2 hover:underline"
+                                className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold text-[var(--public-primary)] underline-offset-2 hover:bg-[var(--public-primary-soft)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-primary)]/40"
                             >
                                 <FileText className="size-3.5 shrink-0" />
                                 {document.title}

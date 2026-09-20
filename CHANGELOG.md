@@ -7,6 +7,98 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 21 September 2026 — Standardize public SEO metadata and crawler policy
+
+- Consolidated public title, description, canonical, Open Graph and Twitter card metadata in the shared public layout.
+- Marked Blade fallback description/canonical tags as Inertia-managed so page-specific SEO values do not create duplicate tags.
+- Added `/robots.txt` with authenticated-route exclusions and a canonical sitemap reference.
+- Extended `/sitemap.xml` to include public news, downloads and FAQ pages; added feature and Playwright regression coverage.
+
+### 21 September 2026 — Resolve public accessibility findings
+
+- Enlarged public sport-document links to meet the axe target-size check and added a visible keyboard focus ring.
+- Updated the shared shadcn button primitive to forward refs, restoring focus to the mobile menu trigger after Escape.
+- Tightened public navigation E2E selectors and excluded the separate `Log in` action from the navigation parity list.
+
+### 21 September 2026 — Verify public production build and accessibility smoke
+
+- Vite production build berjaya: 4,119 modules transformed, selesai dalam 1.76 saat.
+- Playwright public smoke production lulus **6/6** termasuk axe serious/critical, keyboard navigation, focus management, menu parity, locale switching, overflow dan CSP checks.
+- Warning dependency `dlv` tentang invalid `main` field tidak menghalang build dan tidak menghasilkan failure.
+
+### 21 September 2026 — Preserve public touch targets at tablet width
+
+- Public mobile trigger dan hero CTA kini mengekalkan minimum `44px` pada tablet; sebelum ini responsive `sm:min-h-0` mengecilkannya kepada 36px.
+- Responsive smoke production lulus **1/1** untuk mobile/tablet/desktop, reduced motion dan touch target checks.
+
+### 20 September 2026 — Allow release preflight to report enforced config blockers
+
+- Production configuration enforcement remains fail-closed for web requests, workers and ordinary Artisan commands.
+- `stms:release-preflight` can now boot in audit mode and report every invalid production prerequisite instead of failing before its JSON/table output is generated.
+
+### 20 September 2026 — Capture production release preflight evidence
+
+- Production preflight berjaya mencapai semua checks: database MySQL dan public organization/session lulus.
+- Release kekal `error` secara jujur kerana Redis, real mail transport, scheduled backup dan health monitoring belum dikonfigurasi.
+
+### 20 September 2026 — Extend public data states
+
+- Directory fakulti kini mempunyai empty state khusus apabila tiada fakulti diterbitkan.
+- Homepage, directory, contact, information dan athlete profile kini menggunakan notis stale-data yang sama dengan schedule/athlete directory.
+
+### 20 September 2026 — Expand public accessibility smoke coverage
+
+- Added axe checks for all public routes: home, schedule, athletes, sports, faculties, venues, contact, news, downloads, FAQ and about.
+- Added keyboard regression coverage for mobile menu focus entry, Escape restoration and focus wrapping.
+
+### 20 September 2026 — Verify production user active-state migration
+
+- Migration production dijalankan dengan `php artisan migrate --force` dan cache/config/views dibersihkan melalui `php artisan optimize:clear`.
+- Smoke test login dengan credential dummy kembali ke `/login` melalui HTTP 302, mengesahkan regression `Unknown column 'is_active'` tidak lagi direproduksi.
+
+### 20 September 2026 — Tighten sidebar whitespace
+
+- Kurangkan lagi padding luar, gap seksyen dan padding horizontal/vertical item sidebar.
+- Kekalkan minimum `44px` untuk setiap pautan menu dan logout.
+
+### 20 September 2026 — Compact authenticated sidebar spacing
+
+- Kurangkan gap, padding dan tinggi item sidebar secara seragam pada Dashboard dan semua module pages.
+- Kekalkan target klik minimum 44px untuk menu dan logout sambil menambah kapasiti menu yang kelihatan.
+
+### 20 September 2026 — Normalize authenticated sidebar spacing
+
+- Dashboard kini menggunakan gap, padding dan tinggi menu yang sama seperti `/manage/matches` dan page authenticated lain.
+- Dibuang `compactDesktop` route-specific spacing yang menyebabkan sidebar Dashboard kelihatan lebih rapat.
+
+### 20 September 2026 — Role-aware authenticated dashboard
+
+- Dashboard generic kini mempunyai hierarchy berbeza untuk administration, competition operations dan reporting.
+- Admin Sport menerima KPI matches/results serta CTA terus ke matches dan results; pautan analytics yang tidak dibenarkan dibuang.
+- Faculty Representative dan Dean kekal menggunakan dashboard workflow khusus mereka seperti routing backend sedia ada.
+
+### 20 September 2026 — Simplify authenticated sidebar navigation
+
+- Dashboard sidebar kini menggunakan menu rata tanpa dropdown; semua menu yang dibenarkan kelihatan terus pada desktop dan mobile.
+- Kekalkan role filtering, active-route indicator dan spacing compact pada dashboard.
+
+### 20 September 2026 — Redesign public homepage pre-fixture experience
+
+- Homepage kini menyesuaikan CTA utama mengikut ketersediaan jadual; sebelum fixtures diterbitkan, pengguna dibawa ke program sukan.
+- Panel hero tidak lagi memaparkan progress `0%` tanpa konteks; ia menerangkan status penerbitan jadual dan mengekalkan maklumat competition yang sebenar.
+- Tambah quick-access hub responsive ke sports programme, venue directory dan Athletes & Teams untuk menjadikan homepage berguna sebelum jadual tersedia.
+
+### 20 September 2026 — Lengkapkan navigasi awam mobile
+
+- Menu mobile/tablet kini turut memaparkan seksyen `Competition` dan `Information` bersama pautan anaknya seperti desktop.
+- Desktop dan mobile kini menggunakan struktur pautan/kumpulan yang sama; tambah regression check Playwright yang membandingkan semua pautan kedua-dua viewport.
+- Sub-menu desktop kini keluar di bawah `Competition` dan `Information` apabila klik, hover atau keyboard focus, dengan petunjuk anak panah yang jelas.
+
+### 20 September 2026 — Redesign public Venues directory
+
+- Redesigned `/venues` dengan layout directory yang lebih jelas: hierarchy lokasi, numbered venue cards, visual map-pin treatment, empty state dan CTA ke schedule.
+- Setiap venue kini deep-link ke `/schedule?venue=...`, dan halaman schedule membaca filter venue daripada query string.
+
 ### 20 September 2026 — Enforce CSP after live browser verification
 
 - Enabled the enforcing `Content-Security-Policy` header in production after rebuilding the live frontend bundle and passing the public-page Playwright CSP smoke test with zero browser violations.

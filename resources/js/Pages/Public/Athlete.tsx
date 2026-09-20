@@ -3,8 +3,9 @@ import PublicEmptyState from '@/components/PublicEmptyState';
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
+import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import { useI18n } from '@/lib/i18n';
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { ArrowLeft, CalendarDays, CheckCircle2, Clock3, MapPin, Trophy, Users, XCircle } from 'lucide-react';
 
 type Athlete = { id: string; name: string; role: string; faculty: string | null; logo_url: string | null; inverse_logo_url: string | null; sport: string | null; category: string | null; event: string | null };
@@ -15,8 +16,7 @@ export default function PublicAthlete({ app_name, competition, athlete, stats, m
     const { t, locale } = useI18n();
 
     return (
-        <PublicLayout title={`${athlete.name} | ${competition?.name || app_name}`} appName={app_name} current="athletes">
-            <Head><meta name="description" content={t('View the official athlete profile, competition participation and performance record.')} /><link rel="canonical" href={route('public.athletes.show', athlete.id)} /></Head>
+        <PublicLayout title={`${athlete.name} | ${competition?.name || app_name}`} appName={app_name} current="athletes" description={t('View the official athlete profile, competition participation and performance record.')} canonical={route('public.athletes.show', athlete.id)}>
             <main>
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Athlete profile unavailable')} description={error} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t('Athlete Profile')} intro={t('Official participation and performance record.')} icon={<Users className="size-4" />} />
@@ -33,16 +33,12 @@ export default function PublicAthlete({ app_name, competition, athlete, stats, m
 
                     <section className="mt-10"><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.16em] text-[var(--public-primary)]">{t('Official record')}</p><h2 className="mt-2 text-xl font-black">{t('Team performance')}</h2><p className="mt-1 text-xs font-semibold text-[var(--public-dark-faint)]">{t('Results are based on the athlete’s registered faculty team.')}</p></div><Trophy className="size-6 text-[var(--public-primary)]" /></div>
                         {matches.length === 0 ? <div className="mt-5"><PublicEmptyState text={t('No official matches recorded yet.')} /></div> : <div className="mt-5 space-y-3">{matches.map(match => <MatchRow key={match.id} match={match} locale={locale} t={t} />)}</div>}
-                        {updated_at && <p className="mt-5 text-right text-xs font-semibold text-[var(--public-dark-faint)]">{t('Updated')} {formatUpdatedAt(updated_at, locale)}</p>}
+                        {updated_at && <div className="mt-5 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>}
                     </section>
                 </div>
             </main>
         </PublicLayout>
     );
-}
-
-function formatUpdatedAt(value: string, locale: string) {
-    return new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuala_Lumpur' }).format(new Date(value));
 }
 
 function PerformanceStat({ value, label, tone = 'text-[var(--public-text)]' }: { value: number; label: string; tone?: string }) {

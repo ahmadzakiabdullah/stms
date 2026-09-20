@@ -43,12 +43,16 @@ test('login and dashboard have no serious automated accessibility violations', a
 
     await login(page, 'admin@saf.test');
     await page.goto('/dashboard');
+    await expect(page.getByText('Competition Setup', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Sessions', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Competition Setup', exact: true })).toHaveCount(0);
     await expectAccessible(page);
 });
 
 test('public home and contact pages support keyboard navigation and accessibility smoke checks', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('main')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Explore sports programme|View schedule & results/ }).first()).toBeVisible();
     await expectAccessible(page);
 
     await page.keyboard.press('Tab');
@@ -60,6 +64,59 @@ test('public home and contact pages support keyboard navigation and accessibilit
     await expectAccessible(page);
 });
 
+test('all public routes pass serious axe checks and expose a keyboard focus target', async ({ page }) => {
+    for (const path of ['/', '/schedule', '/athletes', '/sports', '/faculties', '/venues', '/contact-us', '/news', '/downloads', '/faq', '/about']) {
+        const response = await page.goto(path);
+        expect(response?.status(), path).toBeLessThan(400);
+        await expect(page.locator('main')).toBeVisible();
+        await expectAccessible(page);
+
+        await page.keyboard.press('Tab');
+        await expect(page.locator(':focus')).toBeVisible();
+    }
+});
+
+test('public routes expose consistent SEO metadata and crawler policy', async ({ page }) => {
+    for (const path of ['/', '/schedule', '/venues', '/contact-us', '/faq']) {
+        await page.goto(path);
+        await expect(page).toHaveTitle(/.+/);
+        await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /.+/);
+        const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
+        expect(canonical).toBeTruthy();
+        expect(new URL(canonical!).pathname).toBe(path);
+        await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /.+/);
+        await expect(page.locator('meta[property="og:description"]')).toHaveAttribute('content', /.+/);
+        await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
+        await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'index, follow');
+    }
+
+    const robots = await page.request.get('/robots.txt');
+    expect(robots.ok()).toBe(true);
+    expect(await robots.text()).toContain('Sitemap:');
+});
+
+test('public navigation supports Escape and focus wrapping on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+
+    const menuButton = page.getByRole('button', { name: 'Open menu' });
+    await menuButton.focus();
+    await menuButton.press('Enter');
+
+    const mobileNav = page.locator('#public-mobile-navigation');
+    await expect(mobileNav).toBeVisible();
+    await expect(mobileNav.getByRole('link').first()).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Open menu' })).toBeFocused();
+
+    await page.getByRole('button', { name: 'Open menu' }).press('Enter');
+    const focusable = mobileNav.locator('a[href], button:not([disabled])');
+    await focusable.last().focus();
+    await page.keyboard.press('Tab');
+    await expect(focusable.first()).toBeFocused();
+});
+
 test('public pages avoid horizontal overflow and support locale switching', async ({ page }) => {
     for (const path of ['/', '/schedule', '/athletes', '/sports', '/faculties', '/venues', '/contact-us']) {
         await page.goto(path);
@@ -68,13 +125,58 @@ test('public pages avoid horizontal overflow and support locale switching', asyn
         await expect(page.locator('body')).not.toContainText(/Invalid Date|NaN/);
     }
 
+    await page.goto('/venues');
+    await expect(page.getByRole('heading', { name: 'Find your competition venue' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /View fixtures/ }).first()).toHaveAttribute('href', /\/schedule\?venue=/);
+
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
     await page.getByRole('button', { name: /Open menu/i }).click();
-    const ms = page.getByRole('button', { name: 'MS' }).first();
+    const mobileNav = page.locator('#public-mobile-navigation');
+    await expect(mobileNav.getByRole('heading', { name: 'Competition', exact: true })).toBeVisible();
+    await expect(mobileNav.getByRole('heading', { name: 'Information', exact: true })).toBeVisible();
+    await expect(mobileNav.getByRole('link', { name: 'Sports', exact: true })).toBeVisible();
+    await expect(mobileNav.getByRole('link', { name: 'News', exact: true })).toBeVisible();
+    const ms = mobileNav.getByRole('button', { name: 'MS' }).first();
     await expect(ms).toBeVisible();
     await ms.click();
     await expect(page.locator('html')).toHaveAttribute('lang', /ms/i);
+});
+
+test('desktop and mobile public navigation stay in sync', async ({ page }) => {
+    const primaryLinks = ['Home', 'Schedule & Results', 'Athletes & Teams', 'Contact'];
+    const competitionLinks = ['Sports', 'Faculties', 'Venues'];
+    const informationLinks = ['News', 'Downloads', 'FAQ', 'About'];
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    const desktopNav = page.locator('nav[aria-label="Public navigation"]:visible');
+
+    for (const label of primaryLinks) {
+        await expect(desktopNav.getByRole('link', { name: label })).toBeVisible();
+    }
+
+    await page.getByRole('button', { name: 'Competition' }).click();
+    for (const label of competitionLinks) {
+        await expect(desktopNav.getByRole('link', { name: label })).toBeVisible();
+    }
+
+    await page.getByRole('button', { name: 'Information' }).click();
+    for (const label of informationLinks) {
+        await expect(desktopNav.getByRole('link', { name: label })).toBeVisible();
+    }
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    await page.getByRole('button', { name: /Open menu/i }).click();
+    const mobileNav = page.locator('#public-mobile-navigation');
+    const mobileLinks = (await mobileNav.locator('a').evaluateAll((anchors) => anchors
+        .filter((anchor) => anchor.getAttribute('aria-label') !== 'Log in')
+        .map((anchor) => anchor.textContent?.trim() ?? '')));
+
+    expect(mobileLinks).toEqual([...primaryLinks, ...competitionLinks, ...informationLinks]);
+    await expect(mobileNav.getByRole('heading', { name: 'Competition', exact: true })).toBeVisible();
+    await expect(mobileNav.getByRole('heading', { name: 'Information', exact: true })).toBeVisible();
 });
 
 test('public pages emit no CSP violations in the browser console', async ({ page }) => {
@@ -93,4 +195,35 @@ test('public pages emit no CSP violations in the browser console', async ({ page
     }
 
     expect(violations).toEqual([]);
+});
+
+test('public shell stays usable on mobile and tablet with reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+
+    for (const viewport of [
+        { width: 390, height: 844, name: 'mobile' },
+        { width: 768, height: 1024, name: 'tablet' },
+        { width: 1440, height: 900, name: 'desktop' },
+    ]) {
+        await page.setViewportSize(viewport);
+        await page.goto('/');
+        await expect(page.locator('main')).toBeVisible();
+
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        expect(overflow, `${viewport.name} horizontal overflow`).toBeLessThanOrEqual(1);
+
+        await expect.poll(() => page.evaluate(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
+
+        const undersizedControls = viewport.width <= 768
+            ? await page.locator('header a, header button, main button, main [role="tab"], main a[class*="min-h-11"]').evaluateAll((elements) => elements
+                .filter((element) => {
+                    const rect = element.getBoundingClientRect();
+                    const style = window.getComputedStyle(element);
+                    return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0 && (rect.width < 44 || rect.height < 44);
+                })
+                .map((element) => ({ tag: element.tagName, text: element.textContent?.trim().slice(0, 40) })))
+            : [];
+
+        expect(undersizedControls, `${viewport.name} controls below 44px`).toEqual([]);
+    }
 });

@@ -1,8 +1,8 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
+import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import { useI18n } from '@/lib/i18n';
-import { Head } from '@inertiajs/react';
 import { Clock, ExternalLink, Mail, MapPin, MessageCircle, Phone, Share2 } from 'lucide-react';
 
 type Props = {
@@ -18,10 +18,11 @@ type Props = {
             youtube: string | null;
         };
     };
+    updated_at?: string;
     error?: string | null;
 };
 
-export default function PublicContact({ app_name, contact, error = null }: Props) {
+export default function PublicContact({ app_name, contact, updated_at, error = null }: Props) {
     const { t } = useI18n();
     const phoneHref = contact.phone ? `tel:${contact.phone.replace(/[^\d+]/g, '')}` : null;
     const socialLinks = [
@@ -32,8 +33,7 @@ export default function PublicContact({ app_name, contact, error = null }: Props
     ].filter(link => link.href);
 
     return (
-        <PublicLayout title={t('Contact Us')} appName={app_name} current="contact">
-            <Head><meta name="description" content={t('Contact the official sports competition secretariat for schedules, participation and venue enquiries.')} /><link rel="canonical" href={route('public.contact')} /></Head>
+        <PublicLayout title={t('Contact Us')} appName={app_name} current="contact" description={t('Contact the official sports competition secretariat for schedules, participation and venue enquiries.')} canonical={route('public.contact')}>
             <main aria-label={t('Contact Us')}>
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Contact information unavailable')} description={error} /></div>}
                 <PublicPageHero
@@ -42,6 +42,7 @@ export default function PublicContact({ app_name, contact, error = null }: Props
                     intro={t('For competition, schedule and participation enquiries, please contact the secretariat through UTeM Sports Centre.')}
                     icon={<MessageCircle className="size-4" />}
                 />
+                <div className="mx-auto flex max-w-5xl justify-end px-4 pt-8 sm:px-6"><PublicStaleDataNotice updatedAt={updated_at} /></div>
 
                 <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:py-20">
                     <div className="grid gap-6 lg:grid-cols-[1.2fr_.8fr]">

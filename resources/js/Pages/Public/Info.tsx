@@ -1,27 +1,26 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
+import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import { useI18n } from '@/lib/i18n';
-import { Head } from '@inertiajs/react';
 import { BookOpen, CircleHelp, Download, FileText, Newspaper, Trophy } from 'lucide-react';
 import { type ComponentType } from 'react';
 
 type Section = 'news' | 'downloads' | 'faq' | 'about';
-type Props = { section: Section; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; error?: string | null };
+type Props = { section: Section; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; updated_at?: string; error?: string | null };
 const meta: Record<Section, { title: string; intro: string; icon: ComponentType<{ className?: string }> }> = { news: { title: 'Announcements', intro: 'Official updates and competition notices.', icon: Newspaper }, downloads: { title: 'Downloads', intro: 'Useful competition documents and resources.', icon: Download }, faq: { title: 'Frequently Asked Questions', intro: 'Answers to common questions about the competition.', icon: CircleHelp }, about: { title: 'About SAF', intro: 'Learn more about the Sports and Athletics Festival.', icon: Trophy } };
 
-export default function PublicInfo({ section, app_name, competition, error = null }: Props) {
+export default function PublicInfo({ section, app_name, competition, updated_at, error = null }: Props) {
     const { t } = useI18n();
     const current = meta[section];
     const Icon = current.icon;
 
     return (
-        <PublicLayout title={`${t(current.title)} | ${competition?.name || app_name}`} appName={app_name}>
-            <Head><meta name="description" content={t(current.intro)} /><link rel="canonical" href={route(`public.${section}`)} /></Head>
+        <PublicLayout title={`${t(current.title)} | ${competition?.name || app_name}`} appName={app_name} description={t(current.intro)} canonical={route(`public.${section}`)}>
             <main>
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Information unavailable')} description={error} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t(current.title)} intro={t(current.intro)} icon={<Icon className="size-4" />} />
-                <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16"><Content section={section} competitionName={competition?.name || app_name} t={t} /></div>
+                <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16"><div className="mb-6 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div><Content section={section} competitionName={competition?.name || app_name} t={t} /></div>
             </main>
         </PublicLayout>
     );

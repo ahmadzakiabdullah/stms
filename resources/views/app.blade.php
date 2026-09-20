@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="{{ config('app.description') }}">
-        <link rel="canonical" href="{{ url()->current() }}">
+        <meta name="description" inertia="description" content="{{ config('app.description') }}">
+        <link rel="canonical" inertia="canonical" href="{{ url()->current() }}">
 
         @php
             $brandingOrganizationId = auth()->user()?->organization_id;

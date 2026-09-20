@@ -33,6 +33,7 @@ Baris Organizations menggambarkan menu yang dikehendaki. Policy semasa membenark
 
 - Desktop sidebar remains pinned while its navigation region scrolls.
 - Mobile navigation uses a sheet opened from the top bar.
+- Dashboard and module routes use the same compact sidebar spacing: `space-y-0 px-2 py-2`, section spacing `space-y-0`, and menu/logout items with `min-h-11 px-2 py-1`; route-specific spacing is not permitted.
 - Every item has visible text; icons never carry meaning alone.
 - Current-page state uses `route().current()` and a left accent marker.
 - Role filtering is presentation-level only; Laravel Policies and Gates remain authoritative.

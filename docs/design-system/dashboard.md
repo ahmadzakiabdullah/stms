@@ -10,6 +10,14 @@ The application has one role-aware entry point at `/dashboard`:
 - **Faculty Representative** — dedicated registration and squad-management page (`Faculty/Dashboard`).
 - **Dean** — redirected to the verification workspace (`/dean`).
 
+The generic dashboard now uses a role-specific workspace treatment:
+
+- **Super Admin / Org Admin** — administration workspace with registration attention, readiness and tenant/platform operations.
+- **Admin Sport** — competition-operations workspace with fixture/result metrics and direct matches/results actions; analytics and registration approval CTAs are not shown.
+- **Staff** — reporting workspace with read-only progress, participation context and analytics-first actions.
+
+The hero action set is authorization-aligned: `admin-sport` no longer receives an `Open Analytics` CTA, and the dashboard does not imply that faculty/dean users share the generic operations workspace.
+
 ## Administrator dashboard hierarchy
 
 The generic administrator dashboard intentionally avoids duplicating full module tables. Information is ordered by urgency:

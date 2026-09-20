@@ -48,7 +48,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Draw pool movement menjana semula fixture berstatus scheduled secara atomik tetapi menyekat fixture yang sudah bermula/selesai.
 - Ranking menggunakan `RankingStrategy` contract, registry, tiga strategy class dan validated session/tournament JSON rules.
 - Favicon guest memilih tenant public secara eksplisit; font adalah self-hosted.
-- Meta description, canonical, `/sitemap.xml`, public refresh status dan guest Ziggy filtering telah ditambah.
+- Public SEO metadata kini diseragamkan melalui layout shared: title, description, canonical, Open Graph/Twitter, serta `robots` index policy; `/sitemap.xml` meliputi semua public routes dan `/robots.txt` mengecualikan route authenticated.
 - Initial global Vite prefetch dibuang untuk mengecilkan HTML/request awal.
 - Production configuration validator kini mewajibkan Redis session/cache/queue, Asia/Kuala_Lumpur, email verification, secure cookie, CSP enforcing dan mail bukan `log`.
 - Vendor dependencies diselaraskan kepada lockfile selamat (Guzzle 7.15.2, PSR-7 2.13.0) untuk menutup advisory semasa.
@@ -61,6 +61,17 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Authenticated multi-worker staging k6 lulus 1,150/1,150 checks, 0% HTTP failures dan p95 81.543 ms pada 10 VU/30 saat.
 - GitHub Actions memantau `/up` setiap lima minit. Forced-failure evidence membuka serta assign issue #75; recovery probe menutup issue selepas endpoint kembali sihat.
 - Public athlete/team directory tersedia di `/athletes` dengan profile performance berasaskan match rasmi.
+- Navigasi awam desktop dan mobile/tablet kini memaparkan struktur menu yang sama; sub-menu Competition dan Information dibuka di bawah label desktop melalui klik, hover atau focus.
+- Halaman awam `/venues` kini mempunyai directory venue yang actionable, empty state dan pautan terus ke `/schedule?venue=...`; schedule membaca filter venue daripada URL.
+- Public homepage, directories, contact, information dan athlete profile kini memaparkan stale-data notice yang konsisten; `/faculties` mempunyai empty state khusus apabila tiada rekod diterbitkan.
+- Public accessibility smoke production lulus **6/6**: axe serious/critical, keyboard focus target, mobile Escape/focus wrapping, navigation parity, locale switch dan CSP console checks.
+- Responsive public shell smoke lulus **1/1** untuk viewport mobile 390px, tablet 768px dan desktop 1440px, reduced motion serta touch target minimum 44px; browser zoom 200% sebenar masih belum diaudit.
+- Homepage public kini mempunyai pre-fixture state yang jelas: CTA utama membawa pengguna ke program sukan apabila jadual belum diterbitkan, dan panel hero menyediakan pautan pantas ke sukan, venue serta atlet.
+- Sidebar authenticated dashboard kini memaparkan semua seksyen menu secara terus tanpa dropdown; visibility masih ditapis mengikut role dan pautan aktif kekal ditanda.
+- Sidebar authenticated kini menggunakan gap, padding dan tinggi item yang sama pada Dashboard, Matches dan semua page lain; tiada lagi spacing khas untuk route Dashboard.
+- Sidebar authenticated menggunakan spacing compact yang seragam untuk mengekalkan lebih banyak menu dalam ruang menegak tanpa mengubah struktur atau role visibility.
+- Whitespace sidebar dipadatkan lagi; menu/logout kekal `min-h-11` untuk target interaksi minimum 44px.
+- Dashboard authenticated kini membezakan workspace Super/Org Admin, Admin Sport dan Staff; CTA analytics/registration tidak lagi dipaparkan kepada role yang tiada akses, manakala faculty representative dan dean kekal pada dashboard khusus masing-masing.
 - Match cards homepage/schedule menggunakan layout shared responsive; completed results menyokong scorer mengikut participant.
 - `Sport.scoring_mode=individual` serta `match_scoring_events` menyokong nama atlet, minit jaringan dan validasi roster/score untuk Hockey dan Football/Soccer.
 - User accounts now have the explicit `is_active` lifecycle flag; inactive accounts are excluded from login and can be managed from the Users form.
@@ -172,4 +183,4 @@ Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam 
 4. Deployment disahkan melalui worker/scheduler restart, authenticated smoke/Playwright dan release tag.
 5. Reset-password mail delivery direkod sebelum email verification diaktifkan.
 
-**Last updated:** 21 Ogos 2026.
+**Last updated:** 20 September 2026.

@@ -65,6 +65,7 @@ Route::get('/faq', [PublicPortalController::class, 'info'])->defaults('section',
 Route::get('/about', [PublicPortalController::class, 'info'])->defaults('section', 'about')->name('public.about');
 Route::get('/contact-us', [PublicPortalController::class, 'contact'])->name('public.contact');
 Route::get('/sitemap.xml', [PublicPortalController::class, 'sitemap'])->name('public.sitemap');
+Route::get('/robots.txt', [PublicPortalController::class, 'robots'])->name('public.robots');
 Route::any('/index.php', static fn () => redirect('/', 301));
 Route::post('/locale', function (Request $request) {
     $supportedLocales = config('app.supported_locales', []);

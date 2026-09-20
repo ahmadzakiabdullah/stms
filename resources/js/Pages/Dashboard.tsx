@@ -142,6 +142,8 @@ export default function Dashboard({
     const primaryRole = ['super-admin', 'org-admin', 'admin-sport', 'staff'].find((role) => roles.has(role)) ?? 'system-user';
     const isAdministrator = roles.has('super-admin') || roles.has('org-admin');
     const isSuperAdmin = roles.has('super-admin');
+    const isSportAdministrator = roles.has('admin-sport');
+    const canViewAnalytics = isAdministrator || roles.has('staff');
 
     const pending = Number(pipeline.pending ?? 0);
     const confirmed = Number(pipeline.confirmed ?? 0);
@@ -180,15 +182,41 @@ export default function Dashboard({
         { label: 'Notifications', description: 'Review system updates', route: 'notifications.index', icon: Activity },
     ];
     const actions = isAdministrator ? administratorActions : roles.has('admin-sport') ? sportAdminActions : staffActions;
+    const workspaceLabel = isAdministrator ? 'Administration workspace' : isSportAdministrator ? 'Competition operations' : 'Reporting workspace';
+    const workspaceDescription = isAdministrator
+        ? 'Monitor registrations, competition readiness and tasks requiring attention.'
+        : isSportAdministrator
+            ? 'Manage fixtures and results for your assigned sports.'
+            : 'Review operational progress and reporting.';
+    const secondaryAction = canViewAnalytics ? { label: 'Open Analytics', route: 'reports.index' } : actions[1];
 
-    const primaryMetrics = [
+    const primaryMetrics = isSportAdministrator ? [
+        { label: 'Events', value: safeStats.events ?? 0, note: `${safeStats.sports ?? 0} ${t('configured sports')}`, icon: Target, tone: 'bg-violet-50 text-violet-700 ring-violet-100' },
+        { label: 'Matches', value: matchTotal, note: `${resultTotal} ${t('results recorded')}`, icon: Swords, tone: 'bg-amber-50 text-amber-700 ring-amber-100' },
+        { label: 'Results', value: resultTotal, note: t('Recorded match outcomes'), icon: Trophy, tone: 'bg-emerald-50 text-emerald-700 ring-emerald-100' },
+        { label: 'Sports', value: safeStats.sports ?? 0, note: t('Configured sport catalogue'), icon: Award, tone: 'bg-blue-50 text-blue-700 ring-blue-100' },
+    ] : roles.has('staff') ? [
+        { label: 'Active Sessions', value: safeStats.activeSessions ?? 0, note: `${safeStats.tournaments ?? 0} ${t('tournaments')}`, icon: CalendarClock, tone: 'bg-blue-50 text-blue-700 ring-blue-100' },
+        { label: 'Events', value: safeStats.events ?? 0, note: `${safeStats.sports ?? 0} ${t('configured sports')}`, icon: Target, tone: 'bg-violet-50 text-violet-700 ring-violet-100' },
+        { label: 'Registrations', value: registrationTotal, note: `${participantsWithRegistrations} ${t('participating faculties')}`, icon: ListChecks, tone: 'bg-cyan-50 text-cyan-700 ring-cyan-100' },
+        { label: 'Results', value: resultTotal, note: `${matchTotal} ${t('matches')}`, icon: Trophy, tone: 'bg-emerald-50 text-emerald-700 ring-emerald-100' },
+    ] : [
         { label: 'Active Sessions', value: safeStats.activeSessions ?? 0, note: `${safeStats.tournaments ?? 0} ${t('tournaments')}`, icon: CalendarClock, tone: 'bg-blue-50 text-blue-700 ring-blue-100' },
         { label: 'Events', value: safeStats.events ?? 0, note: `${safeStats.sports ?? 0} ${t('configured sports')}`, icon: Target, tone: 'bg-violet-50 text-violet-700 ring-violet-100' },
         { label: 'Team Registrations', value: registrationTotal, note: `${participantsWithRegistrations} ${t('participating faculties')}`, icon: ListChecks, tone: 'bg-cyan-50 text-cyan-700 ring-cyan-100' },
         { label: 'Matches', value: matchTotal, note: `${resultTotal} ${t('results recorded')}`, icon: Swords, tone: 'bg-amber-50 text-amber-700 ring-amber-100' },
     ];
 
-    const readiness = [
+    const readinessTitle = isAdministrator ? 'Operational readiness' : isSportAdministrator ? 'Competition readiness' : 'Reporting overview';
+    const readinessDescription = isAdministrator
+        ? 'Completion across the most important workflows.'
+        : isSportAdministrator
+            ? 'A focused view of fixture and result completion.'
+            : 'A read-only view of participation and competition progress.';
+
+    const readiness = isSportAdministrator ? [
+        { label: 'Match completion', value: resultTotal, total: matchTotal, tone: 'bg-violet-500' },
+    ] : [
         { label: 'Registration approval', value: confirmed, total: registrationTotal, tone: 'bg-emerald-500' },
         { label: 'Faculty participation', value: participantsWithRegistrations, total: facultyTotal, tone: 'bg-cyan-500' },
         { label: 'Match completion', value: resultTotal, total: matchTotal, tone: 'bg-violet-500' },
@@ -215,15 +243,15 @@ export default function Dashboard({
                         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                             <div className="max-w-3xl">
                                 <div className="mb-4 flex flex-wrap items-center gap-2">
-                                    <span className="rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-bold uppercase tracking-[.18em] text-primary-foreground">{t('System overview')}</span>
+                                    <span className="rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-bold uppercase tracking-[.18em] text-primary-foreground">{t(workspaceLabel)}</span>
                                     <span className="text-xs text-primary-foreground/70">{t(roleLabels[primaryRole] ?? 'System User')}</span>
                                 </div>
                                 <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{t('Welcome back')}, {user.name}</h1>
-                                <p className="mt-3 max-w-2xl text-sm leading-6 text-primary-foreground/80">{t('A complete view of registration, competition and system readiness.')}</p>
+                                <p className="mt-3 max-w-2xl text-sm leading-6 text-primary-foreground/80">{t(workspaceDescription)}</p>
                                 {user.organization?.name && <p className="mt-4 flex items-center gap-2 text-xs font-medium text-primary-foreground/70"><Building2 className="size-4" />{user.organization.name}</p>}
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                <Button asChild variant="outline" className="border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"><Link href={route('reports.index')}><Activity className="mr-2 size-4" />{t('Open Analytics')}</Link></Button>
+                                <Button asChild variant="outline" className="border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"><Link href={route(secondaryAction.route)}><Activity className="mr-2 size-4" />{t(secondaryAction.label)}</Link></Button>
                                 <Button asChild className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"><Link href={route(actions[0].route)}>{t(actions[0].label)}<ArrowRight className="ml-2 size-4" /></Link></Button>
                             </div>
                         </div>
@@ -275,36 +303,59 @@ export default function Dashboard({
 
                     <section className="grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
                         <Card className="rounded-xl border-border bg-card shadow-sm">
-                            <CardHeader><div className="flex items-start justify-between gap-4"><div><CardTitle>{t('Operational readiness')}</CardTitle><CardDescription>{t('Completion across the most important workflows')}</CardDescription></div><div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Activity className="size-5" /></div></div></CardHeader>
+                            <CardHeader><div className="flex items-start justify-between gap-4"><div><CardTitle>{t(readinessTitle)}</CardTitle><CardDescription>{t(readinessDescription)}</CardDescription></div><div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><Activity className="size-5" /></div></div></CardHeader>
                             <CardContent className="space-y-6">
                                 {readiness.map((item) => { const progress = percentage(item.value, item.total); return <div key={item.label}><div className="mb-2 flex items-center justify-between gap-4 text-sm"><span className="font-medium text-foreground">{t(item.label)}</span><span className="tabular-nums text-muted-foreground">{item.value}/{item.total} · {progress}%</span></div><div className="h-2.5 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full transition-all ${item.tone}`} style={{ width: `${progress}%` }} /></div></div>; })}
                                 <div className="grid grid-cols-2 gap-3 border-t pt-5 sm:grid-cols-4">
-                                    <MiniStat label={t('Faculties')} value={facultyTotal} />
-                                    <MiniStat label={t('Squad Members')} value={squadTotal} />
-                                    <MiniStat label={t('Tournaments')} value={safeStats.tournaments ?? 0} />
-                                    <MiniStat label={t('Organizations')} value={safeStats.organizations ?? 0} />
+                                    {isSportAdministrator ? <>
+                                        <MiniStat label={t('Matches')} value={matchTotal} />
+                                        <MiniStat label={t('Results')} value={resultTotal} />
+                                        <MiniStat label={t('Events')} value={safeStats.events ?? 0} />
+                                        <MiniStat label={t('Sports')} value={safeStats.sports ?? 0} />
+                                    </> : <>
+                                        <MiniStat label={t('Faculties')} value={facultyTotal} />
+                                        <MiniStat label={t('Squad Members')} value={squadTotal} />
+                                        <MiniStat label={t('Tournaments')} value={safeStats.tournaments ?? 0} />
+                                        <MiniStat label={t('Organizations')} value={safeStats.organizations ?? 0} />
+                                    </>}
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <Card className="rounded-xl border-border bg-card shadow-sm">
-                            <CardHeader><CardTitle>{t('Registration pipeline')}</CardTitle><CardDescription>{t('Current event-registration approval status')}</CardDescription></CardHeader>
-                            <CardContent>
-                                <div className="flex h-3 overflow-hidden rounded-full bg-muted" role="img" aria-label={t('Registration pipeline')}>
-                                    <div className="bg-emerald-500" style={{ width: `${percentage(confirmed, registrationTotal)}%` }} />
-                                    <div className="bg-amber-400" style={{ width: `${percentage(pending, registrationTotal)}%` }} />
-                                    <div className="bg-rose-500" style={{ width: `${percentage(rejected, registrationTotal)}%` }} />
-                                    <div className="bg-muted-foreground/40" style={{ width: `${percentage(cancelled, registrationTotal)}%` }} />
-                                </div>
-                                <div className="mt-5 grid grid-cols-2 gap-3">
-                                    <StatusStat label={t('Confirmed')} value={confirmed} tone="border-emerald-100 bg-emerald-50 text-emerald-800" />
-                                    <StatusStat label={t('Pending')} value={pending} tone="border-amber-100 bg-amber-50 text-amber-800" />
-                                    <StatusStat label={t('Rejected')} value={rejected} tone="border-rose-100 bg-rose-50 text-rose-800" />
-                                    <StatusStat label={t('Cancelled')} value={cancelled} tone="border-border bg-muted/50 text-foreground" />
-                                </div>
-                                {isAdministrator && <Button asChild variant="outline" size="sm" className="mt-5 w-full"><Link href={route('event-participants.index')}>{t('Open Event Registrations')}<ArrowRight className="ml-2 size-3.5" /></Link></Button>}
-                            </CardContent>
-                        </Card>
+                        {isSportAdministrator ? (
+                            <Card className="rounded-xl border-border bg-card shadow-sm">
+                                <CardHeader><CardTitle>{t('Competition operations')}</CardTitle><CardDescription>{t('Work on fixtures, results and rankings for assigned sports.')}</CardDescription></CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <StatusStat label={t('Matches')} value={matchTotal} tone="border-amber-100 bg-amber-50 text-amber-800" />
+                                        <StatusStat label={t('Results')} value={resultTotal} tone="border-emerald-100 bg-emerald-50 text-emerald-800" />
+                                    </div>
+                                    <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                                        <Button asChild variant="outline" size="sm"><Link href={route('matches.index')}>{t('Manage Matches')}<ArrowRight className="ml-2 size-3.5" /></Link></Button>
+                                        <Button asChild variant="outline" size="sm"><Link href={route('results.index')}>{t('Enter Results')}<ArrowRight className="ml-2 size-3.5" /></Link></Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <Card className="rounded-xl border-border bg-card shadow-sm">
+                                <CardHeader><CardTitle>{t('Registration pipeline')}</CardTitle><CardDescription>{t('Current event-registration approval status')}</CardDescription></CardHeader>
+                                <CardContent>
+                                    <div className="flex h-3 overflow-hidden rounded-full bg-muted" role="img" aria-label={t('Registration pipeline')}>
+                                        <div className="bg-emerald-500" style={{ width: `${percentage(confirmed, registrationTotal)}%` }} />
+                                        <div className="bg-amber-400" style={{ width: `${percentage(pending, registrationTotal)}%` }} />
+                                        <div className="bg-rose-500" style={{ width: `${percentage(rejected, registrationTotal)}%` }} />
+                                        <div className="bg-muted-foreground/40" style={{ width: `${percentage(cancelled, registrationTotal)}%` }} />
+                                    </div>
+                                    <div className="mt-5 grid grid-cols-2 gap-3">
+                                        <StatusStat label={t('Confirmed')} value={confirmed} tone="border-emerald-100 bg-emerald-50 text-emerald-800" />
+                                        <StatusStat label={t('Pending')} value={pending} tone="border-amber-100 bg-amber-50 text-amber-800" />
+                                        <StatusStat label={t('Rejected')} value={rejected} tone="border-rose-100 bg-rose-50 text-rose-800" />
+                                        <StatusStat label={t('Cancelled')} value={cancelled} tone="border-border bg-muted/50 text-foreground" />
+                                    </div>
+                                    {isAdministrator && <Button asChild variant="outline" size="sm" className="mt-5 w-full"><Link href={route('event-participants.index')}>{t('Open Event Registrations')}<ArrowRight className="ml-2 size-3.5" /></Link></Button>}
+                                </CardContent>
+                            </Card>
+                        )}
                     </section>
 
                     <section className="grid gap-6 xl:grid-cols-[1fr_1fr_.8fr]">

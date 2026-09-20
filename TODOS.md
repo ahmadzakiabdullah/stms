@@ -16,6 +16,7 @@
 ### Runtime, configuration dan deployment
 
 - [ ] Tetapkan `PRODUCTION_CONFIG_ENFORCE=true` dan luluskan `php artisan stms:release-preflight --json` dalam environment sebenar.
+  Nota: preflight production pada 20 September 2026 berjaya berjalan dan mengesahkan database MySQL serta public organization/session lulus. Ia masih `error` kerana runtime menggunakan file session, database queue/cache, log mailer dan email verification `false`; backup berjadual serta health monitoring juga belum tersedia. `AppServiceProvider` akan menolak boot web/worker/Artisan biasa sehingga prerequisite dipenuhi. Command preflight dibenarkan boot dalam audit mode untuk melaporkan blocker.
 - [x] Tetapkan timezone production kepada `Asia/Kuala_Lumpur` dan sahkan portal live masih HTTP 200 dengan timestamp +08:00.
 - [ ] Gunakan Redis untuk session, cache dan queue; aktifkan secure session cookie.
 - [ ] Sediakan worker queue yang diselia process manager serta scheduler yang dipantau.
@@ -69,14 +70,14 @@
 ### User model dan schema
 
 - [x] Jadikan `users.is_active` field rasmi: migration baharu, fillable/cast, factory, request/service, toggle UI dan regression test telah diselaraskan; akaun inactive ditolak semasa log masuk.
-- [ ] Jalankan fresh migration dan semak schema production supaya model tidak merujuk kolum yang tiada.
+- [x] Jalankan migration incremental production (`php artisan migrate --force`) dan `php artisan optimize:clear`; smoke test login dummy kembali ke `/login` dengan HTTP 302 tanpa lagi 500 `is_active`.
 
 ## P1 — Quality gates dan dokumentasi
 
 - [x] Reconcile inventory sebenar: 162 routes, 70 migrations, 41 controllers, 43 Inertia pages dan 100 test files; `npm run check:inventory` lulus.
 - [x] Kemas kini `CURRENT_STATE.md`, `README.md`, `docs/architecture/system-overview.md` dan inventory checks supaya tidak lagi menunjukkan angka lama; `docs/database/schema.md` tiada matriks inventori untuk dikemas kini.
 - [x] Selaraskan arahan Composer production mengikut subcommand (`install --optimize-autoloader`, `dump-autoload --optimize`) dan tambah recovery langkah untuk stale package metadata/provider.
-- [ ] Review working tree dan asingkan/commit perubahan UI atau package yang tidak berkaitan dengan release ini.
+- [x] Review working tree: 15 perubahan yang belum commit semuanya berkaitan dengan release slice UI/UX, dokumentasi, E2E dan production schema verification; tiada perubahan package atau fail tidak berkaitan untuk diasingkan. Commit kekal sebagai langkah release berasingan.
 - [ ] Pulihkan dependency development lengkap supaya PHPUnit dan build native boleh dijalankan dalam environment CI yang konsisten.
 - [ ] Jadikan gate release wajib: `php artisan test`, Pint, typecheck, inventory, tenant-bypass check, production build, budget, E2E, `composer audit` dan `npm audit`.
 - [ ] Ukur coverage daripada commit yang sama dan kekalkan sekurang-kurangnya baseline 74.5% sebelum menambah feature baharu.
@@ -93,13 +94,23 @@
 
 ## P1 — Public UI/UX dan accessibility
 
-- [ ] Lengkapkan navigasi mobile/tablet supaya Competition dan Information tidak hilang berbanding desktop.
+- [x] Lengkapkan navigasi mobile/tablet supaya Competition dan Information tidak hilang berbanding desktop.
+- [x] Redesign public Venues directory dengan kad venue yang boleh membuka jadual mengikut venue.
+- [x] Redesign homepage public supaya state sebelum jadual diterbitkan mempunyai CTA jelas ke sukan, venue dan atlet.
 - [ ] Sediakan state loading, empty, stale, error dan permission untuk semua public routes.
 - [ ] Gunakan komponen shadcn untuk filter, input, select, tabs, pagination, alert dan accordion secara konsisten.
-- [ ] Jalankan keyboard navigation, focus management, screen-reader labels dan axe pada semua public routes.
-- [ ] Uji viewport mobile/tablet/desktop, zoom 200%, contrast, reduced motion dan touch target minimum 44px.
-- [ ] Tambah metadata SEO yang konsisten: title, description, canonical, Open Graph dan sitemap/robots policy.
+- [x] Jalankan keyboard navigation, focus management, screen-reader labels dan axe pada semua public routes; production smoke Playwright lulus **6/6** pada 21 September 2026.
+- [ ] Uji viewport mobile/tablet/desktop, zoom 200%, contrast, reduced motion dan touch target minimum 44px. Smoke production 1/1 lulus untuk viewport 390/768/1440px, reduced motion dan touch target; browser zoom 200% sebenar masih memerlukan verifikasi manual.
+- [x] Tambah metadata SEO yang konsisten: title, description, canonical, Open Graph/Twitter, sitemap lengkap dan robots policy; tambah E2E regression check.
 - [ ] Semak alt text, external links, image loading dan fallback apabila asset atau public data gagal.
+
+## P1 — Authenticated UI/UX
+
+- [x] Sidebar dashboard menggunakan menu rata tanpa dropdown supaya semua menu yang dibenarkan kelihatan terus.
+- [x] Samakan gap, padding dan tinggi item sidebar antara Dashboard dan semua authenticated pages.
+- [x] Compactkan sidebar secara konsisten selepas spacing standard didapati terlalu besar.
+- [x] Kurangkan lagi whitespace sidebar tanpa menurunkan target klik menu di bawah 44px.
+- [x] Redesign dashboard mengikut workspace role: administration, competition operations dan reporting.
 
 ## P2 — Cadangan tambah baik produk
 

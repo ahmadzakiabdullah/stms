@@ -3,13 +3,14 @@ import PublicEmptyState from '@/components/PublicEmptyState';
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicMatchCard, { type PublicMatch } from '@/components/PublicMatchCard';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
+import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicTeamRow from '@/components/PublicTeamRow';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SportIcon } from '@/lib/sportIcons';
 import { useI18n } from '@/lib/i18n';
 import { Head, Link, router } from '@inertiajs/react';
-import { Activity, ArrowRight, CalendarDays, CheckCircle2, Clock3, Medal, RefreshCw, Trophy, Users } from 'lucide-react';
+import { Activity, ArrowRight, CalendarDays, CheckCircle2, Clock3, MapPin, Medal, RefreshCw, Trophy, Users } from 'lucide-react';
 import { type ComponentType, useEffect, useState } from 'react';
 
 type Faculty = { name: string; logo_url?: string | null; inverse_logo_url?: string | null } | null;
@@ -52,6 +53,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
     const [refreshStatus, setRefreshStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [now, setNow] = useState(() => Date.now());
     const progress = stats.total_matches ? Math.round((stats.completed_matches / stats.total_matches) * 100) : 0;
+    const hasPublishedFixtures = stats.total_matches > 0;
     const hasMedals = medals.some(row => row.total_medals > 0);
     const liveMatches = upcoming.filter(match => match.status === 'in_progress');
     const startTime = competition?.start_date ? new Date(`${competition.start_date}T00:00:00`).getTime() : NaN;
@@ -89,10 +91,8 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
     ] as const;
 
     return (
-        <PublicLayout title={competition?.name || app_name} appName={app_name} current="home">
+        <PublicLayout title={competition?.name || app_name} appName={app_name} current="home" description={competition?.description || t('Official competition schedules, results, athletes and medal standings.')} canonical={route('public.index')}>
             <Head>
-                <meta name="description" content={competition?.description || t('Official competition schedules, results, athletes and medal standings.')} />
-                <link rel="canonical" href={route('public.index')} />
                 <link rel="preload" as="image" href="/images/banner/banner-saf-20-2026.jpeg" fetchPriority="high" />
             </Head>
             <main>
@@ -107,10 +107,10 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                             <h1 className="mt-6 text-4xl font-black leading-[.98] tracking-[-.05em] sm:text-6xl xl:text-7xl">{competition?.name || app_name}</h1>
                             <p className="mt-6 max-w-xl text-base leading-7 text-white/65 sm:text-lg">{competition?.description || t('Follow schedules, latest results and medal standings in one official view.')}</p>
                             <div className="mt-8 flex flex-wrap items-center gap-3">
-                                <Button asChild size="lg" className="public-cosmic-bezel bg-[var(--public-highlight)] px-5 text-sm font-black text-[var(--public-dark)] hover:brightness-105">
-                                    <Link href={route('public.schedule')}>{t('View schedule & results')}<ArrowRight className="size-4" /></Link>
+                                <Button asChild size="lg" className="public-cosmic-bezel min-h-11 bg-[var(--public-highlight)] px-5 text-sm font-black text-[var(--public-dark)] hover:brightness-105 sm:min-h-11">
+                                    <Link href={hasPublishedFixtures ? route('public.schedule') : route('public.sports')}>{t(hasPublishedFixtures ? 'View schedule & results' : 'Explore sports programme')}<ArrowRight className="size-4" /></Link>
                                 </Button>
-                                <Button asChild variant="outline" size="lg" className="border-white/15 bg-white/5 px-5 text-sm font-bold text-white hover:bg-white/10 hover:text-white">
+                                <Button asChild variant="outline" size="lg" className="min-h-11 border-white/15 bg-white/5 px-5 text-sm font-bold text-white hover:bg-white/10 hover:text-white sm:min-h-11">
                                     <Link href={route('public.athletes')}>{t('Athletes & Teams')}</Link>
                                 </Button>
                             </div>
@@ -126,8 +126,10 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                                     <div><p className="text-xs font-black uppercase tracking-[.2em] text-[var(--public-accent)]">{t('Competition progress')}</p><p className="public-display mt-3 text-6xl font-extrabold tracking-[-.04em] sm:text-7xl">{progress}%</p></div>
                                     <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-highlight)] text-[var(--public-dark)]"><Activity className="size-5" /></span>
                                 </div>
-                                <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-label={t('Competition progress')} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-gradient-to-r from-[var(--public-primary)] via-[var(--public-accent)] to-[var(--public-highlight)]" style={{ width: `${progress}%` }} /></div>
-                                <div className="mt-6 grid grid-cols-2 gap-3"><ProgressMetric value={stats.completed_matches} label={t('Fixtures completed')} icon={CheckCircle2} /><ProgressMetric value={stats.total_matches} label={t('Total Matches')} icon={Trophy} /></div>
+                                {hasPublishedFixtures ? <>
+                                    <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-label={t('Competition progress')} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-gradient-to-r from-[var(--public-primary)] via-[var(--public-accent)] to-[var(--public-highlight)]" style={{ width: `${progress}%` }} /></div>
+                                    <div className="mt-6 grid grid-cols-2 gap-3"><ProgressMetric value={stats.completed_matches} label={t('Fixtures completed')} icon={CheckCircle2} /><ProgressMetric value={stats.total_matches} label={t('Total Matches')} icon={Trophy} /></div>
+                                </> : <div className="mt-5 rounded-2xl border border-[var(--public-highlight)]/20 bg-[var(--public-highlight)]/10 p-4" aria-live="polite"><p className="text-sm font-black text-white">{t('Schedule will be shown after publication.')}</p><p className="mt-1 text-xs leading-5 text-white/65">{t('Explore the official sports, venues and participating faculties while fixtures are prepared.')}</p></div>}
 
                                 <div className="mt-5 border-t border-white/10 pt-5">
                                     <div className="flex items-center justify-between gap-3"><p className="text-xs font-black uppercase tracking-[.18em] text-white/75">{t('Next fixture')}</p><Clock3 className="size-4 text-[var(--public-accent)]" /></div>
@@ -171,13 +173,26 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                     )}
                 </section>
 
+                {!hasPublishedFixtures && (
+                    <section aria-label={t('Everything you need before the fixtures')} className="public-below-fold border-y border-[var(--public-dark-border)] bg-[var(--public-dark-soft)] py-20 sm:py-24">
+                        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+                            <PublicSectionHeading eyebrow={t('Explore now')} title={t('Everything you need before the fixtures')} description={t('Explore the official sports, venues and participating faculties while fixtures are prepared.')} />
+                            <div className="mt-10 grid gap-4 md:grid-cols-3">
+                                <Link href={route('public.sports')} className="group rounded-[1.5rem] border border-[var(--public-dark-border)] bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]"><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Trophy className="size-5" /></span><h3 className="mt-6 text-lg font-black">{t('Explore the sports')}</h3><p className="mt-2 text-sm leading-6 text-[var(--public-dark-faint)]">{t('Every official sport and event in the competition.')}</p><span className="mt-5 inline-flex items-center gap-1.5 text-sm font-black text-[var(--public-primary)]">{t('View all sports')}<ArrowRight className="size-4" /></span></Link>
+                                <Link href={route('public.venues')} className="group rounded-[1.5rem] border border-[var(--public-dark-border)] bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]"><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><MapPin className="size-5" /></span><h3 className="mt-6 text-lg font-black">{t('Plan your visit')}</h3><p className="mt-2 text-sm leading-6 text-[var(--public-dark-faint)]">{t('Competition locations and venues used for official fixtures.')}</p><span className="mt-5 inline-flex items-center gap-1.5 text-sm font-black text-[var(--public-primary)]">{t('View venues')}<ArrowRight className="size-4" /></span></Link>
+                                <Link href={route('public.athletes')} className="group rounded-[1.5rem] border border-[var(--public-dark-border)] bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]"><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Users className="size-5" /></span><h3 className="mt-6 text-lg font-black">{t('Athletes & Teams')}</h3><p className="mt-2 text-sm leading-6 text-[var(--public-dark-faint)]">{t('Browse confirmed athletes and teams')}</p><span className="mt-5 inline-flex items-center gap-1.5 text-sm font-black text-[var(--public-primary)]">{t('View all')}<ArrowRight className="size-4" /></span></Link>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
                 <section id="sports" className="public-below-fold relative scroll-mt-24 border-y border-[var(--public-dark-border)] bg-[var(--public-dark-soft)] py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><PublicSectionHeading eyebrow={t('Sports programme')} title={t('Explore the sports')} description={t('Every official sport and event in the competition.')} /><Link href={route('public.sports')} className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] sm:self-auto">{t('View all sports')}<ArrowRight className="size-4" /></Link></div>
                     <div className="mt-12 flex flex-wrap gap-2.5">{sports.slice(0, 12).map(sport => <Link key={sport} href={route('public.sports')} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--public-dark-border)] bg-white py-1 pl-1.5 pr-4 text-sm font-bold transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]"><span className="flex size-7 items-center justify-center rounded-full bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><SportIcon name={sport} /></span>{sport}</Link>)}{sports.length > 12 && <Link href={route('public.sports')} className="inline-flex min-h-10 items-center rounded-full border border-dashed border-[var(--public-primary-border)] px-4 text-sm font-black text-[var(--public-primary)]">+{sports.length - 12} {t('more')}</Link>}</div>
                 </div></section>
 
                 <section className="public-below-fold border-y border-[var(--public-dark-border)] bg-white py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
-                    <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><PublicSectionHeading eyebrow={t('Latest')} title={t('Live competition updates')} description={`${t('Updated')} ${formatDate(updated_at, locale, true)}`} /><div className="flex flex-col items-start gap-2 sm:items-end"><button type="button" onClick={() => refresh(true)} disabled={refreshing} className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] disabled:opacity-50 sm:self-auto"><RefreshCw className={`size-4 ${refreshing ? 'animate-spin' : ''}`} />{t(refreshing ? 'Refreshing' : 'Refresh')}</button><p role="status" aria-live="polite" className={`min-h-5 text-xs font-semibold ${refreshStatus === 'error' ? 'text-red-700' : 'text-[var(--public-primary)]'}`}>{refreshStatus === 'success' ? t('Refresh complete') : refreshStatus === 'error' ? t('Unable to refresh. Please try again.') : ''}</p></div></div>
+                    <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><PublicSectionHeading eyebrow={t('Latest')} title={t('Live competition updates')} description={`${t('Updated')} ${formatDate(updated_at, locale, true)}`} /><div className="mt-3"><PublicStaleDataNotice updatedAt={updated_at} /></div></div><div className="flex flex-col items-start gap-2 sm:items-end"><button type="button" onClick={() => refresh(true)} disabled={refreshing} className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] disabled:opacity-50 sm:self-auto"><RefreshCw className={`size-4 ${refreshing ? 'animate-spin' : ''}`} />{t(refreshing ? 'Refreshing' : 'Refresh')}</button><p role="status" aria-live="polite" className={`min-h-5 text-xs font-semibold ${refreshStatus === 'error' ? 'text-red-700' : 'text-[var(--public-primary)]'}`}>{refreshStatus === 'success' ? t('Refresh complete') : refreshStatus === 'error' ? t('Unable to refresh. Please try again.') : ''}</p></div></div>
                     {liveMatches.length > 0 && <Link href={route('public.schedule')} className="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-black text-red-700 transition hover:border-red-300 hover:bg-red-100"><span className="inline-flex items-center gap-2"><span className="size-2 animate-pulse rounded-full bg-red-500" />{liveMatches.length} {t('Live')} {t('matches')}</span><ArrowRight className="size-4" /></Link>}
                     <div className="mt-12 grid gap-14 lg:grid-cols-2"><MatchColumn id="schedule" title={t('Schedule')} href={route('public.schedule')} matches={upcoming.slice(0, 5)} variant="upcoming" t={t} loading={refreshing} /><MatchColumn id="results" title={t('Results')} href={route('public.schedule')} matches={results.slice(0, 5)} variant="result" t={t} loading={refreshing} /></div>
                 </div></section>

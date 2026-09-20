@@ -42,7 +42,7 @@ export default function PublicHeader({ appName, settings, current }: Props) {
                     <span className="min-w-0"><small className="block text-xs font-black uppercase tracking-[.2em] text-[var(--public-accent)]">{t('Official portal')}</small><b className="block max-w-[10rem] truncate text-sm sm:max-w-xs sm:text-base">{appName}</b></span>
                 </Link>
                 <PublicDesktopNav links={links} groups={groups} />
-                <div className="flex shrink-0 items-center justify-end xl:hidden"><PublicMobileMenu links={links} /></div>
+                <div className="flex shrink-0 items-center justify-end xl:hidden"><PublicMobileMenu links={links} groups={groups} /></div>
                 <div className="hidden items-center justify-end gap-2 xl:flex"><span className="mr-1 h-7 w-px bg-white/10" /><LocaleSwitcher compact showLabel={false} /><PublicLoginButton /></div>
             </div>
         </header>

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import PublicPageHero from '@/components/PublicPageHero';
 import { useI18n } from '@/lib/i18n';
 import { SportIcon } from '@/lib/sportIcons';
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Search, Users, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -87,8 +87,7 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
     ];
 
     return (
-        <PublicLayout title={`${t('Athletes & Teams')} | ${competition?.name || app_name}`} appName={app_name} current="athletes">
-            <Head><meta name="description" content={t('Browse confirmed athletes, teams and official competition participation.')} /><link rel="canonical" href={route('public.athletes')} /></Head>
+        <PublicLayout title={`${t('Athletes & Teams')} | ${competition?.name || app_name}`} appName={app_name} current="athletes" description={t('Browse confirmed athletes, teams and official competition participation.')} canonical={route('public.athletes')}>
             <main>
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Directory unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t('Athletes & Teams')} intro={t('Meet the confirmed athletes and teams taking part in the competition.')} icon={<Users className="size-4" />} />

@@ -72,6 +72,15 @@ class ExampleTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
             ->assertSee(route('public.index'), false)
+            ->assertSee(route('public.news'), false)
+            ->assertSee(route('public.faq'), false)
             ->assertSee(route('public.contact'), false);
+
+        $this->get('/robots.txt')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+            ->assertSee('Allow: /')
+            ->assertSee('Disallow: /dashboard')
+            ->assertSee('Sitemap: '.route('public.sitemap'), false);
     }
 }
