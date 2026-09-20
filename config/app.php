@@ -58,8 +58,6 @@ return [
 
     'public_org_slug' => env('PUBLIC_ORG_SLUG'),
 
-    'public_session_slug' => env('PUBLIC_SESSION_SLUG'),
-
     'csp_report_only' => (bool) env('CSP_REPORT_ONLY', true),
 
     'production_config_enforce' => (bool) env('PRODUCTION_CONFIG_ENFORCE', false),

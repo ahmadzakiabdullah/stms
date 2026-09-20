@@ -16,7 +16,7 @@ Mulakan daripada `.env.production.example`, kemudian simpan secret di luar Git. 
 - timezone aplikasi yang diluluskan (`Asia/Kuala_Lumpur` untuk operasi SAF);
 - DB account least-privilege khusus kepada skema STMS;
 - secure cookie/session, trusted proxy yang eksplisit dan HTTPS;
-- `PUBLIC_ORG_SLUG` dan `PUBLIC_SESSION_SLUG` untuk portal awam;
+- `PUBLIC_ORG_SLUG` untuk portal awam; session aktif terkini dalam organisasi tersebut dipilih secara automatik;
 - Redis bagi cache/session/queue apabila tersedia;
 - mail provider sebenar, backup, scheduler, queue worker dan token health;
 - `CSP_REPORT_ONLY=false` hanya selepas policy/enforcement telah diuji.

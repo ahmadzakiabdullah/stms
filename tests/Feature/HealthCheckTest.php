@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Organization;
+use App\Models\Session;
 use App\Services\ReleasePreflightService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -69,6 +71,13 @@ class HealthCheckTest extends TestCase
 
     public function test_release_preflight_passes_safe_connectivity_and_fresh_backup_checks(): void
     {
+        $organization = Organization::factory()->create(['slug' => 'utem', 'is_active' => true]);
+        Session::factory()->create([
+            'organization_id' => $organization->id,
+            'slug' => 'saf-20-2026',
+            'name' => 'SAF 20 2026',
+            'is_active' => true,
+        ]);
         $backupPath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'stms-preflight-'.bin2hex(random_bytes(6));
         File::ensureDirectoryExists($backupPath);
         File::put($backupPath.DIRECTORY_SEPARATOR.'stms-20260818-120000.zip', 'encrypted-backup-fixture');
@@ -87,7 +96,6 @@ class HealthCheckTest extends TestCase
                 'app.health.monitor_enabled' => true,
                 'app.health.token' => 'release-health-token',
                 'app.public_org_slug' => 'utem',
-                'app.public_session_slug' => 'saf-2026',
                 'session.secure' => true,
                 'session.driver' => 'redis',
                 'session.connection' => 'default',

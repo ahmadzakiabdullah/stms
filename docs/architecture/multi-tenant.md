@@ -16,7 +16,7 @@ STMS menggunakan satu pangkalan data dengan skema dikongsi. `organization_id` ia
 
 `Organization` ialah akar tenant dan tidak menggunakan global scope. `User` juga mempunyai pengendalian skop tersendiri. Kedua-duanya memerlukan authorization dan query scoping eksplisit. Super-admin/batch/command hanya boleh bypass melalui API yang disengajakan serta diaudit.
 
-Portal awam tidak bergantung pada “tenant pertama”. Ia memilih `PUBLIC_ORG_SLUG` dahulu, kemudian `PUBLIC_SESSION_SLUG` dalam organisasi itu. Query aset branding tetamu, termasuk favicon, menggunakan pemilihan tenant eksplisit yang sama.
+Portal awam tidak bergantung pada “tenant pertama”. Ia memilih `PUBLIC_ORG_SLUG` dahulu, kemudian memilih session aktif terkini dalam organisasi itu berdasarkan `start_date` (dengan `created_at` dan `id` sebagai tie-breaker). Query aset branding tetamu, termasuk favicon, menggunakan pemilihan tenant eksplisit yang sama.
 
 ## Bukti Enforcement
 

@@ -583,9 +583,8 @@ class PublicPortalService
     private function publicSession(): ?Session
     {
         $organizationSlug = config('app.public_org_slug');
-        $sessionSlug = config('app.public_session_slug');
 
-        if (! $organizationSlug || ! $sessionSlug) {
+        if (! $organizationSlug) {
             return null;
         }
 
@@ -597,9 +596,11 @@ class PublicPortalService
         }
 
         return Session::query()->with('organization:id,name')
-            ->where('organization_id', $organization->id)
-            ->where('slug', $sessionSlug)
+            ->forOrganization($organization->id)
             ->active()
+            ->orderByDesc('start_date')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->first();
     }
 

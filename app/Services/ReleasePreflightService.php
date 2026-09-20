@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Organization;
+use App\Models\Session;
 use App\Support\ProductionConfiguration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -207,15 +209,46 @@ final class ReleasePreflightService
 
     private function publicPortal(): array
     {
-        if (trim((string) config('app.public_org_slug')) === '') {
+        $organizationSlug = trim((string) config('app.public_org_slug'));
+
+        if ($organizationSlug === '') {
             return $this->error('PUBLIC_ORG_SLUG is required.');
         }
 
-        if (trim((string) config('app.public_session_slug')) === '') {
-            return $this->error('PUBLIC_SESSION_SLUG is required.');
-        }
+        try {
+            $organization = Organization::query()
+                ->active()
+                ->where('slug', $organizationSlug)
+                ->first(['id', 'slug']);
 
-        return $this->ok('Public organization and session selectors are configured explicitly.');
+            if (! $organization) {
+                return $this->error('Configured public organization was not found or is inactive.', [
+                    'organization_slug' => $organizationSlug,
+                ]);
+            }
+
+            $session = Session::query()
+                ->forOrganization($organization->id)
+                ->active()
+                ->orderByDesc('start_date')
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->first(['id', 'slug', 'name']);
+
+            if (! $session) {
+                return $this->error('No active public session exists for the configured organization.', [
+                    'organization_slug' => $organizationSlug,
+                ]);
+            }
+
+            return $this->ok('Public organization and active session are available.', [
+                'organization_slug' => $organization->slug,
+                'session_slug' => $session->slug,
+                'session_name' => $session->name,
+            ]);
+        } catch (Throwable) {
+            return $this->error('Public organization/session lookup failed; inspect protected application logs.');
+        }
     }
 
     private function attempt(string $successMessage, \Closure $callback): array

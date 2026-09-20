@@ -474,31 +474,53 @@ class PublicPortalTest extends TestCase
             ->where('competition.organization', $orgA->name));
     }
 
-    public function test_public_portal_uses_the_configured_session_when_multiple_sessions_are_active(): void
+    public function test_public_portal_uses_the_latest_active_session_when_multiple_sessions_are_active(): void
     {
         $organization = Organization::factory()->create(['slug' => 'selector-org', 'is_active' => true]);
         Session::factory()->create([
             'organization_id' => $organization->id,
             'slug' => 'newer-session',
-            'name' => 'Newer Session That Must Not Be Selected',
+            'name' => 'Newer Active Session',
             'start_date' => '2026-11-01',
             'is_active' => true,
         ]);
-        $configuredSession = Session::factory()->create([
+        Session::factory()->create([
             'organization_id' => $organization->id,
-            'slug' => 'configured-session',
-            'name' => 'Configured Public Session',
+            'slug' => 'older-session',
+            'name' => 'Older Active Session',
             'start_date' => '2026-01-01',
             'is_active' => true,
         ]);
 
-        config([
-            'app.public_org_slug' => $organization->slug,
-            'app.public_session_slug' => $configuredSession->slug,
-        ]);
+        config(['app.public_org_slug' => $organization->slug]);
 
         $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->where('competition.name', 'Configured Public Session')
+            ->where('competition.name', 'Newer Active Session')
+            ->where('competition.organization', $organization->name));
+    }
+
+    public function test_public_portal_ignores_inactive_sessions_when_selecting_the_public_session(): void
+    {
+        $organization = Organization::factory()->create(['slug' => 'active-selector-org', 'is_active' => true]);
+        Session::factory()->create([
+            'organization_id' => $organization->id,
+            'slug' => 'inactive-newer-session',
+            'name' => 'Inactive Newer Session',
+            'start_date' => '2027-01-01',
+            'is_active' => false,
+        ]);
+        Session::factory()->create([
+            'organization_id' => $organization->id,
+            'slug' => 'active-older-session',
+            'name' => 'Active Public Session',
+            'start_date' => '2026-01-01',
+            'is_active' => true,
+        ]);
+
+        config(['app.public_org_slug' => $organization->slug]);
+
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('competition.name', 'Active Public Session')
             ->where('competition.organization', $organization->name));
     }
 

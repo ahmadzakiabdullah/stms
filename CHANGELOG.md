@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 20 September 2026 — Select the active public session automatically
+
+- The public portal now selects the latest active session within `PUBLIC_ORG_SLUG`, so changing the competition session no longer requires updating a session slug environment variable.
+- Release preflight now verifies that the configured public organization exists and has an active session.
+
 ### 20 September 2026 — Make frontend native dependencies CI-compatible
 
 - Removed the Windows-only Lightning CSS native package as a direct dependency so Linux CI can complete `npm ci`; the package remains available through Lightning CSS's platform-aware optional dependencies.

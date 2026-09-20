@@ -83,7 +83,7 @@ Current canonical public workflows: `/schedule` renders the schedule/results dir
 
 Navigator dan footer kongsi disediakan oleh `PublicHeader`/`PublicFooter`. `/manage/matches` dan `/manage/sports` ialah halaman pengurusan dalaman yang dilindungi auth; `/sports` kekal awam manakala `/matches` redirect ke `/schedule`. `/sports-programme`, `/medal-tally` dan `/schedules` tidak wujud.
 
-`PublicPortalService` memilih organization/session melalui `PUBLIC_ORG_SLUG` + `PUBLIC_SESSION_SLUG`, menggunakan explicit organization predicates, cache dua minit dan query fixture upcoming/completed berasingan.
+`PublicPortalService` memilih organisasi melalui `PUBLIC_ORG_SLUG` dan session aktif terkini dalam organisasi itu, menggunakan explicit organization predicates, cache dua minit dan query fixture upcoming/completed berasingan.
 
 ## Route and Runtime Summary
 
