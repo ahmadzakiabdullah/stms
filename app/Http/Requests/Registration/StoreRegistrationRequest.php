@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Registration;
 
+use App\Models\Tournament;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\Tournament;
 
 class StoreRegistrationRequest extends FormRequest
 {
@@ -19,7 +19,7 @@ class StoreRegistrationRequest extends FormRequest
             $organizationId = $this->user()->organization_id;
 
             if ($this->user()->hasRole('super-admin') && $this->filled('tournament_id')) {
-                $organizationId = Tournament::forOrganization($organizationId)
+                $organizationId = Tournament::query()
                     ->whereKey($this->input('tournament_id'))
                     ->value('organization_id');
             }

@@ -7,12 +7,12 @@ use App\Models\Sport;
 use App\Models\SportDocument;
 use App\Services\DocumentStorageService;
 use App\Services\PublicPortalService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 
 class SportDocumentController extends Controller
@@ -73,6 +73,7 @@ class SportDocumentController extends Controller
         $absolute = Storage::disk('public')->path($data['file_path']);
         $file = new \SplFileInfo($absolute);
         SportDocument::create(['organization_id' => $sport->organization_id, 'sport_id' => $sport->id, 'session_id' => $data['session_id'], 'title' => $data['title'], 'file_path' => $data['file_path'], 'file_name' => $file->getFilename(), 'mime_type' => File::mimeType($absolute), 'file_size' => $file->getSize(), 'is_published' => true, 'created_by' => $request->user()->uuid]);
+
         return back()->with('success', 'Sport document linked successfully.');
     }
 }

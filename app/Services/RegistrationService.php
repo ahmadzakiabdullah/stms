@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Registration;
-use App\Models\Participant;
 use App\Models\Organization;
+use App\Models\Participant;
+use App\Models\Registration;
 use App\Models\Tournament;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 20 September 2026 — Fix super-admin registration tenant derivation
+
+- Super-admin registration requests now resolve the target organization from the selected tournament before validation; focused registration coverage passes **7/7 tests**.
+
 ### 20 September 2026 — Use explicit tenant scopes in relation validation
 
 - Replaced service and request relation lookups that bypassed the organization scope with explicit `forOrganization($organizationId)` queries.

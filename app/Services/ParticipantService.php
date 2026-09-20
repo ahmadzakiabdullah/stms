@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\EventParticipant;
 use App\Models\Event;
+use App\Models\EventParticipant;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
