@@ -102,7 +102,7 @@
 - [x] Jalankan keyboard navigation, focus management, screen-reader labels dan axe pada semua public routes; production smoke Playwright lulus **6/6** pada 21 September 2026.
 - [ ] Uji viewport mobile/tablet/desktop, zoom 200%, contrast, reduced motion dan touch target minimum 44px. Smoke production 1/1 lulus untuk viewport 390/768/1440px, reduced motion dan touch target; browser zoom 200% sebenar masih memerlukan verifikasi manual.
 - [x] Tambah metadata SEO yang konsisten: title, description, canonical, Open Graph/Twitter, sitemap lengkap dan robots policy; tambah E2E regression check.
-- [ ] Semak alt text, external links, image loading dan fallback apabila asset atau public data gagal.
+- [x] Semak alt text, external links, image loading dan fallback apabila asset atau public data gagal. `SafeImage` kini menyediakan fallback untuk branding, banner dan ikon sport; `ParticipantLogo` kembali kepada initials apabila logo gagal; external links menetapkan `noopener noreferrer`; regression E2E ditambah. Verifikasi browser zoom 200% masih manual dan kekal pada item viewport di atas.
 
 ## P1 — Authenticated UI/UX
 

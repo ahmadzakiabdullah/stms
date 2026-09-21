@@ -396,7 +396,7 @@ function ImportDialog({ open, onClose, participantId, faculties }: {
                             <input type="file" accept=".csv,.xlsx,.xls" className="sr-only" onChange={handleFile} />
                         </label>
                         {errors.file && <p className="text-xs text-destructive">{errors.file}</p>}
-                        <Link href={route('event-participants.import.template')} target="_blank"
+                        <Link href={route('event-participants.import.template')} target="_blank" rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-xs text-primary underline underline-offset-2">
                             <Download className="size-3.5" /> {t('Download CSV template')}
                         </Link>

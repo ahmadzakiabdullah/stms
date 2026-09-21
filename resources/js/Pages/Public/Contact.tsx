@@ -90,13 +90,13 @@ export default function PublicContact({ app_name, contact, updated_at, error = n
                                 <div aria-hidden="true" className="absolute -right-16 -top-16 size-48 rounded-full bg-[var(--public-accent-soft)] blur-3xl" />
                                 <p className="relative text-[10px] font-black uppercase tracking-[.22em] text-[var(--public-highlight)]">{t('UTeM Sports Centre')}</p>
                                 <h2 className="relative mt-3 text-xl font-black leading-snug">{t('Universiti Teknikal Malaysia Melaka')}</h2>
-                                <a href="https://www.utem.edu.my/" target="_blank" rel="noreferrer" className="relative mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--public-highlight)] px-4 text-sm font-black text-[var(--public-dark)] transition hover:-translate-y-0.5 hover:brightness-105">{t('Visit UTeM website')}<ExternalLink className="size-4" /></a>
+                                <a href="https://www.utem.edu.my/" target="_blank" rel="noopener noreferrer" className="relative mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--public-highlight)] px-4 text-sm font-black text-[var(--public-dark)] transition hover:-translate-y-0.5 hover:brightness-105">{t('Visit UTeM website')}<ExternalLink className="size-4" /></a>
                                 {socialLinks.length > 0 && (
                                     <div className="relative mt-7 border-t border-white/10 pt-6">
                                         <p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-white/75"><Share2 className="size-3.5 text-[var(--public-highlight)]" />{t('Official social media')}</p>
                                         <div className="mt-3 flex flex-wrap gap-2">
                                             {socialLinks.map(link => (
-                                                <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 text-xs font-bold text-white transition hover:bg-white/10">
+                                                <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 text-xs font-bold text-white transition hover:bg-white/10">
                                                     {link.label}<ExternalLink className="size-3" />
                                                 </a>
                                             ))}

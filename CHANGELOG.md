@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 21 September 2026 — Harden public image fallbacks and external links
+
+- Added a shared `SafeImage` component with graceful fallback rendering for public branding, the homepage banner and sport icons.
+- Participant logos now fall back to initials when a stored image cannot load; decorative/meaningful image alt attributes are covered by browser regression checks.
+- Added `noopener noreferrer` to links opened in a new tab and E2E checks for external-link safety, missing alt attributes and persistent broken images.
+- Browser zoom at 200% remains a manual verification item because no controllable browser target was available in the local session.
+
 ### 21 September 2026 — Lock connected-CI coverage baseline
 
 - Measured PCOV coverage from the exact master commit `7bddf3c8` using CI run `35556552952`: **76.76% statement coverage (6,062/7,897)**.
