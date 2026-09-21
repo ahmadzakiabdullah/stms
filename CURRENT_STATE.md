@@ -6,7 +6,7 @@
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** perubahan semasa dikomit sebagai `7bddf3c8` dan telah dipush ke `origin/master`. Required quality gate CI lulus pada commit ini. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants dan final cutover evidence diselesaikan.
+**Repository:** perubahan semasa dikomit sebagai `0c1d05e7f` dan telah dipush ke `origin/master`. Required quality gate post-merge CI run `35560044122` lulus pada commit ini. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants dan final cutover evidence diselesaikan.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
@@ -57,7 +57,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Axe/keyboard smoke tests meliputi login, dashboard, homepage dan Contact pada desktop/mobile; contrast dan ARIA findings semasa telah dibaiki.
 - Butiran hubungan awam kini tenant-scoped dan boleh diedit melalui Settings: alamat, e-mel, telefon serta pautan Facebook, Instagram, TikTok dan YouTube divalidasi sebelum dipaparkan.
 - Query/payload assembly bagi Dashboard, Events dan Event Participants telah dipindahkan daripada controller kepada tiga service khusus; controller masing-masing kini fokus pada authorization, input, response dan mutation.
-- Artifact PCOV CI run `35556552952` pada master commit `7bddf3c8` merekod **76.76% statement coverage (6,062/7,897)**; workflow mempunyai ratchet minimum 74.5% yang lulus.
+- Artifact PCOV CI run `35560044122` pada master commit `0c1d05e7f` merekod **76.76% statement coverage (6,062/7,897)**; workflow mempunyai ratchet minimum 74.5% yang lulus.
 - Predis 3.6 menyediakan Redis client portable untuk Windows/IIS dan Docker; Dockerfile/Compose production serta isolated staging path telah dibaiki dan divalidasi.
 - Backup terenkripsi production-labelled workspace telah disalin off-host dan dipulihkan dalam MySQL 8 terasing: SHA-256 sah, 54 uploads serta row counts utama sepadan, health hijau dan RTO 7.699 saat.
 - Authenticated multi-worker staging k6 lulus 1,150/1,150 checks, 0% HTTP failures dan p95 81.543 ms pada 10 VU/30 saat.
@@ -105,7 +105,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Quality Gates Semasa
 
-**Certification run — 21 September 2026:** required quality gate pada master commit `7bddf3c8` lulus semua job: secret scan, dependency audits, Pint, PHPUnit, PCOV coverage, TypeScript/build/budget dan browser E2E. Artifact PCOV merekod **76.76% statement coverage (6,062/7,897)** dan lulus ratchet minimum 74.5%. Bukti ini ialah baseline semasa; ia tidak membuka P0 production yang masih di-hold.
+**Certification run — 21 September 2026:** required quality gate post-merge pada master commit `0c1d05e7f` lulus semua job: secret scan, dependency audits, Pint, PHPUnit, PCOV coverage, TypeScript/build/budget dan browser E2E. Artifact PCOV merekod **76.76% statement coverage (6,062/7,897)** dan lulus ratchet minimum 74.5%. Bukti ini ialah baseline semasa; ia tidak membuka P0 production yang masih di-hold.
 
 | Gate | Keputusan connected CI 21 September 2026 |
 |---|---|
@@ -120,7 +120,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | PCOV statement coverage | **Lulus — 76.76% (6,062/7,897), minimum 74.5%** |
 | Playwright/axe | Lulus — browser E2E |
 | Inventory | Lulus |
-| Connected CI | **Lulus — [run `35556552952`](https://github.com/ahmadzakiabdullah/stms/actions/runs/35556552952)** pada `7bddf3c8`; semua job termasuk required quality gate hijau |
+| Connected CI | **Lulus — [run `35560044122`](https://github.com/ahmadzakiabdullah/stms/actions/runs/35560044122)** pada `0c1d05e7f`; semua job termasuk required quality gate hijau |
 
 ## Capability Tambahan 9 September 2026 — Remediasi Dependensi & Pint Cleanup
 
