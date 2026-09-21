@@ -152,6 +152,7 @@ jobs:
           APP_URL: http://127.0.0.1:8000
           APP_LOCALE: en
           APP_FALLBACK_LOCALE: en
+          EMAIL_VERIFICATION_REQUIRED: 'false'
           PUBLIC_REGISTRATION_ENABLED: 'false'
           SEED_DEMO_DATA: 'true'
           DB_CONNECTION: sqlite
@@ -166,6 +167,7 @@ jobs:
           APP_URL: http://127.0.0.1:8000
           APP_LOCALE: en
           APP_FALLBACK_LOCALE: en
+          EMAIL_VERIFICATION_REQUIRED: 'false'
           PUBLIC_REGISTRATION_ENABLED: 'false'
           SEED_DEMO_DATA: 'true'
           DB_CONNECTION: sqlite
