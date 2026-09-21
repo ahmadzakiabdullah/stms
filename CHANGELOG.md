@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 21 September 2026 — Standardize public shadcn controls
+
+- Added shared shadcn/Radix wrappers for public tabs, pagination, accordion and alert patterns.
+- Replaced remaining raw public filter inputs, clear actions, athlete tabs/pagination, FAQ/roster disclosures and refresh/error controls with shared UI primitives.
+- Kept the public controls keyboard-accessible and tenant-theme compatible without adding a new UI framework.
+
 ### 21 September 2026 — Complete public route data-state coverage
 
 - Standardized public loading announcements through `PublicLayout` with `aria-busy` during Inertia navigation.

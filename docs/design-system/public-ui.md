@@ -37,6 +37,8 @@ Public components are composition layers over local shadcn/ui primitives and Tai
 - `Badge` for match status and compact metadata.
 - `Card`, `Skeleton`, `Alert` and shared public empty/error/loading states for content states.
 
+Public filter/search interactions use the shared `Input`, `Select` and `Button` primitives. Public tabs and pagination use the shared `Tabs` and `Pagination` wrappers, while FAQ and roster disclosures use `Accordion`; page-specific styling is limited to class composition and tenant theme tokens.
+
 Do not add a UI framework, CSS module, styled-components or new custom stylesheet. Existing tenant theme values must remain controlled and contrast-checked.
 
 ## Required states

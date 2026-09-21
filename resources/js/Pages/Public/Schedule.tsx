@@ -361,7 +361,7 @@ function FilterPanel({
     venueFilter, setVenueFilter, sportsCatalog, sportCounts, categoryOptions, categoryCounts,
     venues, hasActiveFilters, clearFilters,
 }: FilterPanelProps) {
-    const selectClass = 'w-full rounded-xl border border-[var(--public-dark-border)] bg-white px-3.5 py-2.5 text-sm font-semibold outline-none transition focus:border-[var(--public-primary)] focus:ring-2 focus:ring-[var(--public-primary)]/15';
+    const selectClass = 'h-11 rounded-xl bg-white text-sm font-semibold';
 
     return (
         <div className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 shadow-sm">
@@ -375,13 +375,13 @@ function FilterPanel({
             <div className="space-y-3">
                 <div className="relative">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--public-dark-faint)]" />
-                    <input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('Search team, venue, match #...')} aria-label={t('Search team, venue, match #...')} className={`${selectClass} pl-10 pr-9`} />
-                    {searchQuery && <button type="button" onClick={() => setSearchQuery('')} aria-label={t('Clear search')} className="absolute right-2.5 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-[var(--public-dark-faint)] hover:bg-[var(--public-dark-soft)] hover:text-[var(--public-text)]"><X className="size-3.5" /></button>}
+                    <Input type="search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('Search team, venue, match #...')} aria-label={t('Search team, venue, match #...')} className={`${selectClass} pl-10 pr-9`} />
+                    {searchQuery && <Button type="button" variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} aria-label={t('Clear search')} className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full text-[var(--public-dark-faint)] hover:bg-[var(--public-dark-soft)] hover:text-[var(--public-text)]"><X className="size-3.5" /></Button>}
                 </div>
                 <Select value={sportFilter || 'all'} onValueChange={(value) => { setSportFilter(value === 'all' ? '' : value); setCategoryFilter(''); }}><SelectTrigger aria-label={t('Filter by sport')} className={selectClass}><SelectValue placeholder={t('All Sports')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Sports')}</SelectItem>{sportsCatalog.map(sport => <SelectItem key={sport.name} value={sport.name}>{sport.name} ({sportCounts.get(sport.name) ?? 0})</SelectItem>)}</SelectContent></Select>
                 <Select value={categoryFilter || 'all'} onValueChange={(value) => setCategoryFilter(value === 'all' ? '' : value)}><SelectTrigger aria-label={t('Filter by category')} className={selectClass}><SelectValue placeholder={t('All Categories')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Categories')}</SelectItem>{categoryOptions.map(category => <SelectItem key={category} value={category}>{category} ({categoryCounts.get(category) ?? 0})</SelectItem>)}</SelectContent></Select>
                 <Select value={venueFilter || 'all'} onValueChange={(value) => setVenueFilter(value === 'all' ? '' : value)}><SelectTrigger aria-label={t('Filter by venue')} className={selectClass}><SelectValue placeholder={t('All Venues')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Venues')}</SelectItem>{venues.map(venue => <SelectItem key={venue} value={venue}>{venue}</SelectItem>)}</SelectContent></Select>
-                {hasActiveFilters && <button type="button" onClick={clearFilters} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--public-dark-border)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--public-dark-faint)] transition hover:border-red-200 hover:text-red-600"><X className="size-4" />{t('Clear')}</button>}
+                {hasActiveFilters && <Button type="button" variant="outline" onClick={clearFilters} className="w-full gap-2 rounded-xl text-sm font-bold text-[var(--public-dark-faint)] hover:border-red-200 hover:text-red-600"><X className="size-4" />{t('Clear')}</Button>}
             </div>
         </div>
     );
