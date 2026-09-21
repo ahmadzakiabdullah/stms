@@ -97,7 +97,7 @@
 - [x] Lengkapkan navigasi mobile/tablet supaya Competition dan Information tidak hilang berbanding desktop.
 - [x] Redesign public Venues directory dengan kad venue yang boleh membuka jadual mengikut venue.
 - [x] Redesign homepage public supaya state sebelum jadual diterbitkan mempunyai CTA jelas ke sukan, venue dan atlet.
-- [ ] Sediakan state loading, empty, stale, error dan permission untuk semua public routes.
+- [x] Sediakan state loading, empty, stale, error dan permission untuk semua public routes. `PublicLayout` mengumumkan loading Inertia dan `aria-busy`; homepage serta semua halaman public mempunyai error state dengan retry, empty/stale/loading state yang relevan; permission state kekal backend HTTP 403/404 kerana route ini anonymous by design.
 - [ ] Gunakan komponen shadcn untuk filter, input, select, tabs, pagination, alert dan accordion secara konsisten.
 - [x] Jalankan keyboard navigation, focus management, screen-reader labels dan axe pada semua public routes; production smoke Playwright lulus **6/6** pada 21 September 2026.
 - [ ] Uji viewport mobile/tablet/desktop, zoom 200%, contrast, reduced motion dan touch target minimum 44px. Smoke production 1/1 lulus untuk viewport 390/768/1440px, reduced motion dan touch target; browser zoom 200% sebenar masih memerlukan verifikasi manual.

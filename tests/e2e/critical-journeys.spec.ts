@@ -68,6 +68,7 @@ test('all public routes pass serious axe checks and expose a keyboard focus targ
         const response = await page.goto(path);
         expect(response?.status(), path).toBeLessThan(400);
         await expect(page.locator('main')).toBeVisible();
+        await expect(page.locator('#public-content')).toHaveAttribute('aria-busy', 'false');
         await expectAccessible(page);
 
         await page.keyboard.press('Tab');

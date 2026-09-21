@@ -3,6 +3,7 @@ import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import { useI18n } from '@/lib/i18n';
+import { router } from '@inertiajs/react';
 import { BookOpen, CircleHelp, Download, FileText, Newspaper, Trophy } from 'lucide-react';
 import { type ComponentType } from 'react';
 
@@ -18,7 +19,7 @@ export default function PublicInfo({ section, app_name, competition, updated_at,
     return (
         <PublicLayout title={`${t(current.title)} | ${competition?.name || app_name}`} appName={app_name} description={t(current.intro)} canonical={route(`public.${section}`)}>
             <main>
-                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Information unavailable')} description={error} /></div>}
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Information unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t(current.title)} intro={t(current.intro)} icon={<Icon className="size-4" />} />
                 <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16"><div className="mb-6 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div><Content section={section} competitionName={competition?.name || app_name} t={t} /></div>
             </main>

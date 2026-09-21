@@ -5,7 +5,7 @@ import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import { useI18n } from '@/lib/i18n';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { ArrowLeft, CalendarDays, CheckCircle2, Clock3, MapPin, Trophy, Users, XCircle } from 'lucide-react';
 
 type Athlete = { id: string; name: string; role: string; faculty: string | null; logo_url: string | null; inverse_logo_url: string | null; sport: string | null; category: string | null; event: string | null };
@@ -18,7 +18,7 @@ export default function PublicAthlete({ app_name, competition, athlete, stats, m
     return (
         <PublicLayout title={`${athlete.name} | ${competition?.name || app_name}`} appName={app_name} current="athletes" description={t('View the official athlete profile, competition participation and performance record.')} canonical={route('public.athletes.show', athlete.id)}>
             <main>
-                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Athlete profile unavailable')} description={error} /></div>}
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Athlete profile unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t('Athlete Profile')} intro={t('Official participation and performance record.')} icon={<Users className="size-4" />} />
                 <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
                     <Link href={route('public.athletes')} className="inline-flex min-h-10 items-center gap-2 text-sm font-black text-[var(--public-primary)] hover:underline"><ArrowLeft className="size-4" />{t('Back to athletes')}</Link>

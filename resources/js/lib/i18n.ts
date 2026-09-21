@@ -2247,6 +2247,11 @@ Object.assign(en, {
     'By faculty': 'By faculty',
     'Clear filters': 'Clear filters',
     'Loading…': 'Loading…',
+    'Loading': 'Loading',
+    'Try again': 'Try again',
+    'Unable to load this content': 'Unable to load this content',
+    'Please try again.': 'Please try again.',
+    'Competition data unavailable': 'Competition data unavailable',
 });
 Object.assign(ms, {
     'All': 'Semua',
@@ -2261,6 +2266,11 @@ Object.assign(ms, {
     'By faculty': 'Mengikut fakulti',
     'Clear filters': 'Kosongkan penapis',
     'Loading…': 'Memuatkan…',
+    'Loading': 'Memuatkan',
+    'Try again': 'Cuba lagi',
+    'Unable to load this content': 'Kandungan tidak dapat dimuatkan',
+    'Please try again.': 'Sila cuba lagi.',
+    'Competition data unavailable': 'Data pertandingan tidak tersedia',
 });
 
 const dictionaries: Record<string, Translations> = { en, ms };
