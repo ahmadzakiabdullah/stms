@@ -79,7 +79,7 @@
 - [x] Selaraskan arahan Composer production mengikut subcommand (`install --optimize-autoloader`, `dump-autoload --optimize`) dan tambah recovery langkah untuk stale package metadata/provider.
 - [x] Review working tree: 15 perubahan yang belum commit semuanya berkaitan dengan release slice UI/UX, dokumentasi, E2E dan production schema verification; tiada perubahan package atau fail tidak berkaitan untuk diasingkan. Commit kekal sebagai langkah release berasingan.
 - [x] Pulihkan dependency development lengkap supaya PHPUnit dan build native boleh dijalankan dalam environment CI yang konsisten. `composer install` dengan `require-dev` dipulihkan; PHPUnit 526/526, Pint, TypeScript, Vite build/budget dan audit dependency lulus pada runner lokal terasing 21 September 2026.
-- [ ] Jadikan gate release wajib: `php artisan test`, Pint, typecheck, inventory, tenant-bypass check, production build, budget, E2E, `composer audit` dan `npm audit`. CI kini mempunyai aggregator `Required quality gate` yang gagal jika mana-mana job gagal/dibatalkan; lengkapkan dengan menetapkan check ini sebagai required status check dalam GitHub branch protection.
+- [x] Jadikan gate release wajib: `php artisan test`, Pint, typecheck, inventory, tenant-bypass check, production build, budget, E2E, `composer audit` dan `npm audit`. Aggregator `Required quality gate` dan GitHub branch protection telah disahkan aktif; run `35555960111` lulus semua job dan PR #139 telah merged ke `master` (`4689e8e1`).
 - [ ] Ukur coverage daripada commit yang sama dan kekalkan sekurang-kurangnya baseline 74.5% sebelum menambah feature baharu.
 - [ ] Tulis Feature/Unit tests untuk setiap item P0 sebelum menandakan item selesai.
 
