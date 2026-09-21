@@ -5,6 +5,7 @@ import PublicMatchCard, { type PublicMatch } from '@/components/PublicMatchCard'
 import PublicSectionHeading from '@/components/PublicSectionHeading';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicTeamRow from '@/components/PublicTeamRow';
+import SafeImage from '@/components/SafeImage';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SportIcon } from '@/lib/sportIcons';
@@ -142,13 +143,14 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
                 <section aria-label={competition?.name || app_name} className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 sm:pt-16">
                     <figure className="overflow-hidden rounded-[1.75rem] border border-[var(--public-dark-border)] shadow-[0_32px_80px_-48px_rgba(7,27,51,.9)]">
-                        <img
+                        <SafeImage
                             src="/images/banner/banner-saf-20-2026.jpeg"
                             alt={competition?.name ? `${t('Official banner')} — ${competition.name}` : t('Official banner')}
                             className="max-h-56 w-full object-cover object-top sm:max-h-80 lg:max-h-[26rem]"
                             loading="eager"
                             decoding="async"
                             fetchPriority="high"
+                            fallback={<div role="img" data-image-fallback="official-banner" aria-label={t('Official banner')} className="flex min-h-56 items-center justify-center bg-[var(--public-dark)] px-6 text-center text-sm font-black text-white/75 sm:min-h-80 lg:min-h-[26rem]">{t('Official banner')}</div>}
                         />
                     </figure>
                     {liveMatches.length > 0 && (

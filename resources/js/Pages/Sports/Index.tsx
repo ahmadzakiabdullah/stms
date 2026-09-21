@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
+import SafeImage from '@/components/SafeImage';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -346,18 +347,12 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                         </TableCell>
                                         <TableCell className="font-medium">
                                             <span className="flex items-center gap-2">
-                                                {sport.icon ? (
-                                                    <img
-                                                        src={sport.icon}
-                                                        alt=""
-                                                        className="size-5 rounded object-contain"
-                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                                    />
-                                                ) : (
-                                                    <span className="flex size-6 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                                                        <SportIcon name={sport.name} className="text-sm leading-none" />
-                                                    </span>
-                                                )}
+                                                <SafeImage
+                                                    src={sport.icon}
+                                                    alt=""
+                                                    className="size-5 rounded object-contain"
+                                                    fallback={<span data-sport-fallback className="flex size-6 items-center justify-center rounded-md bg-muted text-muted-foreground"><SportIcon name={sport.name} className="text-sm leading-none" /></span>}
+                                                />
                                                 {sport.name}
                                             </span>
                                         </TableCell>
@@ -405,7 +400,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                                     </div>
                                                     <div className="mb-4 rounded-lg border bg-background p-3">
                                                         <div className="mb-2 flex items-center justify-between"><h5 className="flex items-center gap-2 text-sm font-medium"><FileText className="size-4" /> {t('Documents')}</h5>{isSuperAdmin && <Button size="sm" variant="outline" onClick={() => setDocumentSport(sport)}><Upload className="mr-1 size-3" /> {t('Upload')}</Button>}</div>
-                                                        {(sport.documents?.length ?? 0) === 0 ? <p className="text-sm text-muted-foreground">{t('No documents yet.')}</p> : sport.documents?.map((doc) => <div key={doc.id} className="flex items-center justify-between border-t py-2 text-sm"><span><span className="font-medium">{doc.title}</span><span className="ml-2 text-xs text-muted-foreground">{doc.file_name}</span></span><span className="flex gap-1"><a href={doc.url} target="_blank" rel="noreferrer"><Button type="button" size="sm" variant="ghost"><ExternalLink className="mr-1 size-3" />{t('View')}</Button></a>{isSuperAdmin && <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => deleteDocument(doc)}><Trash2 className="size-3" /></Button>}</span></div>)}
+                                                        {(sport.documents?.length ?? 0) === 0 ? <p className="text-sm text-muted-foreground">{t('No documents yet.')}</p> : sport.documents?.map((doc) => <div key={doc.id} className="flex items-center justify-between border-t py-2 text-sm"><span><span className="font-medium">{doc.title}</span><span className="ml-2 text-xs text-muted-foreground">{doc.file_name}</span></span><span className="flex gap-1"><a href={doc.url} target="_blank" rel="noopener noreferrer"><Button type="button" size="sm" variant="ghost"><ExternalLink className="mr-1 size-3" />{t('View')}</Button></a>{isSuperAdmin && <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => deleteDocument(doc)}><Trash2 className="size-3" /></Button>}</span></div>)}
                                                     </div>
                                                     {(sport.categories?.length ?? 0) === 0 ? (
                                                         <p className="text-sm text-muted-foreground">{t('No categories yet for this sport.')}</p>

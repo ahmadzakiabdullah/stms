@@ -195,6 +195,29 @@ test('public pages emit no CSP violations in the browser console', async ({ page
     expect(violations).toEqual([]);
 });
 
+test('public images and external links have accessible and resilient contracts', async ({ page }) => {
+    await page.route('**/images/banner/banner-saf-20-2026.jpeg', (route) => route.fulfill({
+        status: 404,
+        contentType: 'image/jpeg',
+        body: '',
+    }));
+
+    await page.goto('/');
+    await expect(page.locator('[data-image-fallback="official-banner"]')).toBeVisible();
+
+    const imageAudit = await page.locator('img').evaluateAll((images) => images.map((image) => ({
+        alt: image.getAttribute('alt'),
+        broken: image.complete && image.currentSrc !== '' && image.naturalWidth === 0,
+    })));
+    expect(imageAudit.every((image) => image.alt !== null)).toBe(true);
+    expect(imageAudit.filter((image) => image.broken)).toEqual([]);
+
+    const unsafeExternalLinks = await page.locator('a[target="_blank"]').evaluateAll((links) => links
+        .filter((link) => !new Set((link.getAttribute('rel') ?? '').split(/\s+/).filter(Boolean)).has('noopener'))
+        .map((link) => link.getAttribute('href')));
+    expect(unsafeExternalLinks).toEqual([]);
+});
+
 test('public shell stays usable on mobile and tablet with reduced motion', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
 

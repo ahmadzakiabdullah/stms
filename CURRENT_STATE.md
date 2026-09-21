@@ -67,6 +67,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Halaman awam `/venues` kini mempunyai directory venue yang actionable, empty state dan pautan terus ke `/schedule?venue=...`; schedule membaca filter venue daripada URL.
 - Public homepage, directories, contact, information dan athlete profile kini memaparkan stale-data notice yang konsisten; `/faculties` mempunyai empty state khusus apabila tiada rekod diterbitkan.
 - Public accessibility smoke production lulus **6/6**: axe serious/critical, keyboard focus target, mobile Escape/focus wrapping, navigation parity, locale switch dan CSP console checks.
+- Public image resilience kini menggunakan `SafeImage` untuk fallback banner, branding dan sport icon; `ParticipantLogo` kembali kepada initials apabila asset logo gagal, manakala external links menggunakan `noopener noreferrer` dan E2E memeriksa alt attribute serta tiada broken image yang kekal.
 - Responsive public shell smoke lulus **1/1** untuk viewport mobile 390px, tablet 768px dan desktop 1440px, reduced motion serta touch target minimum 44px; browser zoom 200% sebenar masih belum diaudit.
 - Homepage public kini mempunyai pre-fixture state yang jelas: CTA utama membawa pengguna ke program sukan apabila jadual belum diterbitkan, dan panel hero menyediakan pautan pantas ke sukan, venue serta atlet.
 - Sidebar authenticated dashboard kini memaparkan semua seksyen menu secara terus tanpa dropdown; visibility masih ditapis mengikut role dan pautan aktif kekal ditanda.
