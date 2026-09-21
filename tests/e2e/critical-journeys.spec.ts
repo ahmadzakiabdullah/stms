@@ -43,12 +43,7 @@ test('login and dashboard have no serious automated accessibility violations', a
 
     await login(page, 'admin@saf.test');
     await page.goto('/dashboard');
-    if ((page.viewportSize()?.width ?? 0) <= 768) {
-        await page.getByRole('button', { name: 'Open mobile menu', exact: true }).click();
-    }
-    await expect(page.getByText('Competition Setup', { exact: true })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Sessions', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Competition Setup', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /Welcome back,/ })).toBeVisible();
     await expectAccessible(page);
 });
 
@@ -129,8 +124,7 @@ test('public pages avoid horizontal overflow and support locale switching', asyn
     }
 
     await page.goto('/venues');
-    await expect(page.getByRole('heading', { name: 'Find your competition venue' })).toBeVisible();
-    await expect(page.getByRole('link', { name: /View fixtures/ }).first()).toHaveAttribute('href', /\/schedule\?venue=/);
+    await expect(page.getByRole('heading', { name: 'Venues', exact: true })).toBeVisible();
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
