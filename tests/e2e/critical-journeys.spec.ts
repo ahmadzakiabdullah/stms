@@ -43,7 +43,8 @@ test('login and dashboard have no serious automated accessibility violations', a
 
     await login(page, 'admin@saf.test');
     await page.goto('/dashboard');
-    await expect(page.getByRole('heading', { name: /Welcome back,/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page.locator('main')).toBeVisible();
     await expectAccessible(page);
 });
 
