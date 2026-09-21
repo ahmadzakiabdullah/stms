@@ -6,7 +6,7 @@
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** perubahan semasa dikomit sebagai `4c4ebf0c` dan telah dipush ke `origin/master`. Quality gate tempatan untuk scorer/public portal lulus; connected CI #112 merujuk commit terdahulu. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants dan final cutover evidence diselesaikan.
+**Repository:** perubahan semasa dikomit sebagai `7bddf3c8` dan telah dipush ke `origin/master`. Required quality gate CI lulus pada commit ini. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants dan final cutover evidence diselesaikan.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
@@ -57,7 +57,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Axe/keyboard smoke tests meliputi login, dashboard, homepage dan Contact pada desktop/mobile; contrast dan ARIA findings semasa telah dibaiki.
 - Butiran hubungan awam kini tenant-scoped dan boleh diedit melalui Settings: alamat, e-mel, telefon serta pautan Facebook, Instagram, TikTok dan YouTube divalidasi sebelum dipaparkan.
 - Query/payload assembly bagi Dashboard, Events dan Event Participants telah dipindahkan daripada controller kepada tiga service khusus; controller masing-masing kini fokus pada authorization, input, response dan mutation.
-- Artifact PCOV CI #112 merekod 75.03% statement coverage (4,676/6,232); workflow mempunyai ratchet minimum 74.5% yang lulus pada commit `4b04c46`.
+- Artifact PCOV CI run `35556552952` pada master commit `7bddf3c8` merekod **76.76% statement coverage (6,062/7,897)**; workflow mempunyai ratchet minimum 74.5% yang lulus.
 - Predis 3.6 menyediakan Redis client portable untuk Windows/IIS dan Docker; Dockerfile/Compose production serta isolated staging path telah dibaiki dan divalidasi.
 - Backup terenkripsi production-labelled workspace telah disalin off-host dan dipulihkan dalam MySQL 8 terasing: SHA-256 sah, 54 uploads serta row counts utama sepadan, health hijau dan RTO 7.699 saat.
 - Authenticated multi-worker staging k6 lulus 1,150/1,150 checks, 0% HTTP failures dan p95 81.543 ms pada 10 VU/30 saat.
@@ -105,11 +105,11 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Quality Gates Semasa
 
-**Certification run — 9 September 2026:** semua gate tempatan dijalankan semula terhadap working tree selepas commit `6f266b1bc` dan `7a43b37e`. PHPUnit penuh **506/506 (2,345 assertions)**; Pint `--test` hijau seluruh repo; inventori `153 / 66 / 39 / 43 / 99`; tenant-bypass allowlist lulus; TypeScript, Vite build, bundle budget lulus; Composer audit dan npm audit kedua-duanya **0 vulnerability** selepas remediasi dependensi (lihat nota di bawah). Playwright/axe 8/8 kekal sebagai evidence CI untuk production smoke.
+**Certification run — 21 September 2026:** required quality gate pada master commit `7bddf3c8` lulus semua job: secret scan, dependency audits, Pint, PHPUnit, PCOV coverage, TypeScript/build/budget dan browser E2E. Artifact PCOV merekod **76.76% statement coverage (6,062/7,897)** dan lulus ratchet minimum 74.5%. Bukti ini ialah baseline semasa; ia tidak membuka P0 production yang masih di-hold.
 
-| Gate | Keputusan working tree 9 September 2026 |
+| Gate | Keputusan connected CI 21 September 2026 |
 |---|---|
-| PHPUnit | **Lulus — 506/506, 2,345 assertions** |
+| PHPUnit | Lulus |
 | Pint | Lulus (`--test` seluruh repo) |
 | TypeScript | Lulus |
 | Tenant bypass allowlist | Lulus |
@@ -117,9 +117,10 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 | Bundle budget | Lulus |
 | Composer audit | **Lulus — 0 advisory** |
 | npm audit | **Lulus — 0 vulnerability** |
-| Playwright/axe | **Lulus — 8/8 desktop/mobile** pada SQLite terasing |
-| Inventory | Matriks `153 / 66 / 39 / 43 / 99` |
-| Connected CI | **Lulus — [run #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726)** pada `4b04c46`; keenam-enam job hijau termasuk browser E2E dan ratchet PCOV |
+| PCOV statement coverage | **Lulus — 76.76% (6,062/7,897), minimum 74.5%** |
+| Playwright/axe | Lulus — browser E2E |
+| Inventory | Lulus |
+| Connected CI | **Lulus — [run `35556552952`](https://github.com/ahmadzakiabdullah/stms/actions/runs/35556552952)** pada `7bddf3c8`; semua job termasuk required quality gate hijau |
 
 ## Capability Tambahan 9 September 2026 — Remediasi Dependensi & Pint Cleanup
 
