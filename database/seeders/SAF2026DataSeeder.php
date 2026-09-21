@@ -232,6 +232,9 @@ class SAF2026DataSeeder extends Seeder
                 if ($event->trashed()) {
                     $event->restore();
                 }
+                if (blank($event->venues)) {
+                    $event->update(['venues' => ['Stadium Mini UTeM', 'Padang B']]);
+                }
                 $allEvents[] = $event;
             }
         }

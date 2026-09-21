@@ -43,6 +43,9 @@ test('login and dashboard have no serious automated accessibility violations', a
 
     await login(page, 'admin@saf.test');
     await page.goto('/dashboard');
+    if ((page.viewportSize()?.width ?? 0) <= 768) {
+        await page.getByRole('button', { name: 'Open mobile menu', exact: true }).click();
+    }
     await expect(page.getByText('Competition Setup', { exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sessions', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Competition Setup', exact: true })).toHaveCount(0);
