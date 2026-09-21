@@ -3,6 +3,7 @@ import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import { useI18n } from '@/lib/i18n';
+import { router } from '@inertiajs/react';
 import { Clock, ExternalLink, Mail, MapPin, MessageCircle, Phone, Share2 } from 'lucide-react';
 
 type Props = {
@@ -35,7 +36,7 @@ export default function PublicContact({ app_name, contact, updated_at, error = n
     return (
         <PublicLayout title={t('Contact Us')} appName={app_name} current="contact" description={t('Contact the official sports competition secretariat for schedules, participation and venue enquiries.')} canonical={route('public.contact')}>
             <main aria-label={t('Contact Us')}>
-                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Contact information unavailable')} description={error} /></div>}
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Contact information unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero
                     eyebrow={t('Official sports information portal')}
                     title={t('Contact Us')}

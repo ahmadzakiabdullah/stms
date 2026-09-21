@@ -41,7 +41,9 @@ Do not add a UI framework, CSS module, styled-components or new custom styleshee
 
 ## Required states
 
-Public data-driven pages must provide meaningful loading, empty and error states. Schedule and athlete pages expose optional error handling and stale-data notices. Error messages must not replace backend authorization or validation.
+Public data-driven pages must provide meaningful loading, empty, error and stale-data states. The shared `PublicLayout` announces Inertia navigation loading and exposes `aria-busy` on the public content root; pages use the shared empty/error/loading/stale components for content and refresh states. Retry actions must call an Inertia reload when the page exposes an error.
+
+Permission state is intentionally not rendered as an in-page public state: these routes are anonymous by design. Route-level authorization remains enforced by the backend; a denied or invalid public URL is handled by the normal HTTP 403/404 response and is never hidden behind an empty state.
 
 ## Responsive and accessibility baseline
 

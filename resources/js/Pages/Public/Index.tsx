@@ -1,5 +1,6 @@
 import ParticipantLogo from '@/components/ParticipantLogo';
 import PublicEmptyState from '@/components/PublicEmptyState';
+import PublicErrorState from '@/components/PublicErrorState';
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicMatchCard, { type PublicMatch } from '@/components/PublicMatchCard';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
@@ -26,6 +27,7 @@ type Props = {
     results: PublicMatch[];
     medals: MedalRow[];
     updated_at: string;
+    error?: string | null;
 };
 type Translate = (key: string) => string;
 
@@ -48,7 +50,7 @@ const countdownParts = (target: number, now: number) => {
     };
 };
 
-export default function PublicIndex({ app_name, competition, stats, sports, faculties, upcoming, results, medals, updated_at }: Props) {
+export default function PublicIndex({ app_name, competition, stats, sports, faculties, upcoming, results, medals, updated_at, error = null }: Props) {
     const { t, locale } = useI18n();
     const [refreshing, setRefreshing] = useState(false);
     const [refreshStatus, setRefreshStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -97,6 +99,7 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                 <link rel="preload" as="image" href="/images/banner/banner-saf-20-2026.jpeg" fetchPriority="high" />
             </Head>
             <main>
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Competition data unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <section className="relative isolate overflow-hidden bg-[var(--public-dark)] pb-16 pt-32 text-white sm:pb-20 sm:pt-40">
                     <CosmicBackground />
                     <div className="mx-auto grid min-h-[520px] max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.08fr_.92fr] xl:gap-20">

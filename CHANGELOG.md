@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 21 September 2026 — Complete public route data-state coverage
+
+- Standardized public loading announcements through `PublicLayout` with `aria-busy` during Inertia navigation.
+- Added homepage error rendering and consistent retry actions across public error states; stale notices now ignore invalid timestamps safely.
+- Added Malay translations for shared loading and retry labels, and documented that anonymous public routes use backend 403/404 handling instead of an in-page permission state.
+
 ### 21 September 2026 — Harden public image fallbacks and external links
 
 - Added a shared `SafeImage` component with graceful fallback rendering for public branding, the homepage banner and sport icons.

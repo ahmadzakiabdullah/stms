@@ -6,6 +6,7 @@ import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
 import { useI18n } from '@/lib/i18n';
+import { router } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
 import { ArrowRight, FileText, MapPin, Search, Trophy, Users, X } from 'lucide-react';
 import { SportIcon } from '@/lib/sportIcons';
@@ -30,7 +31,7 @@ export default function PublicDirectory({ section, app_name, competition, sports
     return (
         <PublicLayout title={`${t(meta.title)} | ${competition?.name || app_name}`} appName={app_name} current={section === 'sports' ? section : undefined} description={t(meta.intro)} canonical={route(`public.${section}`)}>
             <main>
-                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Directory unavailable')} description={error} /></div>}
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Directory unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t(meta.title)} intro={t(meta.intro)} icon={<Icon className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
                     <div className="mb-6 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>
