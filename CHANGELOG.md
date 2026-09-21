@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added a `Required quality gate` CI job that waits for secret scanning, dependency audits, Pint, PHPUnit, coverage, frontend build/budget and browser E2E.
 - The aggregate check fails on any failed, cancelled or skipped prerequisite, providing one status check for GitHub branch-protection configuration.
-- Production P0 work remains on hold; the repository still requires the owner to mark `Required quality gate` as a required status check in GitHub.
+- GitHub branch protection now requires `Required quality gate`; PR #139 was merged after run `35555960111` passed all gates. Production P0 work remains on hold.
 
 ### 21 September 2026 — Resume repository quality-gate verification
 
