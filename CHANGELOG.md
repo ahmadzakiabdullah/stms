@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 21 September 2026 — Lock connected-CI coverage baseline
+
+- Measured PCOV coverage from the exact master commit `7bddf3c8` using CI run `35556552952`: **76.76% statement coverage (6,062/7,897)**.
+- Recorded the 74.5% minimum as the maintained coverage ratchet; the required quality gate passed with this baseline.
+- Production P0 runtime and cutover work remains on hold.
+
 ### 21 September 2026 — Add aggregate required quality gate
 
 - Added a `Required quality gate` CI job that waits for secret scanning, dependency audits, Pint, PHPUnit, coverage, frontend build/budget and browser E2E.
