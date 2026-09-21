@@ -71,6 +71,12 @@ test('all public routes pass serious axe checks and expose a keyboard focus targ
         await expect(page.locator('#public-content')).toHaveAttribute('aria-busy', 'false');
         await expectAccessible(page);
 
+        if (path === '/') await expect(page.locator('[data-slot="button"]:visible').first()).toBeVisible();
+      if (path === '/schedule') await expect(page.locator('[data-slot="input"]:visible, [data-slot="button"]:visible').first()).toBeVisible();
+        if (path === '/athletes') await expect(page.locator('[data-slot="tabs-list"]')).toBeVisible();
+        if (path === '/sports') await expect(page.locator('[data-slot="input"]')).toBeVisible();
+        if (path === '/faq') await expect(page.locator('[data-slot="accordion"]')).toBeVisible();
+
         await page.keyboard.press('Tab');
         await expect(page.locator(':focus')).toBeVisible();
     }

@@ -5,6 +5,8 @@ import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useI18n } from '@/lib/i18n';
 import { router } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
@@ -135,12 +137,6 @@ function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEn
         });
     }, [sports_catalog, normalized, category]);
 
-    const chipClass = (active: boolean) => `inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-black uppercase tracking-wider transition ${
-        active
-            ? 'border-[var(--public-primary)] bg-[var(--public-primary)] text-white'
-            : 'border-[var(--public-dark-border)] bg-white text-[var(--public-dark-faint)] hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]'
-    }`;
-
     return (
         <section>
             <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
@@ -156,36 +152,38 @@ function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEn
                 </div>
                 <div className="relative w-full lg:max-w-sm">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--public-dark-faint)]" />
-                    <input
+                    <Input
                         type="search"
                         value={query}
                         onChange={(event) => setQuery(event.target.value)}
                         placeholder={t('Search sports and events')}
                         aria-label={t('Search sports and events')}
-                        className="w-full rounded-xl border border-[var(--public-dark-border)] bg-white py-2.5 pl-10 pr-9 text-sm font-semibold outline-none transition placeholder:text-[var(--public-dark-faint)] focus:border-[var(--public-primary-border)] focus:ring-2 focus:ring-[var(--public-primary)]/15"
+                        className="h-11 w-full rounded-xl py-2.5 pl-10 pr-9 text-sm font-semibold"
                     />
                     {query ? (
-                        <button type="button" onClick={() => setQuery('')} aria-label={t('Clear search')} className="absolute right-2.5 top-1/2 -translate-y-1/2 flex size-6 items-center justify-center rounded-full text-[var(--public-dark-faint)] transition hover:bg-[var(--public-dark-soft)] hover:text-[var(--public-text)]">
+                        <Button type="button" variant="ghost" size="icon-xs" onClick={() => setQuery('')} aria-label={t('Clear search')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--public-dark-faint)] hover:bg-[var(--public-dark-soft)] hover:text-[var(--public-text)]">
                             <X className="size-3.5" />
-                        </button>
+                        </Button>
                     ) : null}
                 </div>
             </div>
 
             {categories.length > 1 ? (
                 <div role="group" aria-label={t('Filter by category')} className="mt-5 flex flex-wrap items-center gap-2">
-                    <button type="button" onClick={() => setCategory('')} aria-pressed={category === ''} className={chipClass(category === '')}>{t('All')}</button>
+                    <Button type="button" variant={category === '' ? 'default' : 'outline'} size="sm" onClick={() => setCategory('')} aria-pressed={category === ''} className="min-h-9 rounded-full px-3 text-xs font-black uppercase tracking-wider">{t('All')}</Button>
                     {categories.map(([name, count]) => (
-                        <button
+                        <Button
                             key={name}
                             type="button"
+                            variant={category === name ? 'default' : 'outline'}
+                            size="sm"
                             onClick={() => setCategory(previous => (previous === name ? '' : name))}
                             aria-pressed={category === name}
-                            className={chipClass(category === name)}
+                            className="min-h-9 gap-1.5 rounded-full px-3 text-xs font-black uppercase tracking-wider"
                         >
                             {name}
-                            <span className={`tabular-nums ${category === name ? 'text-white/70' : 'text-[var(--public-dark-faint)]'}`}>{count}</span>
-                        </button>
+                            <span className="tabular-nums opacity-70">{count}</span>
+                        </Button>
                     ))}
                 </div>
             ) : null}

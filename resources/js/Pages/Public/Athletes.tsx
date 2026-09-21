@@ -4,9 +4,12 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import PublicErrorState from '@/components/PublicErrorState';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicLoadingState from '@/components/PublicLoadingState';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PublicPageHero from '@/components/PublicPageHero';
 import { useI18n } from '@/lib/i18n';
 import { SportIcon } from '@/lib/sportIcons';
@@ -99,14 +102,18 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                             <Stat value={stats?.officials ?? 0} label={t('officials')} />
                         </div>
 
-                        <div role="tablist" aria-label={t('Athletes & Teams')} className="mt-7 inline-flex flex-wrap gap-1 rounded-2xl border border-[var(--public-dark-border)] bg-[var(--public-dark-soft)] p-1">
+                        <Tabs value={view} onValueChange={value => applyFilters({ view: value as View, letter: '' })} className="mt-7">
+                            <TabsList aria-label={t('Athletes & Teams')}>
                             {(['teams', 'athletes'] as const).map(option => (
-                                <button key={option} type="button" role="tab" aria-selected={view === option} onClick={() => applyFilters({ view: option, letter: '' })} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition ${view === option ? 'bg-[var(--public-primary)] text-white shadow-sm' : 'text-[var(--public-dark-faint)] hover:text-[var(--public-primary)]'}`}>
+                                <TabsTrigger key={option} value={option} disabled={loading}>
                                     {option === 'teams' ? t('Teams & Rosters') : t('Athlete Directory')}
-                                    <span className={`rounded-md px-1.5 py-0.5 text-xs tabular-nums ${view === option ? 'bg-white/20' : 'bg-[var(--public-dark-border)]'}`}>{option === 'teams' ? counts.teams : counts.athletes}</span>
-                                </button>
+                                    <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-xs tabular-nums">{option === 'teams' ? counts.teams : counts.athletes}</span>
+                                </TabsTrigger>
                             ))}
-                        </div>
+                            </TabsList>
+                            <TabsContent value="teams" className="hidden" aria-hidden="true" />
+                            <TabsContent value="athletes" className="hidden" aria-hidden="true" />
+                        </Tabs>
 
                         <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label={t('Filter by sport')}>
                             <Chip active={!filters.sport} onClick={() => applyFilters({ sport: '' })} disabled={loading}>{t('All Sports')}</Chip>
@@ -126,13 +133,13 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                             <Select value={filters.faculty || 'all'} onValueChange={value => applyFilters({ faculty: value === 'all' ? '' : value })} disabled={loading}><SelectTrigger aria-label={t('Filter by faculty')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue placeholder={t('All Faculties')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Faculties')}</SelectItem>{faculties.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
                             <Select value={filters.category || 'all'} onValueChange={value => applyFilters({ category: value === 'all' ? '' : value })} disabled={loading}><SelectTrigger aria-label={t('Filter by category')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue placeholder={t('All Categories')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Categories')}</SelectItem>{categories.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
                             <Select value={filters.sort || 'name'} onValueChange={value => applyFilters({ sort: value })} disabled={loading}><SelectTrigger aria-label={t('Sort')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue /></SelectTrigger><SelectContent>{sortOptions.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
-                            {hasFilters && <button type="button" onClick={clearFilters} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--public-dark-border)] px-4 py-2.5 text-sm font-black text-[var(--public-dark-faint)] hover:border-red-200 hover:text-red-600 disabled:opacity-60"><X className="size-4" />{t('Clear')}</button>}
+                            {hasFilters && <Button type="button" variant="outline" onClick={clearFilters} disabled={loading} className="gap-2 rounded-xl text-sm font-black text-[var(--public-dark-faint)] hover:border-red-200 hover:text-red-600"><X className="size-4" />{t('Clear')}</Button>}
                         </div>
 
                         {view === 'athletes' && letters.length > 0 && (
                             <div className="mt-6 flex flex-wrap items-center gap-1.5 border-t border-[var(--public-dark-border)] pt-5" role="group" aria-label={t('Jump to letter')}>
-                                <button type="button" onClick={() => applyFilters({ letter: '' })} disabled={loading} aria-pressed={!filters.letter} className={`min-h-10 min-w-10 rounded-lg px-2.5 text-xs font-black transition disabled:opacity-60 ${!filters.letter ? 'bg-[var(--public-primary)] text-white' : 'border border-[var(--public-dark-border)] text-[var(--public-dark-faint)] hover:text-[var(--public-primary)]'}`}>{t('All')}</button>
-                                {letters.map(letter => <button key={letter} type="button" onClick={() => applyFilters({ letter: filters.letter === letter ? '' : letter })} disabled={loading} aria-pressed={filters.letter === letter} className={`min-h-10 min-w-10 rounded-lg px-2.5 text-xs font-black transition disabled:opacity-60 ${filters.letter === letter ? 'bg-[var(--public-primary)] text-white' : 'border border-[var(--public-dark-border)] text-[var(--public-dark-faint)] hover:text-[var(--public-primary)]'}`}>{letter}</button>)}
+                                <Button type="button" variant={!filters.letter ? 'default' : 'outline'} size="sm" onClick={() => applyFilters({ letter: '' })} disabled={loading} aria-pressed={!filters.letter} className="min-h-10 min-w-10 rounded-lg px-2.5 text-xs font-black">{t('All')}</Button>
+                                {letters.map(letter => <Button key={letter} type="button" variant={filters.letter === letter ? 'default' : 'outline'} size="sm" onClick={() => applyFilters({ letter: filters.letter === letter ? '' : letter })} disabled={loading} aria-pressed={filters.letter === letter} className="min-h-10 min-w-10 rounded-lg px-2.5 text-xs font-black">{letter}</Button>)}
                             </div>
                         )}
                     </section>
@@ -146,7 +153,7 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                         <PublicLoadingState label={t('Loading')} />
                     ) : items.length === 0 ? (
                         <PublicEmptyState text={t('No athletes or teams found.')}>
-                            {hasFilters && <button type="button" onClick={clearFilters} className="inline-flex items-center gap-2 rounded-xl bg-[var(--public-primary)] px-4 py-2.5 text-sm font-black text-white transition hover:opacity-90"><X className="size-4" />{t('Clear filters')}</button>}
+                            {hasFilters && <Button type="button" onClick={clearFilters} className="gap-2 rounded-xl"><X className="size-4" />{t('Clear filters')}</Button>}
                         </PublicEmptyState>
                     ) : view === 'teams' ? (
                         <div className="mt-4 grid gap-5 lg:grid-cols-2">
@@ -159,11 +166,21 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                     )}
 
                     {active && active.last_page > 1 && (
-                        <nav className="mt-8 flex items-center justify-center gap-1.5" aria-label={t('Navigate pages')}>
-                            <PaginationButton url={prevLink?.url ?? null} label={t('Previous')} icon={<ChevronLeft className="size-4" />} />
-                            {pageLinks.map(link => <Link key={link.label} href={link.url || '#'} className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg px-2.5 text-sm font-black transition ${link.active ? 'bg-[var(--public-primary)] text-white' : 'border border-[var(--public-dark-border)] text-[var(--public-dark-faint)] hover:text-[var(--public-primary)]'}`} aria-current={link.active ? 'page' : undefined}>{link.label}</Link>)}
-                            <PaginationButton url={nextLink?.url ?? null} label={t('Next')} icon={<ChevronRight className="size-4" />} trailing />
-                        </nav>
+                        <Pagination className="mt-8" aria-label={t('Navigate pages')}>
+                            <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationPrevious asChild aria-disabled={!prevLink?.url}>
+                                        {prevLink?.url ? <Link href={prevLink.url}><ChevronLeft className="size-4" />{t('Previous')}</Link> : <span><ChevronLeft className="size-4" />{t('Previous')}</span>}
+                                    </PaginationPrevious>
+                                </PaginationItem>
+                                {pageLinks.map(link => <PaginationItem key={link.label}><PaginationLink asChild isActive={link.active}>{link.url ? <Link href={link.url}>{link.label}</Link> : <span>{link.label}</span>}</PaginationLink></PaginationItem>)}
+                                <PaginationItem>
+                                    <PaginationNext asChild aria-disabled={!nextLink?.url}>
+                                        {nextLink?.url ? <Link href={nextLink.url}>{t('Next')}<ChevronRight className="size-4" /></Link> : <span>{t('Next')}<ChevronRight className="size-4" /></span>}
+                                    </PaginationNext>
+                                </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
                     )}
                 </div>
             </main>
@@ -177,16 +194,6 @@ function Stat({ value, label }: { value: number; label: string }) {
 
 function Chip({ active, onClick, disabled, children }: { active: boolean; onClick: () => void; disabled?: boolean; children: React.ReactNode }) {
     return <Button type="button" variant={active ? 'default' : 'outline'} size="sm" onClick={onClick} disabled={disabled} aria-pressed={active} className="min-h-10 rounded-full px-3.5 text-xs font-black">{children}</Button>;
-}
-
-function PaginationButton({ url, label, icon, trailing = false }: { url: string | null; label: string; icon: React.ReactNode; trailing?: boolean }) {
-    const content = <>{!trailing && icon}<span className={trailing ? 'ml-1' : 'mr-1'}>{label}</span>{trailing && icon}</>;
-
-    if (!url) {
-        return <span className="inline-flex min-h-10 cursor-not-allowed items-center rounded-lg border border-[var(--public-dark-border)] px-3 text-sm font-black text-[var(--public-dark-faint)] opacity-40">{content}</span>;
-    }
-
-    return <Link href={url} className="inline-flex min-h-10 items-center rounded-lg border border-[var(--public-dark-border)] px-3 text-sm font-black text-[var(--public-text)] transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]">{content}</Link>;
 }
 
 function AthleteCard({ athlete, t }: { athlete: Athlete; t: (key: string) => string }) {
@@ -218,7 +225,7 @@ function RosterCard({ roster, t }: { roster: Roster; t: (key: string) => string 
                 </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 border-y border-[var(--public-dark-border)] py-3 text-xs font-bold text-[var(--public-dark-faint)]"><span><strong className="text-base text-[var(--public-text)]">{athletes.length}</strong> {t('athletes')}</span><span><strong className="text-base text-[var(--public-text)]">{officials.length}</strong> {t('officials')}</span></div>
-            <details className="mt-4 group"><summary className="cursor-pointer list-none text-sm font-black text-[var(--public-primary)] group-open:mb-3 [&::-webkit-details-marker]:hidden">{t('View roster')}</summary><div className="space-y-2">{roster.members.map(member => <div key={`${member.name}-${member.role}`} className="flex items-center justify-between gap-3 rounded-lg bg-[var(--public-dark-soft)] px-3 py-2 text-sm"><span className="font-bold">{member.name}</span><span className="text-xs font-semibold text-[var(--public-dark-faint)]">{roleLabel(member.role, t)}</span></div>)}</div></details>
+            <Accordion type="single" collapsible className="mt-4"><AccordionItem value="roster"><AccordionTrigger>{t('View roster')}</AccordionTrigger><AccordionContent><div className="space-y-2">{roster.members.map(member => <div key={`${member.name}-${member.role}`} className="flex items-center justify-between gap-3 rounded-lg bg-[var(--public-dark-soft)] px-3 py-2 text-sm"><span className="font-bold">{member.name}</span><span className="text-xs font-semibold text-[var(--public-dark-faint)]">{roleLabel(member.role, t)}</span></div>)}</div></AccordionContent></AccordionItem></Accordion>
         </article>
     );
 }
