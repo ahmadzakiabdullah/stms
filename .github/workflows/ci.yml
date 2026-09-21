@@ -175,3 +175,42 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
+
+  quality-gate:
+    name: Required quality gate
+    if: always()
+    needs:
+      - secret-scan
+      - dependency-audit
+      - lint
+      - test
+      - coverage
+      - build
+      - browser-e2e
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Fail when any release gate is not successful
+        if: >-
+          ${{
+            needs['secret-scan'].result != 'success' ||
+            needs['dependency-audit'].result != 'success' ||
+            needs.lint.result != 'success' ||
+            needs.test.result != 'success' ||
+            needs.coverage.result != 'success' ||
+            needs.build.result != 'success' ||
+            needs['browser-e2e'].result != 'success'
+          }}
+        run: |
+          echo "One or more required quality gates failed or were skipped."
+          echo "secret-scan:       ${{ needs['secret-scan'].result }}"
+          echo "dependency-audit:  ${{ needs['dependency-audit'].result }}"
+          echo "lint:               ${{ needs.lint.result }}"
+          echo "test:               ${{ needs.test.result }}"
+          echo "coverage:           ${{ needs.coverage.result }}"
+          echo "build:              ${{ needs.build.result }}"
+          echo "browser-e2e:        ${{ needs['browser-e2e'].result }}"
+          exit 1
+      - name: All required quality gates passed
+        run: echo "All required quality gates passed."

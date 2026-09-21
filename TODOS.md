@@ -74,12 +74,12 @@
 
 ## P1 — Quality gates dan dokumentasi
 
-- [x] Reconcile inventory sebenar: 162 routes, 70 migrations, 41 controllers, 43 Inertia pages dan 100 test files; `npm run check:inventory` lulus.
+- [x] Reconcile inventory sebenar: 163 routes, 70 migrations, 41 controllers, 43 Inertia pages dan 100 test files; `npm run check:inventory` lulus.
 - [x] Kemas kini `CURRENT_STATE.md`, `README.md`, `docs/architecture/system-overview.md` dan inventory checks supaya tidak lagi menunjukkan angka lama; `docs/database/schema.md` tiada matriks inventori untuk dikemas kini.
 - [x] Selaraskan arahan Composer production mengikut subcommand (`install --optimize-autoloader`, `dump-autoload --optimize`) dan tambah recovery langkah untuk stale package metadata/provider.
 - [x] Review working tree: 15 perubahan yang belum commit semuanya berkaitan dengan release slice UI/UX, dokumentasi, E2E dan production schema verification; tiada perubahan package atau fail tidak berkaitan untuk diasingkan. Commit kekal sebagai langkah release berasingan.
-- [ ] Pulihkan dependency development lengkap supaya PHPUnit dan build native boleh dijalankan dalam environment CI yang konsisten.
-- [ ] Jadikan gate release wajib: `php artisan test`, Pint, typecheck, inventory, tenant-bypass check, production build, budget, E2E, `composer audit` dan `npm audit`.
+- [x] Pulihkan dependency development lengkap supaya PHPUnit dan build native boleh dijalankan dalam environment CI yang konsisten. `composer install` dengan `require-dev` dipulihkan; PHPUnit 526/526, Pint, TypeScript, Vite build/budget dan audit dependency lulus pada runner lokal terasing 21 September 2026.
+- [ ] Jadikan gate release wajib: `php artisan test`, Pint, typecheck, inventory, tenant-bypass check, production build, budget, E2E, `composer audit` dan `npm audit`. CI kini mempunyai aggregator `Required quality gate` yang gagal jika mana-mana job gagal/dibatalkan; lengkapkan dengan menetapkan check ini sebagai required status check dalam GitHub branch protection.
 - [ ] Ukur coverage daripada commit yang sama dan kekalkan sekurang-kurangnya baseline 74.5% sebelum menambah feature baharu.
 - [ ] Tulis Feature/Unit tests untuk setiap item P0 sebelum menandakan item selesai.
 

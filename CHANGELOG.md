@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 21 September 2026 — Add aggregate required quality gate
+
+- Added a `Required quality gate` CI job that waits for secret scanning, dependency audits, Pint, PHPUnit, coverage, frontend build/budget and browser E2E.
+- The aggregate check fails on any failed, cancelled or skipped prerequisite, providing one status check for GitHub branch-protection configuration.
+- Production P0 work remains on hold; the repository still requires the owner to mark `Required quality gate` as a required status check in GitHub.
+
+### 21 September 2026 — Resume repository quality-gate verification
+
+- Reconciled the live inventory to 163 application routes across `CURRENT_STATE.md`, `README.md`, `TODOS.md` and `docs/architecture/system-overview.md`.
+- Restored missing Composer development dependencies and verified the isolated suite at **526/526 tests (2,577 assertions)**, Pint, TypeScript, Vite build/budget, tenant-bypass and dependency audits.
+- Corrected the remaining Pint `concat_space` finding in `SecurityHeaders` without changing CSP behavior.
+- Kept PCOV/Playwright and all production runtime/cutover items open until a suitable CI/deployment environment provides exact-candidate evidence.
+
 ### 21 September 2026 — Standardize public SEO metadata and crawler policy
 
 - Consolidated public title, description, canonical, Open Graph and Twitter card metadata in the shared public layout.

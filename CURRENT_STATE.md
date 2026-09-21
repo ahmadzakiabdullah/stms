@@ -1,6 +1,6 @@
 # CURRENT STATE
 
-> Snapshot jujur STMS/SAF pada **21 Ogos 2026** selepas public athlete/scorer workflows dan match-card UX refactor. Bukti asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
+> Snapshot jujur STMS/SAF pada **21 September 2026** selepas public accessibility/SEO hardening dan repository quality-gate verification. Bukti audit asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
 
 ## Status Keseluruhan
 
@@ -12,11 +12,13 @@
 
 Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Category/Event → Participant/Registration/Squad → Dean Verification → Draw/Match/Result → Rankings/Exports/Reports → Notifications/Settings/Activity Logs.
 
+**Repository verification — 21 September 2026:** dev dependencies dipulihkan daripada `composer.lock`; PHPUnit terasing lulus **526/526 (2,577 assertions)**, Pint `--test` lulus, TypeScript, inventory, tenant-bypass, Vite production build, bundle budget, Composer audit dan npm audit lulus. Build dijalankan pada salinan lokal kerana native Rolldown tidak boleh dimuatkan dari network share. PCOV dan Playwright belum dijalankan semula pada working tree ini; bukti CI/Playwright terdahulu kekal berasingan.
+
 ## Inventori Repository
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 162 application routes |
+| Laravel routes | 163 application routes |
 | Migrations | 70 migration files |
 | Controllers | 41 controller files |
 | Form Requests | 28 |
