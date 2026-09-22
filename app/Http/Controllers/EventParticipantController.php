@@ -12,9 +12,11 @@ use App\Http\Requests\EventParticipant\RegisterEventParticipantRequest;
 use App\Http\Requests\EventParticipant\UpdateEventParticipantStatusRequest;
 use App\Http\Requests\EventParticipant\WithdrawEventParticipantRequest;
 use App\Imports\EventParticipantImport;
+use App\Models\DataTransfer;
 use App\Models\EventParticipant;
 use App\Models\Participant;
 use App\Models\SquadMember;
+use App\Services\DataTransferService;
 use App\Services\EventParticipantIndexService;
 use App\Services\SquadManagementService;
 use Illuminate\Http\RedirectResponse;
@@ -210,6 +212,37 @@ class EventParticipantController extends Controller
         }
 
         return $response;
+    }
+
+    public function queueImport(EventParticipantImportRequest $request, DataTransferService $transfers): RedirectResponse
+    {
+        $participant = Participant::where('organization_id', $request->user()->organization_id)
+            ->findOrFail($request->participantId());
+        $contents = file_get_contents($request->file('file')->getRealPath());
+        abort_unless(is_string($contents), 422, 'The import file could not be read.');
+        $idempotencyKey = 'event-participant-import:'.sha1($participant->id.'|'.$contents);
+        $sourcePath = $request->file('file')->store('transfers/'.$request->user()->organization_id.'/input', 'local');
+        $transfer = $transfers->queue(
+            $request->user(),
+            DataTransfer::TYPE_IMPORT_EVENT_PARTICIPANTS,
+            ['participant_id' => $participant->id],
+            $sourcePath,
+            $idempotencyKey,
+        );
+
+        if ($transfer->isSuccessful()) {
+            $response = redirect()->back();
+            if ($transfer->processed > 0) {
+                $response->with('success', "{$transfer->processed} registration(s) imported successfully.");
+            }
+            if (count($transfer->failure_report ?? []) > 0) {
+                $response->with('error', 'Import completed with errors: '.implode(' ', $transfer->failure_report));
+            }
+
+            return $response;
+        }
+
+        return redirect()->back()->with('success', 'Event registration import queued. Track progress using transfer '.$transfer->id.'.');
     }
 
     public function downloadImportTemplate(): StreamedResponse

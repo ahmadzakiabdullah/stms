@@ -8,9 +8,12 @@ use App\Actions\Participants\UpdateParticipant;
 use App\Http\Requests\Participant\ParticipantImportRequest;
 use App\Http\Requests\Participant\StoreParticipantRequest;
 use App\Http\Requests\Participant\UpdateParticipantRequest;
+use App\Http\Requests\QueueParticipantImportRequest;
 use App\Imports\ParticipantsImport;
+use App\Models\DataTransfer;
 use App\Models\Participant;
 use App\Models\Session;
+use App\Services\DataTransferService;
 use App\Services\ParticipantLogoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -246,6 +249,40 @@ class ParticipantController extends Controller
         Log::info('Participants imported', ['org_id' => $payload['organization_id'], 'count' => $created]);
 
         return redirect()->back()->with('success', "{$created} participant(s) imported.");
+    }
+
+    public function queueImport(QueueParticipantImportRequest $request, DataTransferService $transfers): RedirectResponse
+    {
+        Gate::authorize('create', Participant::class);
+
+        $user = $request->user();
+        $token = trim((string) $request->input('token'));
+        $key = "participants_import_{$user->id}_{$token}";
+        $payload = Cache::get($key);
+
+        if (! $payload || ($payload['organization_id'] ?? null) !== $user->organization_id) {
+            return redirect()->back()->with('error', 'Import preview expired or not found. Please re-upload the file.');
+        }
+
+        $transferId = (string) Str::uuid();
+        $sourcePath = "transfers/{$user->organization_id}/input/{$transferId}.json";
+        Storage::disk('local')->put($sourcePath, json_encode($payload['rows'], JSON_THROW_ON_ERROR));
+
+        $transfer = $transfers->queue(
+            $user,
+            DataTransfer::TYPE_IMPORT_PARTICIPANTS,
+            ['session_id' => $payload['session_id'] ?? null],
+            $sourcePath,
+            'participants-preview:'.$token,
+        );
+        Cache::forget($key);
+
+        if ($transfer->isSuccessful()) {
+            return redirect()->back()->with('success', "{$transfer->processed} participant(s) imported.")
+                ->with('error', count($transfer->failure_report ?? []) > 0 ? implode(' ', $transfer->failure_report) : null);
+        }
+
+        return redirect()->back()->with('success', 'Participant import queued. Track progress using transfer '.$transfer->id.'.');
     }
 
     public function downloadImportTemplate(): StreamedResponse
