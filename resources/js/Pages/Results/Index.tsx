@@ -49,6 +49,7 @@ const resultSchema = z.object({
     score_away: z.number().nullable().optional().default(null),
     winner_participant_id: z.string().nullable().optional().default(''),
     notes: z.string().optional().default(''),
+    correction_reason: z.string().optional().default(''),
     scoring_events: z.array(z.object({
         participant_id: z.string().min(1),
         squad_member_id: z.string().min(1),
@@ -312,6 +313,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             score_away: null,
             winner_participant_id: '',
             notes: '',
+            correction_reason: '',
             scoring_events: [],
         },
     });
@@ -425,6 +427,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             score_away: null,
             winner_participant_id: '',
             notes: '',
+            correction_reason: '',
             scoring_events: [],
         });
         setOpen(true);
@@ -438,6 +441,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             score_away: result.score_away ?? null,
             winner_participant_id: result.winner_participant_id || '',
             notes: result.notes || '',
+            correction_reason: '',
             scoring_events: (result.scoring_events || []).map((event) => ({
                 participant_id: event.participant_id,
                 squad_member_id: event.squad_member_id,
@@ -473,6 +477,13 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                 onSuccess: () => closeDialog(),
             });
         }
+    };
+
+    const unlockResult = (result: ResultRow) => {
+        const reason = window.prompt(t('Reason for unlocking this result?'))?.trim();
+        if (!reason) return;
+
+        router.post(route('results.unlock', result.id), { correction_reason: reason }, { preserveScroll: true });
     };
 
     const handleDelete = () => {
@@ -702,6 +713,19 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                             {...register('notes')}
                                         />
                                     </div>
+
+                                    {editingResult?.status === 'approved' && (
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="correction_reason">{t('Correction reason')}</Label>
+                                            <textarea
+                                                id="correction_reason"
+                                                className="flex min-h-[70px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                placeholder={t('Explain why this approved result is being corrected.')}
+                                                {...register('correction_reason')}
+                                            />
+                                            {errors.correction_reason && <p className="text-sm text-destructive">{errors.correction_reason.message}</p>}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <DialogFooter>
@@ -871,7 +895,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                             onDelete={() => setDeleteResult(result)}
                                                             onApprove={() => router.post(route('results.approve', result.id), {}, { preserveScroll: true })}
                                                             onLock={() => router.post(route('results.lock', result.id), {}, { preserveScroll: true })}
-                                                            onUnlock={() => router.post(route('results.unlock', result.id), {}, { preserveScroll: true })}
+                                                            onUnlock={() => unlockResult(result)}
                                                             canManage={canManage}
                                                             canApprove={canApproveResults}
                                                             canUnlock={canUnlockResults}
@@ -960,7 +984,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                     onDelete={() => setDeleteResult(result)}
                                                     onApprove={() => router.post(route('results.approve', result.id), {}, { preserveScroll: true })}
                                                     onLock={() => router.post(route('results.lock', result.id), {}, { preserveScroll: true })}
-                                                    onUnlock={() => router.post(route('results.unlock', result.id), {}, { preserveScroll: true })}
+                                                    onUnlock={() => unlockResult(result)}
                                                     canManage={canManage}
                                                     canApprove={canApproveResults}
                                                     canUnlock={canUnlockResults}

@@ -96,6 +96,11 @@ class ResultService
         $result = DB::transaction(function () use ($organization, $id, $data) {
             $result = $this->getById($organization, $id, true);
             $this->assertEditable($result);
+            $correctionReason = trim((string) ($data['correction_reason'] ?? ''));
+            unset($data['correction_reason']);
+            if ($result->status === Result::STATUS_APPROVED && $correctionReason === '') {
+                throw ValidationException::withMessages(['correction_reason' => 'A correction reason is required when updating an approved result.']);
+            }
             $data['organization_id'] = $organization->id;
             $this->ensureRelationsBelongToOrganization($data, $organization->id, $result);
             $scoringEvents = $data['scoring_events'] ?? null;
@@ -106,6 +111,14 @@ class ResultService
             }
             $this->markMatchCompleted($result->match_id);
             $this->advanceKnockoutStage($result->match_id);
+            if ($correctionReason !== '') {
+                activity()
+                    ->performedOn($result)
+                    ->causedBy(auth()->user())
+                    ->event('corrected')
+                    ->withProperties(['correction_reason' => $correctionReason])
+                    ->log('Result corrected');
+            }
             Log::info('Result updated', ['id' => $id, 'org_id' => $organization->id]);
 
             return $result->fresh();
@@ -236,18 +249,23 @@ class ResultService
         ], 'locked');
     }
 
-    public function unlock(Organization $organization, string $id, User $actor): Result
+    public function unlock(Organization $organization, string $id, User $actor, ?string $reason = null): Result
     {
+        $reason = trim((string) $reason);
+        if ($reason === '') {
+            throw ValidationException::withMessages(['correction_reason' => 'A correction reason is required when unlocking a result.']);
+        }
+
         return $this->transition($organization, $id, $actor, Result::STATUS_APPROVED, [
             'locked_by' => null,
             'locked_at' => null,
-        ], 'unlocked');
+        ], 'unlocked', ['correction_reason' => $reason]);
     }
 
     /** @param array<string, mixed> $attributes */
-    protected function transition(Organization $organization, string $id, User $actor, string $status, array $attributes, string $event): Result
+    protected function transition(Organization $organization, string $id, User $actor, string $status, array $attributes, string $event, array $properties = []): Result
     {
-        $result = DB::transaction(function () use ($organization, $id, $actor, $status, $attributes, $event) {
+        $result = DB::transaction(function () use ($organization, $id, $actor, $status, $attributes, $event, $properties) {
             $result = $this->getById($organization, $id, true);
 
             if ($result->isLocked() && $status !== Result::STATUS_APPROVED) {
@@ -263,7 +281,7 @@ class ResultService
             }
 
             $result->update(array_merge($attributes, ['status' => $status]));
-            activity()->performedOn($result)->causedBy($actor)->event($event)->log('Result '.$event);
+            activity()->performedOn($result)->causedBy($actor)->event($event)->withProperties($properties)->log('Result '.$event);
 
             return $result->fresh();
         });

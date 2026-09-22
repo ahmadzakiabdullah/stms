@@ -12,7 +12,7 @@
 
 Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Category/Event → Participant/Registration/Squad → Dean Verification → Draw/Match/Result → Rankings/Exports/Reports → Notifications/Settings/Activity Logs.
 
-**Repository verification — 22 September 2026:** dependency development dipasang daripada lockfile pada runner lokal terasing. SQLite PHPUnit **559/559 (2,738 assertions)**, Pint, TypeScript, inventory, tenant-bypass, Vite build/budget dan Composer/npm audits lulus. Cache config/routes runtime dikecualikan daripada runner. PHPunit/Pint dalam vendor network workspace tidak dipulihkan kerana ia berkongsi runtime; runner lokal digunakan. PCOV belum diukur semula secara lokal. Playwright/axe: 22/24 cases lulus dalam full run; dua assertion navigasi lama dibetulkan dan rerun terfokus lulus 2/2, maka semua 24 cases telah lulus merentas dua run.
+**Repository verification — 22 September 2026:** dependency development dipasang daripada lockfile pada runner lokal terasing. SQLite PHPUnit **563/563 (2,791 assertions)**, Pint, TypeScript, inventory, tenant-bypass, Vite build/budget dan Composer/npm audits lulus. Cache config/routes runtime dikecualikan daripada runner. PHPunit/Pint dalam vendor network workspace tidak dipulihkan kerana ia berkongsi runtime; runner lokal digunakan. PCOV belum diukur semula secara lokal. Playwright/axe: 22/24 cases lulus dalam full run; dua assertion navigasi lama dibetulkan dan rerun terfokus lulus 2/2, maka semua 24 cases telah lulus merentas dua run.
 
 ## Inventori Repository
 
@@ -27,7 +27,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Services/concerns | 44 fail |
 | Models | 22 (tidak termasuk trait) |
 | Inertia `.tsx` pages | 47 |
-| PHP tests | 103 PHP test files |
+| PHP tests | 104 PHP test files |
 | Playwright journeys | 12 dalam 1 spec, desktop + mobile (24 cases) |
 
 ## Tech Stack
@@ -83,6 +83,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Sidebar authenticated menggunakan spacing compact yang seragam untuk mengekalkan lebih banyak menu dalam ruang menegak tanpa mengubah struktur atau role visibility.
 - Whitespace sidebar dipadatkan lagi; menu/logout kekal `min-h-11` untuk target interaksi minimum 44px.
 - Dashboard authenticated kini membezakan workspace Super/Org Admin, Admin Sport dan Staff; CTA analytics/registration tidak lagi dipaparkan kepada role yang tiada akses, manakala faculty representative dan dean kekal pada dashboard khusus masing-masing.
+- P2 product improvements kini menambah Calendar view dan print action pada public schedule, monitor operasi dalam Reports, tenant-scoped data quality checks serta correction reason wajib untuk approved result update/unlock dengan rekod activity log. Bukti runtime production untuk worker/alert/monitoring kekal P0 berasingan.
 - Match cards homepage/schedule menggunakan layout shared responsive; completed results menyokong scorer mengikut participant.
 - `Sport.scoring_mode=individual` serta `match_scoring_events` menyokong nama atlet, minit jaringan dan validasi roster/score untuk Hockey dan Football/Soccer.
 - User accounts now have the explicit `is_active` lifecycle flag; inactive accounts are excluded from login and can be managed from the Users form.

@@ -55,6 +55,7 @@ class ResultServiceTest extends TestCase
         $result = Result::factory()->create([
             'organization_id' => $org->id,
             'match_id' => $match->id,
+            'status' => Result::STATUS_SUBMITTED,
         ]);
 
         $updated = $this->service->update($org, $result->id, [
@@ -74,6 +75,7 @@ class ResultServiceTest extends TestCase
         $result = Result::factory()->create([
             'organization_id' => $org->id,
             'match_id' => $match->id,
+            'status' => Result::STATUS_SUBMITTED,
         ]);
 
         $this->service->delete($org, $result->id);
@@ -113,6 +115,7 @@ class ResultServiceTest extends TestCase
         $result = Result::factory()->create([
             'organization_id' => $org->id,
             'match_id' => $match->id,
+            'status' => Result::STATUS_SUBMITTED,
         ]);
 
         $this->service->update($org, $result->id, [

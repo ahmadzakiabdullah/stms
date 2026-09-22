@@ -6,8 +6,8 @@ STMS ialah platform pengurusan kejohanan sukan multi-tenant. Repository ini meng
 
 MVP produk beroperasi; verifikasi lokal working tree dipisahkan daripada connected CI baseline `dd559c56e`. Deployment production masih menunggu tindakan operator/owner:
 
-- 173 application routes, 71 migration files, 42 controller files, 47 Inertia pages dan 103 PHP test files.
-- Full native PHPUnit terasing lulus 559/559 (2,738 assertions) dan production build/budget lulus pada runner local disk; network share masih tidak sesuai untuk native Rolldown.
+- 173 application routes, 71 migration files, 42 controller files, 47 Inertia pages dan 104 PHP test files.
+- Full native PHPUnit terasing lulus 563/563 (2,791 assertions) dan production build/budget lulus pada runner local disk; network share masih tidak sesuai untuk native Rolldown.
 - Composer/npm audit 0 advisory/vulnerability selepas remediasi dependensi (league/commonmark 2.10.1, maatwebsite/excel 3.1.70, regenerasi lockfile npm).
 - Playwright/axe mempunyai 12 journeys pada desktop/mobile (24 cases); bukti browser semasa direkod dalam `CURRENT_STATE.md`.
 - Runtime workspace `production` tidak sepadan dengan baseline Redis/session/verification yang didokumenkan.

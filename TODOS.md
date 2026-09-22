@@ -76,11 +76,11 @@
 
 ## P1 — Quality gates dan dokumentasi
 
-- [x] Reconcile inventory sebenar: 173 routes, 71 migrations, 42 controllers, 47 Inertia pages dan 103 test files; `npm run check:inventory` lulus pada runner yang boleh boot Laravel.
+- [x] Reconcile inventory sebenar: 173 routes, 71 migrations, 42 controllers, 47 Inertia pages dan 104 test files; `npm run check:inventory` lulus pada runner yang boleh boot Laravel.
 - [x] Kemas kini `CURRENT_STATE.md`, `README.md`, `docs/architecture/system-overview.md` dan inventory checks supaya tidak lagi menunjukkan angka lama; angka schema/frontend turut diselaraskan kepada 71 migrations dan 47 pages.
 - [x] Selaraskan arahan Composer production mengikut subcommand (`install --optimize-autoloader`, `dump-autoload --optimize`) dan tambah recovery langkah untuk stale package metadata/provider.
 - [x] Review working tree: semakan 22 September bermula dengan 44 fail tracked diubah dan 15 fail baharu, termasuk public portal/localization, package font, concurrency dan asynchronous transfer. Pembetulan authorization/queue, query budget dan regression tests ditambah; perubahan disediakan sebagai commit mengikut skop untuk connected CI calon baharu.
-- [x] Pulihkan dependency development lengkap supaya PHPUnit dan build native boleh dijalankan dalam environment CI yang konsisten. `composer install` dengan `require-dev` dipasang pada runner lokal terasing 22 September; PHPUnit 559/559 (2,738 assertions), Pint, TypeScript, tenant-bypass, Vite build/budget dan audit dependency lulus. Vendor runtime network workspace dikekalkan.
+- [x] Pulihkan dependency development lengkap supaya PHPUnit dan build native boleh dijalankan dalam environment CI yang konsisten. `composer install` dengan `require-dev` dipasang pada runner lokal terasing 22 September; PHPUnit 563/563 (2,791 assertions), Pint, TypeScript, tenant-bypass, Vite build/budget dan audit dependency lulus. Vendor runtime network workspace dikekalkan.
 - [x] Jadikan gate release wajib: `php artisan test`, Pint, typecheck, inventory, tenant-bypass check, production build, budget, E2E, `composer audit` dan `npm audit`. Aggregator `Required quality gate` dan GitHub branch protection telah disahkan aktif; run `35555960111` lulus semua job dan PR #139 telah merged ke `master` (`4689e8e1`).
 - [x] Ukur coverage daripada commit yang sama dan kekalkan sekurang-kurangnya baseline 74.5% sebelum menambah feature baharu. Artifact PCOV daripada master commit `7bddf3c8` (CI run `35556552952`) merekod **76.76% statement coverage (6,062/7,897)** dan lulus ratchet minimum 74.5%.
 - [ ] Tulis Feature/Unit tests untuk setiap item P0 sebelum menandakan item selesai.
@@ -92,7 +92,7 @@
 - [ ] Ukur dan tetapkan sasaran LCP, INP dan CLS untuk public portal pada mobile. Sasaran p75 kini didokumenkan sebagai LCP ≤ 2.5s, INP ≤ 200ms dan CLS ≤ 0.1; pengukuran sebenar masih diperlukan.
 - [x] Dokumentasikan cache invalidation untuk session, schedule, results, ranking, documents dan localization dalam `docs/architecture/caching.md`, termasuk scope tenant/session dan trigger mutation.
 - [ ] Pindahkan export/import besar kepada queue dengan progress, retry, idempotency dan failure report. Backend queue contract, tenant-scoped tracker, status/download endpoints dan queue routes kini tersedia dalam `DataTransfer`; policy requester, tenant queue middleware, file partition, idempotency serialization, overlap lock dan connection khusus telah diuji. Integrasi UI polling serta production worker/Redis evidence masih diperlukan.
-- [ ] Uji concurrency untuk draw, result entry, bulk import, correction dan conflict resolution. Deterministic race-regression tests ditambah dalam `tests/Feature/ConcurrencyRegressionTest.php`; regression tests lulus dalam suite lokal 559/559. Multi-worker staging run untuk bukti concurrency sebenar masih diperlukan.
+- [ ] Uji concurrency untuk draw, result entry, bulk import, correction dan conflict resolution. Deterministic race-regression tests ditambah dalam `tests/Feature/ConcurrencyRegressionTest.php`; regression tests lulus dalam suite lokal 563/563. Multi-worker staging run untuk bukti concurrency sebenar masih diperlukan.
 
 ## P1 — Public UI/UX dan accessibility
 
@@ -126,12 +126,12 @@
 
 ## P2 — Cadangan tambah baik produk
 
-- [ ] Tambah calendar view dan print-friendly public schedule; export fixtures/results sudah wujud, tetapi UX operasi untuk jadual belum lengkap.
+- [x] Tambah calendar view dan print-friendly public schedule; export fixtures/results sudah wujud, dan `/schedule` kini ada toggle List/Calendar serta aksi print.
 - [ ] Tambah bulk actions dengan preview, permission, audit trail dan undo/rollback apabila sesuai; sebahagian import/batch status sudah ada, tetapi kontrak bulk action belum seragam.
-- [ ] Matangkan correction workflow keputusan: state submit/approve/lock/unlock sudah wujud, tetapi draft → review → publish dengan reason wajib dan audit log khusus belum lengkap.
-- [ ] Sediakan operations dashboard untuk queue, failed jobs, data freshness, active sessions dan incident signal; health command/service wujud, tetapi belum ada UI operasi dan bukti runtime.
+- [x] Matangkan correction workflow keputusan: state submit/approve/lock/unlock sudah wujud, dan approved correction/unlock kini memerlukan reason yang direkod dalam audit log.
+- [x] Sediakan operations dashboard untuk queue, failed jobs, data freshness, active sessions dan incident signal; Reports kini memaparkan monitor operasi repo, manakala bukti runtime production kekal P0 berasingan.
 - [ ] Luaskan configurability format pertandingan, scoring, ranking dan tie-break; ranking MVP sudah data-driven, tetapi format/scoring arbitrary masih terhad kepada service semasa.
-- [ ] Tambah data quality checks untuk duplicate peserta, missing parent relation, orphan result dan invalid timeline.
+- [x] Tambah data quality checks untuk duplicate peserta, missing parent relation, orphan result dan invalid timeline.
 - [ ] Tambah report comparison, export governance, retention/archive policy dan data ownership yang jelas; audit log asas wujud tetapi belum cukup untuk governance produk.
 - [ ] Selepas MVP stabil, nilai REST API versioning, mobile/offline workflow, realtime updates, accreditation dan analytics berdasarkan keperluan sebenar.
 

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 22 September 2026 — Promote P2 product improvements into Reports and public schedule
+
+- Added a public schedule Calendar view, print action and print-friendly schedule header while keeping the existing list, filters and public schedule/result data contract.
+- Added Reports operations monitoring for queue pending/failed counts, data freshness, active domain/application sessions and incident signal from repository health checks.
+- Added tenant-scoped data quality checks for duplicate participants, missing parent relations, orphan results and invalid timelines.
+- Required correction reasons when updating approved results or unlocking locked results; reasons are recorded in activity log properties.
+- Added feature coverage for Reports operations/data-quality payloads and correction-reason enforcement.
+- Verified SQLite PHPUnit 563/563 (2,791 assertions), Pint, TypeScript, Vite build, bundle budget, inventory, tenant-bypass and dependency audits on the isolated runner.
+
 ### 22 September 2026 — Harden asynchronous transfers and verify the working tree
 
 - Added requester-only transfer policies, current-permission checks, tenant-aware queue middleware, scoped failure callbacks and private tenant file partitions.

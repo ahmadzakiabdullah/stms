@@ -35,7 +35,7 @@ Jika nombor atau status bercanggah, sumber bertarikh paling baharu menang; dakwa
 ## Portal Awam Semasa
 
 - `/` — homepage dengan anchor sections Sports, Schedule, Results dan Medal standings.
-- `/schedule` — satu-satunya halaman awam jadual/keputusan (tab All/Live/Upcoming/Completed dan filter).
+- `/schedule` — satu-satunya halaman awam jadual/keputusan (tab All/Live/Upcoming/Completed, filter, List/Calendar view dan print action).
 - `/sports`, `/faculties` dan `/venues` — halaman kandungan pertandingan awam.
 - `/athletes` dan `/athletes/{id}` — directory roster dan profil prestasi atlet.
 - `/news`, `/downloads`, `/faq`, `/about`, `/general-information`, `/jawatankuasa-induk`, `/jawatankuasa-pelaksana`, `/pengerusi-permainan` dan `/tarikh-penting` — halaman maklumat awam tambahan termasuk syarat kelayakan, pendaftaran, jawatankuasa, pengerusi permainan dan tarikh penting SAF.
