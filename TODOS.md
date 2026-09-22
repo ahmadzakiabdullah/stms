@@ -126,13 +126,13 @@
 
 ## P2 — Cadangan tambah baik produk
 
-- [ ] Tambah calendar view, print-friendly schedule dan export schedule/results yang mesra operasi.
-- [ ] Tambah bulk actions dengan preview, permission, audit trail dan undo/rollback apabila sesuai.
-- [ ] Wujudkan correction workflow untuk keputusan: draft → review → publish, termasuk reason dan audit log.
-- [ ] Sediakan operations dashboard untuk queue, failed jobs, data freshness, active sessions dan incident signal.
-- [ ] Jadikan format pertandingan, scoring, ranking dan tie-break configurable; jangan hardcode peraturan sukan.
+- [ ] Tambah calendar view dan print-friendly public schedule; export fixtures/results sudah wujud, tetapi UX operasi untuk jadual belum lengkap.
+- [ ] Tambah bulk actions dengan preview, permission, audit trail dan undo/rollback apabila sesuai; sebahagian import/batch status sudah ada, tetapi kontrak bulk action belum seragam.
+- [ ] Matangkan correction workflow keputusan: state submit/approve/lock/unlock sudah wujud, tetapi draft → review → publish dengan reason wajib dan audit log khusus belum lengkap.
+- [ ] Sediakan operations dashboard untuk queue, failed jobs, data freshness, active sessions dan incident signal; health command/service wujud, tetapi belum ada UI operasi dan bukti runtime.
+- [ ] Luaskan configurability format pertandingan, scoring, ranking dan tie-break; ranking MVP sudah data-driven, tetapi format/scoring arbitrary masih terhad kepada service semasa.
 - [ ] Tambah data quality checks untuk duplicate peserta, missing parent relation, orphan result dan invalid timeline.
-- [ ] Tambah report comparison, export governance, retention/archive policy dan data ownership yang jelas.
+- [ ] Tambah report comparison, export governance, retention/archive policy dan data ownership yang jelas; audit log asas wujud tetapi belum cukup untuk governance produk.
 - [ ] Selepas MVP stabil, nilai REST API versioning, mobile/offline workflow, realtime updates, accreditation dan analytics berdasarkan keperluan sebenar.
 
 ## Definition of Done untuk setiap item berisiko tinggi
