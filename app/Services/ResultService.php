@@ -33,12 +33,17 @@ class ResultService
             ->get(['id', 'match_id', 'score_home', 'score_away']);
     }
 
-    public function getById(Organization $organization, string $id): Result
+    public function getById(Organization $organization, string $id, bool $forUpdate = false): Result
     {
-        return $this->baseQuery($organization)
+        $query = $this->baseQuery($organization)
             ->with(['match.event.sport', 'match.homeParticipant', 'match.awayParticipant', 'winner', 'scoringEvents.squadMember'])
-            ->where('results.id', $id)
-            ->firstOrFail();
+            ->where('results.id', $id);
+
+        if ($forUpdate) {
+            $query->lockForUpdate();
+        }
+
+        return $query->firstOrFail();
     }
 
     public function getByMatchId(Organization $organization, string $matchId): ?Result
@@ -53,6 +58,17 @@ class ResultService
     {
         $result = DB::transaction(function () use ($organization, $data) {
             $data['organization_id'] = $organization->id;
+            $match = Fixture::forOrganization($organization->id)
+                ->whereKey($data['match_id'] ?? null)
+                ->lockForUpdate()
+                ->first();
+
+            if ($match && Result::withTrashed()->where('match_id', $match->id)->exists()) {
+                throw ValidationException::withMessages([
+                    'match_id' => ['A result already exists for this match.'],
+                ]);
+            }
+
             $this->ensureRelationsBelongToOrganization($data, $organization->id);
             $data['status'] = Result::STATUS_SUBMITTED;
             $data['submitted_by'] = auth()->id();
@@ -78,7 +94,7 @@ class ResultService
     public function update(Organization $organization, string $id, array $data): Result
     {
         $result = DB::transaction(function () use ($organization, $id, $data) {
-            $result = $this->getById($organization, $id);
+            $result = $this->getById($organization, $id, true);
             $this->assertEditable($result);
             $data['organization_id'] = $organization->id;
             $this->ensureRelationsBelongToOrganization($data, $organization->id, $result);
@@ -147,7 +163,7 @@ class ResultService
     public function delete(Organization $organization, string $id): void
     {
         DB::transaction(function () use ($organization, $id) {
-            $result = $this->getById($organization, $id);
+            $result = $this->getById($organization, $id, true);
             $this->assertEditable($result);
             $result->delete();
             Log::info('Result deleted', ['id' => $id, 'org_id' => $organization->id]);
@@ -232,7 +248,7 @@ class ResultService
     protected function transition(Organization $organization, string $id, User $actor, string $status, array $attributes, string $event): Result
     {
         $result = DB::transaction(function () use ($organization, $id, $actor, $status, $attributes, $event) {
-            $result = $this->getById($organization, $id);
+            $result = $this->getById($organization, $id, true);
 
             if ($result->isLocked() && $status !== Result::STATUS_APPROVED) {
                 throw ValidationException::withMessages(['status' => 'A locked result must be unlocked before another status change.']);
