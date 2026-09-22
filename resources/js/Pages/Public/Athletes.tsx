@@ -95,7 +95,7 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Directory unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t('Athletes & Teams')} intro={t('Meet the confirmed athletes and teams taking part in the competition.')} icon={<Users className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
-                    <section className="rounded-3xl border border-[var(--public-dark-border)] bg-white p-5 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] sm:p-7">
+                    <section className="public-card p-5 sm:p-7">
                         <div className="flex flex-wrap items-end gap-6">
                             <Stat value={stats?.teams ?? 0} label={t('teams')} />
                             <Stat value={stats?.athletes ?? 0} label={t('athletes')} />
@@ -197,7 +197,7 @@ function Chip({ active, onClick, disabled, children }: { active: boolean; onClic
 }
 
 function AthleteCard({ athlete, t }: { athlete: Athlete; t: (key: string) => string }) {
-    return <article className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:shadow-md">
+    return <article className="public-card p-4">
         <div className="flex items-center gap-3">
             <ParticipantLogo participant={{ name: athlete.faculty, logo_url: athlete.faculty_logo_url, inverse_logo_url: athlete.faculty_inverse_logo_url }} size="md" />
             <div className="min-w-0"><h2 className="truncate text-sm font-black">{athlete.name}</h2><p className="mt-1 truncate text-xs font-semibold text-[var(--public-dark-faint)]">{athlete.faculty || t('Faculty')}</p></div>
@@ -216,7 +216,7 @@ function RosterCard({ roster, t }: { roster: Roster; t: (key: string) => string 
     const officials = roster.members.filter(member => !athletes.includes(member));
 
     return (
-        <article className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:shadow-md">
+        <article className="public-card p-5">
             <div className="flex items-start gap-4">
                 <ParticipantLogo participant={roster} size="lg" />
                 <div className="min-w-0 flex-1">

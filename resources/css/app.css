@@ -1,5 +1,6 @@
 @import "@fontsource-variable/geist";
-@import "@fontsource-variable/plus-jakarta-sans";
+@import "@fontsource/barlow-condensed/700.css";
+@import "@fontsource/barlow-condensed/800.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -160,16 +161,13 @@
 }
 
 .public-cosmic {
-  font-family: 'Plus Jakarta Sans Variable', sans-serif;
+  font-family: 'Geist Variable', sans-serif;
 }
 
-.public-cosmic h1,
-.public-cosmic h2,
-.public-cosmic h3,
 .public-cosmic .public-display {
-  font-family: 'Plus Jakarta Sans Variable', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   font-style: normal;
-  font-variation-settings: 'wght' 800;
+  font-weight: 800;
 }
 
 .public-cosmic-grid {
@@ -193,6 +191,50 @@
     inset 0 2px 0 rgb(255 255 255 / .35),
     inset 0 -1px 0 rgb(0 0 0 / .16),
     0 12px 30px -18px var(--public-highlight);
+}
+
+/* Shared public card language: venue cards are the visual reference for
+   discoverability, information and fixture cards across the public portal. */
+.public-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--public-dark-border);
+  border-radius: 1.5rem;
+  background: #fff;
+  box-shadow: 0 24px 70px -48px rgb(7 27 51 / .9);
+  transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+
+.public-card::before {
+  position: absolute;
+  z-index: -1;
+  top: -3rem;
+  right: -2.5rem;
+  width: 10rem;
+  height: 10rem;
+  border: 1rem solid var(--public-primary-soft);
+  border-radius: 9999px;
+  content: '';
+  opacity: .8;
+  pointer-events: none;
+  transition: transform .3s ease;
+}
+
+.public-card:hover {
+  border-color: var(--public-primary-border);
+  box-shadow: 0 24px 70px -48px rgb(7 27 51 / .9);
+  transform: translateY(-.25rem);
+}
+
+.public-card:hover::before {
+  transform: scale(1.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-card { transition: none; }
+  .public-card:hover { transform: none; }
+  .public-card::before { transition: none; }
 }
 
 /* Keep the hero responsive while below-the-fold portal sections are not

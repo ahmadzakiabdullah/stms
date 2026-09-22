@@ -9,7 +9,7 @@ Dokumen ini ialah rujukan semasa untuk public portal STMS. Public portal ialah p
 - Homepage → Schedule & Results → filter/search → fixture or result information.
 - Homepage → Athletes & Teams → search/filter → athlete or roster profile.
 - Homepage → Competition → Sports, Faculties or Venues.
-- Homepage → Information → News, Downloads, FAQ or About.
+- Homepage → Information → General Information, committees, game chairpersons or important dates.
 - Homepage/Footer → Contact → official address, email, phone and social links.
 
 ## Navigation
@@ -20,7 +20,7 @@ Primary public navigation:
 - Schedule & Results
 - Athletes & Teams
 - Competition: Sports, Faculties, Venues
-- Information: News, Downloads, FAQ, About
+- Information: General Information, Jawatankuasa Induk, Jawatankuasa Pelaksana, Pengerusi Permainan, Tarikh Penting
 - Contact
 - Login
 
@@ -33,6 +33,10 @@ Public components are composition layers over local shadcn/ui primitives and Tai
 - `Button` for actions and links.
 - `Input` and `Select` for search and filters.
 - `Tabs` for schedule/result views.
+
+Public content cards should use the shared `public-card` class so Venue, Sports, Faculty, Athlete, Committee, Contact and Fixture cards retain the same rounded 3xl surface, soft shadow, hover lift, border highlight and decorative accent.
+
+All public UI labels and supplied information pages should support the shared `en` and `ms` locales. Official personal names, sport names and venue names remain unchanged unless an approved localized label is available.
 - `Sheet` for mobile schedule filters and navigation.
 - `Badge` for match status and compact metadata.
 - `Card`, `Skeleton`, `Alert` and shared public empty/error/loading states for content states.

@@ -2,36 +2,37 @@ import LocaleSwitcher from '@/components/LocaleSwitcher';
 import PublicAnnouncementBar from '@/components/PublicAnnouncementBar';
 import PublicDesktopNav from '@/components/PublicDesktopNav';
 import PublicLoginButton from '@/components/PublicLoginButton';
-import PublicMobileMenu from '@/components/PublicMobileMenu';
+import PublicMobileMenu, { type PublicMenuItem } from '@/components/PublicMobileMenu';
 import SafeImage from '@/components/SafeImage';
 import { useI18n } from '@/lib/i18n';
 import { type PublicThemeSettings } from '@/lib/publicTheme';
 import { Link } from '@inertiajs/react';
 
-export type PublicHeaderCurrent = 'home' | 'sports' | 'schedule' | 'athletes' | 'contact';
+export type PublicHeaderCurrent = 'home' | 'sports' | 'schedule' | 'athletes' | 'contact' | 'information';
 type Props = { appName: string; settings: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings; current?: PublicHeaderCurrent };
 
 export default function PublicHeader({ appName, settings, current }: Props) {
     const { t } = useI18n();
     const logoUrl = settings.inverse_logo_url ?? settings.logo_url;
-    const links = [
-        { href: route('public.index'), label: t('Home'), current: current === 'home' },
-        { href: route('public.schedule'), label: t('Schedule & Results'), current: current === 'schedule' },
-        { href: route('public.athletes'), label: t('Athletes & Teams'), current: current === 'athletes' },
-        { href: route('public.contact'), label: t('Contact'), current: current === 'contact' },
-    ];
-    const groups = [
-        { label: t('Competition'), links: [
+    const information = { label: t('Information'), links: [
+        { href: route('public.general-information'), label: t('General Information') },
+        { href: route('public.committee'), label: t('Jawatankuasa Induk') },
+        { href: route('public.student-committee'), label: t('Jawatankuasa Pelaksana') },
+        { href: route('public.game-chairpersons'), label: t('Pengerusi Permainan') },
+        { href: route('public.important-dates'), label: t('Tarikh Penting') },
+    ] };
+    const competition = { label: t('Competition'), links: [
             { href: route('public.sports'), label: t('Sports'), current: current === 'sports' },
             { href: route('public.faculties'), label: t('Faculties') },
             { href: route('public.venues'), label: t('Venues') },
-        ] },
-        { label: t('Information'), links: [
-            { href: route('public.news'), label: t('News') },
-            { href: route('public.downloads'), label: t('Downloads') },
-            { href: route('public.faq'), label: t('FAQ') },
-            { href: route('public.about'), label: t('About') },
-        ] },
+    ] };
+    const items: PublicMenuItem[] = [
+        { type: 'link', link: { href: route('public.index'), label: t('Public Home'), current: current === 'home' } },
+        { type: 'group', group: { ...information, current: current === 'information' } },
+        { type: 'group', group: competition },
+        { type: 'link', link: { href: route('public.schedule'), label: t('Public Schedule & Results'), current: current === 'schedule' } },
+        { type: 'link', link: { href: route('public.athletes'), label: t('Athletes & Teams'), current: current === 'athletes' } },
+        { type: 'link', link: { href: route('public.contact'), label: t('Public Contact'), current: current === 'contact' } },
     ];
 
     return <div className="absolute inset-x-0 top-0 z-50">
@@ -42,8 +43,8 @@ export default function PublicHeader({ appName, settings, current }: Props) {
                     {logoUrl && <SafeImage src={logoUrl} alt="" className="h-11 w-auto shrink-0 object-contain" />}
                     <span className="min-w-0"><small className="block text-xs font-black uppercase tracking-[.2em] text-[var(--public-accent)]">{t('Official portal')}</small><b className="block max-w-[10rem] truncate text-sm sm:max-w-xs sm:text-base">{appName}</b></span>
                 </Link>
-                <PublicDesktopNav links={links} groups={groups} />
-                <div className="flex shrink-0 items-center justify-end xl:hidden"><PublicMobileMenu links={links} groups={groups} /></div>
+                <PublicDesktopNav items={items} />
+                <div className="flex shrink-0 items-center justify-end xl:hidden"><PublicMobileMenu items={items} /></div>
                 <div className="hidden items-center justify-end gap-2 xl:flex"><span className="mr-1 h-7 w-px bg-white/10" /><LocaleSwitcher compact showLabel={false} /><PublicLoginButton /></div>
             </div>
         </header>

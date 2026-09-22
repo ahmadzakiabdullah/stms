@@ -364,7 +364,7 @@ function FilterPanel({
     const selectClass = 'h-11 rounded-xl bg-white text-sm font-semibold';
 
     return (
-        <div className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 shadow-sm">
+        <div className="public-card p-4">
             <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                     <h2 className="text-sm font-black text-[var(--public-text)]">{t('Filters')}</h2>

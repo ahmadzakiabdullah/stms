@@ -47,6 +47,10 @@ Measured against `https://saf.utem.edu.my/` with Lighthouse 13.4.1 and the Playw
 
 The main follow-up is LCP optimization on both pages. Repeat the measurement from a consistent CI/monitoring region before changing the target or declaring the public performance work complete.
 
+## Mobile Core Web Vitals Targets
+
+The public portal adopts the standard “good” p75 targets for mobile as its release baseline: LCP ≤ 2.5 seconds, INP ≤ 200 milliseconds and CLS ≤ 0.1. These are targets, not current evidence; production or staging measurement from a stable mobile Chromium/Lighthouse run is required before the P1 item can be marked complete.
+
 ## LCP follow-up — 21 August 2026
 
 The homepage now skips initial layout/paint work for below-the-fold sections with `content-visibility: auto` and defers participant logo decoding/loading. This keeps the hero path smaller without removing content or changing the public payload. Re-run Lighthouse after deployment; the change is an optimization candidate, not evidence of an improved LCP until the production measurement confirms it.

@@ -529,28 +529,41 @@ class PublicPortalService
         $playableCount = $fixtureQuery()->whereIn('status', ['scheduled', 'in_progress', 'completed'])->count();
         $lastUpdated = collect([$session->updated_at, $fixtureQuery()->max('updated_at')])->filter()->max();
 
+        // Reuse the catalog for counts, names and venues instead of querying events repeatedly.
+        $catalogEvents = (clone $eventQuery)->with([
+            'sport:id,name',
+            'sportCategory:id,name,quota_mode,max_athletes_total,max_male_athletes,max_female_athletes,min_male_athletes,min_female_athletes,max_officials',
+            'sport.documents' => fn ($query) => $query
+                ->where('organization_id', $organizationId)
+                ->where('session_id', $session->id)
+                ->where('is_published', true),
+        ])->get();
+
         return [
             'app_name' => filled($portalSettings['app_name'] ?? null) ? $portalSettings['app_name'] : config('app.name'),
             'competition' => ['name' => $session->name, 'description' => $session->description,
                 'start_date' => $session->start_date?->toDateString(), 'end_date' => $session->end_date?->toDateString(),
                 'organization' => $session->organization?->name],
-            'stats' => ['sports' => (clone $eventQuery)->distinct()->count('sport_id'), 'events' => (clone $eventQuery)->count(),
+            'stats' => ['sports' => $catalogEvents->pluck('sport_id')->filter()->unique()->count(), 'events' => $catalogEvents->count(),
                 'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()->count(),
                 'completed_matches' => $completedFixtures->count(), 'total_matches' => $playableCount],
-            'sports_catalog' => (clone $eventQuery)->with([
-                'sport:id,name',
-                'sportCategory:id,name',
-                'sport.documents' => fn ($query) => $query
-                    ->where('organization_id', $organizationId)
-                    ->where('session_id', $session->id)
-                    ->where('is_published', true),
-            ])->get()
+            'sports_catalog' => $catalogEvents
                 ->groupBy('sport_id')->map(fn ($events) => [
                     'name' => $events->first()->sport?->name,
                     'categories' => $events->map(fn ($event) => $event->sportCategory?->name)->filter()->unique()->sort()->values()->all(),
                     'events' => $events->map(fn ($event) => [
                         'name' => $event->name,
                         'category' => $event->sportCategory?->name,
+                        'venues' => collect($event->venues ?? [])->filter()->values()->all(),
+                        'quota' => [
+                            'mode' => $event->sportCategory?->quota_mode,
+                            'total' => $event->sportCategory?->max_athletes_total,
+                            'male' => $event->sportCategory?->max_male_athletes,
+                            'female' => $event->sportCategory?->max_female_athletes,
+                            'officials' => $event->sportCategory?->max_officials,
+                            'min_male' => $event->sportCategory?->min_male_athletes,
+                            'min_female' => $event->sportCategory?->min_female_athletes,
+                        ],
                     ])->sortBy('name')->values()->all(),
                     'documents' => ($events->first()->sport?->documents ?? collect())->map(fn ($document) => [
                         'title' => $document->title,
@@ -560,13 +573,13 @@ class PublicPortalService
                         'file_size' => $document->file_size,
                     ])->values()->all(),
                 ])->filter(fn ($sport) => filled($sport['name']))->sortBy('name')->values()->all(),
-            'sports' => (clone $eventQuery)->with('sport:id,name')->get()->pluck('sport.name')->filter()->unique()->sort()->values()->all(),
+            'sports' => $catalogEvents->pluck('sport.name')->filter()->unique()->sort()->values()->all(),
             'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()
                 ->orderBy('name')->get(['id', 'name', 'logo_path', 'inverse_logo_path'])->map(fn (Participant $participant) => [
                     'name' => $participant->name, 'logo_url' => $participant->logo_url, 'inverse_logo_url' => $participant->inverse_logo_url,
                 ])->values()->all(),
             'venues' => collect([
-                ...(clone $eventQuery)->pluck('venues')->flatten()->filter()->all(),
+                ...$catalogEvents->pluck('venues')->flatten()->filter()->all(),
                 ...$fixtureQuery()->whereNotNull('venue')->where('venue', '!=', '')->get(['venue'])->pluck('venue')->all(),
             ])->unique()->sort()->values()->all(),
             'upcoming' => $upcoming->all(),

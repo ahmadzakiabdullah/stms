@@ -16,7 +16,9 @@ import { type ComponentType, useMemo, useState } from 'react';
 
 type Team = { name: string; logo_url: string | null; inverse_logo_url: string | null } | null;
 type SportDocument = { title: string; url: string; file_name: string; mime_type: string; file_size: number };
-type SportCatalogEntry = { name: string; categories: string[]; events: { name: string; category: string | null }[]; documents?: SportDocument[] };
+type SportQuota = { mode: string | null; total: number | null; male: number | null; female: number | null; officials: number | null; min_male: number | null; min_female: number | null };
+type SportEvent = { name: string; category: string | null; venues: string[]; quota: SportQuota };
+type SportCatalogEntry = { name: string; categories: string[]; events: SportEvent[]; documents?: SportDocument[] };
 type Props = { section: 'sports' | 'faculties' | 'venues'; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; sports_catalog: SportCatalogEntry[]; faculties: Team[]; venues: string[]; updated_at?: string; error?: string | null };
 
 const labels: Record<Props['section'], { title: string; intro: string; icon: ComponentType<{ className?: string }> }> = {
@@ -48,7 +50,7 @@ function DirectoryContent({ section, sports_catalog, faculties, venues, t }: { s
     if (section === 'sports') return <SportsDirectory sports_catalog={sports_catalog} t={t} />;
     if (section === 'faculties') return faculties.length === 0
         ? <PublicEmptyState text={t('No faculties published yet.')} />
-        : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{faculties.map((faculty, index) => <article key={`${faculty?.name}-${index}`} className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 text-center shadow-sm"><div className="flex justify-center"><ParticipantLogo participant={faculty} size="xl" /></div><h2 className="mt-4 text-sm font-black">{faculty?.name || 'TBC'}</h2></article>)}</div>;
+        : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{faculties.map((faculty, index) => <article key={`${faculty?.name}-${index}`} className="public-card p-5 text-center"><div className="relative z-10 flex justify-center"><ParticipantLogo participant={faculty} size="xl" /></div><h2 className="relative z-10 mt-4 text-sm font-black">{faculty?.name || 'TBC'}</h2></article>)}</div>;
     return <VenuesDirectory venues={venues} t={t} />;
 }
 
@@ -73,8 +75,7 @@ function VenuesDirectory({ venues, t }: { venues: string[]; t: (key: string) => 
 
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {venues.map((venue, index) => (
-                    <article key={venue} className="group relative isolate flex min-h-64 flex-col overflow-hidden rounded-3xl border border-[var(--public-dark-border)] bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]">
-                        <div aria-hidden="true" className="absolute -right-10 -top-12 -z-10 size-40 rounded-full border-[16px] border-[var(--public-primary-soft)] opacity-80 transition duration-300 group-hover:scale-110" />
+                    <article key={venue} className="public-card group flex min-h-64 flex-col p-6">
                         <div className="flex items-start justify-between gap-4">
                             <span className="flex size-12 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]">
                                 <MapPin className="size-6" aria-hidden="true" />
@@ -205,11 +206,11 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
     const documents = sport.documents ?? [];
 
     return (
-        <article className="group relative flex h-full flex-col rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]">
+        <article className="public-card group flex h-full flex-col p-5">
             <Link
                 href={route('public.schedule', { sport: sport.name })}
                 aria-label={`${sport.name} — ${t('View fixtures')}`}
-                className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-primary)]/40"
+                className="absolute inset-0 z-0 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-primary)]/40"
             />
             <div className="flex items-start justify-between gap-3">
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><SportIcon name={sport.name} className="text-2xl leading-none" /></span>
@@ -218,6 +219,26 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
             <h2 className="mt-4 text-lg font-black leading-tight tracking-[-.02em]">{sport.name}</h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
                 {labels.map(label => <span key={label} className="rounded-md border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] px-2 py-0.5 text-xs font-bold text-[var(--public-primary)]">{label}</span>)}
+            </div>
+            <div className="relative z-10 mt-4 space-y-2 border-t border-[var(--public-dark-border)] pt-4">
+                {sport.events.map(event => (
+                    <div key={`${event.name}-${event.category ?? 'uncategorized'}`} className="rounded-xl border border-[var(--public-dark-border)] bg-[var(--public-background)] p-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <p className="text-sm font-black leading-tight">{event.name}</p>
+                            {event.category ? <span className="shrink-0 text-[10px] font-black uppercase tracking-wider text-[var(--public-dark-faint)]">{event.category}</span> : null}
+                        </div>
+                        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                            <QuotaValue label={t('Male')} value={event.quota.male} />
+                            <QuotaValue label={t('Female')} value={event.quota.female} />
+                            <QuotaValue label={t('Officials')} value={event.quota.officials} />
+                        </div>
+                        {event.quota.total !== null ? <p className="mt-2 text-xs font-bold text-[var(--public-dark-faint)]">{t('Max Total Athletes')}: <span className="font-black tabular-nums text-[var(--public-text)]">{event.quota.total}</span></p> : null}
+                        <p className="mt-3 flex items-start gap-1.5 text-xs font-semibold leading-5 text-[var(--public-dark-faint)]">
+                            <MapPin className="mt-0.5 size-3.5 shrink-0 text-[var(--public-primary)]" aria-hidden="true" />
+                            <span>{event.venues.length > 0 ? event.venues.join(', ') : t('Venue TBD')}</span>
+                        </p>
+                    </div>
+                ))}
             </div>
             {documents.length > 0 ? (
                 <ul className="relative z-10 mt-3 space-y-1.5">
@@ -241,5 +262,14 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
                 <span className="inline-flex items-center gap-1 text-xs font-black text-[var(--public-primary)]">{t('View fixtures')}<ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span>
             </div>
         </article>
+    );
+}
+
+function QuotaValue({ label, value }: { label: string; value: number | null }) {
+    return (
+        <div className="rounded-lg bg-white px-2 py-1.5">
+            <span className="block text-[10px] font-black uppercase tracking-wider text-[var(--public-dark-faint)]">{label}</span>
+            <strong className="mt-0.5 block text-sm font-black tabular-nums">{value ?? '—'}</strong>
+        </div>
     );
 }

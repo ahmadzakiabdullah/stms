@@ -254,6 +254,34 @@ class PublicPortalTest extends TestCase
             ->where('sports_catalog.0.documents.0.title', 'Peraturan Badminton'));
     }
 
+    public function test_public_sports_directory_exposes_event_quotas_and_venues(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $sport = Sport::factory()->create(['organization_id' => $organization->id, 'name' => 'Badminton']);
+        $category = SportCategory::factory()->forSport($sport)->create([
+            'name' => 'Campuran',
+            'quota_mode' => 'mixed_gender',
+            'max_male_athletes' => 6,
+            'max_female_athletes' => 6,
+            'max_officials' => 1,
+        ]);
+        Event::factory()->forTournament($tournament)->create([
+            'sport_id' => $sport->id,
+            'sport_category_id' => $category->id,
+            'venues' => ['Dewan Sukan'],
+        ]);
+
+        $this->get(route('public.sports'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Directory')
+            ->where('sports_catalog.0.events.0.venues.0', 'Dewan Sukan')
+            ->where('sports_catalog.0.events.0.quota.male', 6)
+            ->where('sports_catalog.0.events.0.quota.female', 6)
+            ->where('sports_catalog.0.events.0.quota.officials', 1));
+    }
+
     public function test_public_schedule_includes_sport_categories_for_filtering(): void
     {
         $organization = Organization::factory()->create(['is_active' => true]);
@@ -403,6 +431,36 @@ class PublicPortalTest extends TestCase
     {
         $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Public/Index')->where('competition', null)->has('upcoming', 0)->has('results', 0));
+    }
+
+    public function test_public_general_information_page_uses_the_information_page_with_the_expected_section(): void
+    {
+        $this->get(route('public.general-information'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Info')->where('section', 'general'));
+    }
+
+    public function test_public_committee_page_renders_the_committee_page(): void
+    {
+        $this->get(route('public.committee'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/Committee'));
+    }
+
+    public function test_public_student_committee_page_renders_the_student_committee_page(): void
+    {
+        $this->get(route('public.student-committee'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/StudentCommittee'));
+    }
+
+    public function test_public_game_chairpersons_page_renders_the_game_chairpersons_page(): void
+    {
+        $this->get(route('public.game-chairpersons'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/GameChairpersons'));
+    }
+
+    public function test_public_important_dates_page_renders_the_important_dates_page(): void
+    {
+        $this->get(route('public.important-dates'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('Public/ImportantDates'));
     }
 
     public function test_public_contact_exposes_only_valid_channels_for_the_configured_organization(): void
