@@ -1,6 +1,6 @@
 # System Overview
 
-> Current route inventory is 163 application routes and 43 Inertia pages. Public athlete profiles and scorer events are implemented; `/schedule` is the canonical public match/results view and `/results/manage` is the authenticated result workflow.
+> Current route inventory is 173 application routes and 47 Inertia pages. Public athlete profiles and scorer events are implemented; `/schedule` is the canonical public match/results view and `/results/manage` is the authenticated result workflow.
 
 > **Current implementation update — 21 August 2026:** Public athlete profiles, configurable individual scoring events and participant-grouped public scorer display are implemented. See `CURRENT_STATE.md` for release status.
 
@@ -60,7 +60,7 @@ Sensitive index/read actions kini memanggil policy/gate yang sesuai. Dashboard, 
 
 ## Frontend
 
-- 43 Inertia pages, semuanya `.tsx`.
+- 47 Inertia pages, semuanya `.tsx`.
 - Shared layouts/components masih mempunyai compatibility `.jsx` files.
 - React Hook Form + Zod digunakan pada forms yang telah dimigrasi; auth dan beberapa pages menggunakan Inertia `useForm`.
 - TanStack Table terpasang tetapi tidak digunakan dalam source semasa.
@@ -74,10 +74,10 @@ Current canonical public workflows: `/schedule` renders the schedule/results dir
 
 - `/` -> `Public/Index` (homepage dengan anchor sections Sports, Schedule, Results dan Medal standings); `/portal` dan `/index.php` redirect 301 ke `/`.
 - `/schedule` -> `Public/Schedule` (satu-satunya halaman awam jadual/keputusan).
-- `/sports`, `/faculties` dan `/venues` -> `Public/Directory` (seksyen disahkan di controller).
+- `/sports`, `/faculties` dan `/venues` -> `Public/Directory` (seksyen disahkan di controller). Sports turut memaparkan quota acara daripada `SportCategory` serta venue daripada `Event.venues`.
 - `/athletes` dan `/athletes/{id}` -> `Public/Athletes`/`Public/Athlete`.
 - `/matches`, `/results` dan `/live` -> redirect 301 ke `/schedule`.
-- `/news`, `/downloads`, `/faq` dan `/about` -> `Public/Info`.
+- `/news`, `/downloads`, `/faq`, `/about` dan `/general-information` -> `Public/Info`; `/jawatankuasa-induk` -> `Public/Committee`; `/jawatankuasa-pelaksana` -> `Public/StudentCommittee`; `/pengerusi-permainan` -> `Public/GameChairpersons`; `/tarikh-penting` -> `Public/ImportantDates`.
 - `/contact-us` -> `Public/Contact`.
 - `/sitemap.xml` -> sitemap public.
 
@@ -87,7 +87,7 @@ Navigator dan footer kongsi disediakan oleh `PublicHeader`/`PublicFooter`. `/man
 
 ## Route and Runtime Summary
 
-- 163 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
+- 173 application routes termasuk sitemap; authenticated route group kekal dilindungi auth/verified middleware.
 - Email verification ditentukan ketika route bootstrap melalui `EMAIL_VERIFICATION_REQUIRED`.
 - `/health` boleh dilindungi token dan menyamar sebagai 404; `/up` ialah Laravel liveness asas.
 - Runtime workspace audit: production env, debug off, database cache/queue, file session, email verification off, CSP report-only, enforcement off.

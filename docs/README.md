@@ -18,11 +18,13 @@ Jika nombor atau status bercanggah, sumber bertarikh paling baharu menang; dakwa
 
 - `adr/` — Architecture Decision Records. Keputusan kekal, implementation status boleh dikemas kini.
 - `architecture/` — current architecture dan jurang diketahui.
+- `architecture/data-transfers.md` — queue contract, progress, idempotency dan failure report untuk export/import besar.
 - `database/` — schema, ERD, naming dan migration rules.
 - `deployment/` — release, backup dan restore runbooks.
 - `design-system/` — frontend/design usage semasa.
 - `security/` — controls dan production checklist.
 - `testing/` — current quality gates dan rekod drill.
+- `testing/concurrency.md` — deterministic duplicate-request and race-regression coverage serta staging evidence requirements.
 - `audits/` — point-in-time reports.
 - `api/` — future REST API placeholders; bukan endpoint aktif.
 
@@ -36,7 +38,7 @@ Jika nombor atau status bercanggah, sumber bertarikh paling baharu menang; dakwa
 - `/schedule` — satu-satunya halaman awam jadual/keputusan (tab All/Live/Upcoming/Completed dan filter).
 - `/sports`, `/faculties` dan `/venues` — halaman kandungan pertandingan awam.
 - `/athletes` dan `/athletes/{id}` — directory roster dan profil prestasi atlet.
-- `/news`, `/downloads`, `/faq` dan `/about` — halaman maklumat awam tambahan.
+- `/news`, `/downloads`, `/faq`, `/about`, `/general-information`, `/jawatankuasa-induk`, `/jawatankuasa-pelaksana`, `/pengerusi-permainan` dan `/tarikh-penting` — halaman maklumat awam tambahan termasuk syarat kelayakan, pendaftaran, jawatankuasa, pengerusi permainan dan tarikh penting SAF.
 - `/contact-us` — halaman hubungan.
 - `/login` — login.
 - `/matches`, `/results` dan `/live` — redirect 301 ke `/schedule`.

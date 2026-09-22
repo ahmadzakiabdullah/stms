@@ -7,6 +7,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 22 September 2026 — Harden asynchronous transfers and verify the working tree
+
+- Added requester-only transfer policies, current-permission checks, tenant-aware queue middleware, scoped failure callbacks and private tenant file partitions.
+- Serialized idempotency creation and rejected key reuse across requesters/types/payloads; added overlap protection and a dedicated queue connection with a retry interval longer than its timeout.
+- Added Form Requests and JSON exception responses for export queue/status endpoints, plus feature/unit regressions for access, worker context, retries and import isolation.
+- Reused the public event catalog for counts, names and venues to meet the existing query budget without increasing its threshold.
+- Restored development dependencies on an isolated local runner; full SQLite PHPUnit passed 559/559 (2,738 assertions), Pint, TypeScript, tenant-bypass, Vite build/budget and Composer/npm audits passed. Updated stale English-locale Contact/navigation assertions; Playwright passed 22 cases in the full run and the remaining two in a focused rerun. Production operations remain on hold.
+
+### 21 September 2026 — Add asynchronous data-transfer contract
+
+- Added tenant-scoped `DataTransfer` records and a retryable queue job for large Excel exports and participant/event-participant imports.
+- Added progress, idempotency, row-level failure reports, status polling and private output download endpoints.
+- Kept synchronous transfer routes available while the UI polling flow and production queue worker are migrated.
+
+### 21 September 2026 — Add P1 concurrency regression coverage
+
+- Added deterministic race-regression tests for draw fixture generation, result entry/approval/correction, bulk registration import, and match schedule conflicts.
+- Added event/match/result row locking and transaction-local conflict validation so duplicate requests cannot silently create duplicate state.
+- Documented the remaining requirement for a real multi-worker MySQL/Redis staging run.
+
+### 21 September 2026 — Correct public Malay home label
+
+- Changed the public navigation and footer home label from `Tuan Rumah` to `Utama` in Bahasa Malaysia without changing match terminology such as home team.
+
+### 21 September 2026 — Localize Information submenu labels
+
+- Added English labels for the Information submenu while retaining the official Bahasa Malaysia names in the BM locale.
+
+### 21 September 2026 — Complete public navigation localization
+
+- Added dedicated public navigation labels for Schedule & Results and Contact so the BM locale displays `Jadual & Keputusan` and `Hubungi`.
+
+### 21 September 2026 — Strengthen P1 reliability baselines
+
+- Added repository query-budget regression coverage for the public homepage, public schedule and authenticated Events index.
+- Documented metric thresholds/owners/escalation and a tenant-scoped cache invalidation matrix; production alert activation remains held with the P0 runtime work.
+
+### 21 September 2026 — Refresh public typography
+
+- Kept Geist for public body text, navigation and headings so long titles remain readable.
+- Limited locally bundled Barlow Condensed 700/800 to display numbers and selected sport-oriented accents.
+
+### 21 September 2026 — Complete public portal localization
+
+- Added English/Bahasa Malaysia content switching for the General Information, Main Committee, Student Executive Committee, Game Chairpersons and Important Dates pages.
+- Localized the Contact secretariat table headings, roles and staff labels while preserving official names, sports and venue names.
+- Reused the existing EN/MS locale switcher, session/cookie persistence and public translation dictionary.
+
+### 21 September 2026 — Standardize public card design
+
+- Added a shared `public-card` visual treatment based on the Venues directory card.
+- Applied the same rounded layout, soft shadow, border highlight, hover lift and decorative accent to public information, directory, athlete, fixture and contact cards.
+
+### 21 September 2026 — Simplify Information submenu
+
+- Removed About, Download, News and FAQ from the public Information submenu.
+- Kept the corresponding pages and routes available for direct access; the submenu now focuses on the active SAF information pages.
+
+### 21 September 2026 — Enrich sports programme information
+
+- Added event-level male, female and official quota information to the public Sports page.
+- Added configured event venues to each public sport card, sourced from the existing `SportCategory` and `Event` data.
+- Added a feature regression test for the public quota and venue payload.
+
+### 21 September 2026 — Add secretariat game contacts
+
+- Added the Sekretariat section to the public Contact page.
+- Added 23 sport-event coordinator and chairperson entries with public phone links.
+
+### 21 September 2026 — Add important dates page
+
+- Added the public Tarikh Penting page under the Information submenu.
+- Added the supplied meeting, preparation, registration and event schedule for SAF 2026.
+
+### 21 September 2026 — Add game chairpersons page
+
+- Added the public Pengerusi Permainan page under the Information submenu.
+- Added the supplied chairperson, technical and referee requirements for all listed games.
+
+### 21 September 2026 — Add student committee page
+
+- Added the public Jawatankuasa Pelaksana page under the Information submenu.
+- Added the supplied student committee roles, faculty representatives and volunteer task assignments for the 2025 faculty sports championship.
+
+### 21 September 2026 — Add committee page
+
+- Added the public Jawatankuasa Induk page under the Information submenu.
+- Added the supplied committee, university representative and committee member listings for the 2025 faculty sports championship.
+
+### 21 September 2026 — Add general information page
+
+- Added the public General Information page under the Information submenu.
+- Added the supplied SAF 2026 eligibility, participant registration and team participation requirements.
+
+### 21 September 2026 — Reorder Information submenu
+
+- Reordered the Information submenu to About, Download, News and FAQ.
+
+### 21 September 2026 — Reorder public navigation
+
+- Moved Information to the second public menu position after Home.
+- Kept Contact as the final public menu item and synchronized the order across desktop and mobile navigation.
+
 ### 21 September 2026 — Standardize public shadcn controls
 
 - Added shared shadcn/Radix wrappers for public tabs, pagination, accordion and alert patterns.
