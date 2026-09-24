@@ -31,10 +31,14 @@ final class EventParticipantIndexService
         $participantId = $filters['participant_id'] ?? null;
         $status = $filters['status'] ?? null;
 
+        if ($hasParticipant) {
+            $user->loadMissing('participant.session');
+        }
+
         $participants = $this->safePaginatedQuery(function () use ($hasParticipant, $isFacultyRepresentative, $user, $search, $sportId, $categoryId, $participantId, $status) {
             $query = Participant::query()
                 ->with(['eventParticipants' => function ($query) use ($search, $sportId, $categoryId, $status) {
-                    $query->with(['event.sport', 'event.sportCategory', 'event.tournament', 'squadMembers' => fn ($query) => $query->ordered()])
+                    $query->with(['event.sport', 'event.sportCategory', 'event.tournament.session', 'squadMembers' => fn ($query) => $query->ordered()])
                         ->when($search, fn ($query, $value) => $query->where(fn ($query) => $query->whereHas('event', fn ($query) => $query->where('name', 'like', "%{$value}%"))
                             ->orWhereHas('event.sport', fn ($query) => $query->where('name', 'like', "%{$value}%"))
                             ->orWhereHas('event.sportCategory', fn ($query) => $query->where('name', 'like', "%{$value}%"))))
@@ -77,7 +81,7 @@ final class EventParticipantIndexService
 
         $events = $this->safeCollectionQuery(function () use ($search, $sportId, $categoryId) {
             return Event::query()
-                ->with(['sport', 'sportCategory', 'tournament'])
+                ->with(['sport', 'sportCategory', 'tournament.session'])
                 ->where('is_active', true)
                 ->when($search, fn ($query, $value) => $query->where(fn ($query) => $query->where('name', 'like', "%{$value}%")
                     ->orWhereHas('sport', fn ($query) => $query->where('name', 'like', "%{$value}%"))
@@ -149,6 +153,10 @@ final class EventParticipantIndexService
             'events' => $events,
             'faculties' => $faculties,
             'isFacultyRepresentative' => $isFacultyRepresentative,
+            'eventRegistrationStartDate' => $isFacultyRepresentative ? $user->participant?->session?->event_registration_start_date : null,
+            'eventRegistrationDeadline' => $isFacultyRepresentative ? $user->participant?->session?->event_registration_deadline : null,
+            'squadRegistrationStartDate' => $isFacultyRepresentative ? $user->participant?->session?->squad_registration_start_date : null,
+            'squadRegistrationDeadline' => $isFacultyRepresentative ? $user->participant?->session?->squad_registration_deadline : null,
             'statusCounts' => $statusCounts,
             'conflicts' => $conflicts,
             'dataLoadFailed' => $this->dataLoadFailed,

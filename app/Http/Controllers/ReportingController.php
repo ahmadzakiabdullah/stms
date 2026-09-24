@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Fixture;
+use App\Models\DataTransfer;
 use App\Models\Result;
 use App\Services\DataQualityService;
 use App\Services\SystemHealthService;
@@ -40,6 +41,7 @@ class ReportingController extends Controller implements HasMiddleware
                 'fixturesByTournament' => collect(),
                 'operations' => $this->emptyOperations(),
                 'dataQuality' => ['status' => 'ok', 'total_issues' => 0, 'checks' => []],
+                'governance' => $this->emptyGovernance(),
             ]);
         }
 
@@ -145,6 +147,7 @@ class ReportingController extends Controller implements HasMiddleware
             'fixturesByTournament' => $fixturesByTournament,
             'operations' => $this->operationsSummary($org->id, $health->check()),
             'dataQuality' => $dataQuality->summary($org),
+            'governance' => $this->governanceSummary($org->id),
         ]);
     }
 
@@ -156,6 +159,42 @@ class ReportingController extends Controller implements HasMiddleware
             'data_freshness' => ['last_match_update' => null, 'last_result_update' => null],
             'active_sessions' => ['domain' => 0, 'application' => null],
             'incident_signal' => 'No organization context.',
+        ];
+    }
+
+    private function emptyGovernance(): array
+    {
+        return [
+            'comparison' => [
+                'window_days' => 7,
+                'fixtures_completed_current' => 0,
+                'fixtures_completed_previous' => 0,
+                'results_recorded_current' => 0,
+                'results_recorded_previous' => 0,
+                'completion_delta' => 0,
+                'results_delta' => 0,
+            ],
+            'exports' => [
+                'window_days' => 30,
+                'total' => 0,
+                'completed' => 0,
+                'failed' => 0,
+                'running' => 0,
+                'last_export_at' => null,
+                'policy' => 'Exports are tenant-scoped, permission-gated and requester-only for queued downloads.',
+            ],
+            'retention' => [
+                'backup_retention_days' => (int) config('app.backup.retention_days', 14),
+                'transfer_retention_days' => 30,
+                'archive_owner' => 'Organization administrator',
+                'policy' => 'Keep operational exports only while needed for competition administration, then archive official records and remove working files.',
+            ],
+            'ownership' => [
+                ['area' => 'Competition records', 'owner' => 'Tournament manager', 'access' => 'Create/update fixtures, results and draw operations within tenant scope.'],
+                ['area' => 'Participant data', 'owner' => 'Organization administrator', 'access' => 'Manage participant records, registrations and imports for the organization.'],
+                ['area' => 'Exports and reports', 'owner' => 'Report/export role holders', 'access' => 'Export permission required; queued files are requester-only.'],
+                ['area' => 'Audit and retention', 'owner' => 'System administrator', 'access' => 'Review activity logs, retention evidence and operational backups.'],
+            ],
         ];
     }
 
@@ -197,5 +236,61 @@ class ReportingController extends Controller implements HasMiddleware
                 ? 'No active incident signal from repository health checks.'
                 : 'Health checks report degraded components; inspect queue, cache, database and disk.',
         ];
+    }
+
+    private function governanceSummary(string $organizationId): array
+    {
+        $now = now();
+        $currentStart = $now->copy()->subDays(7);
+        $previousStart = $now->copy()->subDays(14);
+
+        $completedCurrent = Fixture::query()
+            ->where('organization_id', $organizationId)
+            ->where('status', 'completed')
+            ->whereBetween('updated_at', [$currentStart, $now])
+            ->count();
+        $completedPrevious = Fixture::query()
+            ->where('organization_id', $organizationId)
+            ->where('status', 'completed')
+            ->whereBetween('updated_at', [$previousStart, $currentStart])
+            ->count();
+        $resultsCurrent = Result::query()
+            ->where('organization_id', $organizationId)
+            ->whereBetween('created_at', [$currentStart, $now])
+            ->count();
+        $resultsPrevious = Result::query()
+            ->where('organization_id', $organizationId)
+            ->whereBetween('created_at', [$previousStart, $currentStart])
+            ->count();
+
+        $transferWindow = $now->copy()->subDays(30);
+        $exportTypes = [
+            DataTransfer::TYPE_EXPORT_FIXTURES,
+            DataTransfer::TYPE_EXPORT_RESULTS,
+            DataTransfer::TYPE_EXPORT_RANKINGS,
+            DataTransfer::TYPE_EXPORT_MEDALS,
+        ];
+        $exportQuery = DataTransfer::query()
+            ->where('organization_id', $organizationId)
+            ->whereIn('type', $exportTypes)
+            ->where('created_at', '>=', $transferWindow);
+
+        return array_replace_recursive($this->emptyGovernance(), [
+            'comparison' => [
+                'fixtures_completed_current' => $completedCurrent,
+                'fixtures_completed_previous' => $completedPrevious,
+                'results_recorded_current' => $resultsCurrent,
+                'results_recorded_previous' => $resultsPrevious,
+                'completion_delta' => $completedCurrent - $completedPrevious,
+                'results_delta' => $resultsCurrent - $resultsPrevious,
+            ],
+            'exports' => [
+                'total' => (clone $exportQuery)->count(),
+                'completed' => (clone $exportQuery)->whereIn('status', [DataTransfer::STATUS_COMPLETED, DataTransfer::STATUS_COMPLETED_WITH_ERRORS])->count(),
+                'failed' => (clone $exportQuery)->where('status', DataTransfer::STATUS_FAILED)->count(),
+                'running' => (clone $exportQuery)->whereIn('status', [DataTransfer::STATUS_PENDING, DataTransfer::STATUS_RUNNING])->count(),
+                'last_export_at' => (clone $exportQuery)->latest('created_at')->value('created_at'),
+            ],
+        ]);
     }
 }

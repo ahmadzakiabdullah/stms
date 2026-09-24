@@ -9,10 +9,13 @@ use App\Http\Requests\Session\StoreSessionRequest;
 use App\Http\Requests\Session\UpdateSessionRequest;
 use App\Models\Organization;
 use App\Models\Session;
+use App\Services\ParticipantLogoService;
+use App\Services\PublicPortalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,21 +54,72 @@ class SessionController extends Controller
         ]);
     }
 
-    public function store(StoreSessionRequest $request, CreateSession $action): RedirectResponse
+    public function store(StoreSessionRequest $request, CreateSession $action, ParticipantLogoService $logoService, PublicPortalService $publicPortal): RedirectResponse
     {
         Gate::authorize('create', Session::class);
 
-        $action->handle($request->validated());
+        $data = $request->validated();
+        $storedPaths = [];
+
+        try {
+            foreach (['logo' => 'logo_path', 'inverse_logo' => 'inverse_logo_path'] as $upload => $pathKey) {
+                if ($request->hasFile($upload)) {
+                    $data[$pathKey] = $logoService->store($request->file($upload), $upload);
+                    $storedPaths[] = $data[$pathKey];
+                }
+            }
+            unset($data['logo'], $data['inverse_logo']);
+            $action->handle($data);
+            $publicPortal->forget();
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($storedPaths);
+            throw $exception;
+        }
 
         return redirect()->route('sessions.index')
             ->with('success', 'Session created successfully.');
     }
 
-    public function update(UpdateSessionRequest $request, Session $session, UpdateSession $action): RedirectResponse
+    public function update(UpdateSessionRequest $request, Session $session, UpdateSession $action, ParticipantLogoService $logoService, PublicPortalService $publicPortal): RedirectResponse
     {
         Gate::authorize('update', $session);
 
-        $action->handle($session, $request->validated());
+        $data = $request->validated();
+        $storedPaths = [];
+        $pathsToDelete = [];
+
+        try {
+            foreach ([
+                'logo' => ['path' => 'logo_path', 'remove' => 'remove_logo'],
+                'inverse_logo' => ['path' => 'inverse_logo_path', 'remove' => 'remove_inverse_logo'],
+            ] as $upload => $fields) {
+                $currentPath = $session->getAttribute($fields['path']);
+
+                if ($request->hasFile($upload)) {
+                    $data[$fields['path']] = $logoService->store($request->file($upload), $upload);
+                    $storedPaths[] = $data[$fields['path']];
+                    if ($currentPath) {
+                        $pathsToDelete[] = $currentPath;
+                    }
+                } elseif ($request->boolean($fields['remove'])) {
+                    $data[$fields['path']] = null;
+                    if ($currentPath) {
+                        $pathsToDelete[] = $currentPath;
+                    }
+                }
+            }
+
+            unset($data['logo'], $data['inverse_logo'], $data['remove_logo'], $data['remove_inverse_logo']);
+            if ($data !== []) {
+                $action->handle($session, $data);
+            }
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($storedPaths);
+            throw $exception;
+        }
+
+        Storage::disk('public')->delete(array_values(array_unique($pathsToDelete)));
+        $publicPortal->forget($session->id);
 
         return redirect()->route('sessions.index')
             ->with('success', 'Session updated successfully.');

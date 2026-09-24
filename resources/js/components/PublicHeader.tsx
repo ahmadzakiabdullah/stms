@@ -9,11 +9,12 @@ import { type PublicThemeSettings } from '@/lib/publicTheme';
 import { Link } from '@inertiajs/react';
 
 export type PublicHeaderCurrent = 'home' | 'sports' | 'schedule' | 'athletes' | 'contact' | 'information';
-type Props = { appName: string; settings: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings; current?: PublicHeaderCurrent };
+type Props = { appName: string; settings: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings; sessionBranding?: { logo_url?: string | null; inverse_logo_url?: string | null }; current?: PublicHeaderCurrent };
 
-export default function PublicHeader({ appName, settings, current }: Props) {
+export default function PublicHeader({ appName, settings, sessionBranding, current }: Props) {
     const { t } = useI18n();
-    const logoUrl = settings.inverse_logo_url ?? settings.logo_url;
+    const organizationLogoUrl = settings.inverse_logo_url ?? settings.logo_url;
+    const sessionLogoUrl = sessionBranding?.inverse_logo_url ?? sessionBranding?.logo_url;
     const information = { label: t('Information'), links: [
         { href: route('public.general-information'), label: t('General Information') },
         { href: route('public.committee'), label: t('Jawatankuasa Induk') },
@@ -39,9 +40,13 @@ export default function PublicHeader({ appName, settings, current }: Props) {
         <PublicAnnouncementBar />
         <header className="px-3 pt-3 sm:px-6 sm:pt-5">
             <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-4 rounded-2xl border border-white/15 bg-[color:var(--public-dark)] px-4 py-2.5 text-white shadow-2xl sm:px-5 xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-                <Link href={route('public.index')} className="flex min-h-11 min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-highlight)]">
-                    {logoUrl && <SafeImage src={logoUrl} alt="" className="h-11 w-auto shrink-0 object-contain" />}
-                    <span className="min-w-0"><small className="block text-xs font-black uppercase tracking-[.2em] text-[var(--public-accent)]">{t('Official portal')}</small><b className="block max-w-[10rem] truncate text-sm sm:max-w-xs sm:text-base">{appName}</b></span>
+                <Link href={route('public.index')} className="flex min-h-11 min-w-0 flex-col items-start justify-center gap-1 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-highlight)]">
+                    {(organizationLogoUrl || sessionLogoUrl) && <span className="flex shrink-0 items-center gap-2">
+                        {organizationLogoUrl && <SafeImage src={organizationLogoUrl} alt="" className="h-10 w-auto max-w-[7rem] object-contain" />}
+                        {organizationLogoUrl && sessionLogoUrl && <span aria-hidden="true" className="h-8 w-px bg-white/20" />}
+                        {sessionLogoUrl && <SafeImage src={sessionLogoUrl} alt="" className="h-10 w-auto max-w-[7rem] object-contain" />}
+                    </span>}
+                    <span className="min-w-0"><b className="block max-w-[15rem] truncate text-sm leading-tight sm:max-w-xs sm:text-base">{appName}</b></span>
                 </Link>
                 <PublicDesktopNav items={items} />
                 <div className="flex shrink-0 items-center justify-end xl:hidden"><PublicMobileMenu items={items} /></div>

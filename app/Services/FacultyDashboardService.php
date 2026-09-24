@@ -21,6 +21,7 @@ class FacultyDashboardService
     public function dataFor(User $user): array
     {
         $participant = $user->participant;
+        $participant?->loadMissing('session');
 
         $registrations = collect();
         $totalMale = 0;
@@ -48,10 +49,14 @@ class FacultyDashboardService
         $availableEvents = Event::with(['sport', 'sportCategory', 'tournament'])
             ->where('is_active', true)
             ->orderBy('start_date')
-            ->get(['id', 'name', 'sport_id', 'sport_category_id', 'tournament_id', 'start_date']);
+            ->get(['id', 'name', 'sport_id', 'sport_category_id', 'tournament_id', 'start_date', 'end_date', 'registration_deadline']);
 
         return [
             'participant' => $participant,
+            'eventRegistrationStartDate' => $participant?->session?->event_registration_start_date,
+            'eventRegistrationDeadline' => $participant?->session?->event_registration_deadline,
+            'squadRegistrationStartDate' => $participant?->session?->squad_registration_start_date,
+            'squadRegistrationDeadline' => $participant?->session?->squad_registration_deadline,
             'registrations' => $registrations,
             'totals' => [
                 'male' => $totalMale,

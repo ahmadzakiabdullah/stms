@@ -14,11 +14,13 @@ use App\Http\Requests\EventParticipant\WithdrawEventParticipantRequest;
 use App\Imports\EventParticipantImport;
 use App\Models\DataTransfer;
 use App\Models\EventParticipant;
+use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\SquadMember;
 use App\Services\DataTransferService;
 use App\Services\EventParticipantIndexService;
 use App\Services\SquadManagementService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -87,7 +89,24 @@ class EventParticipantController extends Controller
 
         $validated = $request->validated();
 
-        ['registered' => $registered, 'failures' => $failures, 'created' => $created] = $action->handle($participant, $validated['event_ids']);
+        $result = $action->handle($participant, $validated['event_ids']);
+        ['registered' => $registered, 'failures' => $failures, 'created' => $created] = $result;
+        $bulkActionId = (string) str()->uuid();
+        activity()
+            ->performedOn($participant)
+            ->causedBy($user)
+            ->event('bulk_registered')
+            ->withProperties([
+                'bulk_action_id' => $bulkActionId,
+                'bulk_action' => 'event_participants.batch_register',
+                'selected_count' => $result['selected_count'],
+                'registered_count' => $registered,
+                'skipped_count' => $result['skipped_count'],
+                'event_ids' => $result['event_ids'],
+                'created_ids' => $created->pluck('id')->values()->all(),
+                'failures' => $failures,
+            ])
+            ->log('Participant registered to events by bulk action');
 
         $redirect = $isWakil ? 'dashboard' : 'event-participants.index';
 
@@ -134,11 +153,22 @@ class EventParticipantController extends Controller
         $validated = $request->validated();
         $status = $validated['status'];
         $notes = $validated['notes'] ?? null;
+        $ids = array_values(array_unique($validated['ids']));
+        $bulkActionId = (string) str()->uuid();
+        $visibleRegistrations = EventParticipant::whereIn('id', $ids)->get();
+
+        if ($visibleRegistrations->pluck('organization_id')->unique()->count() > 1) {
+            return redirect()->route('event-participants.index', collect($request->query())->only([
+                'search', 'sport_id', 'category_id', 'participant_id', 'status',
+            ])->filter(fn ($v) => $v !== null && $v !== '')->all())
+                ->with('error', 'Bulk status updates can only be applied to registrations from one organization at a time.');
+        }
 
         $updated = 0;
         $failures = [];
+        $updatedIds = [];
 
-        foreach (array_unique($validated['ids']) as $id) {
+        foreach ($ids as $id) {
             $eventParticipant = EventParticipant::find($id);
 
             if (! $eventParticipant || ! Gate::allows('update', $eventParticipant)) {
@@ -148,9 +178,42 @@ class EventParticipantController extends Controller
             try {
                 $action->handle($eventParticipant, $status, $notes);
                 $updated++;
+                $updatedIds[] = $eventParticipant->id;
+                activity()
+                    ->performedOn($eventParticipant)
+                    ->causedBy($request->user())
+                    ->event('bulk_status_updated')
+                    ->withProperties([
+                        'bulk_action_id' => $bulkActionId,
+                        'bulk_action' => 'event_participants.batch_status',
+                        'target_status' => $status,
+                        'notes' => $notes,
+                    ])
+                    ->log('Event registration status updated by bulk action');
             } catch (ValidationException $e) {
                 $failures[] = $e->getMessage();
             }
+        }
+
+        $organizationId = $visibleRegistrations->first()?->organization_id ?? $request->user()?->organization_id;
+        $organization = $organizationId ? Organization::withoutGlobalScopes()->find($organizationId) : null;
+        if ($organization) {
+            activity()
+                ->performedOn($organization)
+                ->causedBy($request->user())
+                ->event('bulk_status_updated')
+                ->withProperties([
+                    'bulk_action_id' => $bulkActionId,
+                    'bulk_action' => 'event_participants.batch_status',
+                    'target_status' => $status,
+                    'notes' => $notes,
+                    'selected_count' => count($ids),
+                    'updated_count' => $updated,
+                    'skipped_count' => max(0, count($ids) - $updated),
+                    'updated_ids' => $updatedIds,
+                    'failures' => $failures,
+                ])
+                ->log('Event registration bulk status update');
         }
 
         $verdict = $status === 'confirmed' ? 'approved' : 'rejected';
@@ -195,6 +258,19 @@ class EventParticipantController extends Controller
 
         $created = $import->createdCount();
         $errors = $import->errors();
+        activity()
+            ->performedOn($participant)
+            ->causedBy($request->user())
+            ->event('bulk_imported')
+            ->withProperties([
+                'bulk_action_id' => (string) str()->uuid(),
+                'bulk_action' => 'event_participants.import',
+                'selected_count' => $created + count($errors),
+                'created_count' => $created,
+                'error_count' => count($errors),
+                'failures' => $errors,
+            ])
+            ->log('Event registrations imported by bulk action');
 
         $response = redirect()->back();
 
@@ -214,7 +290,7 @@ class EventParticipantController extends Controller
         return $response;
     }
 
-    public function queueImport(EventParticipantImportRequest $request, DataTransferService $transfers): RedirectResponse
+    public function queueImport(EventParticipantImportRequest $request, DataTransferService $transfers): JsonResponse|RedirectResponse
     {
         $participant = Participant::where('organization_id', $request->user()->organization_id)
             ->findOrFail($request->participantId());
@@ -229,6 +305,10 @@ class EventParticipantController extends Controller
             $sourcePath,
             $idempotencyKey,
         );
+
+        if ($request->expectsJson()) {
+            return response()->json(['data' => $transfers->status($transfer)], $transfer->wasRecentlyCreated ? 202 : 200);
+        }
 
         if ($transfer->isSuccessful()) {
             $response = redirect()->back();

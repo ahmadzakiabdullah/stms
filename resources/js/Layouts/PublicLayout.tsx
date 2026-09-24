@@ -20,7 +20,7 @@ type Props = {
 export default function PublicLayout({ children, title, appName, current, description, canonical, image = '/images/banner/banner-saf-20-2026.jpeg' }: Props) {
     const { t, locale } = useI18n();
     const loading = usePageLoading();
-    const { settings = {} } = usePage<PageProps & { settings?: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings }>().props;
+    const { settings = {}, session_branding = { logo_url: null, inverse_logo_url: null } } = usePage<PageProps & { settings?: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings; session_branding?: { logo_url?: string | null; inverse_logo_url?: string | null } }>().props;
     const metaDescription = (description || title).trim().replace(/\s+/g, ' ').slice(0, 160);
     const socialImage = image && (typeof window !== 'undefined' ? new URL(image, window.location.origin).toString() : image);
     const socialLocale = locale === 'ms' ? 'ms_MY' : 'en_US';
@@ -48,11 +48,11 @@ export default function PublicLayout({ children, title, appName, current, descri
             <a href="#public-content" className="sr-only z-[100] rounded-md bg-background px-4 py-2 text-sm font-semibold text-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:outline-none focus:ring-2 focus:ring-ring">
                 {t('Skip to content')}
             </a>
-            <PublicHeader appName={appName} settings={settings} current={current} />
+            <PublicHeader appName={appName} settings={settings} sessionBranding={session_branding} current={current} />
             <div id="public-content" tabIndex={-1} aria-busy={loading}>
                 {children}
             </div>
-            <PublicFooter appName={appName} settings={settings} />
+            <PublicFooter appName={appName} settings={settings} sessionBranding={session_branding} />
         </div>
     </>;
 }

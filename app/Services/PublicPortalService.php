@@ -30,7 +30,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v10:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v11:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::flexible($cacheKey, [120, 600], function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -45,7 +45,7 @@ class PublicPortalService
     {
         $session = $this->publicSession();
         if (! $session) {
-            return ['app_name' => config('app.name'), 'competition' => null];
+            return ['app_name' => config('app.name'), 'session_branding' => ['logo_url' => null, 'inverse_logo_url' => null], 'competition' => null];
         }
 
         $appName = Setting::query()
@@ -55,6 +55,10 @@ class PublicPortalService
 
         return [
             'app_name' => filled($appName) ? $appName : config('app.name'),
+            'session_branding' => [
+                'logo_url' => $session->logo_url,
+                'inverse_logo_url' => $session->inverse_logo_url,
+            ],
             'competition' => [
                 'name' => $session->name,
                 'organization' => $session->organization?->name,
@@ -77,6 +81,7 @@ class PublicPortalService
                 Cache::forget('public-portal:v8:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v9:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v10:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v11:'.$sessionId.':'.$limit);
             }
             Cache::forget('public-athletes:v1:'.$sessionId);
             Cache::forget('public-athletes:v2:'.$sessionId);
@@ -541,6 +546,10 @@ class PublicPortalService
 
         return [
             'app_name' => filled($portalSettings['app_name'] ?? null) ? $portalSettings['app_name'] : config('app.name'),
+            'session_branding' => [
+                'logo_url' => $session->logo_url,
+                'inverse_logo_url' => $session->inverse_logo_url,
+            ],
             'competition' => ['name' => $session->name, 'description' => $session->description,
                 'start_date' => $session->start_date?->toDateString(), 'end_date' => $session->end_date?->toDateString(),
                 'organization' => $session->organization?->name],
@@ -646,7 +655,7 @@ class PublicPortalService
 
     private function emptyData(): array
     {
-        return ['app_name' => config('app.name'), 'competition' => null, 'stats' => ['sports' => 0, 'events' => 0, 'faculties' => 0, 'completed_matches' => 0, 'total_matches' => 0],
+        return ['app_name' => config('app.name'), 'session_branding' => ['logo_url' => null, 'inverse_logo_url' => null], 'competition' => null, 'stats' => ['sports' => 0, 'events' => 0, 'faculties' => 0, 'completed_matches' => 0, 'total_matches' => 0],
             'sports' => [], 'sports_catalog' => [], 'faculties' => [], 'venues' => [], 'upcoming' => [], 'results' => [], 'medals' => [],
             'contact' => $this->contactData([]), 'updated_at' => now()->toIso8601String(),
             'weather' => $this->weatherService->current()];

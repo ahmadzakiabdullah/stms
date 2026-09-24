@@ -1,8 +1,9 @@
 import PublicLayout from '@/Layouts/PublicLayout';
-import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
+import SafeImage from '@/components/SafeImage';
 import { useI18n } from '@/lib/i18n';
-import { Users } from 'lucide-react';
+import { type PageProps } from '@/types';
+import { usePage } from '@inertiajs/react';
 
 type Props = {
     app_name: string;
@@ -96,43 +97,62 @@ const committeeMembers = [
 
 export default function PublicCommittee({ app_name, competition, updated_at }: Props) {
     const { t, locale } = useI18n();
+    const { settings = {}, session_branding: sessionBranding = { logo_url: null, inverse_logo_url: null } } = usePage<PageProps & {
+        settings?: { logo_url?: string | null; inverse_logo_url?: string | null };
+        session_branding?: { logo_url?: string | null; inverse_logo_url?: string | null };
+    }>().props;
     const isMalay = locale === 'ms';
     const title = isMalay ? 'JAWATANKUASA INDUK & JAWATANKUASA STAF (PENYELARAS)' : 'MAIN COMMITTEE & STAFF COMMITTEE (COORDINATORS)';
+    const organizationLogo = settings.logo_url ?? settings.inverse_logo_url;
+    const sessionLogo = sessionBranding.logo_url ?? sessionBranding.inverse_logo_url;
 
     return (
         <PublicLayout title={`${title} | ${competition?.name || app_name}`} appName={app_name} current="information" description={t('Committee information for the faculty sports championship.')} canonical={route('public.committee')}>
             <main>
-                <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={title} intro={isMalay ? 'KEJOHANAN SUKAN ANTARA FAKULTI KALI KE-19, 2025' : '19TH INTER-FACULTY SPORTS CHAMPIONSHIP, 2025'} icon={<Users className="size-4" />} />
-                <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+                <div className="mx-auto max-w-5xl px-4 pb-12 pt-32 sm:px-6 sm:pb-16 sm:pt-40">
                     <div className="mb-6 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>
-                    <div className="grid gap-6 lg:grid-cols-2">
-                        {committeeGroups.map(group => <CommitteeCard key={group.title} group={group} locale={locale} />)}
-                    </div>
-                    <section className="public-card mt-8 p-6 sm:p-8">
-                        <h2 className="text-2xl font-black text-[var(--public-text)]">{isMalay ? 'PEGAWAI KANAN UNIVERSITI DAN WAKIL FAKULTI' : 'SENIOR UNIVERSITY OFFICERS AND FACULTY REPRESENTATIVES'}</h2>
-                        <div className="mt-6 divide-y divide-[var(--public-dark-border)]">
+                    <article className="public-card p-6 sm:p-10 lg:p-14">
+                        <header className="text-center">
+                            {(organizationLogo || sessionLogo) && <div className="flex items-center justify-center gap-4 sm:gap-6">
+                                {organizationLogo && <SafeImage src={organizationLogo} alt="" className="h-14 w-auto max-w-[10rem] object-contain sm:h-16" />}
+                                {organizationLogo && sessionLogo && <span aria-hidden="true" className="h-12 w-px bg-[var(--public-dark-border)]" />}
+                                {sessionLogo && <SafeImage src={sessionLogo} alt="" className="h-14 w-auto max-w-[10rem] object-contain sm:h-16" />}
+                            </div>}
+                            <p className="mt-7 text-sm font-black uppercase tracking-[.12em] text-[var(--public-primary)]">{title}</p>
+                            <h1 className="mx-auto mt-4 max-w-3xl text-2xl font-black uppercase leading-tight text-[var(--public-text)] sm:text-3xl">{isMalay ? 'JAWATANKUASA INDUK & JAWATANKUASA STAF (PENYELARAS)' : 'MAIN COMMITTEE & STAFF COMMITTEE (COORDINATORS)'}</h1>
+                            <p className="mt-3 text-sm font-semibold uppercase tracking-wide text-[var(--public-dark-faint)]">{competition?.name || app_name}</p>
+                        </header>
+
+                        <div className="mt-10 divide-y divide-[var(--public-dark-border)] border-y border-[var(--public-dark-border)]">
+                            {committeeGroups.map(group => <CommitteeRow key={group.title} group={group} locale={locale} />)}
+                        </div>
+                        <section className="mt-10 border-t border-[var(--public-dark-border)] pt-8">
+                        <h2 className="text-xl font-black uppercase text-[var(--public-text)]">{isMalay ? 'PEGAWAI KANAN UNIVERSITI DAN WAKIL FAKULTI' : 'SENIOR UNIVERSITY OFFICERS AND FACULTY REPRESENTATIVES'}</h2>
+                        <div className="mt-5 divide-y divide-[var(--public-dark-border)]">
                             {universityRepresentatives.map(person => <PersonRow key={person.name} person={person} locale={locale} />)}
                         </div>
-                    </section>
-                    <section className="public-card mt-8 p-6 sm:p-8">
-                        <h2 className="text-2xl font-black text-[var(--public-text)]">{isMalay ? 'AHLI JAWATANKUASA' : 'COMMITTEE MEMBERS'}</h2>
-                        <ol className="mt-6 grid gap-x-8 gap-y-3 pl-6 leading-7 text-[var(--public-dark-faint)] marker:font-black marker:text-[var(--public-primary)] lg:grid-cols-2">
+                        </section>
+                        <section className="mt-10 border-t border-[var(--public-dark-border)] pt-8">
+                        <h2 className="text-xl font-black uppercase text-[var(--public-text)]">{isMalay ? 'AHLI JAWATANKUASA' : 'COMMITTEE MEMBERS'}</h2>
+                        <ol className="mt-5 grid gap-x-8 gap-y-2 pl-6 leading-7 text-[var(--public-dark-faint)] marker:font-black marker:text-[var(--public-primary)] lg:grid-cols-2">
                             {committeeMembers.map(member => <li key={member} className="pl-2">{localizeCommitteeMember(member, locale)}</li>)}
                         </ol>
-                    </section>
+                        </section>
+                    </article>
                 </div>
             </main>
         </PublicLayout>
     );
 }
 
-function CommitteeCard({ group, locale }: { group: CommitteeGroup; locale: string }) {
-    return <section className="public-card p-6 sm:p-8">
-        <h2 className="text-lg font-black text-[var(--public-text)]">{localizeCommitteeTitle(group.title, locale)}</h2>
-        <div className="mt-4 divide-y divide-[var(--public-dark-border)]">
+function CommitteeRow({ group, locale }: { group: CommitteeGroup; locale: string }) {
+    return <div className="grid gap-3 py-5 md:grid-cols-[14rem_1.25rem_minmax(0,1fr)] md:gap-4">
+        <h2 className="font-semibold leading-6 text-[var(--public-text)]">{localizeCommitteeTitle(group.title, locale)}</h2>
+        <span className="hidden font-semibold text-[var(--public-primary)] md:block">:</span>
+        <div className="min-w-0">
             {group.people.map(person => <PersonRow key={person.name} person={person} locale={locale} />)}
         </div>
-    </section>;
+    </div>;
 }
 
 function PersonRow({ person, locale }: { person: Person; locale: string }) {

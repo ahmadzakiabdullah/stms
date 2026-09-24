@@ -35,12 +35,12 @@ class SettingController extends Controller
                 'secretariat_instagram_url' => $settings['secretariat_instagram_url'] ?? '',
                 'secretariat_tiktok_url' => $settings['secretariat_tiktok_url'] ?? '',
                 'secretariat_youtube_url' => $settings['secretariat_youtube_url'] ?? '',
-                'public_theme_dark' => $settings['public_theme_dark'] ?? '#071B33',
-                'public_theme_primary' => $settings['public_theme_primary'] ?? '#0057A8',
-                'public_theme_accent' => $settings['public_theme_accent'] ?? '#20B8E6',
-                'public_theme_highlight' => $settings['public_theme_highlight'] ?? '#F4B942',
-                'public_theme_background' => $settings['public_theme_background'] ?? '#F4F7FA',
-                'public_theme_text' => $settings['public_theme_text'] ?? '#102A43',
+                'public_theme_dark' => $settings['public_theme_dark'] ?? '#09091A',
+                'public_theme_primary' => $settings['public_theme_primary'] ?? '#3020A8',
+                'public_theme_accent' => $settings['public_theme_accent'] ?? '#F21D32',
+                'public_theme_highlight' => $settings['public_theme_highlight'] ?? '#FF8614',
+                'public_theme_background' => $settings['public_theme_background'] ?? '#F7F6FC',
+                'public_theme_text' => $settings['public_theme_text'] ?? '#17132F',
             ],
         ]);
     }

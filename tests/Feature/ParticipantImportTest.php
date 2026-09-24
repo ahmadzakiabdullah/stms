@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
@@ -119,6 +120,18 @@ class ParticipantImportTest extends TestCase
             'participant_type' => 'individual',
             'status' => 'confirmed',
         ]);
+
+        $summary = Activity::query()
+            ->where('event', 'bulk_imported')
+            ->where('subject_type', Organization::class)
+            ->where('subject_id', $org->id)
+            ->firstOrFail();
+
+        $this->assertSame('participants.import_confirm', $summary->properties['bulk_action']);
+        $this->assertSame(2, $summary->properties['selected_count']);
+        $this->assertSame(2, $summary->properties['created_count']);
+        $this->assertSame($session->id, $summary->properties['session_id']);
+        $this->assertNotEmpty($summary->properties['bulk_action_id']);
     }
 
     public function test_import_confirm_rejects_expired_or_unknown_token(): void

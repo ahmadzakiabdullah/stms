@@ -102,13 +102,24 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Competition data unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <section className="relative isolate overflow-hidden bg-[var(--public-dark)] pb-16 pt-32 text-white sm:pb-20 sm:pt-40">
                     <CosmicBackground />
-                    <div className="mx-auto grid min-h-[520px] max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.08fr_.92fr] xl:gap-20">
+                    <figure className="mx-auto max-w-7xl overflow-hidden rounded-[1.5rem] border border-white/15 bg-white/[.07] shadow-2xl">
+                        <SafeImage
+                            src="/images/banner/banner-saf-20-2026.jpeg"
+                            alt={competition?.name ? `${t('Official banner')} — ${competition.name}` : t('Official banner')}
+                            className="max-h-64 w-full object-cover object-top sm:max-h-96 lg:max-h-[30rem]"
+                            loading="eager"
+                            decoding="async"
+                            fetchPriority="high"
+                            fallback={<div role="img" data-image-fallback="official-banner" aria-label={t('Official banner')} className="flex min-h-40 items-center justify-center bg-[var(--public-dark)] px-6 text-center text-sm font-black text-white/75 sm:min-h-56">{t('Official banner')}</div>}
+                        />
+                    </figure>
+                    <div className="mx-auto mt-10 grid min-h-[520px] max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.08fr_.92fr] xl:gap-20">
                         <div className="relative z-10 max-w-3xl">
                             <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.24em] text-[var(--public-accent)] sm:text-xs">
                                 <span className="h-px w-8 bg-[var(--public-accent)]" />
                                 {competition?.organization || t('Universiti Teknikal Malaysia Melaka')}
                             </p>
-                            <h1 className="mt-6 max-w-2xl text-4xl font-black leading-[1.02] tracking-[-.04em] text-balance sm:text-6xl xl:text-7xl">{competition?.name || app_name}</h1>
+                            <h1 className="mt-6 max-w-[42rem] text-3xl font-black leading-[1.04] tracking-[-.035em] text-balance sm:text-5xl lg:text-6xl xl:text-6xl">{competition?.name || app_name}</h1>
                             <p className="mt-6 max-w-xl text-base leading-7 text-white/65 sm:text-lg">{competition?.description || t('Follow schedules, latest results and medal standings in one official view.')}</p>
                             <div className="mt-8 flex flex-wrap items-center gap-3">
                                 <Button asChild size="lg" className="public-cosmic-bezel min-h-11 bg-[var(--public-highlight)] px-5 text-sm font-black text-[var(--public-dark)] hover:brightness-105 sm:min-h-11">
@@ -145,17 +156,6 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                 </section>
 
                 <section aria-label={competition?.name || app_name} className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 sm:pt-16">
-                    <figure className="overflow-hidden rounded-[1.75rem] border border-[var(--public-dark-border)] shadow-[0_32px_80px_-48px_rgba(7,27,51,.9)]">
-                        <SafeImage
-                            src="/images/banner/banner-saf-20-2026.jpeg"
-                            alt={competition?.name ? `${t('Official banner')} — ${competition.name}` : t('Official banner')}
-                            className="max-h-56 w-full object-cover object-top sm:max-h-80 lg:max-h-[26rem]"
-                            loading="eager"
-                            decoding="async"
-                            fetchPriority="high"
-                            fallback={<div role="img" data-image-fallback="official-banner" aria-label={t('Official banner')} className="flex min-h-56 items-center justify-center bg-[var(--public-dark)] px-6 text-center text-sm font-black text-white/75 sm:min-h-80 lg:min-h-[26rem]">{t('Official banner')}</div>}
-                        />
-                    </figure>
                     {liveMatches.length > 0 && (
                         <Link href={route('public.schedule')} className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-black text-red-700 transition hover:border-red-300 hover:bg-red-100">
                             <span className="inline-flex items-center gap-2"><span className="size-2 animate-pulse rounded-full bg-red-500" />{liveMatches.length} {t('Live')} {t('matches')}</span>

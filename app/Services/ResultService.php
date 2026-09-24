@@ -70,6 +70,7 @@ class ResultService
             }
 
             $this->ensureRelationsBelongToOrganization($data, $organization->id);
+            $this->validateScoringProfile($data);
             $data['status'] = Result::STATUS_SUBMITTED;
             $data['submitted_by'] = auth()->id();
             $data['submitted_at'] = now();
@@ -103,6 +104,7 @@ class ResultService
             }
             $data['organization_id'] = $organization->id;
             $this->ensureRelationsBelongToOrganization($data, $organization->id, $result);
+            $this->validateScoringProfile($data, $result);
             $scoringEvents = $data['scoring_events'] ?? null;
             unset($data['scoring_events']);
             $result->update($data);
@@ -298,6 +300,30 @@ class ResultService
         }
     }
 
+    protected function validateScoringProfile(array $data, ?Result $result = null): void
+    {
+        $matchId = $data['match_id'] ?? $result?->match_id;
+        if (! $matchId) {
+            return;
+        }
+
+        $match = Fixture::query()->with('event.sport')->find($matchId);
+        $profile = $match?->event?->sport?->scoring_profile ?? [];
+        $scoreHome = array_key_exists('score_home', $data) ? $data['score_home'] : $result?->score_home;
+        $scoreAway = array_key_exists('score_away', $data) ? $data['score_away'] : $result?->score_away;
+
+        if (isset($profile['max_score'])) {
+            $maxScore = (int) $profile['max_score'];
+            if (($scoreHome !== null && (int) $scoreHome > $maxScore) || ($scoreAway !== null && (int) $scoreAway > $maxScore)) {
+                throw ValidationException::withMessages(['score_home' => "Scores cannot exceed {$maxScore} for this sport."]);
+            }
+        }
+
+        if (($profile['allow_draw'] ?? true) === false && $scoreHome !== null && $scoreAway !== null && (int) $scoreHome === (int) $scoreAway) {
+            throw ValidationException::withMessages(['score_away' => 'Draw results are not allowed for this sport.']);
+        }
+    }
+
     /** @param array<int, array<string, mixed>> $events */
     protected function syncScoringEvents(Organization $organization, Result $result, array $events): void
     {
@@ -310,6 +336,8 @@ class ResultService
             return;
         }
 
+        $allowedEventTypes = $match->event?->sport?->scoring_profile['scoring_event_types'] ?? ['goal'];
+        $allowedEventTypes = collect($allowedEventTypes)->filter()->values()->all() ?: ['goal'];
         $homeId = $match->home_participant_id;
         $awayId = $match->away_participant_id;
         $allowedParticipantIds = collect([$homeId, $awayId])->filter()->values();
@@ -337,6 +365,11 @@ class ResultService
             }
 
             $points = 1;
+            $eventType = $event['event_type'] ?? $allowedEventTypes[0];
+            if (! in_array($eventType, $allowedEventTypes, true)) {
+                throw ValidationException::withMessages(['scoring_events' => 'Scoring event type is not enabled for this sport.']);
+            }
+
             $totals[$participantId] = ($totals[$participantId] ?? 0) + $points;
             $rows[] = [
                 'organization_id' => $organization->id,
@@ -344,7 +377,7 @@ class ResultService
                 'match_id' => $match->id,
                 'participant_id' => $participantId,
                 'squad_member_id' => $member->id,
-                'event_type' => $event['event_type'] ?? 'goal',
+                'event_type' => $eventType,
                 'period' => $event['period'] ?? null,
                 'minute' => $event['minute'] ?? null,
                 'second' => $event['second'] ?? null,

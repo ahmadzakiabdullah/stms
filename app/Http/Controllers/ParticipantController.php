@@ -11,10 +11,12 @@ use App\Http\Requests\Participant\UpdateParticipantRequest;
 use App\Http\Requests\QueueParticipantImportRequest;
 use App\Imports\ParticipantsImport;
 use App\Models\DataTransfer;
+use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
 use App\Services\DataTransferService;
 use App\Services\ParticipantLogoService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -246,12 +248,29 @@ class ParticipantController extends Controller
 
         Cache::forget($key);
 
+        $organization = Organization::withoutGlobalScopes()->find($payload['organization_id']);
+        if ($organization) {
+            activity()
+                ->performedOn($organization)
+                ->causedBy($user)
+                ->event('bulk_imported')
+                ->withProperties([
+                    'bulk_action_id' => (string) Str::uuid(),
+                    'bulk_action' => 'participants.import_confirm',
+                    'selected_count' => count($payload['rows']),
+                    'created_count' => $created,
+                    'session_id' => $payload['session_id'] ?? null,
+                    'row_numbers' => collect($payload['rows'])->pluck('row_number')->values()->all(),
+                ])
+                ->log('Participants imported by bulk action');
+        }
+
         Log::info('Participants imported', ['org_id' => $payload['organization_id'], 'count' => $created]);
 
         return redirect()->back()->with('success', "{$created} participant(s) imported.");
     }
 
-    public function queueImport(QueueParticipantImportRequest $request, DataTransferService $transfers): RedirectResponse
+    public function queueImport(QueueParticipantImportRequest $request, DataTransferService $transfers): JsonResponse|RedirectResponse
     {
         Gate::authorize('create', Participant::class);
 
@@ -276,6 +295,10 @@ class ParticipantController extends Controller
             'participants-preview:'.$token,
         );
         Cache::forget($key);
+
+        if ($request->expectsJson()) {
+            return response()->json(['data' => $transfers->status($transfer)], $transfer->wasRecentlyCreated ? 202 : 200);
+        }
 
         if ($transfer->isSuccessful()) {
             return redirect()->back()->with('success', "{$transfer->processed} participant(s) imported.")

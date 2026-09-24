@@ -32,7 +32,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
 import ParticipantLogo from '@/components/ParticipantLogo';
 import { Head, Link, router } from '@inertiajs/react';
-import { Download, FileText, Plus, Search, Trash2, Upload, Users } from 'lucide-react';
+import { ArrowRight, CalendarClock, CheckCircle2, CircleAlert, Clock3, Download, FileText, Plus, Search, ShieldCheck, Trash2, Trophy, Upload, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { Event, EventParticipant, Participant, SportCategory, SquadMember } from '@/types';
 import { useI18n } from '@/lib/i18n';
@@ -44,7 +44,11 @@ interface FacultyDashboardProps {
         squad_members?: SquadMember[];
     })[];
     totals: { male: number; female: number; officials: number };
-    availableEvents: (Event & { sport?: { name: string }; sport_category?: { name: string }; tournament?: { name: string } })[];
+    eventRegistrationDeadline?: string | null;
+    eventRegistrationStartDate?: string | null;
+    squadRegistrationStartDate?: string | null;
+    squadRegistrationDeadline?: string | null;
+    availableEvents: (Event & { sport?: { name: string }; sport_category?: { name: string }; tournament?: { name: string }; registration_deadline?: string | null })[];
     sportCategories: (SportCategory & { sport?: { name: string } })[];
 }
 
@@ -93,6 +97,10 @@ export default function FacultyDashboard({
     participant,
     registrations,
     totals,
+    eventRegistrationDeadline = null,
+    eventRegistrationStartDate = null,
+    squadRegistrationStartDate = null,
+    squadRegistrationDeadline = null,
     availableEvents,
     sportCategories,
 }: FacultyDashboardProps) {
@@ -243,6 +251,31 @@ export default function FacultyDashboard({
         return g;
     }, [filteredUnregEvents]);
 
+    const pendingRegistrations = registrations.filter((registration) => registration.status === 'pending');
+    const confirmedRegistrations = registrations.filter((registration) => registration.status === 'confirmed');
+    const rejectedRegistrations = registrations.filter((registration) => ['rejected', 'disqualified'].includes(registration.status));
+    const incompleteRegistrations = confirmedRegistrations.filter((registration) => {
+        const quota = getQuota(registration);
+        const athletesComplete = quota.isTotalBased
+            ? quota.currentAthletes >= quota.totalAthletes
+            : (quota.male === 0 || quota.currentMale >= quota.male) && (quota.female === 0 || quota.currentFemale >= quota.female);
+        return !athletesComplete || quota.currentOfficials < quota.officials;
+    });
+    const effectiveEventDeadline = eventRegistrationDeadline ?? availableEvents.find((event) => event.registration_deadline)?.registration_deadline ?? null;
+    const effectiveSquadDeadline = squadRegistrationDeadline;
+    const upcomingDeadlines = availableEvents
+        .filter(() => effectiveEventDeadline && new Date(effectiveEventDeadline).getTime() >= Date.now())
+        .slice(0, 3);
+    const formatDeadline = (deadline: string | null | undefined) => deadline
+        ? new Intl.DateTimeFormat('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(deadline))
+        : t('No deadline set');
+    const today = new Date();
+    const eventWindowOpen = (!eventRegistrationStartDate || new Date(eventRegistrationStartDate) <= today)
+        && (!effectiveEventDeadline || new Date(effectiveEventDeadline) >= today);
+    const squadWindowOpen = Boolean(squadRegistrationStartDate && new Date(squadRegistrationStartDate) <= today
+        && effectiveSquadDeadline && new Date(effectiveSquadDeadline) >= today);
+    const confirmedCount = confirmedRegistrations.length;
+
     return (
         <AuthenticatedLayout
             header={
@@ -279,7 +312,47 @@ export default function FacultyDashboard({
                     </CardContent>
                 </Card>
             ) : (
-                <>
+                <div className="space-y-6">
+                    <section className="relative overflow-hidden rounded-2xl border bg-slate-950 text-white shadow-sm">
+                        <div className="absolute -right-20 -top-24 size-64 rounded-full bg-primary/25 blur-3xl" />
+                        <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+                            <div>
+                                <div className="mb-3 flex flex-wrap items-center gap-2">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-slate-200">
+                                        <ShieldCheck className="size-3.5" /> {t('Faculty registration workspace')}
+                                    </span>
+                                    <Badge className={eventWindowOpen ? 'border-emerald-400/30 bg-emerald-400/15 text-emerald-200' : 'border-amber-400/30 bg-amber-400/15 text-amber-200'}>
+                                        {eventWindowOpen ? t('Event registration open') : t('Event registration closed')}
+                                    </Badge>
+                                </div>
+                                <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('Prepare your faculty team')}</h2>
+                                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">{t('Register events first, follow Dean approval, then complete your officials and athletes within the squad registration window.')}</p>
+                                <div className="mt-5 flex flex-wrap gap-2">
+                                    <Button asChild className="bg-white text-slate-950 hover:bg-slate-100">
+                                        <Link href={route('faculty.register-events')}><Plus className="mr-2 size-4" />{t('Register Events')}</Link>
+                                    </Button>
+                                    <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                                        <Link href="#my-registrations">{t('View My Registrations')}<ArrowRight className="ml-2 size-4" /></Link>
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                                {[
+                                    { label: t('Choose events'), done: registrations.length > 0, active: eventWindowOpen },
+                                    { label: t('Dean approval'), done: confirmedCount > 0, active: pendingRegistrations.length > 0 },
+                                    { label: t('Complete squad'), done: incompleteRegistrations.length === 0 && confirmedCount > 0, active: squadWindowOpen },
+                                ].map((step, index) => (
+                                    <div key={step.label} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                                        <span className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${step.done ? 'bg-emerald-400/20 text-emerald-200' : step.active ? 'bg-primary/30 text-primary-foreground' : 'bg-white/10 text-slate-400'}`}>
+                                            {step.done ? <CheckCircle2 className="size-4" /> : `0${index + 1}`}
+                                        </span>
+                                        <span className="text-sm font-medium text-slate-200">{step.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
                     <div className="grid gap-4 md:grid-cols-4">
                         <Card>
                             <CardHeader className="pb-2">
@@ -307,8 +380,64 @@ export default function FacultyDashboard({
                         </Card>
                     </div>
 
-                    <div className="mt-6 grid gap-6 xl:grid-cols-2">
-                        <Card className="xl:col-span-2">
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="flex items-center gap-2 text-base"><Clock3 className="size-4 text-primary" />{t('Registration windows')}</CardTitle>
+                            <CardDescription>{t('Dates apply to all sports and events in this session.')}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-lg border p-3">
+                                <p className="text-xs font-medium text-muted-foreground">{t('Event registration')}</p>
+                                <p className="mt-1 text-sm font-semibold">{eventRegistrationStartDate ? formatDeadline(eventRegistrationStartDate) : t('Open now')} → {formatDeadline(effectiveEventDeadline)}</p>
+                            </div>
+                            <div className="rounded-lg border p-3">
+                                <p className="text-xs font-medium text-muted-foreground">{t('Officials and athletes')}</p>
+                                <p className="mt-1 text-sm font-semibold">{squadRegistrationStartDate ? formatDeadline(squadRegistrationStartDate) : t('After event registration')} → {formatDeadline(effectiveSquadDeadline)}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">{t('Dean approval is required before this phase opens.')}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {(pendingRegistrations.length > 0 || incompleteRegistrations.length > 0 || rejectedRegistrations.length > 0) && (
+                        <section className="grid gap-3 md:grid-cols-3" aria-labelledby="faculty-actions-title">
+                            <h2 id="faculty-actions-title" className="sr-only">{t('Next steps')}</h2>
+                            {pendingRegistrations.length > 0 && (
+                                <Link href={route('participation-confirmations.index')} className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 transition hover:bg-amber-100">
+                                    <CircleAlert className="size-5 shrink-0 text-amber-700" />
+                                    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-amber-950">{pendingRegistrations.length} {t('registrations awaiting confirmation')}</span><span className="block text-xs text-amber-800">{t('Review your submission status')}</span></span>
+                                </Link>
+                            )}
+                            {incompleteRegistrations.length > 0 && (
+                                <button type="button" onClick={() => setActiveRegId(incompleteRegistrations[0].id)} className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:bg-blue-100">
+                                    <Users className="size-5 shrink-0 text-blue-700" />
+                                    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-blue-950">{incompleteRegistrations.length} {t('squads need attention')}</span><span className="block text-xs text-blue-800">{t('Complete athletes and officials')}</span></span>
+                                </button>
+                            )}
+                            {rejectedRegistrations.length > 0 && (
+                                <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+                                    <CircleAlert className="size-5 shrink-0 text-rose-700" />
+                                    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-rose-950">{rejectedRegistrations.length} {t('registrations require review')}</span><span className="block text-xs text-rose-800">{t('Check the reason before re-registering')}</span></span>
+                                </div>
+                            )}
+                        </section>
+                    )}
+
+                    {upcomingDeadlines.length > 0 && (
+                        <Card>
+                            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><Clock3 className="size-4 text-amber-600" />{t('Upcoming registration deadlines')}</CardTitle><CardDescription>{t('Events that are closing soon')}</CardDescription></CardHeader>
+                            <CardContent className="grid gap-2 md:grid-cols-3">
+                                {upcomingDeadlines.map((event) => (
+                                    <div key={event.id} className="flex items-center gap-3 rounded-lg border p-3">
+                                        <CalendarClock className="size-4 shrink-0 text-muted-foreground" />
+                                        <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{event.name}</p><p className="text-xs text-muted-foreground">{t('Event registration closes')}: {formatDeadline(effectiveEventDeadline)}</p></div>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <div className="grid gap-6 xl:grid-cols-2">
+                        <Card id="my-registrations" className="scroll-mt-24 xl:col-span-2">
                             <CardHeader>
                                 <CardTitle>{t('My Registrations')}</CardTitle>
                                 <CardDescription>{t('Click to manage squad members for each event')}</CardDescription>
@@ -446,7 +575,7 @@ export default function FacultyDashboard({
                             </CardContent>
                         </Card>
                     </div>
-                </>
+                </div>
             )}
 
             {/* Register for Event Dialog */}
@@ -500,8 +629,11 @@ export default function FacultyDashboard({
                                             <span className="font-normal text-xs">({evts.length})</span>
                                         </div>
                                         {evts.map((evt) => {
-                                            const deadlinePassed = (evt as any).registration_deadline
-                                                ? new Date((evt as any).registration_deadline) < new Date()
+                                            const deadlinePassed = effectiveEventDeadline
+                                                ? new Date(effectiveEventDeadline) < new Date()
+                                                : false;
+                                            const registrationNotOpen = eventRegistrationStartDate
+                                                ? new Date(eventRegistrationStartDate) > new Date()
                                                 : false;
 
                                             return (
@@ -518,17 +650,19 @@ export default function FacultyDashboard({
                                                         value={evt.id}
                                                         checked={selectedEventIds.includes(evt.id)}
                                                         onChange={() => toggleEvent(evt.id)}
-                                                        disabled={deadlinePassed}
+                                                        disabled={deadlinePassed || registrationNotOpen}
                                                         className="size-4"
                                                     />
-                                                    <span className="text-lg">
-                                                        {evt.sport?.name === 'Badminton' ? '🏸' : evt.sport?.name === 'Football' ? '⚽' : evt.sport?.name === 'Basketball' ? '🏀' : '🏅'}
+                                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+                                                        <Trophy className="size-4" />
                                                     </span>
                                                     <div className="min-w-0 flex-1">
                                                         <div className="truncate">{evt.sport?.name} — {evt.sport_category?.name}</div>
                                                         <div className="text-xs text-muted-foreground truncate">{evt.name}</div>
-                                                        {deadlinePassed && (
-                                                            <span className="text-xs text-destructive">(Deadline passed)</span>
+                                                        {(deadlinePassed || registrationNotOpen) && (
+                                                            <span className={`text-xs ${registrationNotOpen ? 'text-amber-700' : 'text-destructive'}`}>
+                                                                ({registrationNotOpen ? `${t('Opens')} ${formatDeadline(eventRegistrationStartDate)}` : t('Deadline passed')})
+                                                            </span>
                                                         )}
                                                     </div>
                                                 </label>

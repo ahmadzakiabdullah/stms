@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
+use App\Models\DataTransfer;
 use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;
@@ -127,5 +128,57 @@ class ReportingDashboardTest extends TestCase
             ->where('operations.status', 'degraded')
             ->where('operations.queue.pending', 1)
             ->where('operations.queue.failed', 1));
+    }
+
+    public function test_reports_include_governance_comparison_export_retention_and_ownership(): void
+    {
+        $organization = Organization::factory()->create();
+        $otherOrganization = Organization::factory()->create();
+        $user = $this->createStaffUser($organization);
+
+        Fixture::factory()->create([
+            'organization_id' => $organization->id,
+            'status' => 'completed',
+            'updated_at' => now()->subDays(2),
+        ]);
+        Fixture::factory()->create([
+            'organization_id' => $organization->id,
+            'status' => 'completed',
+            'updated_at' => now()->subDays(10),
+        ]);
+        Result::factory()->forOrganization($organization)->create(['created_at' => now()->subDays(1)]);
+        Result::factory()->forOrganization($organization)->create(['created_at' => now()->subDays(9)]);
+
+        DataTransfer::factory()->create([
+            'organization_id' => $organization->id,
+            'type' => DataTransfer::TYPE_EXPORT_RESULTS,
+            'status' => DataTransfer::STATUS_COMPLETED,
+            'created_at' => now()->subDays(3),
+        ]);
+        DataTransfer::factory()->create([
+            'organization_id' => $organization->id,
+            'type' => DataTransfer::TYPE_EXPORT_FIXTURES,
+            'status' => DataTransfer::STATUS_FAILED,
+            'created_at' => now()->subDays(4),
+        ]);
+        DataTransfer::factory()->create([
+            'organization_id' => $otherOrganization->id,
+            'type' => DataTransfer::TYPE_EXPORT_RESULTS,
+            'status' => DataTransfer::STATUS_FAILED,
+            'created_at' => now()->subDays(1),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('reports.index'));
+
+        $response->assertOk()->assertInertia(fn ($page) => $page
+            ->where('governance.comparison.fixtures_completed_current', 1)
+            ->where('governance.comparison.fixtures_completed_previous', 1)
+            ->where('governance.comparison.results_recorded_current', 1)
+            ->where('governance.comparison.results_recorded_previous', 1)
+            ->where('governance.exports.total', 2)
+            ->where('governance.exports.completed', 1)
+            ->where('governance.exports.failed', 1)
+            ->where('governance.retention.backup_retention_days', (int) config('app.backup.retention_days', 14))
+            ->has('governance.ownership', 4));
     }
 }

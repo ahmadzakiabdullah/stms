@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **24 Sep 2026 — Student committee page redesign:** Menyamakan halaman Jawatankuasa Pelaksana dengan layout dokumen Jawatankuasa Induk, termasuk logo UTeM/SAF dan susunan jawatan dua kolum.
+
+- **24 Sep 2026 — Committee page redesign:** Menyusun semula Jawatankuasa Induk kepada layout dokumen berpusat dengan logo UTeM/SAF, jadual jawatan dua kolum, pegawai universiti dan senarai ahli jawatankuasa.
+
+- **24 Sep 2026 — General information prizes:** Menambah seksyen Hadiah pada Maklumat Am dengan tawaran 30 pingat emas, 30 perak dan 30 gangsa, serta terjemahan English.
+
+- **24 Sep 2026 — Public header hierarchy:** Mengalih keluar label “Official portal” dan menyusun logo UTeM + SAF di atas nama “Sukan Antara Fakulti”.
+
+- **24 Sep 2026 — Public header session logo:** Public header kini memaparkan logo organisasi UTeM dan logo SAF session secara bersebelahan, dengan divider dan inverse variant untuk latar gelap.
+
+- **24 Sep 2026 — Session branding:** Sessions kini menyokong upload logo standard dan inverse, dengan varian session digunakan pada public header/footer dan fallback kepada branding organisasi.
+
+- **24 Sep 2026 — Theme defaults propagation:** Selaraskan fallback backend dan migrasi setting lama supaya palet SAF baharu benar-benar dihantar ke public page, termasuk tenant yang sudah mempunyai rekod warna lama.
+
+- **24 Sep 2026 — SAF 20 visual theme:** Menyesuaikan default public theme dengan identiti banner SAF 20 2026 menggunakan midnight navy, biru elektrik/ungu, merah dan oren, serta latar kad yang lebih lembut.
+
+- **24 Sep 2026 — Hero poster:** Memindahkan poster rasmi SAF 20, 2026 ke hero homepage dalam format full-width, tepat di atas tajuk “Sukan Antara Fakulti”, dan menghapuskan paparan banner berulang selepas hero.
+
+- **23 Sep 2026 — Split registration windows:** Sessions now support separate start/end windows for event registration and officials/athletes registration. Faculty squad changes require Dean approval, a closed event-registration window, and an active squad-registration window.
+
+### 23 September 2026 — Centralize faculty registration deadline
+
+- Added a Session-level `registration_deadline` shared by all sports and events in the session.
+- Added the deadline field to Session create/edit UI and removed per-event deadline editing from the Events UI.
+- Faculty event registration now respects the Session deadline; squad registration/import requires both a confirmed event registration and a closed Session registration window.
+- Updated faculty registration UI to show the global deadline and use the Session deadline for event status display.
+
+### 22 September 2026 — Start bulk-action and ranking configurability hardening
+
+- Added a dedicated Form Request for Events batch deletion with required reason, UUID validation and batch size limits.
+- Updated the Events batch-delete flow with selected-event preview, mandatory operator reason, same-organization enforcement and activity-log summary metadata.
+- Updated Event Participants batch approve/reject with selected-registration preview, mandatory reject reason, mixed-organization protection and activity-log summary metadata.
+- Updated batch event registration with selected-event preview for eligible/already registered/deadline-passed events and activity-log summary metadata for registered/skipped outcomes.
+- Added activity-log summary metadata for participant import confirmation and event-registration CSV import, including created/error counts and failure reports.
+- Replaced free-text ranking tie-breaker entry with ordered, validated field selection for points, win-rate and medal-tally strategies.
+- Tightened ranking rule validation so points and win-rate tie-breakers cannot contain duplicate fields.
+- Added Event draw configuration for qualifiers per pool alongside format and pool size, including backend validation and Events list visibility.
+- Added configurable Sport scoring profiles with score unit, max score, draw policy and allowed individual scoring event types; result recording now enforces configured score limits, draw policy and event type allow-lists.
+- Added Reports governance panels for 7-day report comparison, 30-day export governance, retention/archive policy and data ownership, backed by tenant-scoped DataTransfer and activity metrics.
+- Added a post-MVP capability evaluation matrix covering REST API versioning, mobile/offline workflow, realtime updates, accreditation and analytics, including start triggers, MVP non-goals and sequencing guidance.
+- Switched Reports quick Excel exports to the queued DataTransfer flow with status polling, progress display, failure reporting and ready-file download links.
+- Switched participant and event-registration imports to queued DataTransfer UI flows with JSON queue responses, status polling, progress bars, failure reporting and refresh actions.
+- Added DataTransfer regression coverage for JSON queued participant and event-registration imports returning polling-ready transfer status payloads.
+- Added a read-only `stms:query-profile` Artisan command and performance documentation for collecting MySQL EXPLAIN evidence on representative public schedule, results, event-registration and Reports governance query paths.
+- Recorded live MySQL query-plan evidence for organization `utem`; representative paths returned low row counts with `ref`/`eq_ref` joins, so the query-budget P1 item is closed without adding speculative indexes.
+- Expanded the production operations runbook with incident evidence commands, rollback go/no-go checks, worker/scheduler supervision requirements, restore-drill records and release evidence pack guidance.
+- Recorded 23 September 2026 production preflight evidence: MySQL and public portal checks passed, health check showed healthy database/cache/queue/disk with no pending or failed jobs, and scheduler listed the five-minute health check; release remains blocked by production config enforcement, Redis, non-log mailer, scheduled backup and health monitoring activation.
+- Added `stms:production-smoke` for repeatable deployed HTTP smoke evidence, including homepage, `/up` and optional tokened `/health`; recorded partial production HTTP smoke evidence for `https://saf.utem.edu.my/` and `/up`, both returning HTTP 200.
+- Hardened production smoke URL parsing for pasted Markdown links and documented PHP cURL CA bundle requirements for TLS-verified smoke evidence.
+- Added regression coverage for missing reason, audited deletion/status/register summaries and mixed-organization rejection.
+- Verified PHP syntax for the changed PHP files and TypeScript typecheck; PHPUnit/Pint could not run in the current network vendor workspace because development binaries are not installed there.
+
 ### 22 September 2026 — Promote P2 product improvements into Reports and public schedule
 
 - Added a public schedule Calendar view, print action and print-friendly schedule header while keeping the existing list, filters and public schedule/result data contract.

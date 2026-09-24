@@ -201,8 +201,8 @@
   overflow: hidden;
   border: 1px solid var(--public-dark-border);
   border-radius: 1.5rem;
-  background: #fff;
-  box-shadow: 0 24px 70px -48px rgb(7 27 51 / .9);
+  background: linear-gradient(145deg, #fff 0%, color-mix(in srgb, var(--public-background) 72%, white) 100%);
+  box-shadow: 0 24px 70px -48px rgb(9 9 26 / .9);
   transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
 }
 
@@ -223,7 +223,7 @@
 
 .public-card:hover {
   border-color: var(--public-primary-border);
-  box-shadow: 0 24px 70px -48px rgb(7 27 51 / .9);
+  box-shadow: 0 24px 70px -48px rgb(9 9 26 / .9);
   transform: translateY(-.25rem);
 }
 

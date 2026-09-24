@@ -46,6 +46,11 @@ const sportSchema = z.object({
     name: z.string().min(1, 'Name is required').max(255),
     slug: z.string().min(1, 'Slug is required').regex(/^[a-zA-Z0-9_-]+$/, 'Slug must be alpha-numeric with dashes or underscores'),
     icon: z.string().optional().default(''),
+    scoring_mode: z.enum(['none', 'individual']).default('none'),
+    score_unit: z.string().optional().default('points'),
+    max_score: z.union([z.coerce.number().int().min(0).max(999), z.literal(''), z.literal(undefined)]).optional().transform(v => v === '' || v === undefined ? null : v),
+    allow_draw: z.boolean().default(true),
+    scoring_event_types: z.string().optional().default('goal'),
     is_active: z.boolean(),
 });
 
@@ -108,9 +113,9 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
 
     const sportForm = useForm<SportForm>({
         resolver: zodResolver(sportSchema),
-        defaultValues: { name: '', slug: '', icon: '', is_active: true },
+        defaultValues: { name: '', slug: '', icon: '', scoring_mode: 'none', score_unit: 'points', max_score: null, allow_draw: true, scoring_event_types: 'goal', is_active: true },
     });
-    const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = sportForm;
+    const { register, control, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = sportForm;
     const name = watch('name');
     const iconValue = watch('icon');
     const iconPreview = iconFile ? URL.createObjectURL(iconFile) : iconValue;
@@ -126,7 +131,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
         setServerError(null);
         setIconFile(null);
         autoSlugRef.current = true;
-        reset({ name: '', slug: '', icon: '', is_active: true });
+        reset({ name: '', slug: '', icon: '', scoring_mode: 'none', score_unit: 'points', max_score: null, allow_draw: true, scoring_event_types: 'goal', is_active: true });
         setOpen(true);
     };
 
@@ -135,7 +140,17 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
         setServerError(null);
         setIconFile(null);
         autoSlugRef.current = false;
-        reset({ name: sport.name, slug: sport.slug, icon: sport.icon || '', is_active: sport.is_active });
+        reset({
+            name: sport.name,
+            slug: sport.slug,
+            icon: sport.icon || '',
+            scoring_mode: sport.scoring_mode === 'individual' ? 'individual' : 'none',
+            score_unit: sport.scoring_profile?.score_unit ?? 'points',
+            max_score: sport.scoring_profile?.max_score ?? null,
+            allow_draw: sport.scoring_profile?.allow_draw ?? true,
+            scoring_event_types: sport.scoring_profile?.scoring_event_types?.join(', ') ?? 'goal',
+            is_active: sport.is_active,
+        });
         setOpen(true);
     };
 
@@ -154,6 +169,17 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
         fd.append('name', formData.name);
         fd.append('slug', formData.slug);
         fd.append('icon', formData.icon ?? '');
+        fd.append('scoring_mode', formData.scoring_mode);
+        fd.append('scoring_profile[score_unit]', formData.score_unit || 'points');
+        if (formData.max_score !== null && formData.max_score !== undefined) {
+            fd.append('scoring_profile[max_score]', String(formData.max_score));
+        }
+        fd.append('scoring_profile[allow_draw]', formData.allow_draw ? '1' : '0');
+        formData.scoring_event_types
+            .split(',')
+            .map((value) => value.trim())
+            .filter(Boolean)
+            .forEach((value, index) => fd.append(`scoring_profile[scoring_event_types][${index}]`, value));
         fd.append('is_active', formData.is_active ? '1' : '0');
         if (iconFile) {
             fd.append('icon_file', iconFile);
@@ -285,6 +311,16 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
     const toggleExpand = (id: string) => {
         setExpandedId(expandedId === id ? null : id);
     };
+    const scoringSummary = (sport: Sport) => {
+        const unit = sport.scoring_profile?.score_unit ?? 'points';
+        const max = sport.scoring_profile?.max_score;
+        const draw = sport.scoring_profile?.allow_draw === false ? 'no draws' : 'draws ok';
+        const events = sport.scoring_profile?.scoring_event_types?.length ? sport.scoring_profile.scoring_event_types.join(', ') : 'goal';
+
+        return sport.scoring_mode === 'individual'
+            ? `Individual ${unit}; events: ${events}${max !== null && max !== undefined ? `; max ${max}` : ''}; ${draw}`
+            : `Team ${unit}${max !== null && max !== undefined ? `; max ${max}` : ''}; ${draw}`;
+    };
     const uploadDocument = (event: FormEvent) => { event.preventDefault(); if (!documentSport || !documentFile) return; const fd = new FormData(); fd.append('title', documentTitle); fd.append('session_id', documentSession); fd.append('document', documentFile); fd.append('is_published', '1'); router.post(route('sports.documents.store', documentSport.slug), fd, { forceFormData: true, onSuccess: () => { setDocumentSport(null); router.reload({ only: ['sports'] }); } }); };
     const deleteDocument = (document: SportDocument) => setDeleteDocumentTarget(document);
     const confirmDeleteDocument = () => { if (!deleteDocumentTarget) return; router.delete(route('sports.documents.destroy', deleteDocumentTarget.id), { preserveScroll: true, onFinish: () => setDeleteDocumentTarget(null) }); };
@@ -324,6 +360,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                 <TableHead className="w-8" />
                                 <TableHead>{t('Name')}</TableHead>
                                 <TableHead>{t('Slug')}</TableHead>
+                                <TableHead>{t('Scoring')}</TableHead>
                                 <TableHead>{t('Categories')}</TableHead>
                                 <TableHead>{t('Status')}</TableHead>
                                 {isSuperAdmin && <TableHead className="text-right">{t('Actions')}</TableHead>}
@@ -332,7 +369,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                         <TableBody>
                             {sports.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={isSuperAdmin ? 6 : 5} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={isSuperAdmin ? 7 : 6} className="text-center text-muted-foreground">
                                         <EmptyState title={search ? t('No sports match your search.') : t('No sports yet.')} />
                                     </TableCell>
                                 </TableRow>
@@ -358,6 +395,9 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                         </TableCell>
                                         <TableCell>
                                             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{sport.slug}</code>
+                                        </TableCell>
+                                        <TableCell className="max-w-64 text-xs text-muted-foreground">
+                                            {scoringSummary(sport)}
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="secondary" className="text-xs">
@@ -388,7 +428,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                     </TableRow>
                                     {expandedId === sport.id && (
                                         <TableRow>
-                                            <TableCell colSpan={isSuperAdmin ? 6 : 5} className="bg-muted/30 p-0">
+                                            <TableCell colSpan={isSuperAdmin ? 7 : 6} className="bg-muted/30 p-0">
                                                 <div className="px-6 py-4">
                                                     <div className="flex items-center justify-between mb-3">
                                                          <h4 className="text-sm font-medium">{t('Categories')}</h4>
@@ -499,6 +539,46 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                         {t('Preview')}
                                     </div>
                                 )}
+                            </div>
+                            <div className="border-t pt-4">
+                                <h4 className="mb-3 text-sm font-medium">{t('Scoring Profile')}</h4>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="scoring_mode">{t('Scoring Mode')}</Label>
+                                        <Controller
+                                            control={control}
+                                            name="scoring_mode"
+                                            render={({ field }) => (
+                                                <Select value={field.value} onValueChange={field.onChange}>
+                                                    <SelectTrigger id="scoring_mode" className="h-9 w-full">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">{t('Team score only')}</SelectItem>
+                                                        <SelectItem value="individual">{t('Track individual scorers')}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="score_unit">{t('Score Unit')}</Label>
+                                        <Input id="score_unit" {...register('score_unit')} placeholder="points" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="max_score">{t('Max Score')}</Label>
+                                        <Input id="max_score" type="number" min="0" max="999" {...register('max_score')} placeholder={t('No limit')} />
+                                        {errors.max_score && <p className="text-sm text-destructive">{String(errors.max_score.message ?? '')}</p>}
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="scoring_event_types">{t('Scoring Event Types')}</Label>
+                                        <Input id="scoring_event_types" {...register('scoring_event_types')} placeholder="goal, penalty" />
+                                        <p className="text-xs text-muted-foreground">{t('Comma-separated keys for individual scoring events.')}</p>
+                                    </div>
+                                </div>
+                                <label className="mt-3 flex items-center gap-2 text-sm">
+                                    <input type="checkbox" {...register('allow_draw')} /> {t('Allow draw results')}
+                                </label>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="is_active">{t('Status')}</Label>

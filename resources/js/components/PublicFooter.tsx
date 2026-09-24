@@ -3,11 +3,11 @@ import { type PublicThemeSettings } from '@/lib/publicTheme';
 import { Link } from '@inertiajs/react';
 import SafeImage from '@/components/SafeImage';
 
-type Props = { appName: string; settings: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings };
+type Props = { appName: string; settings: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings; sessionBranding?: { logo_url?: string | null; inverse_logo_url?: string | null } };
 
-export default function PublicFooter({ appName, settings }: Props) {
+export default function PublicFooter({ appName, settings, sessionBranding }: Props) {
     const { t } = useI18n();
-    const logoUrl = settings.inverse_logo_url ?? settings.logo_url;
+    const logoUrl = sessionBranding?.inverse_logo_url ?? sessionBranding?.logo_url ?? settings.inverse_logo_url ?? settings.logo_url;
 
     return <footer className="bg-[var(--public-dark)] text-white/55">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr]">

@@ -7,11 +7,14 @@ use App\Models\DataTransfer;
 use App\Models\Event;
 use App\Models\Organization;
 use App\Models\Participant;
+use App\Models\Session;
 use App\Services\DataTransferService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
@@ -76,6 +79,67 @@ class DataTransferTest extends TestCase
         $transfer = DataTransfer::query()->firstOrFail();
         $this->assertSame(DataTransfer::TYPE_IMPORT_EVENT_PARTICIPANTS, $transfer->type);
         $this->assertNotNull($transfer->source_path);
+        Storage::disk('local')->assertExists($transfer->source_path);
+        Queue::assertPushed(ProcessDataTransfer::class, 1);
+    }
+
+    public function test_queue_participant_import_json_returns_transfer_status_for_polling(): void
+    {
+        Queue::fake();
+        Storage::fake('local');
+        $org = Organization::factory()->create();
+        $session = Session::factory()->create(['organization_id' => $org->id]);
+        $admin = $this->createOrgAdmin($org);
+        $token = (string) Str::uuid();
+
+        Cache::put("participants_import_{$admin->id}_{$token}", [
+            'organization_id' => $org->id,
+            'session_id' => $session->id,
+            'rows' => [
+                ['row_number' => 2, 'data' => ['name' => 'Faculty Queued', 'participant_type' => 'team']],
+            ],
+        ], now()->addMinutes(30));
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('participants.import.queue'), ['token' => $token])
+            ->assertStatus(202)
+            ->assertJsonPath('data.type', DataTransfer::TYPE_IMPORT_PARTICIPANTS)
+            ->assertJsonPath('data.status', DataTransfer::STATUS_PENDING)
+            ->assertJsonPath('data.progress', 0);
+
+        $transfer = DataTransfer::query()->findOrFail($response->json('data.id'));
+
+        $this->assertSame($org->id, $transfer->organization_id);
+        $this->assertSame($admin->uuid, $transfer->requested_by);
+        $this->assertSame(['session_id' => $session->id], $transfer->payload);
+        $this->assertNotNull($transfer->source_path);
+        Storage::disk('local')->assertExists($transfer->source_path);
+        $this->assertNull(Cache::get("participants_import_{$admin->id}_{$token}"));
+        Queue::assertPushed(ProcessDataTransfer::class, 1);
+    }
+
+    public function test_queue_event_participant_import_json_returns_transfer_status_for_polling(): void
+    {
+        Queue::fake();
+        Storage::fake('local');
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $participant = Participant::factory()->create(['organization_id' => $org->id]);
+
+        $response = $this->actingAs($admin)
+            ->postJson(route('event-participants.import.queue'), [
+                'participant_id' => $participant->id,
+                'file' => UploadedFile::fake()->createWithContent('registrations.csv', "event_name\nBadminton - Singles\n"),
+            ])
+            ->assertStatus(202)
+            ->assertJsonPath('data.type', DataTransfer::TYPE_IMPORT_EVENT_PARTICIPANTS)
+            ->assertJsonPath('data.status', DataTransfer::STATUS_PENDING)
+            ->assertJsonPath('data.progress', 0);
+
+        $transfer = DataTransfer::query()->findOrFail($response->json('data.id'));
+
+        $this->assertSame($admin->uuid, $transfer->requested_by);
+        $this->assertSame(['participant_id' => $participant->id], $transfer->payload);
         Storage::disk('local')->assertExists($transfer->source_path);
         Queue::assertPushed(ProcessDataTransfer::class, 1);
     }

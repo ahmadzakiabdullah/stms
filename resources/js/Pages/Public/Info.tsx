@@ -77,5 +77,9 @@ function GeneralInformation({ locale }: { locale: string }) {
                 <li className="pl-2">{isMalay ? 'Pertandingan sesuatu acara hanya akan dijalankan sekiranya penyertaan lebih 4 pasukan yang mengambil bahagian. (Merujuk kepada Peraturan Am SAF perkara 5.0.)' : 'An event will only be conducted if more than 4 teams take part. (Refer to SAF General Regulations, clause 5.0.)'}</li>
             </ol>
         </section>
+        <section className="mt-10 border-t border-[var(--public-dark-border)] pt-8">
+            <h3 className="text-xl font-black text-[var(--public-text)]">{isMalay ? 'HADIAH' : 'PRIZES'}</h3>
+            <p className="mt-4 leading-7 text-[var(--public-dark-faint)]">{isMalay ? 'Hadiah: Pingat – pingat yang ditawarkan sebanyak 30 Emas, 30 Perak dan 30 Gangsa.' : 'Prizes: Medals – a total of 30 Gold, 30 Silver and 30 Bronze medals are offered.'}</p>
+        </section>
     </article>;
 }

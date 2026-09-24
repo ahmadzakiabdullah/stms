@@ -19,8 +19,10 @@ Jika nombor atau status bercanggah, sumber bertarikh paling baharu menang; dakwa
 - `adr/` — Architecture Decision Records. Keputusan kekal, implementation status boleh dikemas kini.
 - `architecture/` — current architecture dan jurang diketahui.
 - `architecture/data-transfers.md` — queue contract, progress, idempotency dan failure report untuk export/import besar.
+- `architecture/post-mvp-evaluation.md` — decision matrix untuk REST API, mobile/offline, realtime, accreditation dan analytics selepas MVP stabil.
 - `database/` — schema, ERD, naming dan migration rules.
 - `deployment/` — release, backup dan restore runbooks.
+- `deployment/operations-runbook.md` — incident triage, rollback, worker/scheduler recovery, restore-drill evidence dan release evidence pack.
 - `design-system/` — frontend/design usage semasa.
 - `security/` — controls dan production checklist.
 - `testing/` — current quality gates dan rekod drill.
