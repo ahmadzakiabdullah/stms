@@ -20,6 +20,26 @@ class PublicPortalController extends Controller
         return Inertia::render('Public/Contact', $service->data());
     }
 
+    public function committee(PublicPortalService $service): Response
+    {
+        return Inertia::render('Public/Committee', $service->data());
+    }
+
+    public function studentCommittee(PublicPortalService $service): Response
+    {
+        return Inertia::render('Public/StudentCommittee', $service->data());
+    }
+
+    public function gameChairpersons(PublicPortalService $service): Response
+    {
+        return Inertia::render('Public/GameChairpersons', $service->data());
+    }
+
+    public function importantDates(PublicPortalService $service): Response
+    {
+        return Inertia::render('Public/ImportantDates', $service->data());
+    }
+
     public function directory(string $section, PublicPortalService $service): Response
     {
         abort_unless(in_array($section, ['sports', 'faculties', 'venues'], true), 404);
@@ -56,7 +76,7 @@ class PublicPortalController extends Controller
 
     public function info(string $section, PublicPortalService $service): Response
     {
-        abort_unless(in_array($section, ['news', 'downloads', 'faq', 'about'], true), 404);
+        abort_unless(in_array($section, ['news', 'downloads', 'faq', 'about', 'general'], true), 404);
 
         return Inertia::render('Public/Info', [...$service->data(), 'section' => $section]);
     }
@@ -74,6 +94,11 @@ class PublicPortalController extends Controller
             ['location' => route('public.downloads'), 'priority' => '0.4'],
             ['location' => route('public.faq'), 'priority' => '0.4'],
             ['location' => route('public.about'), 'priority' => '0.4'],
+            ['location' => route('public.general-information'), 'priority' => '0.4'],
+            ['location' => route('public.committee'), 'priority' => '0.4'],
+            ['location' => route('public.student-committee'), 'priority' => '0.4'],
+            ['location' => route('public.game-chairpersons'), 'priority' => '0.4'],
+            ['location' => route('public.important-dates'), 'priority' => '0.4'],
             ['location' => route('public.contact'), 'priority' => '0.6'],
         ];
 

@@ -33,12 +33,17 @@ class ResultService
             ->get(['id', 'match_id', 'score_home', 'score_away']);
     }
 
-    public function getById(Organization $organization, string $id): Result
+    public function getById(Organization $organization, string $id, bool $forUpdate = false): Result
     {
-        return $this->baseQuery($organization)
+        $query = $this->baseQuery($organization)
             ->with(['match.event.sport', 'match.homeParticipant', 'match.awayParticipant', 'winner', 'scoringEvents.squadMember'])
-            ->where('results.id', $id)
-            ->firstOrFail();
+            ->where('results.id', $id);
+
+        if ($forUpdate) {
+            $query->lockForUpdate();
+        }
+
+        return $query->firstOrFail();
     }
 
     public function getByMatchId(Organization $organization, string $matchId): ?Result
@@ -53,7 +58,19 @@ class ResultService
     {
         $result = DB::transaction(function () use ($organization, $data) {
             $data['organization_id'] = $organization->id;
+            $match = Fixture::forOrganization($organization->id)
+                ->whereKey($data['match_id'] ?? null)
+                ->lockForUpdate()
+                ->first();
+
+            if ($match && Result::withTrashed()->where('match_id', $match->id)->exists()) {
+                throw ValidationException::withMessages([
+                    'match_id' => ['A result already exists for this match.'],
+                ]);
+            }
+
             $this->ensureRelationsBelongToOrganization($data, $organization->id);
+            $this->validateScoringProfile($data);
             $data['status'] = Result::STATUS_SUBMITTED;
             $data['submitted_by'] = auth()->id();
             $data['submitted_at'] = now();
@@ -78,10 +95,16 @@ class ResultService
     public function update(Organization $organization, string $id, array $data): Result
     {
         $result = DB::transaction(function () use ($organization, $id, $data) {
-            $result = $this->getById($organization, $id);
+            $result = $this->getById($organization, $id, true);
             $this->assertEditable($result);
+            $correctionReason = trim((string) ($data['correction_reason'] ?? ''));
+            unset($data['correction_reason']);
+            if ($result->status === Result::STATUS_APPROVED && $correctionReason === '') {
+                throw ValidationException::withMessages(['correction_reason' => 'A correction reason is required when updating an approved result.']);
+            }
             $data['organization_id'] = $organization->id;
             $this->ensureRelationsBelongToOrganization($data, $organization->id, $result);
+            $this->validateScoringProfile($data, $result);
             $scoringEvents = $data['scoring_events'] ?? null;
             unset($data['scoring_events']);
             $result->update($data);
@@ -90,6 +113,14 @@ class ResultService
             }
             $this->markMatchCompleted($result->match_id);
             $this->advanceKnockoutStage($result->match_id);
+            if ($correctionReason !== '') {
+                activity()
+                    ->performedOn($result)
+                    ->causedBy(auth()->user())
+                    ->event('corrected')
+                    ->withProperties(['correction_reason' => $correctionReason])
+                    ->log('Result corrected');
+            }
             Log::info('Result updated', ['id' => $id, 'org_id' => $organization->id]);
 
             return $result->fresh();
@@ -147,7 +178,7 @@ class ResultService
     public function delete(Organization $organization, string $id): void
     {
         DB::transaction(function () use ($organization, $id) {
-            $result = $this->getById($organization, $id);
+            $result = $this->getById($organization, $id, true);
             $this->assertEditable($result);
             $result->delete();
             Log::info('Result deleted', ['id' => $id, 'org_id' => $organization->id]);
@@ -220,19 +251,24 @@ class ResultService
         ], 'locked');
     }
 
-    public function unlock(Organization $organization, string $id, User $actor): Result
+    public function unlock(Organization $organization, string $id, User $actor, ?string $reason = null): Result
     {
+        $reason = trim((string) $reason);
+        if ($reason === '') {
+            throw ValidationException::withMessages(['correction_reason' => 'A correction reason is required when unlocking a result.']);
+        }
+
         return $this->transition($organization, $id, $actor, Result::STATUS_APPROVED, [
             'locked_by' => null,
             'locked_at' => null,
-        ], 'unlocked');
+        ], 'unlocked', ['correction_reason' => $reason]);
     }
 
     /** @param array<string, mixed> $attributes */
-    protected function transition(Organization $organization, string $id, User $actor, string $status, array $attributes, string $event): Result
+    protected function transition(Organization $organization, string $id, User $actor, string $status, array $attributes, string $event, array $properties = []): Result
     {
-        $result = DB::transaction(function () use ($organization, $id, $actor, $status, $attributes, $event) {
-            $result = $this->getById($organization, $id);
+        $result = DB::transaction(function () use ($organization, $id, $actor, $status, $attributes, $event, $properties) {
+            $result = $this->getById($organization, $id, true);
 
             if ($result->isLocked() && $status !== Result::STATUS_APPROVED) {
                 throw ValidationException::withMessages(['status' => 'A locked result must be unlocked before another status change.']);
@@ -247,7 +283,7 @@ class ResultService
             }
 
             $result->update(array_merge($attributes, ['status' => $status]));
-            activity()->performedOn($result)->causedBy($actor)->event($event)->log('Result '.$event);
+            activity()->performedOn($result)->causedBy($actor)->event($event)->withProperties($properties)->log('Result '.$event);
 
             return $result->fresh();
         });
@@ -264,6 +300,30 @@ class ResultService
         }
     }
 
+    protected function validateScoringProfile(array $data, ?Result $result = null): void
+    {
+        $matchId = $data['match_id'] ?? $result?->match_id;
+        if (! $matchId) {
+            return;
+        }
+
+        $match = Fixture::query()->with('event.sport')->find($matchId);
+        $profile = $match?->event?->sport?->scoring_profile ?? [];
+        $scoreHome = array_key_exists('score_home', $data) ? $data['score_home'] : $result?->score_home;
+        $scoreAway = array_key_exists('score_away', $data) ? $data['score_away'] : $result?->score_away;
+
+        if (isset($profile['max_score'])) {
+            $maxScore = (int) $profile['max_score'];
+            if (($scoreHome !== null && (int) $scoreHome > $maxScore) || ($scoreAway !== null && (int) $scoreAway > $maxScore)) {
+                throw ValidationException::withMessages(['score_home' => "Scores cannot exceed {$maxScore} for this sport."]);
+            }
+        }
+
+        if (($profile['allow_draw'] ?? true) === false && $scoreHome !== null && $scoreAway !== null && (int) $scoreHome === (int) $scoreAway) {
+            throw ValidationException::withMessages(['score_away' => 'Draw results are not allowed for this sport.']);
+        }
+    }
+
     /** @param array<int, array<string, mixed>> $events */
     protected function syncScoringEvents(Organization $organization, Result $result, array $events): void
     {
@@ -276,6 +336,8 @@ class ResultService
             return;
         }
 
+        $allowedEventTypes = $match->event?->sport?->scoring_profile['scoring_event_types'] ?? ['goal'];
+        $allowedEventTypes = collect($allowedEventTypes)->filter()->values()->all() ?: ['goal'];
         $homeId = $match->home_participant_id;
         $awayId = $match->away_participant_id;
         $allowedParticipantIds = collect([$homeId, $awayId])->filter()->values();
@@ -303,6 +365,11 @@ class ResultService
             }
 
             $points = 1;
+            $eventType = $event['event_type'] ?? $allowedEventTypes[0];
+            if (! in_array($eventType, $allowedEventTypes, true)) {
+                throw ValidationException::withMessages(['scoring_events' => 'Scoring event type is not enabled for this sport.']);
+            }
+
             $totals[$participantId] = ($totals[$participantId] ?? 0) + $points;
             $rows[] = [
                 'organization_id' => $organization->id,
@@ -310,7 +377,7 @@ class ResultService
                 'match_id' => $match->id,
                 'participant_id' => $participantId,
                 'squad_member_id' => $member->id,
-                'event_type' => $event['event_type'] ?? 'goal',
+                'event_type' => $eventType,
                 'period' => $event['period'] ?? null,
                 'minute' => $event['minute'] ?? null,
                 'second' => $event['second'] ?? null,

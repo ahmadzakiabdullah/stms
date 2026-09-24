@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/table';
 import { Head, router, useForm } from '@inertiajs/react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BarChart3, Download, Medal, Save, Settings2, Trophy, Users } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChart3, Download, Medal, Plus, Save, Settings2, Trophy, Users, X } from 'lucide-react';
 import { type RankingEntry, type RankingRules, type Session, type Tournament } from '@/types';
 import { useI18n } from '@/lib/i18n';
 import { useEffect } from 'react';
@@ -42,6 +42,33 @@ const rankColors: Record<number, string> = {
     2: 'text-gray-500 font-bold',
     3: 'text-amber-600 font-bold',
 };
+
+type RankingStrategyKey = 'points' | 'win_rate' | 'medal_tally';
+type TieBreakerOption = { value: string; label: string };
+
+const tieBreakerOptions: Record<RankingStrategyKey, TieBreakerOption[]> = {
+    points: [
+        { value: 'points', label: 'Points' },
+        { value: 'goal_difference', label: 'Goal difference' },
+        { value: 'score_for', label: 'Score for' },
+        { value: 'wins', label: 'Wins' },
+    ],
+    win_rate: [
+        { value: 'win_rate', label: 'Win rate' },
+        { value: 'wins', label: 'Wins' },
+        { value: 'goal_difference', label: 'Goal difference' },
+        { value: 'score_for', label: 'Score for' },
+    ],
+    medal_tally: [
+        { value: 'gold', label: 'Gold' },
+        { value: 'silver', label: 'Silver' },
+        { value: 'bronze', label: 'Bronze' },
+    ],
+};
+
+const strategyKeys = Object.keys(tieBreakerOptions) as RankingStrategyKey[];
+const isRankingStrategyKey = (value: string): value is RankingStrategyKey => strategyKeys.includes(value as RankingStrategyKey);
+const optionLabel = (strategy: RankingStrategyKey, value: string) => tieBreakerOptions[strategy].find((option) => option.value === value)?.label ?? value;
 
 export default function RankingsIndex({ sessions, selectedSession, tournaments, selectedTournament, rankings, events, strategies }: RankingsIndexProps) {
     const { t } = useI18n();
@@ -95,6 +122,45 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
         } else if (selectedSessionData) {
             put(route('rankings.updateSessionStrategy', selectedSessionData.slug));
         }
+    };
+
+    const selectedStrategy = isRankingStrategyKey(data.ranking_strategy) ? data.ranking_strategy : 'points';
+    const selectedTiebreakers = data.ranking_rules[selectedStrategy].tiebreakers;
+    const availableTiebreakers = tieBreakerOptions[selectedStrategy].filter((option) => !selectedTiebreakers.includes(option.value));
+    const maxTiebreakers = selectedStrategy === 'medal_tally' ? 3 : 4;
+
+    const updateTiebreakers = (strategy: RankingStrategyKey, tiebreakers: string[]) => {
+        setData('ranking_rules', {
+            ...data.ranking_rules,
+            [strategy]: {
+                ...data.ranking_rules[strategy],
+                tiebreakers,
+            },
+        });
+    };
+
+    const moveTiebreaker = (strategy: RankingStrategyKey, index: number, direction: -1 | 1) => {
+        const nextIndex = index + direction;
+        const tiebreakers = [...data.ranking_rules[strategy].tiebreakers];
+
+        if (nextIndex < 0 || nextIndex >= tiebreakers.length) {
+            return;
+        }
+
+        [tiebreakers[index], tiebreakers[nextIndex]] = [tiebreakers[nextIndex], tiebreakers[index]];
+        updateTiebreakers(strategy, tiebreakers);
+    };
+
+    const removeTiebreaker = (strategy: RankingStrategyKey, value: string) => {
+        updateTiebreakers(strategy, data.ranking_rules[strategy].tiebreakers.filter((field) => field !== value));
+    };
+
+    const addTiebreaker = (strategy: RankingStrategyKey, value: string) => {
+        if (!value || data.ranking_rules[strategy].tiebreakers.includes(value)) {
+            return;
+        }
+
+        updateTiebreakers(strategy, [...data.ranking_rules[strategy].tiebreakers, value].slice(0, maxTiebreakers));
     };
 
     const isMedal = (selectedTournamentData?.ranking_strategy ?? selectedSessionData?.ranking_strategy ?? 'points') === 'medal_tally';
@@ -219,7 +285,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                {data.ranking_strategy === 'points' && (
+                                {selectedStrategy === 'points' && (
                                     <>
                                         {(['win_points', 'draw_points', 'loss_points'] as const).map((field) => (
                                             <div key={field} className="w-24">
@@ -238,46 +304,77 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                                 />
                                             </div>
                                         ))}
-                                        <div className="min-w-64 flex-1">
-                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Tiebreakers</label>
-                                            <Input
-                                                value={data.ranking_rules.points.tiebreakers.join(', ')}
-                                                onChange={(event) => setData('ranking_rules', {
-                                                    ...data.ranking_rules,
-                                                    points: {
-                                                        ...data.ranking_rules.points,
-                                                        tiebreakers: event.target.value.split(',').map((value) => value.trim()).filter(Boolean),
-                                                    },
-                                                })}
-                                                aria-describedby="ranking-rules-help"
-                                            />
-                                        </div>
                                     </>
                                 )}
-                                {data.ranking_strategy === 'win_rate' && (
-                                    <div className="min-w-64 flex-1">
-                                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Tiebreakers</label>
-                                        <Input
-                                            value={data.ranking_rules.win_rate.tiebreakers.join(', ')}
-                                            onChange={(event) => setData('ranking_rules', {
-                                                ...data.ranking_rules,
-                                                win_rate: { tiebreakers: event.target.value.split(',').map((value) => value.trim()).filter(Boolean) },
-                                            })}
-                                        />
+                                <div className="min-w-72 flex-1 space-y-2">
+                                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                        {selectedStrategy === 'medal_tally' ? 'Medal order' : 'Tiebreakers'}
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedTiebreakers.map((field, index) => (
+                                            <Badge key={field} variant="secondary" className="gap-1.5 rounded-md px-2 py-1">
+                                                <span className="text-[11px] text-muted-foreground">{index + 1}</span>
+                                                <span>{optionLabel(selectedStrategy, field)}</span>
+                                                <button
+                                                    type="button"
+                                                    className="rounded-sm p-0.5 text-muted-foreground hover:bg-background hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                                                    onClick={() => moveTiebreaker(selectedStrategy, index, -1)}
+                                                    disabled={index === 0}
+                                                    aria-label={`Move ${optionLabel(selectedStrategy, field)} up`}
+                                                >
+                                                    <ArrowUp className="size-3" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="rounded-sm p-0.5 text-muted-foreground hover:bg-background hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                                                    onClick={() => moveTiebreaker(selectedStrategy, index, 1)}
+                                                    disabled={index === selectedTiebreakers.length - 1}
+                                                    aria-label={`Move ${optionLabel(selectedStrategy, field)} down`}
+                                                >
+                                                    <ArrowDown className="size-3" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="rounded-sm p-0.5 text-muted-foreground hover:bg-background hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                                                    onClick={() => removeTiebreaker(selectedStrategy, field)}
+                                                    disabled={selectedTiebreakers.length <= 1}
+                                                    aria-label={`Remove ${optionLabel(selectedStrategy, field)}`}
+                                                >
+                                                    <X className="size-3" />
+                                                </button>
+                                            </Badge>
+                                        ))}
                                     </div>
-                                )}
-                                {data.ranking_strategy === 'medal_tally' && (
-                                    <div className="min-w-64 flex-1">
-                                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Medal order</label>
-                                        <Input
-                                            value={data.ranking_rules.medal_tally.tiebreakers.join(', ')}
-                                            onChange={(event) => setData('ranking_rules', {
-                                                ...data.ranking_rules,
-                                                medal_tally: { tiebreakers: event.target.value.split(',').map((value) => value.trim()).filter(Boolean) },
-                                            })}
-                                        />
+                                    <div className="flex max-w-sm gap-2">
+                                        <Select
+                                            value=""
+                                            onValueChange={(value) => addTiebreaker(selectedStrategy, value)}
+                                            disabled={availableTiebreakers.length === 0 || selectedTiebreakers.length >= maxTiebreakers}
+                                        >
+                                            <SelectTrigger className="h-9">
+                                                <SelectValue placeholder="Add field" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableTiebreakers.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-9 w-9 shrink-0"
+                                            disabled={availableTiebreakers.length === 0 || selectedTiebreakers.length >= maxTiebreakers}
+                                            aria-label="Add next available tiebreaker"
+                                            onClick={() => availableTiebreakers[0] && addTiebreaker(selectedStrategy, availableTiebreakers[0].value)}
+                                        >
+                                            <Plus className="size-4" />
+                                        </Button>
                                     </div>
-                                )}
+                                </div>
                                 <Button type="submit" size="sm" className="h-10" disabled={processing}>
                                     <Save className="mr-1 size-3.5" /> {processing ? t('Saving...') : t('Apply changes')}
                                 </Button>
@@ -285,7 +382,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                         )}
                         {selectedSessionData && (
                             <div className="w-full text-xs text-muted-foreground" id="ranking-rules-help">
-                                Allowed fields depend on strategy. Separate tiebreakers with commas.
+                                Arrange tie-breakers in priority order. Each field can only be used once.
                                 {Object.keys(errors).length > 0 && <span className="ml-2 text-destructive">Check the ranking rule values.</span>}
                             </div>
                         )}

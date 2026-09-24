@@ -4,13 +4,13 @@ STMS ialah platform pengurusan kejohanan sukan multi-tenant. Repository ini meng
 
 ## Status Semasa
 
-MVP produk beroperasi dan quality gate repository semasa hijau. Deployment production masih menunggu tindakan operator/owner:
+MVP produk beroperasi; verifikasi lokal working tree dipisahkan daripada connected CI baseline `dd559c56e`. Deployment production masih menunggu tindakan operator/owner:
 
-- 163 application routes, 70 migration files, 41 controller files, 43 Inertia pages dan 100 PHP test files.
-- Full native PHPUnit terasing lulus 526/526 (2,577 assertions) dan production build/budget lulus pada runner local disk; network share masih tidak sesuai untuk native Rolldown.
+- 173 application routes, 71 migration files, 42 controller files, 47 Inertia pages dan 104 PHP test files.
+- Full native PHPUnit terasing lulus 563/563 (2,791 assertions) dan production build/budget lulus pada runner local disk; network share masih tidak sesuai untuk native Rolldown.
 - Composer/npm audit 0 advisory/vulnerability selepas remediasi dependensi (league/commonmark 2.10.1, maatwebsite/excel 3.1.70, regenerasi lockfile npm).
-- Playwright/axe lulus 8/8 pada desktop/mobile menggunakan SQLite terasing.
-- Runtime workspace `production` tidak sepadan dengan baseline Redis/session/verification/CSP yang didokumenkan.
+- Playwright/axe mempunyai 12 journeys pada desktop/mobile (24 cases); bukti browser semasa direkod dalam `CURRENT_STATE.md`.
+- Runtime workspace `production` tidak sepadan dengan baseline Redis/session/verification yang didokumenkan.
 - Tiada release tag.
 
 Rujuk [`CURRENT_STATE.md`](CURRENT_STATE.md) dan [audit penuh 17 Ogos 2026](docs/audits/2026-08-17-full-project-and-production-audit.md).
@@ -34,7 +34,7 @@ REST API, accreditation, live scoring, mobile app, advanced analytics dan AI kek
 
 ## Portal Production
 
-<https://saf.utem.edu.my/> ialah homepage single-page dengan anchor sections untuk Sports, Schedule, Results dan Medal standings. `/contact-us` ialah satu-satunya halaman maklumat awam berasingan.
+<https://saf.utem.edu.my/> ialah homepage single-page dengan anchor sections untuk Sports, Schedule, Results dan Medal standings. `/news`, `/downloads`, `/faq`, `/about`, `/general-information`, `/jawatankuasa-induk`, `/jawatankuasa-pelaksana`, `/pengerusi-permainan`, `/tarikh-penting` dan `/contact-us` ialah halaman maklumat awam berasingan.
 
 Route lama `/sports-programme`, `/medal-tally` dan `/schedules` kini 404; `/matches`, `/results` dan `/live` redirect ke `/schedule`. Pengurusan match berada di `/manage/matches`, keputusan di `/results/manage`, dan roster awam di `/athletes`.
 

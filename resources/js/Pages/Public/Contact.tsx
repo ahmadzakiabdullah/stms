@@ -23,8 +23,44 @@ type Props = {
     error?: string | null;
 };
 
+type SecretariatGame = {
+    bil: string;
+    event: string;
+    staffName: string;
+    staffPhone?: string;
+    chairperson: string;
+    chairRole: string;
+    chairPhone: string;
+};
+
+const secretariatGames: SecretariatGame[] = [
+    { bil: '1', event: 'Catur Campuran', staffName: 'En. Ahmad Rhafee bin Samsudin', staffPhone: '012 – 2646902', chairperson: 'Muhammad Zamzamin Bin Zamzuri', chairRole: 'Pengerusi Kelab Catur', chairPhone: '013-9367803' },
+    { bil: '2', event: 'Tenis Campuran', staffName: 'Pn. Norasikin binti Md Isa', staffPhone: '017-3068061', chairperson: 'Ahmad Rayyan Bin Nor Anuar', chairRole: 'Pengerusi Kelab Tenis', chairPhone: '016-2218914' },
+    { bil: '3', event: 'Hoki 9 Sebelah (L&W)', staffName: '—', chairperson: 'Nabil Ilham Bin Abdul Jamal', chairRole: 'Pengerusi Kelab Hoki', chairPhone: '013-2244845' },
+    { bil: '4', event: 'E-Sport Terbuka (Mobile Legends)', staffName: 'En. Ahmad Affenday bin Mohamed Sani', staffPhone: '012-6376317', chairperson: 'Nurul Alieya Maisara Nor Hazlan', chairRole: 'Pengerusi Kelab Esport', chairPhone: '011-39121149' },
+    { bil: '5', event: 'E-Sport Terbuka Valorant', staffName: '—', chairperson: 'Nurul Alieya Maisara Nor Hazlan', chairRole: 'Pengerusi Kelab Esport', chairPhone: '011-39121149' },
+    { bil: '6', event: 'Bola Tampar (L&W)', staffName: '—', chairperson: 'Afnan Muslim Bin Ab Rahman', chairRole: 'Pengerusi Kelab Bola Tampar', chairPhone: '010-3576537' },
+    { bil: '7', event: 'Sepak Takraw Berpasukan', staffName: '—', chairperson: 'Aliff Hakimi Bin Syamsul Ariffin', chairRole: 'Pengerusi Kelab Takraw', chairPhone: '011-40563167' },
+    { bil: '8', event: 'Ragbi 10 Sebelah', staffName: 'En. Razali bin Yaakob', staffPhone: '019-6515423', chairperson: 'Farhad Bin Mohd Fairuz', chairRole: 'Pengerusi Kelab Ragbi', chairPhone: '011-15381901' },
+    { bil: '9', event: 'Futsal (L&W)', staffName: '—', chairperson: 'Muhammad Iqbal Daniel Bin Halim', chairRole: 'Pengerusi Kelab Futsal', chairPhone: '017-9420611' },
+    { bil: '10', event: 'Basikal (L&W)', staffName: '—', chairperson: 'Muhammad Safwan Bin Mohd Lazim', chairRole: 'Pengerusi Kelab Berbasikal', chairPhone: '01133381938' },
+    { bil: '11', event: 'Petanque Campuran', staffName: 'En. Mohd Hadzren Redza bin Norhidzam Amin Akbar', staffPhone: '019-6067801', chairperson: 'Siti Nur Farhana Dania Binti Mohd Najib', chairRole: 'Pengerusi Kelab Petanque', chairPhone: '017-3176700' },
+    { bil: '12', event: 'Memanah Campuran', staffName: '—', chairperson: 'Muhammad Haziq Danial Bin Hasan', chairRole: 'Pengerusi Kelab Memanah', chairPhone: '011-23358129' },
+    { bil: '13', event: 'Indoor Rowing (L&W)', staffName: 'Pn. Norashikin binti Hashim', staffPhone: '017-3499118', chairperson: 'Ahmad Hulaif Bin Ramzi', chairRole: 'Pengerusi Kelab Sukan Rowing', chairPhone: '012-8162160' },
+    { bil: '14', event: 'Kayak Campuran', staffName: '—', chairperson: 'Mohammad Hikmal Bin Suwadi', chairRole: 'Pengerusi Kelab Kayak', chairPhone: '014-5630821' },
+    { bil: '15', event: 'Ping Pong Campuran', staffName: 'En. Mohd Yusri bin Misron', staffPhone: '019 – 6846772', chairperson: 'Burhanuddin Al-Hilmi Bin Mohd Salleh', chairRole: 'Pengerusi Kelab Sukan Ping Pong', chairPhone: '011-55039867' },
+    { bil: '16', event: 'Lawn Bowls', staffName: '—', chairperson: 'Nur Najwa Natasya binti Mohd Zaiham', chairRole: 'Pengerusi Kelab Lawn Bowls', chairPhone: '011-61606078' },
+    { bil: '17', event: 'Bola Sepak', staffName: '—', chairperson: 'Wan Amirul Ariff bin Wan Mohd Nordin', chairRole: 'Pengerusi Kelab Bola Sepak', chairPhone: '012-3122619' },
+    { bil: '18', event: 'Tenpin Bowling Campuran', staffName: 'Pn. Zuraidah binti Abdullah', staffPhone: '019-6207058', chairperson: 'Ilhan Hezly bin Harriman', chairRole: 'Pengerusi Kelab Tenpin Bowling', chairPhone: '012-4144653' },
+    { bil: '19', event: 'Bola Baling (L&W)', staffName: '—', chairperson: 'Muhammad Arman bin Houd', chairRole: 'Pengerusi Kelab Bola Baling', chairPhone: '018-2941270' },
+    { bil: '20', event: 'Bola Jaring', staffName: '—', chairperson: 'Nur Zulaikha binti Mohd Afendi', chairRole: 'Pengerusi Kelab Bola Jaring', chairPhone: '013-5854220' },
+    { bil: '21', event: 'Bola Keranjang (L&W)', staffName: 'En. Muhammad Ashraff bin Nor Rizan', staffPhone: '012-6423165', chairperson: 'Soo Teng Xiang', chairRole: 'Pengerusi Kelab Bola Keranjang', chairPhone: '011-20686147' },
+    { bil: '22', event: 'Badminton Campuran', staffName: '—', chairperson: 'Muhammad Haziq Irfan bin Muhammad Hisham', chairRole: 'Pengerusi Kelab Badminton', chairPhone: '013-4430625' },
+    { bil: '23', event: 'Sofbol (L)', staffName: '—', chairperson: 'Muhammad Rifqi Danish bin Mohd Shafiee', chairRole: 'Pengerusi Kelab Sofbol', chairPhone: '018-3552545' },
+];
+
 export default function PublicContact({ app_name, contact, updated_at, error = null }: Props) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const phoneHref = contact.phone ? `tel:${contact.phone.replace(/[^\d+]/g, '')}` : null;
     const socialLinks = [
         { label: 'Facebook', href: contact.social.facebook },
@@ -47,7 +83,7 @@ export default function PublicContact({ app_name, contact, updated_at, error = n
 
                 <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:py-20">
                     <div className="grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
-                        <div className="rounded-[2rem] border border-[var(--public-dark-border)] bg-white p-7 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] sm:p-10">
+                        <div className="public-card p-7 sm:p-10">
                             <p className="text-[10px] font-black uppercase tracking-[.22em] text-[var(--public-primary)]">{t('Secretariat')}</p>
                             <h2 className="mt-2 text-2xl font-black tracking-[-.02em] text-[var(--public-text)]">{t('SAF UTeM Secretariat')}</h2>
                             <p className="mt-3 max-w-md text-sm leading-6 text-[var(--public-dark-faint)]">{t('Official channels for competition, schedule and contingent management enquiries.')}</p>
@@ -106,7 +142,7 @@ export default function PublicContact({ app_name, contact, updated_at, error = n
                                 )}
                             </div>
 
-                            <div className="rounded-[2rem] border border-[var(--public-dark-border)] bg-white p-7 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] sm:p-8">
+                            <div className="public-card p-7 sm:p-8">
                                 <div className="flex items-center gap-3">
                                     <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><Clock className="size-5" /></span>
                                     <h3 className="text-base font-black text-[var(--public-text)]">{t('Office Hours')}</h3>
@@ -120,7 +156,56 @@ export default function PublicContact({ app_name, contact, updated_at, error = n
                         </aside>
                     </div>
                 </section>
+
+                <section aria-labelledby="secretariat-games" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:pb-20">
+                    <div className="mb-6">
+                        <p className="text-[10px] font-black uppercase tracking-[.22em] text-[var(--public-primary)]">{t('Secretariat')}</p>
+                        <h2 id="secretariat-games" className="mt-2 text-2xl font-black tracking-[-.02em] text-[var(--public-text)]">{t('Coordinators & Game Chairpersons')}</h2>
+                    </div>
+                    <div className="public-card overflow-x-auto">
+                        <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+                            <caption className="sr-only">{t('List of event coordinators and sports event chairpersons')}</caption>
+                            <thead className="bg-[var(--public-dark)] text-white">
+                                <tr>
+                                    <th scope="col" className="w-16 px-4 py-4 text-center font-black">{t('No.')}</th>
+                                    <th scope="col" className="w-56 px-4 py-4 font-black">{t('Event')}</th>
+                                    <th scope="col" className="w-72 px-4 py-4 font-black">{t('Staff Event Coordinator')}</th>
+                                    <th scope="col" className="px-4 py-4 font-black">{t('Sports Event Chairperson')}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[var(--public-dark-border)] text-[var(--public-dark-faint)]">
+                                {secretariatGames.map(game => <tr key={game.bil} className="align-top even:bg-[var(--public-background)]">
+                                    <td className="px-4 py-5 text-center font-black text-[var(--public-primary)]">{game.bil}</td>
+                                    <td className="px-4 py-5 font-semibold leading-6 text-[var(--public-text)]">{game.event}</td>
+                                    <td className="px-4 py-5 leading-6">
+                                        <p className="font-semibold text-[var(--public-text)]">{localizeSecretariatName(game.staffName, locale)}</p>
+                                        {game.staffPhone && <a href={`tel:${game.staffPhone.replace(/[^\d+]/g, '')}`} className="font-medium underline decoration-[var(--public-primary)] underline-offset-2">{game.staffPhone}</a>}
+                                    </td>
+                                    <td className="px-4 py-5 leading-6">
+                                        <p className="font-semibold text-[var(--public-text)]">{game.chairperson}</p>
+                                        <p>{localizeSecretariatRole(game.chairRole, locale)}</p>
+                                        <a href={`tel:${game.chairPhone.replace(/[^\d+]/g, '')}`} className="font-medium underline decoration-[var(--public-primary)] underline-offset-2">{game.chairPhone}</a>
+                                    </td>
+                                </tr>)}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </main>
         </PublicLayout>
     );
+}
+
+function localizeSecretariatRole(value: string, locale: string): string {
+    if (locale === 'ms') return value;
+    if (value.startsWith('Pengerusi Kelab Sukan ')) return `President of the ${value.replace('Pengerusi Kelab Sukan ', '')} Sports Club`;
+    if (value.startsWith('Pengerusi Kelab ')) return `President of the ${value.replace('Pengerusi Kelab ', '')} Club`;
+
+    return value;
+}
+
+function localizeSecretariatName(value: string, locale: string): string {
+    if (locale === 'ms') return value;
+
+    return value.replace('En. ', 'Mr. ').replace('Pn. ', 'Ms. ');
 }

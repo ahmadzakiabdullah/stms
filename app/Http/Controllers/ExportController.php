@@ -6,12 +6,17 @@ use App\Exports\FixtureExport;
 use App\Exports\MedalTallyExport;
 use App\Exports\RankingExport;
 use App\Exports\ResultExport;
+use App\Http\Requests\QueueExportRequest;
+use App\Models\DataTransfer;
+use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Result;
 use App\Models\Session;
 use App\Models\Tournament;
+use App\Services\DataTransferService;
 use App\Services\RankingService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -28,6 +33,48 @@ class ExportController extends Controller implements HasMiddleware
     }
 
     // ─── FIXTURES ───
+
+    public function queueExcel(QueueExportRequest $request, DataTransferService $transfers): JsonResponse
+    {
+        $validated = $request->validated();
+        $organization = $request->user()->organization;
+        abort_unless($organization, 404);
+
+        $type = match ($validated['type']) {
+            'fixtures' => DataTransfer::TYPE_EXPORT_FIXTURES,
+            'results' => DataTransfer::TYPE_EXPORT_RESULTS,
+            'rankings' => DataTransfer::TYPE_EXPORT_RANKINGS,
+            'medals' => DataTransfer::TYPE_EXPORT_MEDALS,
+        };
+
+        if (! empty($validated['event_id']) && ! Event::where('organization_id', $organization->id)->whereKey($validated['event_id'])->exists()) {
+            abort(404);
+        }
+
+        if (! empty($validated['tournament_id']) && ! Tournament::where('organization_id', $organization->id)->whereKey($validated['tournament_id'])->exists()) {
+            abort(404);
+        }
+
+        if (! empty($validated['session_id']) && ! Session::where('organization_id', $organization->id)->whereKey($validated['session_id'])->exists()) {
+            abort(404);
+        }
+
+        $payload = array_filter([
+            'event_id' => $validated['event_id'] ?? null,
+            'tournament_id' => $validated['tournament_id'] ?? null,
+            'session_id' => $validated['session_id'] ?? null,
+        ]);
+
+        $transfer = $transfers->queue(
+            $request->user(),
+            $type,
+            $payload,
+            null,
+            $validated['idempotency_key'] ?? null,
+        );
+
+        return response()->json(['data' => $transfers->status($transfer)], $transfer->wasRecentlyCreated ? 202 : 200);
+    }
 
     public function fixturesPdf(Request $request)
     {

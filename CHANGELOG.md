@@ -7,6 +7,170 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **24 Sep 2026 — Student committee page redesign:** Menyamakan halaman Jawatankuasa Pelaksana dengan layout dokumen Jawatankuasa Induk, termasuk logo UTeM/SAF dan susunan jawatan dua kolum.
+
+- **24 Sep 2026 — Committee page redesign:** Menyusun semula Jawatankuasa Induk kepada layout dokumen berpusat dengan logo UTeM/SAF, jadual jawatan dua kolum, pegawai universiti dan senarai ahli jawatankuasa.
+
+- **24 Sep 2026 — General information prizes:** Menambah seksyen Hadiah pada Maklumat Am dengan tawaran 30 pingat emas, 30 perak dan 30 gangsa, serta terjemahan English.
+
+- **24 Sep 2026 — Public header hierarchy:** Mengalih keluar label “Official portal” dan menyusun logo UTeM + SAF di atas nama “Sukan Antara Fakulti”.
+
+- **24 Sep 2026 — Public header session logo:** Public header kini memaparkan logo organisasi UTeM dan logo SAF session secara bersebelahan, dengan divider dan inverse variant untuk latar gelap.
+
+- **24 Sep 2026 — Session branding:** Sessions kini menyokong upload logo standard dan inverse, dengan varian session digunakan pada public header/footer dan fallback kepada branding organisasi.
+
+- **24 Sep 2026 — Theme defaults propagation:** Selaraskan fallback backend dan migrasi setting lama supaya palet SAF baharu benar-benar dihantar ke public page, termasuk tenant yang sudah mempunyai rekod warna lama.
+
+- **24 Sep 2026 — SAF 20 visual theme:** Menyesuaikan default public theme dengan identiti banner SAF 20 2026 menggunakan midnight navy, biru elektrik/ungu, merah dan oren, serta latar kad yang lebih lembut.
+
+- **24 Sep 2026 — Hero poster:** Memindahkan poster rasmi SAF 20, 2026 ke hero homepage dalam format full-width, tepat di atas tajuk “Sukan Antara Fakulti”, dan menghapuskan paparan banner berulang selepas hero.
+
+- **23 Sep 2026 — Split registration windows:** Sessions now support separate start/end windows for event registration and officials/athletes registration. Faculty squad changes require Dean approval, a closed event-registration window, and an active squad-registration window.
+
+### 23 September 2026 — Centralize faculty registration deadline
+
+- Added a Session-level `registration_deadline` shared by all sports and events in the session.
+- Added the deadline field to Session create/edit UI and removed per-event deadline editing from the Events UI.
+- Faculty event registration now respects the Session deadline; squad registration/import requires both a confirmed event registration and a closed Session registration window.
+- Updated faculty registration UI to show the global deadline and use the Session deadline for event status display.
+
+### 22 September 2026 — Start bulk-action and ranking configurability hardening
+
+- Added a dedicated Form Request for Events batch deletion with required reason, UUID validation and batch size limits.
+- Updated the Events batch-delete flow with selected-event preview, mandatory operator reason, same-organization enforcement and activity-log summary metadata.
+- Updated Event Participants batch approve/reject with selected-registration preview, mandatory reject reason, mixed-organization protection and activity-log summary metadata.
+- Updated batch event registration with selected-event preview for eligible/already registered/deadline-passed events and activity-log summary metadata for registered/skipped outcomes.
+- Added activity-log summary metadata for participant import confirmation and event-registration CSV import, including created/error counts and failure reports.
+- Replaced free-text ranking tie-breaker entry with ordered, validated field selection for points, win-rate and medal-tally strategies.
+- Tightened ranking rule validation so points and win-rate tie-breakers cannot contain duplicate fields.
+- Added Event draw configuration for qualifiers per pool alongside format and pool size, including backend validation and Events list visibility.
+- Added configurable Sport scoring profiles with score unit, max score, draw policy and allowed individual scoring event types; result recording now enforces configured score limits, draw policy and event type allow-lists.
+- Added Reports governance panels for 7-day report comparison, 30-day export governance, retention/archive policy and data ownership, backed by tenant-scoped DataTransfer and activity metrics.
+- Added a post-MVP capability evaluation matrix covering REST API versioning, mobile/offline workflow, realtime updates, accreditation and analytics, including start triggers, MVP non-goals and sequencing guidance.
+- Switched Reports quick Excel exports to the queued DataTransfer flow with status polling, progress display, failure reporting and ready-file download links.
+- Switched participant and event-registration imports to queued DataTransfer UI flows with JSON queue responses, status polling, progress bars, failure reporting and refresh actions.
+- Added DataTransfer regression coverage for JSON queued participant and event-registration imports returning polling-ready transfer status payloads.
+- Added a read-only `stms:query-profile` Artisan command and performance documentation for collecting MySQL EXPLAIN evidence on representative public schedule, results, event-registration and Reports governance query paths.
+- Recorded live MySQL query-plan evidence for organization `utem`; representative paths returned low row counts with `ref`/`eq_ref` joins, so the query-budget P1 item is closed without adding speculative indexes.
+- Expanded the production operations runbook with incident evidence commands, rollback go/no-go checks, worker/scheduler supervision requirements, restore-drill records and release evidence pack guidance.
+- Recorded 23 September 2026 production preflight evidence: MySQL and public portal checks passed, health check showed healthy database/cache/queue/disk with no pending or failed jobs, and scheduler listed the five-minute health check; release remains blocked by production config enforcement, Redis, non-log mailer, scheduled backup and health monitoring activation.
+- Added `stms:production-smoke` for repeatable deployed HTTP smoke evidence, including homepage, `/up` and optional tokened `/health`; recorded partial production HTTP smoke evidence for `https://saf.utem.edu.my/` and `/up`, both returning HTTP 200.
+- Hardened production smoke URL parsing for pasted Markdown links and documented PHP cURL CA bundle requirements for TLS-verified smoke evidence.
+- Added regression coverage for missing reason, audited deletion/status/register summaries and mixed-organization rejection.
+- Verified PHP syntax for the changed PHP files and TypeScript typecheck; PHPUnit/Pint could not run in the current network vendor workspace because development binaries are not installed there.
+
+### 22 September 2026 — Promote P2 product improvements into Reports and public schedule
+
+- Added a public schedule Calendar view, print action and print-friendly schedule header while keeping the existing list, filters and public schedule/result data contract.
+- Added Reports operations monitoring for queue pending/failed counts, data freshness, active domain/application sessions and incident signal from repository health checks.
+- Added tenant-scoped data quality checks for duplicate participants, missing parent relations, orphan results and invalid timelines.
+- Required correction reasons when updating approved results or unlocking locked results; reasons are recorded in activity log properties.
+- Added feature coverage for Reports operations/data-quality payloads and correction-reason enforcement.
+- Verified SQLite PHPUnit 563/563 (2,791 assertions), Pint, TypeScript, Vite build, bundle budget, inventory, tenant-bypass and dependency audits on the isolated runner.
+
+### 22 September 2026 — Harden asynchronous transfers and verify the working tree
+
+- Added requester-only transfer policies, current-permission checks, tenant-aware queue middleware, scoped failure callbacks and private tenant file partitions.
+- Serialized idempotency creation and rejected key reuse across requesters/types/payloads; added overlap protection and a dedicated queue connection with a retry interval longer than its timeout.
+- Added Form Requests and JSON exception responses for export queue/status endpoints, plus feature/unit regressions for access, worker context, retries and import isolation.
+- Reused the public event catalog for counts, names and venues to meet the existing query budget without increasing its threshold.
+- Restored development dependencies on an isolated local runner; full SQLite PHPUnit passed 559/559 (2,738 assertions), Pint, TypeScript, tenant-bypass, Vite build/budget and Composer/npm audits passed. Updated stale English-locale Contact/navigation assertions; Playwright passed 22 cases in the full run and the remaining two in a focused rerun. Production operations remain on hold.
+
+### 21 September 2026 — Add asynchronous data-transfer contract
+
+- Added tenant-scoped `DataTransfer` records and a retryable queue job for large Excel exports and participant/event-participant imports.
+- Added progress, idempotency, row-level failure reports, status polling and private output download endpoints.
+- Kept synchronous transfer routes available while the UI polling flow and production queue worker are migrated.
+
+### 21 September 2026 — Add P1 concurrency regression coverage
+
+- Added deterministic race-regression tests for draw fixture generation, result entry/approval/correction, bulk registration import, and match schedule conflicts.
+- Added event/match/result row locking and transaction-local conflict validation so duplicate requests cannot silently create duplicate state.
+- Documented the remaining requirement for a real multi-worker MySQL/Redis staging run.
+
+### 21 September 2026 — Correct public Malay home label
+
+- Changed the public navigation and footer home label from `Tuan Rumah` to `Utama` in Bahasa Malaysia without changing match terminology such as home team.
+
+### 21 September 2026 — Localize Information submenu labels
+
+- Added English labels for the Information submenu while retaining the official Bahasa Malaysia names in the BM locale.
+
+### 21 September 2026 — Complete public navigation localization
+
+- Added dedicated public navigation labels for Schedule & Results and Contact so the BM locale displays `Jadual & Keputusan` and `Hubungi`.
+
+### 21 September 2026 — Strengthen P1 reliability baselines
+
+- Added repository query-budget regression coverage for the public homepage, public schedule and authenticated Events index.
+- Documented metric thresholds/owners/escalation and a tenant-scoped cache invalidation matrix; production alert activation remains held with the P0 runtime work.
+
+### 21 September 2026 — Refresh public typography
+
+- Kept Geist for public body text, navigation and headings so long titles remain readable.
+- Limited locally bundled Barlow Condensed 700/800 to display numbers and selected sport-oriented accents.
+
+### 21 September 2026 — Complete public portal localization
+
+- Added English/Bahasa Malaysia content switching for the General Information, Main Committee, Student Executive Committee, Game Chairpersons and Important Dates pages.
+- Localized the Contact secretariat table headings, roles and staff labels while preserving official names, sports and venue names.
+- Reused the existing EN/MS locale switcher, session/cookie persistence and public translation dictionary.
+
+### 21 September 2026 — Standardize public card design
+
+- Added a shared `public-card` visual treatment based on the Venues directory card.
+- Applied the same rounded layout, soft shadow, border highlight, hover lift and decorative accent to public information, directory, athlete, fixture and contact cards.
+
+### 21 September 2026 — Simplify Information submenu
+
+- Removed About, Download, News and FAQ from the public Information submenu.
+- Kept the corresponding pages and routes available for direct access; the submenu now focuses on the active SAF information pages.
+
+### 21 September 2026 — Enrich sports programme information
+
+- Added event-level male, female and official quota information to the public Sports page.
+- Added configured event venues to each public sport card, sourced from the existing `SportCategory` and `Event` data.
+- Added a feature regression test for the public quota and venue payload.
+
+### 21 September 2026 — Add secretariat game contacts
+
+- Added the Sekretariat section to the public Contact page.
+- Added 23 sport-event coordinator and chairperson entries with public phone links.
+
+### 21 September 2026 — Add important dates page
+
+- Added the public Tarikh Penting page under the Information submenu.
+- Added the supplied meeting, preparation, registration and event schedule for SAF 2026.
+
+### 21 September 2026 — Add game chairpersons page
+
+- Added the public Pengerusi Permainan page under the Information submenu.
+- Added the supplied chairperson, technical and referee requirements for all listed games.
+
+### 21 September 2026 — Add student committee page
+
+- Added the public Jawatankuasa Pelaksana page under the Information submenu.
+- Added the supplied student committee roles, faculty representatives and volunteer task assignments for the 2025 faculty sports championship.
+
+### 21 September 2026 — Add committee page
+
+- Added the public Jawatankuasa Induk page under the Information submenu.
+- Added the supplied committee, university representative and committee member listings for the 2025 faculty sports championship.
+
+### 21 September 2026 — Add general information page
+
+- Added the public General Information page under the Information submenu.
+- Added the supplied SAF 2026 eligibility, participant registration and team participation requirements.
+
+### 21 September 2026 — Reorder Information submenu
+
+- Reordered the Information submenu to About, Download, News and FAQ.
+
+### 21 September 2026 — Reorder public navigation
+
+- Moved Information to the second public menu position after Home.
+- Kept Contact as the final public menu item and synchronized the order across desktop and mobile navigation.
+
 ### 21 September 2026 — Standardize public shadcn controls
 
 - Added shared shadcn/Radix wrappers for public tabs, pagination, accordion and alert patterns.

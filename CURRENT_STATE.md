@@ -1,34 +1,38 @@
 # CURRENT STATE
 
-> Snapshot jujur STMS/SAF pada **21 September 2026** selepas public accessibility/SEO hardening dan repository quality-gate verification. Bukti audit asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
+> Snapshot jujur STMS/SAF pada **22 September 2026** selepas public accessibility/SEO hardening dan repository quality-gate verification. Bukti audit asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
 
 ## Status Keseluruhan
 
 **Produk:** MVP web beroperasi.
 
-**Repository:** perubahan semasa dikomit sebagai `0c1d05e7f` dan telah dipush ke `origin/master`. Required quality gate post-merge CI run `35560044122` lulus pada commit ini. **Production deployment kekal NO-GO** sehingga konfigurasi runtime, mail, DB grants dan final cutover evidence diselesaikan.
+**Repository:** baseline master `dd559c56e` disahkan sepadan dengan remote pada permulaan semakan; connected CI run `35575999380` lulus pada commit itu. Calon perubahan public portal, concurrency dan asynchronous transfer telah melalui verifikasi lokal. Connected CI mesti dinilai pada SHA calon yang sama. **Production deployment kekal NO-GO** sehingga runtime, mail, DB grants dan final cutover evidence lengkap.
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
+**Production preflight — 23 September 2026:** `php artisan stms:release-preflight --json` berjalan pada `APP_ENV=production`; database MySQL dan public portal `utem` / `saf-20-2026` lulus, tetapi status keseluruhan masih `error` kerana production config enforcement, email verification, Redis session/cache/queue, non-log mailer, scheduled backup dan health monitoring token/alert belum aktif. `stms:health-check` pada masa yang sama lulus untuk database/cache/queue/disk dengan pending queue 0 dan failed queue 0; `schedule:list` mendaftarkan `stms:health-check` setiap lima minit. Ini ialah evidence asas host sihat, bukan bukti release `GO`.
+
+**Production HTTP smoke — 23 September 2026:** unauthenticated `Invoke-WebRequest` ke `https://saf.utem.edu.my/` dan `https://saf.utem.edu.my/up` return HTTP 200. Repository kini mempunyai `stms:production-smoke` untuk mengulang HTTP smoke dan tokened `/health` sebagai JSON evidence. Authenticated smoke, cross-tenant negative test, Playwright dan axe pada deployment sebenar masih diperlukan sebelum cutover release boleh ditutup.
+
 Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Category/Event → Participant/Registration/Squad → Dean Verification → Draw/Match/Result → Rankings/Exports/Reports → Notifications/Settings/Activity Logs.
 
-**Repository verification — 21 September 2026:** dev dependencies dipulihkan daripada `composer.lock`; PHPUnit terasing lulus **526/526 (2,577 assertions)**, Pint `--test` lulus, TypeScript, inventory, tenant-bypass, Vite production build, bundle budget, Composer audit dan npm audit lulus. Build dijalankan pada salinan lokal kerana native Rolldown tidak boleh dimuatkan dari network share. PCOV dan Playwright belum dijalankan semula pada working tree ini; bukti CI/Playwright terdahulu kekal berasingan.
+**Repository verification — 22 September 2026:** dependency development dipasang daripada lockfile pada runner lokal terasing. SQLite PHPUnit **563/563 (2,791 assertions)**, Pint, TypeScript, inventory, tenant-bypass, Vite build/budget dan Composer/npm audits lulus. Cache config/routes runtime dikecualikan daripada runner. PHPunit/Pint dalam vendor network workspace tidak dipulihkan kerana ia berkongsi runtime; runner lokal digunakan. PCOV belum diukur semula secara lokal. Playwright/axe: 22/24 cases lulus dalam full run; dua assertion navigasi lama dibetulkan dan rerun terfokus lulus 2/2, maka semua 24 cases telah lulus merentas dua run.
 
 ## Inventori Repository
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 163 application routes |
-| Migrations | 70 migration files |
-| Controllers | 41 controller files |
-| Form Requests | 28 |
-| Policies | 21 fail |
+| Laravel routes | 173 application routes |
+| Migrations | 71 migration files |
+| Controllers | 42 controller files |
+| Form Requests | 35 |
+| Policies | 22 fail |
 | Actions | 37 |
-| Services/concerns | 40 fail |
-| Models | 18 |
-| Inertia `.tsx` pages | 43 |
-| PHP tests | 100 PHP test files |
-| Playwright journeys | 8 dalam 1 spec, desktop + mobile |
+| Services/concerns | 44 fail |
+| Models | 22 (tidak termasuk trait) |
+| Inertia `.tsx` pages | 47 |
+| PHP tests | 104 PHP test files |
+| Playwright journeys | 12 dalam 1 spec, desktop + mobile (24 cases) |
 
 ## Tech Stack
 
@@ -55,7 +59,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Production configuration validator kini mewajibkan Redis session/cache/queue, Asia/Kuala_Lumpur, email verification, secure cookie, CSP enforcing dan mail bukan `log`.
 - Vendor dependencies diselaraskan kepada lockfile selamat (Guzzle 7.15.2, PSR-7 2.13.0) untuk menutup advisory semasa.
 - Axe/keyboard smoke tests meliputi login, dashboard, homepage dan Contact pada desktop/mobile; contrast dan ARIA findings semasa telah dibaiki.
-- Butiran hubungan awam kini tenant-scoped dan boleh diedit melalui Settings: alamat, e-mel, telefon serta pautan Facebook, Instagram, TikTok dan YouTube divalidasi sebelum dipaparkan.
+- Butiran hubungan awam kini tenant-scoped dan boleh diedit melalui Settings: alamat, e-mel, telefon serta pautan Facebook, Instagram, TikTok dan YouTube divalidasi sebelum dipaparkan. Halaman Contact turut memaparkan seksyen Sekretariat dengan 23 penyelaras dan pengerusi permainan.
 - Query/payload assembly bagi Dashboard, Events dan Event Participants telah dipindahkan daripada controller kepada tiga service khusus; controller masing-masing kini fokus pada authorization, input, response dan mutation.
 - Artifact PCOV CI run `35560044122` pada master commit `0c1d05e7f` merekod **76.76% statement coverage (6,062/7,897)**; workflow mempunyai ratchet minimum 74.5% yang lulus.
 - Predis 3.6 menyediakan Redis client portable untuk Windows/IIS dan Docker; Dockerfile/Compose production serta isolated staging path telah dibaiki dan divalidasi.
@@ -63,20 +67,37 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 - Authenticated multi-worker staging k6 lulus 1,150/1,150 checks, 0% HTTP failures dan p95 81.543 ms pada 10 VU/30 saat.
 - GitHub Actions memantau `/up` setiap lima minit. Forced-failure evidence membuka serta assign issue #75; recovery probe menutup issue selepas endpoint kembali sihat.
 - Public athlete/team directory tersedia di `/athletes` dengan profile performance berasaskan match rasmi.
-- Navigasi awam desktop dan mobile/tablet kini memaparkan struktur menu yang sama; sub-menu Competition dan Information dibuka di bawah label desktop melalui klik, hover atau focus.
+- Navigasi awam desktop dan mobile/tablet kini memaparkan susunan yang sama: Home, Information, Competition, Schedule & Results, Athletes & Teams dan Contact sebagai menu terakhir; submenu Information hanya memaparkan General Information, Jawatankuasa Induk, Jawatankuasa Pelaksana, Pengerusi Permainan dan Tarikh Penting.
 - Halaman awam `/venues` kini mempunyai directory venue yang actionable, empty state dan pautan terus ke `/schedule?venue=...`; schedule membaca filter venue daripada URL.
-- Public homepage, directories, contact, information dan athlete profile kini memaparkan stale-data notice yang konsisten; `/faculties` mempunyai empty state khusus apabila tiada rekod diterbitkan.
+- Public homepage, directories, contact, information dan athlete profile kini memaparkan stale-data notice yang konsisten; `/faculties` mempunyai empty state khusus apabila tiada rekod diterbitkan. Halaman `/general-information` memaparkan syarat kelayakan dan pendaftaran SAF, `/jawatankuasa-induk` memaparkan jawatankuasa induk, pegawai universiti dan ahli jawatankuasa, `/jawatankuasa-pelaksana` memaparkan jawatankuasa pelaksana pelajar, `/pengerusi-permainan` memaparkan pengerusi setiap permainan, manakala `/tarikh-penting` memaparkan jadual tarikh penting.
 - Public accessibility smoke production lulus **6/6**: axe serious/critical, keyboard focus target, mobile Escape/focus wrapping, navigation parity, locale switch dan CSP console checks.
 - Public image resilience kini menggunakan `SafeImage` untuk fallback banner, branding dan sport icon; `ParticipantLogo` kembali kepada initials apabila asset logo gagal, manakala external links menggunakan `noopener noreferrer` dan E2E memeriksa alt attribute serta tiada broken image yang kekal.
 - Public route state coverage kini lengkap: `PublicLayout` mengumumkan loading Inertia melalui `aria-busy`, halaman public mempunyai empty/error/stale/loading state dan retry yang konsisten, manakala permission kekal pada backend 403/404 kerana route public adalah anonymous.
 - Public controls kini distandardkan dengan primitive shared shadcn/Radix untuk tabs, pagination, accordion, alert, filter, input, select dan action buttons tanpa UI framework baharu.
+- Semua card public kini menggunakan bahasa visual bersama berasaskan kad Venue: radius 3xl, border highlight, shadow lembut, hover lift dan aksen bulatan dekoratif melalui utility `public-card`.
+- Public portal menyokong EN/MS melalui locale switcher; halaman Maklumat Am, Jawatankuasa, Pengerusi Permainan, Tarikh Penting dan seksyen Sekretariat kini mempunyai kandungan serta label English/Bahasa Malaysia. Menu public turut dilokalkan sebagai Home → Utama, Schedule & Results → Jadual & Keputusan dan Contact → Hubungi dalam Bahasa Malaysia.
+- P1 reliability contract kini mendokumenkan metric/threshold/owner/escalation serta matriks cache invalidation; regression query budgets ditambah untuk dashboard, public homepage, public schedule dan Events index. Runtime alert delivery, Redis activation dan query profiling tambahan masih bergantung pada production/staging evidence.
+- P1 concurrency regression coverage kini melindungi duplicate draw fixture generation, result entry/approval/correction, bulk registration import dan schedule conflict validation melalui row locks, unique indexes dan write-transaction rechecks. Ujian multi-worker pada MySQL/Redis staging masih diperlukan untuk menutup bukti runtime.
+- P1 asynchronous data-transfer backend kini menyediakan tenant-scoped `DataTransfer`, retryable queue job, progress, idempotency key, failure report serta status/download endpoints untuk Excel export dan participant/event-participant import. Reports Quick Exports, participant import dan event registration import sudah menggunakan queued UI dengan polling/progress/failure handling, dengan regression coverage untuk JSON queue status payloads; production worker/Redis evidence masih belum ditutup.
+- P1 performance baseline kini mempunyai query-budget regression untuk dashboard, public homepage/schedule, Events, Results, Registrations dan Reports. MySQL `stms:query-profile` pada 23 September 2026 untuk organisasi `utem` merekod representative paths dengan `rows=1` dan join `ref`/`eq_ref`; beberapa query masih menunjukkan `Using filesort`, tetapi tiada high-cardinality scan semasa yang mewajarkan index baharu tanpa bukti beban tambahan.
+- Production operations runbook kini mendokumenkan incident triage, minimum evidence commands, rollback go/no-go, worker/scheduler supervision, restore-drill record dan release evidence pack. Named owner, alert destination, supervised processes dan restore evidence sebenar masih production P0 yang perlu diaktifkan sebelum `GO`.
+- Tipografi public menggunakan Geist untuk body, navigasi dan heading supaya teks kekal jelas, serta Barlow Condensed 700/800 secara terhad untuk nombor paparan dan aksen display.
 - Responsive public shell smoke lulus **1/1** untuk viewport mobile 390px, tablet 768px dan desktop 1440px, reduced motion serta touch target minimum 44px; browser zoom 200% sebenar masih belum diaudit.
 - Homepage public kini mempunyai pre-fixture state yang jelas: CTA utama membawa pengguna ke program sukan apabila jadual belum diterbitkan, dan panel hero menyediakan pautan pantas ke sukan, venue serta atlet.
+- Poster rasmi SAF 20, 2026 kini memenuhi lebar kandungan hero, tepat di atas tajuk “Sukan Antara Fakulti”; banner tidak lagi diulang dalam seksyen berasingan selepas hero.
+- Default visual public theme kini mengikut identiti banner SAF 20 2026: midnight navy, biru elektrik/ungu, merah, oren dan latar neutral yang lebih lembut; tetapan tenant masih boleh override palet ini.
+- Session branding kini menyokong logo standard dan inverse; /sessions boleh upload kedua-dua variant, manakala public header/footer menggunakan logo session aktif sebelum fallback kepada logo organisasi.
+- Public header kini memaparkan logo UTeM dan logo SAF session aktif secara bersebelahan pada shell public.
+- Public header menggunakan hierarchy dua tingkat: logo UTeM/SAF di atas dan nama “Sukan Antara Fakulti” di bawah tanpa label tambahan “Official portal”.
+- Halaman public General Information kini memaparkan seksyen Hadiah: 30 emas, 30 perak dan 30 gangsa.
+- Halaman Jawatankuasa Induk kini menggunakan susun atur dokumen berpusat dengan logo UTeM/SAF dan pembahagian jawatan, wakil universiti serta ahli jawatankuasa yang lebih jelas.
+- Halaman Jawatankuasa Pelaksana kini menggunakan susun atur dokumen berpusat yang sama dengan logo UTeM/SAF dan jadual jawatan dua kolum.
 - Sidebar authenticated dashboard kini memaparkan semua seksyen menu secara terus tanpa dropdown; visibility masih ditapis mengikut role dan pautan aktif kekal ditanda.
 - Sidebar authenticated kini menggunakan gap, padding dan tinggi item yang sama pada Dashboard, Matches dan semua page lain; tiada lagi spacing khas untuk route Dashboard.
 - Sidebar authenticated menggunakan spacing compact yang seragam untuk mengekalkan lebih banyak menu dalam ruang menegak tanpa mengubah struktur atau role visibility.
 - Whitespace sidebar dipadatkan lagi; menu/logout kekal `min-h-11` untuk target interaksi minimum 44px.
 - Dashboard authenticated kini membezakan workspace Super/Org Admin, Admin Sport dan Staff; CTA analytics/registration tidak lagi dipaparkan kepada role yang tiada akses, manakala faculty representative dan dean kekal pada dashboard khusus masing-masing.
+- P2 product improvements kini menambah Calendar view dan print action pada public schedule, monitor operasi dalam Reports, tenant-scoped data quality checks serta correction reason wajib untuk approved result update/unlock dengan rekod activity log. Bulk action contract semasa kini meliputi Events batch delete, Event Participants batch approve/reject, batch register events, participant import dan event registration import melalui preview/report, reason/notes apabila relevan, sekatan campur organisasi, eligible/skip handling dan audit summary. Ranking configurability kini mempunyai UI pilihan/susunan tie-breaker untuk strategi points, win-rate dan medal tally dengan validation duplicate. Event draw configurability expose format, pool size dan qualifiers per pool dengan validation. Sport scoring profile expose score unit, max score, draw policy dan allowed scoring event types yang dikuatkuasakan semasa result recording. Reports governance kini memaparkan comparison 7 hari, export governance 30 hari, retention/archive policy dan data ownership matrix. Post-MVP capability matrix untuk REST API/mobile/offline/realtime/accreditation/analytics sudah didokumenkan sebagai non-goal MVP sehingga trigger sebenar wujud. Formula/rules engine penuh kekal future enhancement; bukti runtime production untuk worker/alert/monitoring/retention automation kekal P0 berasingan.
 - Match cards homepage/schedule menggunakan layout shared responsive; completed results menyokong scorer mengikut participant.
 - `Sport.scoring_mode=individual` serta `match_scoring_events` menyokong nama atlet, minit jaringan dan validasi roster/score untuk Hockey dan Football/Soccer.
 - User accounts now have the explicit `is_active` lifecycle flag; inactive accounts are excluded from login and can be managed from the Users form.
@@ -94,21 +115,21 @@ Tujuh tetapan hubungan rasmi Pusat Sukan telah disimpan untuk organisasi `utem` 
 
 Walaupun backup off-host point-in-time dan external uptime monitor kini mempunyai bukti, `.env` live belum mengaktifkan jadual backup/internal token atau Redis/runtime baseline; preflight 18 Ogos 12:02 MYT masih melaporkan kedua-duanya sebagai belum dikonfigurasi.
 
-Runtime masih menggunakan nilai berikut sehingga deployment berjadual dibuat:
+Snapshot runtime lama (18 Ogos; bukan semakan runtime baharu) menggunakan nilai berikut. Rekod lebih baharu dalam `TODOS.md` mengesahkan timezone Malaysia dan CSP enforcing pada 20 September:
 
 - database cache dan queue;
 - file session;
-- timezone UTC;
+- timezone UTC pada snapshot lama; `TODOS.md` kemudian merekod Asia/Kuala_Lumpur;
 - email verification disabled;
 - mail `log`;
-- CSP report-only;
+- CSP report-only pada snapshot lama; `TODOS.md` kemudian merekod enforcing;
 - `PRODUCTION_CONFIG_ENFORCE=false`.
 
 Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada sistem hidup boleh melog keluar pengguna atau menutup akses tanpa mail transport yang sah. Perubahan runtime mesti dibuat melalui release runbook, bukan suntingan ad hoc.
 
 ## Quality Gates Semasa
 
-**Certification run — 21 September 2026:** required quality gate post-merge pada master commit `0c1d05e7f` lulus semua job: secret scan, dependency audits, Pint, PHPUnit, PCOV coverage, TypeScript/build/budget dan browser E2E. Artifact PCOV merekod **76.76% statement coverage (6,062/7,897)** dan lulus ratchet minimum 74.5%. Bukti ini ialah baseline semasa; ia tidak membuka P0 production yang masih di-hold.
+**Certification run — 21 September 2026:** required quality gate post-merge pada master commit `0c1d05e7f` lulus semua job: secret scan, dependency audits, Pint, PHPUnit, PCOV coverage, TypeScript/build/budget dan browser E2E. Artifact PCOV merekod **76.76% statement coverage (6,062/7,897)** dan lulus ratchet minimum 74.5%. Bukti ini ialah baseline connected CI terdahulu; ia tidak mengesahkan kod selepas commit itu dan tidak membuka P0 production yang masih di-hold.
 
 | Gate | Keputusan connected CI 21 September 2026 |
 |---|---|
@@ -137,6 +158,12 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 - `PublicPortalService::athleteDirectory()` memulangkan paginator `rosters`/`athletes` berserta `counts`; cache dinaikkan ke `public-athletes:v2`.
 - Kemasan UX P0: segmented Teams/Athletes dengan kiraan, chip sukan berikon, penapis fakulti + susunan, skeleton/loading dengan `aria-busy`, dan empty state boleh tindak.
 - Suite penuh **508/508** (2,478 assertions); ujian pagination/filter/fakulti/susunan dalam `PublicPortalTest`.
+
+## Capability Tambahan 21 September 2026 — Public Sports Programme Quota & Venue
+
+- `/sports` kini memaparkan quota maksimum atlet lelaki, atlet perempuan dan pegawai bagi setiap acara berdasarkan konfigurasi `SportCategory`.
+- Venue acara daripada `Event.venues` turut dipaparkan pada kad sukan; nilai `—` atau `Venue Belum Ditetapkan` digunakan apabila konfigurasi belum lengkap.
+- Regression test ditambah untuk memastikan quota dan venue dihantar dalam payload public portal.
 
 ## Capability Tambahan 9 September 2026 — Bulk Import Peserta/Kontinjen (Session-level)
 
@@ -179,7 +206,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
-Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about` dan `/contact-us`. Product owner mengesahkan SAF 2026 berlangsung 13–25 Oktober 2026 dengan satu tournament, 30 acara dan 8 kontinjen. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
+Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about`, `/general-information`, `/jawatankuasa-induk`, `/jawatankuasa-pelaksana`, `/pengerusi-permainan`, `/tarikh-penting` dan `/contact-us`. Product owner mengesahkan SAF 2026 berlangsung 13–25 Oktober 2026 dengan satu tournament, 30 acara dan 8 kontinjen. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
 
 ## Baki Sebelum Release Production
 
@@ -189,4 +216,4 @@ Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam 
 4. Deployment disahkan melalui worker/scheduler restart, authenticated smoke/Playwright dan release tag.
 5. Reset-password mail delivery direkod sebelum email verification diaktifkan.
 
-**Last updated:** 20 September 2026.
+**Last updated:** 22 September 2026.

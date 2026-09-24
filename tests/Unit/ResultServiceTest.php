@@ -55,6 +55,7 @@ class ResultServiceTest extends TestCase
         $result = Result::factory()->create([
             'organization_id' => $org->id,
             'match_id' => $match->id,
+            'status' => Result::STATUS_SUBMITTED,
         ]);
 
         $updated = $this->service->update($org, $result->id, [
@@ -74,6 +75,7 @@ class ResultServiceTest extends TestCase
         $result = Result::factory()->create([
             'organization_id' => $org->id,
             'match_id' => $match->id,
+            'status' => Result::STATUS_SUBMITTED,
         ]);
 
         $this->service->delete($org, $result->id);
@@ -113,6 +115,7 @@ class ResultServiceTest extends TestCase
         $result = Result::factory()->create([
             'organization_id' => $org->id,
             'match_id' => $match->id,
+            'status' => Result::STATUS_SUBMITTED,
         ]);
 
         $this->service->update($org, $result->id, [
@@ -163,6 +166,80 @@ class ResultServiceTest extends TestCase
         $this->service->create($org, [
             'match_id' => $match->id, 'score_home' => 2, 'score_away' => 0,
             'scoring_events' => [['participant_id' => $home->id, 'squad_member_id' => $athlete->id]],
+        ]);
+    }
+
+    public function test_scoring_profile_rejects_scores_above_the_configured_max(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $org = Organization::factory()->create();
+        $sport = Sport::factory()->create([
+            'organization_id' => $org->id,
+            'scoring_profile' => ['max_score' => 5, 'allow_draw' => true],
+        ]);
+        $event = Event::factory()->create(['organization_id' => $org->id, 'sport_id' => $sport->id]);
+        $home = Participant::factory()->create(['organization_id' => $org->id]);
+        $away = Participant::factory()->create(['organization_id' => $org->id]);
+        $match = Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id]);
+
+        $this->service->create($org, [
+            'match_id' => $match->id,
+            'score_home' => 6,
+            'score_away' => 1,
+        ]);
+    }
+
+    public function test_scoring_profile_rejects_draw_when_not_allowed(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $org = Organization::factory()->create();
+        $sport = Sport::factory()->create([
+            'organization_id' => $org->id,
+            'scoring_profile' => ['allow_draw' => false],
+        ]);
+        $event = Event::factory()->create(['organization_id' => $org->id, 'sport_id' => $sport->id]);
+        $home = Participant::factory()->create(['organization_id' => $org->id]);
+        $away = Participant::factory()->create(['organization_id' => $org->id]);
+        $match = Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id]);
+
+        $this->service->create($org, [
+            'match_id' => $match->id,
+            'score_home' => 1,
+            'score_away' => 1,
+        ]);
+    }
+
+    public function test_individual_scoring_profile_allows_configured_event_types(): void
+    {
+        $org = Organization::factory()->create();
+        $sport = Sport::factory()->create([
+            'organization_id' => $org->id,
+            'scoring_mode' => 'individual',
+            'scoring_profile' => ['scoring_event_types' => ['goal', 'penalty']],
+        ]);
+        $event = Event::factory()->create(['organization_id' => $org->id, 'sport_id' => $sport->id]);
+        $home = Participant::factory()->create(['organization_id' => $org->id]);
+        $away = Participant::factory()->create(['organization_id' => $org->id]);
+        $homeEntry = EventParticipant::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'participant_id' => $home->id, 'status' => 'confirmed']);
+        $athlete = SquadMember::factory()->create(['organization_id' => $org->id, 'event_participant_id' => $homeEntry->id, 'role' => 'athlete_male']);
+        $match = Fixture::factory()->create(['organization_id' => $org->id, 'event_id' => $event->id, 'home_participant_id' => $home->id, 'away_participant_id' => $away->id]);
+
+        $result = $this->service->create($org, [
+            'match_id' => $match->id,
+            'score_home' => 1,
+            'score_away' => 0,
+            'scoring_events' => [[
+                'participant_id' => $home->id,
+                'squad_member_id' => $athlete->id,
+                'event_type' => 'penalty',
+            ]],
+        ]);
+
+        $this->assertDatabaseHas('match_scoring_events', [
+            'result_id' => $result->id,
+            'event_type' => 'penalty',
         ]);
     }
 

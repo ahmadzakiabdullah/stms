@@ -1,11 +1,12 @@
 # Database Schema
 
-> **Status semasa (21 Ogos 2026):** Repositori mengandungi **66 migration files**. Migrasi terkini menambah: `ranking_rules` JSON pada session/tournament; `sports.scoring_mode` + `match_scoring_events` untuk individual scoring; dan status result `draft`/`submitted`/`approved`/`locked` (`2026_08_21_130000`) bersama actor timestamps. Runtime production memerlukan migrasi melalui release runbook.
+> **Inventori repository (22 September 2026):** Repositori mengandungi **71 migration files**. Migrasi terkini menambah: `ranking_rules` JSON pada session/tournament; `sports.scoring_mode` + `match_scoring_events` untuk individual scoring; dan status result `draft`/`submitted`/`approved`/`locked` (`2026_08_21_130000`) bersama actor timestamps. Runtime production memerlukan migrasi melalui release runbook.
 
-## Domain dan Tenancy (20 jadual)
+## Domain dan Tenancy
 
 | Jadual | Tujuan utama |
 |---|---|
+| `data_transfers` | Transfer import/export tenant-scoped, requester, progress, idempotency dan failure report. |
 | `organizations` | Root tenant dan hierarki `parent_id`. |
 | `users` | Akaun UUID (`uuid` sebagai PK), organisasi, participant, username/e-mel dan status `is_active`. Akaun inactive tidak boleh log masuk. |
 | `event_sessions` | Tempoh pertandingan organisasi, default ranking strategy dan JSON rules. |
@@ -33,7 +34,7 @@
 - Framework: `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`, `password_reset_tokens`, `sessions`.
 - Spatie Permission: `permissions`, `roles`, `model_has_permissions`, `model_has_roles`, `role_has_permissions`.
 
-Jadual ke-33 ialah `migrations`.
+Jadual framework turut merangkumi `migrations`; jumlah migration files bukan jumlah jadual runtime.
 
 ## Konvensyen dan Pengecualian
 

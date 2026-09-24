@@ -51,10 +51,10 @@ const eventSchema = z.object({
     venues: z.array(z.object({ value: z.string() })).optional().default([]),
     start_date: z.string().min(1, 'Start date is required'),
     end_date: z.string().optional().default(''),
-    registration_deadline: z.string().optional().default(''),
     is_active: z.boolean(),
     format: z.string().optional().default(''),
     pool_size: z.coerce.number().min(2).max(32).optional().default(4),
+    qualifiers_per_pool: z.coerce.number().min(1).max(16).optional().default(2),
 });
 
 type EventForm = z.infer<typeof eventSchema>;
@@ -81,6 +81,7 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     const [deleteEvent, setDeleteEvent] = useState<EventRow | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [batchDelete, setBatchDelete] = useState(false);
+    const [batchDeleteReason, setBatchDeleteReason] = useState('');
     const [drawEvent, setDrawEvent] = useState<EventRow | null>(null);
     const [redrawEvent, setRedrawEvent] = useState<EventRow | null>(null);
     const [resetDrawEvent, setResetDrawEvent] = useState<EventRow | null>(null);
@@ -91,6 +92,7 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     const tournaments = Array.isArray(tournamentsProp) ? tournamentsProp : (tournamentsProp ?? []);
     const sports = Array.isArray(sportsProp) ? sportsProp : (sportsProp ?? []);
     const categories = Array.isArray(categoriesProp) ? categoriesProp : (categoriesProp ?? []);
+    const selectedEvents = events.filter((event) => selectedIds.has(event.id));
 
     const applySearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -118,8 +120,10 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
             venues: [],
             start_date: '',
             end_date: '',
-            registration_deadline: '',
             is_active: true,
+            format: '',
+            pool_size: 4,
+            qualifiers_per_pool: 2,
         },
     });
 
@@ -127,15 +131,34 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
 
     const selectedTournamentId = watch('tournament_id');
     const selectedSportId = watch('sport_id');
+    const selectedFormat = watch('format');
 
     const formatLabel = (format?: string | null) => {
-    const map: Record<string, string> = {
+        const map: Record<string, string> = {
             group_knockout: t('Group Knockout'),
             league: t('League'),
             knockout: t('Knockout'),
-    };
+        };
         return format ? map[format] || format : t('Not set');
-};
+    };
+
+    const formatDetail = (event: EventRow) => {
+        const format = (event as any).format;
+
+        if (!format) {
+            return t('No draw config');
+        }
+
+        if (format === 'group_knockout') {
+            return `${event.pool_size ?? 4}/pool, ${event.qualifiers_per_pool ?? 2} qualify`;
+        }
+
+        if (format === 'league') {
+            return `${event.pool_size ?? 4}/pool`;
+        }
+
+        return t('Direct elimination');
+    };
 
 const formatForDateInput = (dateStr: string | null | undefined) => {
         if (!dateStr) return '';
@@ -193,10 +216,10 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             venues: [],
             start_date: '',
             end_date: '',
-            registration_deadline: '',
             is_active: true,
             format: '',
             pool_size: 4,
+            qualifiers_per_pool: 2,
         });
         setOpen(true);
     };
@@ -214,10 +237,10 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             venues: (event.venues ?? []).map((value) => ({ value })),
             start_date: formatForDateInput(event.start_date),
             end_date: formatForDateInput(event.end_date),
-            registration_deadline: formatForDateInput((event as any).registration_deadline),
             is_active: event.is_active,
             format: (event as any).format || '',
             pool_size: (event as any).pool_size ?? 4,
+            qualifiers_per_pool: (event as any).qualifiers_per_pool ?? 2,
         });
         setOpen(true);
     };
@@ -290,10 +313,9 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
     };
 
     const handleBatchDelete = () => {
-        router.post(route('events.batch-destroy'), { ids: Array.from(selectedIds) }, {
+        router.post(route('events.batch-destroy'), { ids: Array.from(selectedIds), reason: batchDeleteReason.trim() }, {
             preserveScroll: true,
-            onSuccess: () => { setSelectedIds(new Set()); setBatchDelete(false); },
-            onError: () => setBatchDelete(false),
+            onSuccess: () => { setSelectedIds(new Set()); setBatchDeleteReason(''); setBatchDelete(false); },
         });
     };
 
@@ -465,18 +487,8 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             />
                                             {errors.end_date && <p className="text-sm text-destructive">{errors.end_date.message}</p>}
                                         </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="registration_deadline">{t('Registration Deadline')}</Label>
-                                            <Input
-                                                id="registration_deadline"
-                                                type="text"
-                                                placeholder="dd/mm/yyyy"
-                                                value={formatForDateDisplay(watch('registration_deadline'))}
-                                                onChange={(event) => setValue('registration_deadline', parseDateDisplay(event.target.value), { shouldValidate: true })}
-                                            />
-                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-4 sm:grid-cols-3">
                                         <div className="grid gap-2">
                                             <Label htmlFor="format">{t('Format')}</Label>
                                             <Controller
@@ -500,6 +512,19 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                         <div className="grid gap-2">
                                             <Label htmlFor="pool_size">{t('Pool Size')}</Label>
                                             <Input id="pool_size" type="number" min={2} max={32} {...register('pool_size', { valueAsNumber: true })} />
+                                            {errors.pool_size && <p className="text-sm text-destructive">{errors.pool_size.message}</p>}
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="qualifiers_per_pool">{t('Qualifiers / Pool')}</Label>
+                                            <Input
+                                                id="qualifiers_per_pool"
+                                                type="number"
+                                                min={1}
+                                                max={16}
+                                                disabled={selectedFormat !== 'group_knockout'}
+                                                {...register('qualifiers_per_pool', { valueAsNumber: true })}
+                                            />
+                                            {errors.qualifiers_per_pool && <p className="text-sm text-destructive">{errors.qualifiers_per_pool.message}</p>}
                                         </div>
                                     </div>
                                 </div>
@@ -541,7 +566,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                     {isSuperAdmin && selectedIds.size > 0 && (
                         <div className="mb-4 flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">{selectedIds.size} {t('selected')}</span>
-                            <Button variant="destructive" size="sm" onClick={() => setBatchDelete(true)}>
+                            <Button variant="destructive" size="sm" onClick={() => { setBatchDeleteReason(''); setBatchDelete(true); }}>
                                 <Trash className="mr-1 size-3" /> {t('Delete Selected')}
                             </Button>
                         </div>
@@ -561,7 +586,6 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                 <TableHead>{t('Tournament')}</TableHead>
                                 <TableHead>{t('Sport / Category')}</TableHead>
                                 <TableHead>{t('Dates')}</TableHead>
-                                <TableHead>{t('Deadline')}</TableHead>
                                 <TableHead>{t('Format')}</TableHead>
                                 <TableHead>{t('Participation')}</TableHead>
                                 <TableHead>{t('Status')}</TableHead>
@@ -571,7 +595,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                         <TableBody>
                             {events.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={isSuperAdmin ? 10 : 9} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={isSuperAdmin ? 9 : 8} className="text-center text-muted-foreground">
                                         <EmptyState title={search ? t('No events match your search.') : t('No events yet.')} />
                                     </TableCell>
                                 </TableRow>
@@ -599,11 +623,11 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     <TableCell className="text-sm text-muted-foreground">
                                         {new Date(event.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })} {event.end_date ? `→ ${new Date(event.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}` : ''}
                                     </TableCell>
-                                    <TableCell className="text-sm text-muted-foreground">
-                                        {(event as any).registration_deadline ? new Date((event as any).registration_deadline).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
-                                    </TableCell>
                                     <TableCell>
-                                        <span className="text-xs">{formatLabel((event as any).format)}</span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-xs font-medium">{formatLabel((event as any).format)}</span>
+                                            <span className="text-xs text-muted-foreground">{formatDetail(event)}</span>
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col gap-1">
@@ -694,19 +718,49 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             </Card>
 
             {isSuperAdmin && (
-                <Dialog open={batchDelete} onOpenChange={(isOpen) => !isOpen && setBatchDelete(false)}>
+                <Dialog open={batchDelete} onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setBatchDelete(false);
+                        setBatchDeleteReason('');
+                    }
+                }}>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>{t('Delete Events')}?</DialogTitle>
                             <DialogDescription>
-                                {t('This action cannot be undone. The events and all associated data will be permanently deleted.')}
+                                {t('Review the selected events and record a reason before deleting them.')}
                             </DialogDescription>
                         </DialogHeader>
+                        <div className="space-y-4 py-2">
+                            <div className="rounded-md border bg-muted/30 p-3">
+                                <p className="text-sm font-medium">{selectedEvents.length} {t('selected')}</p>
+                                <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                                    {selectedEvents.slice(0, 6).map((event) => (
+                                        <li key={event.id} className="truncate">- {event.name}</li>
+                                    ))}
+                                </ul>
+                                {selectedEvents.length > 6 && (
+                                    <p className="mt-2 text-xs text-muted-foreground">+{selectedEvents.length - 6} {t('more')}</p>
+                                )}
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="batch-delete-reason">{t('Reason')}</Label>
+                                <textarea
+                                    id="batch-delete-reason"
+                                    value={batchDeleteReason}
+                                    onChange={(event) => setBatchDeleteReason(event.target.value)}
+                                    className="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    maxLength={500}
+                                    placeholder={t('Example: Duplicate events created during setup review.')}
+                                />
+                                <p className="text-xs text-muted-foreground">{t('This reason will be stored in the activity log.')}</p>
+                            </div>
+                        </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setBatchDelete(false)}>
                                 {t('Cancel')}
                             </Button>
-                            <Button variant="destructive" onClick={handleBatchDelete}>
+                            <Button variant="destructive" onClick={handleBatchDelete} disabled={selectedEvents.length === 0 || batchDeleteReason.trim().length < 5}>
                                 {t('Yes, Delete All')}
                             </Button>
                         </DialogFooter>

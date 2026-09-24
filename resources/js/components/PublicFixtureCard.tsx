@@ -56,7 +56,7 @@ export default function PublicFixtureCard({ match, mode }: Props) {
     );
 
     return (
-        <article id={`match-${match.id}`} className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 shadow-sm transition hover:border-[var(--public-primary-border)] hover:shadow-md sm:p-7">
+        <article id={`match-${match.id}`} className="public-card p-4 sm:p-7">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                     <h3 className="text-base font-black leading-tight text-[var(--public-text)] sm:text-lg">{match.event || match.sport || t('Competition')}</h3>

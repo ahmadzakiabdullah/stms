@@ -38,13 +38,14 @@
 
 - [ ] Freeze release candidate dan semak semua perubahan tracked/untracked sebelum deploy.
 - [ ] Jalankan migration, cache clear/warm, worker restart dan scheduler verification dalam urutan cutover.
-- [ ] Jalankan smoke test authenticated, cross-tenant negative test, Playwright dan axe pada deployment sebenar.
+- [ ] Jalankan smoke test authenticated, cross-tenant negative test, Playwright dan axe pada deployment sebenar. Partial unauthenticated smoke pada 23 September 2026 mengesahkan `GET /` dan `GET /up` di `https://saf.utem.edu.my` return HTTP 200; `stms:production-smoke` kini menyediakan evidence command untuk ulang HTTP smoke dan tokened `/health`. Authenticated/cross-tenant/Playwright/axe evidence masih diperlukan.
 - [ ] Tag commit release dan simpan bukti preflight, smoke test, backup serta rollback readiness.
 
 ## P0 — Keselamatan authorization dan tenant isolation
 
 ### Faculty dashboard
 
+- [x] Centralize separate start/end windows for event registration and officials/athletes at Session level; squad entry/import requires a confirmed registration, a closed event window, and an active squad window.
 - [x] Lindungi route `/faculty/squad*` dengan middleware role dan semakan controller untuk faculty representative yang mempunyai participant; jangan bergantung pada `participant_id` sahaja.
 - [x] Tambah negative tests untuk user biasa, user tanpa role, peserta lain dan organisasi lain.
 - [x] Pastikan user yang auto-created melalui `ParticipantService::ensureUserLinked` tidak mendapat akses faculty sebelum role diberikan; akses route kini memerlukan role dan linked participant.
@@ -97,6 +98,15 @@
 - [x] Lengkapkan navigasi mobile/tablet supaya Competition dan Information tidak hilang berbanding desktop.
 - [x] Redesign public Venues directory dengan kad venue yang boleh membuka jadual mengikut venue.
 - [x] Redesign homepage public supaya state sebelum jadual diterbitkan mempunyai CTA jelas ke sukan, venue dan atlet.
+- [x] Letakkan poster rasmi SAF 20, 2026 secara full-width dalam hero homepage, di atas tajuk “Sukan Antara Fakulti”, tanpa paparan banner berganda di bawah hero.
+- [x] Selaraskan default warna dan gaya public page dengan banner SAF 20 2026 menggunakan palet navy, biru/ungu, merah dan oren yang kekal mudah dibaca.
+- [x] Pastikan palet baharu mengatasi default theme lama yang tersimpan dalam Settings melalui fallback backend dan migration data yang selamat.
+- [x] Tambah branding per-session dengan logo standard/inverse pada Session, public shell dan fallback logo organisasi.
+- [x] Paparkan logo organisasi UTeM dan logo SAF session secara bersebelahan pada public header.
+- [x] Ringkaskan public header kepada logo UTeM/SAF di atas dan nama session di bawah tanpa label “Official portal”.
+- [x] Tambah maklumat Hadiah pada halaman General Information: 30 pingat emas, 30 perak dan 30 gangsa.
+- [x] Redesign halaman Jawatankuasa Induk mengikut lampiran dengan logo UTeM/SAF dan susun atur jawatan dua kolum.
+- [x] Selaraskan halaman Jawatankuasa Pelaksana dengan susun atur dokumen dan branding logo yang sama.
 - [x] Sediakan state loading, empty, stale, error dan permission untuk semua public routes. `PublicLayout` mengumumkan loading Inertia dan `aria-busy`; homepage serta semua halaman public mempunyai error state dengan retry, empty/stale/loading state yang relevan; permission state kekal backend HTTP 403/404 kerana route ini anonymous by design.
 - [x] Gunakan komponen shadcn untuk filter, input, select, tabs, pagination, alert dan accordion secara konsisten. Public filter/search controls, athlete tabs/pagination, FAQ/roster disclosure, error alert dan refresh actions kini menggunakan primitive shared di `components/ui`.
 - [x] Jalankan keyboard navigation, focus management, screen-reader labels dan axe pada semua public routes; production smoke Playwright lulus **6/6** pada 21 September 2026.
@@ -127,6 +137,6 @@
 
 1. Kod, migration dan authorization disemak untuk tenant isolation.
 2. Policy, Form Request, Service/Action dan regression tests lengkap.
-3. Semua quality gates lulus pada commit yang sama.
+ 3. Semua quality gates lulus pada commit yang sama.
 4. Dokumentasi, ADR atau `CHANGELOG.md` dikemas kini apabila kontrak/architecture berubah.
 5. Bukti deployment sebenar tersedia; contoh konfigurasi sahaja tidak dikira sebagai selesai.

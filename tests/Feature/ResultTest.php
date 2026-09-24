@@ -113,13 +113,54 @@ class ResultTest extends TestCase
             'locked_by' => $admin->uuid,
         ]);
 
-        $this->actingAs($admin)->post(route('results.unlock', $result))
+        $this->actingAs($admin)->post(route('results.unlock', $result), [
+            'correction_reason' => 'Score needs verification before publishing.',
+        ])
             ->assertRedirect(route('results.index'));
         $this->assertDatabaseHas('results', [
             'id' => $result->id,
             'status' => Result::STATUS_APPROVED,
             'locked_by' => null,
             'locked_at' => null,
+        ]);
+    }
+
+    public function test_approved_result_requires_correction_reason_before_update(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $match = Fixture::factory()->create(['organization_id' => $org->id]);
+        $result = Result::factory()->create([
+            'organization_id' => $org->id,
+            'match_id' => $match->id,
+            'status' => Result::STATUS_APPROVED,
+            'score_home' => 1,
+            'score_away' => 0,
+        ]);
+
+        $this->actingAs($admin)->from(route('results.index'))->put(route('results.update', $result), [
+            'match_id' => $match->id,
+            'score_home' => 2,
+            'score_away' => 0,
+        ])->assertRedirect(route('results.index'))
+            ->assertSessionHasErrors('correction_reason');
+
+        $this->actingAs($admin)->put(route('results.update', $result), [
+            'match_id' => $match->id,
+            'score_home' => 2,
+            'score_away' => 0,
+            'correction_reason' => 'Official table confirmed a correction.',
+        ])->assertRedirect(route('results.index'));
+
+        $this->assertDatabaseHas('results', [
+            'id' => $result->id,
+            'score_home' => 2,
+            'status' => Result::STATUS_APPROVED,
+        ]);
+        $this->assertDatabaseHas('activity_log', [
+            'subject_type' => $result->getMorphClass(),
+            'subject_id' => $result->id,
+            'event' => 'corrected',
         ]);
     }
 
@@ -181,6 +222,7 @@ class ResultTest extends TestCase
             'match_id' => $match->id,
             'score_home' => 1,
             'score_away' => 0,
+            'status' => Result::STATUS_SUBMITTED,
         ]);
 
         $response = $this->actingAs($admin)->put(route('results.update', $result), [

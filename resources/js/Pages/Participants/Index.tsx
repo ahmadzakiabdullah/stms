@@ -39,6 +39,7 @@ import { Eye, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import type { Participant, Session, Paginated } from '@/types';
+import axios from 'axios';
 
 const participantSchema = z.object({
     session_id: z.string().nullable().optional().default(''),
@@ -679,16 +680,47 @@ interface ImportPreview {
     errors: string[];
 }
 
+interface TransferStatus {
+    id: string;
+    type: string;
+    status: 'pending' | 'running' | 'completed' | 'completed_with_errors' | 'failed';
+    progress: number;
+    processed: number;
+    total: number | null;
+    failure_report: string[];
+    download_url: string | null;
+}
+
 function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessions: Session[]; initialPreview: ImportPreview | null; onClose: () => void }) {
     const { t } = useI18n();
     const [file, setFile] = useState<File | null>(null);
     const [sessionId, setSessionId] = useState('');
     const [preview, setPreview] = useState<ImportPreview | null>(initialPreview);
     const [busy, setBusy] = useState(false);
+    const [transfer, setTransfer] = useState<TransferStatus | null>(null);
+    const [queueError, setQueueError] = useState<string | null>(null);
 
     useEffect(() => {
         setPreview(initialPreview);
     }, [initialPreview]);
+
+    useEffect(() => {
+        if (!transfer || ['completed', 'completed_with_errors', 'failed'].includes(transfer.status)) {
+            return;
+        }
+
+        const timer = window.setInterval(async () => {
+            try {
+                const response = await axios.get<{ data: TransferStatus }>(route('data-transfers.show', transfer.id));
+                setTransfer(response.data.data);
+            } catch {
+                setQueueError(t('Unable to refresh import status.'));
+                window.clearInterval(timer);
+            }
+        }, 2000);
+
+        return () => window.clearInterval(timer);
+    }, [transfer?.id, transfer?.status]);
 
     const handleUpload = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -707,25 +739,32 @@ function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessi
         });
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!preview || busy) return;
 
         setBusy(true);
-        router.post(route('participants.import.confirm'), { token: preview.token }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                setPreview(null);
-                setFile(null);
-                onClose();
-            },
-            onFinish: () => setBusy(false),
-        });
+        setQueueError(null);
+
+        try {
+            const response = await axios.post<{ data: TransferStatus }>(route('participants.import.queue'), { token: preview.token });
+            setTransfer(response.data.data);
+            setPreview(null);
+            setFile(null);
+        } catch (error) {
+            const message = axios.isAxiosError(error)
+                ? (error.response?.data?.message ?? t('Unable to queue import.'))
+                : t('Unable to queue import.');
+            setQueueError(message);
+        } finally {
+            setBusy(false);
+        }
     };
 
     const resetPreview = () => {
         setPreview(null);
         setFile(null);
+        setTransfer(null);
+        setQueueError(null);
     };
 
     return (
@@ -745,6 +784,35 @@ function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessi
             </a>
 
             {!preview ? (
+                transfer ? (
+                    <div className="mt-4 grid gap-3">
+                        <div className="rounded-md border bg-muted/30 p-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-sm font-medium">{t('Queued participant import')}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t(transfer.status)} · {transfer.progress}%
+                                        {transfer.total !== null && ` · ${transfer.processed}/${transfer.total}`}
+                                    </p>
+                                </div>
+                                {['completed', 'completed_with_errors', 'failed'].includes(transfer.status) && (
+                                    <Button type="button" variant="outline" onClick={() => router.reload({ only: ['participants'] })}>
+                                        {t('Refresh list')}
+                                    </Button>
+                                )}
+                            </div>
+                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-background">
+                                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${transfer.progress}%` }} />
+                            </div>
+                            {transfer.failure_report.length > 0 && (
+                                <p className="mt-2 text-xs text-yellow-700">{transfer.failure_report.join(' ')}</p>
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={onClose}>{t('Close')}</Button>
+                        </DialogFooter>
+                    </div>
+                ) : (
                 <form onSubmit={handleUpload} className="mt-4 grid gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="import_session">{t('Session')}</Label>
@@ -786,8 +854,10 @@ function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessi
                         </Button>
                     </DialogFooter>
                 </form>
+                )
             ) : (
                 <div className="mt-4 grid gap-3">
+                    {queueError && <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{queueError}</p>}
                     <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-sm">
                         <span>
                             <strong>{preview.valid_count}</strong> {t('valid')} ·{' '}

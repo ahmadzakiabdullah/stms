@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DataTransferController;
 use App\Http\Controllers\DeanVerificationController;
 use App\Http\Controllers\DrawController;
 use App\Http\Controllers\EventController;
@@ -63,6 +64,11 @@ Route::get('/news', [PublicPortalController::class, 'info'])->defaults('section'
 Route::get('/downloads', [PublicPortalController::class, 'info'])->defaults('section', 'downloads')->name('public.downloads');
 Route::get('/faq', [PublicPortalController::class, 'info'])->defaults('section', 'faq')->name('public.faq');
 Route::get('/about', [PublicPortalController::class, 'info'])->defaults('section', 'about')->name('public.about');
+Route::get('/general-information', [PublicPortalController::class, 'info'])->defaults('section', 'general')->name('public.general-information');
+Route::get('/jawatankuasa-induk', [PublicPortalController::class, 'committee'])->name('public.committee');
+Route::get('/jawatankuasa-pelaksana', [PublicPortalController::class, 'studentCommittee'])->name('public.student-committee');
+Route::get('/pengerusi-permainan', [PublicPortalController::class, 'gameChairpersons'])->name('public.game-chairpersons');
+Route::get('/tarikh-penting', [PublicPortalController::class, 'importantDates'])->name('public.important-dates');
 Route::get('/contact-us', [PublicPortalController::class, 'contact'])->name('public.contact');
 Route::get('/sitemap.xml', [PublicPortalController::class, 'sitemap'])->name('public.sitemap');
 Route::get('/robots.txt', [PublicPortalController::class, 'robots'])->name('public.robots');
@@ -108,6 +114,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
 
     // Faculty squad management (faculty-representative role)
     Route::middleware('role:faculty-representative')->group(function () {
+        Route::get('/faculty/registrations', [DashboardController::class, 'index'])->name('faculty.registrations');
         Route::post('/faculty/squad', [FacultyDashboardController::class, 'storeSquad'])->name('faculty.squad.store');
         Route::post('/faculty/squad/import', [FacultyDashboardController::class, 'importSquad'])->name('faculty.squad.import');
         Route::get('/faculty/squad/template', [FacultyDashboardController::class, 'downloadTemplate'])->name('faculty.squad.template');
@@ -197,6 +204,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::middleware('throttle:10,1')->group(function () {
         Route::post('/participants/import/preview', [ParticipantController::class, 'previewImport'])->name('participants.import.preview');
         Route::post('/participants/import/confirm', [ParticipantController::class, 'confirmImport'])->name('participants.import.confirm');
+        Route::post('/participants/import/queue', [ParticipantController::class, 'queueImport'])->name('participants.import.queue');
     });
 
     Route::get('/registrations', [RegistrationController::class, 'index'])->name('registrations.index');
@@ -212,6 +220,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::middleware('throttle:30,1')->group(function () {
         Route::post('/event-participants', [EventParticipantController::class, 'store'])->name('event-participants.store');
         Route::post('/event-participants/import', [EventParticipantController::class, 'import'])->name('event-participants.import');
+        Route::post('/event-participants/import/queue', [EventParticipantController::class, 'queueImport'])->name('event-participants.import.queue');
         Route::post('/event-participants/batch-status', [EventParticipantController::class, 'batchUpdateStatus'])->name('event-participants.batch-status');
         Route::post('/dashboard/registrations', [EventParticipantController::class, 'storeBatch'])->name('event-participants.store-batch');
         Route::patch('/event-participants/{eventParticipant}/status', [EventParticipantController::class, 'updateStatus'])->name('event-participants.status');
@@ -255,6 +264,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
 
     // M6: Exports (rate limited — resource intensive)
     Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/exports/queue', [ExportController::class, 'queueExcel'])->name('exports.queue');
         Route::get('/exports/fixtures/pdf', [ExportController::class, 'fixturesPdf'])->name('exports.fixtures.pdf');
         Route::get('/exports/fixtures/excel', [ExportController::class, 'fixturesExcel'])->name('exports.fixtures.excel');
         Route::get('/exports/results/pdf', [ExportController::class, 'resultsPdf'])->name('exports.results.pdf');
@@ -266,6 +276,9 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
         Route::get('/exports/match-sheet/{fixture}', [ExportController::class, 'matchSheet'])->name('exports.matchSheet');
         Route::get('/exports/result-sheet/{fixture}', [ExportController::class, 'resultSheet'])->name('exports.resultSheet');
     });
+
+    Route::get('/data-transfers/{id}', [DataTransferController::class, 'show'])->name('data-transfers.show');
+    Route::get('/data-transfers/{id}/download', [DataTransferController::class, 'download'])->name('data-transfers.download');
 
     // M6: Reporting Dashboard
     Route::get('/reports', [ReportingController::class, 'index'])->name('reports.index');

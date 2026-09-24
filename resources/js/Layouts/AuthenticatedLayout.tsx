@@ -37,6 +37,7 @@ interface NavItem {
     label: string;
     icon: LucideIcon;
     href: string;
+    anchor?: string;
     active: string;
     roles?: string[];
 }
@@ -78,6 +79,7 @@ const navSections: NavSection[] = [
         items: [
             { label: 'Participants', icon: Users, href: 'participants.index', active: 'participants.index', roles: systemRoles.administrators },
             { label: 'Register Events', icon: Calendar, href: 'faculty.register-events', active: 'faculty.register-events', roles: systemRoles.faculty },
+            { label: 'My Registrations & Squads', icon: ClipboardList, href: 'faculty.registrations', anchor: '#my-registrations', active: 'faculty.registrations', roles: systemRoles.faculty },
             { label: 'Registrations & Squads', icon: ClipboardList, href: 'event-participants.index', active: 'event-participants.index', roles: systemRoles.administrators },
             { label: 'Participation Confirmation', icon: FileCheck2, href: 'participation-confirmations.index', active: 'participation-confirmations.index', roles: [...systemRoles.administrators, ...systemRoles.faculty, ...systemRoles.dean] },
         ],
@@ -88,6 +90,7 @@ const navSections: NavSection[] = [
             { label: 'Matches', icon: Swords, href: 'matches.index', active: 'matches.index', roles: systemRoles.competition },
             { label: 'Results', icon: Trophy, href: 'results.index', active: 'results.index', roles: systemRoles.competition },
             { label: 'Rankings', icon: Award, href: 'rankings.index', active: 'rankings.index', roles: systemRoles.competition },
+            { label: 'Public Schedule & Results', icon: Calendar, href: 'public.schedule', active: 'public.schedule', roles: systemRoles.faculty },
         ],
     },
     {
@@ -175,7 +178,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                                     return (
                                         <Link
                                             key={item.label}
-                                            href={route(item.href)}
+                                            href={`${route(item.href)}${item.anchor ?? ''}`}
                                             onClick={onNavigate}
                                             className={
                                                 'group relative flex min-h-11 items-center gap-3 rounded-lg px-2 py-1 text-sm font-medium transition ' +

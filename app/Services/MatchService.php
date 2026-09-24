@@ -44,8 +44,10 @@ class MatchService
     public function create(Organization $organization, array $data): Fixture
     {
         $match = DB::transaction(function () use ($organization, $data) {
+            $this->lockOrganization($organization);
             $data['organization_id'] = $organization->id;
             $this->ensureRelationsBelongToOrganization($data, $organization->id);
+            $this->assertNoScheduleConflict($organization, $data);
             if (empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['match_number'] ?? Str::random(8));
             }
@@ -66,9 +68,16 @@ class MatchService
     public function update(Organization $organization, string $id, array $data): Fixture
     {
         $match = DB::transaction(function () use ($organization, $id, $data) {
+            $this->lockOrganization($organization);
             $match = $this->getById($organization, $id);
             $data['organization_id'] = $organization->id;
             $this->ensureRelationsBelongToOrganization($data, $organization->id, $match);
+            $this->assertNoScheduleConflict($organization, array_merge([
+                'scheduled_at' => $match->scheduled_at,
+                'venue' => $match->venue,
+                'home_participant_id' => $match->home_participant_id,
+                'away_participant_id' => $match->away_participant_id,
+            ], $data), $match->id);
             if (isset($data['slug']) && empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['match_number'] ?? Str::random(8));
             }
@@ -144,6 +153,22 @@ class MatchService
                     $field => ['The selected participant must belong to the match organization.'],
                 ]);
             }
+        }
+    }
+
+    private function lockOrganization(Organization $organization): void
+    {
+        Organization::query()->whereKey($organization->id)->lockForUpdate()->firstOrFail();
+    }
+
+    private function assertNoScheduleConflict(Organization $organization, array $data, ?string $exceptId = null): void
+    {
+        $conflicts = app(MatchScheduleConflictValidator::class)->conflictsFor($organization, $data, $exceptId);
+
+        if ($conflicts !== []) {
+            throw ValidationException::withMessages([
+                'scheduled_at' => ['The schedule clashes with an existing match.'],
+            ]);
         }
     }
 }
