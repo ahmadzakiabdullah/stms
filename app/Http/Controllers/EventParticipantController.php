@@ -136,8 +136,14 @@ class EventParticipantController extends Controller
         $updated = 0;
         $failures = [];
 
+        // ⚡ Bolt: Fetch all models and necessary relationships outside the loop to prevent N+1 query vulnerability.
+        $eventParticipants = EventParticipant::with(['event', 'participant.users'])
+            ->whereIn('id', array_unique($validated['ids']))
+            ->get()
+            ->keyBy('id');
+
         foreach (array_unique($validated['ids']) as $id) {
-            $eventParticipant = EventParticipant::find($id);
+            $eventParticipant = $eventParticipants->get($id);
 
             if (! $eventParticipant || ! Gate::allows('update', $eventParticipant)) {
                 continue;
