@@ -507,7 +507,7 @@ function SquadEditForm({ epId, member, onCancel }: { epId: string; member: Squad
         <form onSubmit={submit} className="rounded-md border bg-background p-2.5">
             <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-semibold text-muted-foreground">{t('Edit Squad Member')}</span>
-                <button type="button" onClick={onCancel} className="text-xs text-muted-foreground hover:text-foreground">{t('Cancel')}</button>
+                <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="h-6 px-2 text-xs text-muted-foreground">{t('Cancel')}</Button>
             </div>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
                 <div className="sm:col-span-2"><Field label={t('Full Name')}><Input value={name} onChange={(e) => setName(e.target.value)} required className="h-8 text-sm" /></Field></div>
@@ -1086,26 +1086,26 @@ export default function EventParticipantsIndex({
                                                             </Link>
                                                             {!isFacultyRepresentative && ep.status === 'pending' && (
                                                                 <>
-                                                                    <button onClick={() => approveRegistration(ep.id)}
-                                                                        className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"                                                                          title={t('Approve')}>
+                                                                    <Button variant="outline" size="icon" onClick={() => approveRegistration(ep.id)}
+                                                                        className="size-8 border-emerald-200 text-emerald-600 hover:bg-emerald-600 hover:text-white" title={t('Approve')} aria-label={t('Approve')}>
                                                                         <Check className="size-3.5" />
-                                                                    </button>
-                                                                    <button onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                                        className="inline-flex size-8 items-center justify-center rounded-md border border-rose-200 text-rose-600 transition hover:bg-rose-600 hover:text-white"                                                                          title={t('Reject')}>
+                                                                    </Button>
+                                                                    <Button variant="outline" size="icon" onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                        className="size-8 border-rose-200 text-rose-600 hover:bg-rose-600 hover:text-white" title={t('Reject')} aria-label={t('Reject')}>
                                                                         <CircleX className="size-3.5" />
-                                                                    </button>
+                                                                    </Button>
                                                                 </>
                                                             )}
                                                              {(ep.status === 'pending' || ep.status === 'confirmed' || ep.status === 'rejected') && (
-                                                                <button onClick={() => withdrawRegistration(ep.id)}
-                                                                    className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-muted hover:text-foreground" title={t('Withdraw')}>
+                                                                <Button variant="outline" size="icon" onClick={() => withdrawRegistration(ep.id)}
+                                                                    className="size-8" title={t('Withdraw')} aria-label={t('Withdraw')}>
                                                                     <LogOut className="size-3.5" />
-                                                                </button>
+                                                                </Button>
                                                             )}
-                                                             <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                                 className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')}>
+                                                             <Button variant="outline" size="icon" onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                 className="size-8 hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')} aria-label={t('Unregister')}>
                                                                 <X className="size-3.5" />
-                                                            </button>
+                                                            </Button>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
@@ -1276,10 +1276,10 @@ export default function EventParticipantsIndex({
                                                             <span className={`size-1 rounded-full ${statusDot[ep.status] ?? 'bg-muted-foreground'}`} />
                                                             {cfg.label}
                                                         </Badge>
-                                                        <button onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
-                                                            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
+                                                        <Button variant="ghost" size="icon" onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
+                                                            className="size-5 p-0 rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title={t('Unregister')} aria-label={t('Unregister')}>
                                                             <X className="size-2.5" />
-                                                        </button>
+                                                        </Button>
                                                     </div>
                                                 );
                                             })}
