@@ -27,7 +27,7 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Services/concerns | 40 fail |
 | Models | 18 |
 | Inertia `.tsx` pages | 43 |
-| PHP tests | 100 PHP test files |
+| PHP tests | 101 PHP test files |
 | Playwright journeys | 8 dalam 1 spec, desktop + mobile |
 
 ## Tech Stack

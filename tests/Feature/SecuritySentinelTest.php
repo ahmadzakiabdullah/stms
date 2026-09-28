@@ -2,12 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\User;
-use App\Models\Organization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SecuritySentinelTest extends TestCase
@@ -23,7 +21,7 @@ class SecuritySentinelTest extends TestCase
         $response = $this->actingAs($user)->put(route('participants.update', $participant), [
             'organization_id' => $organization->id,
             'name' => 'Test',
-            'logo_path_existing' => 'logos/../../test.png'
+            'logo_path_existing' => 'logos/../../test.png',
         ]);
 
         $response->assertSessionHasErrors(['logo_path_existing']);
