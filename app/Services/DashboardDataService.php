@@ -149,7 +149,7 @@ final class DashboardDataService
                     },
                     'eventParticipants as rejected' => function ($query) use ($sportId) {
                         $query->where('status', 'rejected')->when($sportId, fn ($query) => $query->whereHas('event', fn ($query) => $query->where('sport_id', $sportId)));
-                    }
+                    },
                 ])
                 ->orderBy('name')
                 ->get(['id', 'name']), collect());
