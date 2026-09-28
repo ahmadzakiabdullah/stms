@@ -29,8 +29,8 @@ final class EventIndexService
 
         $events = $this->safePaginatedQuery(function () use ($sportIds, $filters) {
             $query = Event::with(['tournament', 'sport', 'sportCategory', 'organization'])
-                ->withCount('pools')
                 ->withCount([
+                    'pools',
                     'matches as matches_count',
                     'matches as completed_matches_count' => fn ($query) => $query->where('status', 'completed'),
                     'eventParticipants as registrations_count',
