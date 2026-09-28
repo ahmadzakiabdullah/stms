@@ -132,23 +132,25 @@ final class DashboardDataService
 
             $facultyStats = $this->safeQuery(fn () => Participant::query()
                 ->where('is_active', true)
-                ->withCount(['eventParticipants as total' => function ($query) use ($sportId, $status) {
-                    if ($sportId) {
-                        $query->whereHas('event', fn ($query) => $query->where('sport_id', $sportId));
-                    }
-                    if ($status) {
-                        $query->where('status', $status);
-                    }
-                }])
-                ->withCount(['eventParticipants as pending' => function ($query) use ($sportId) {
-                    $query->where('status', 'pending')->when($sportId, fn ($query) => $query->whereHas('event', fn ($query) => $query->where('sport_id', $sportId)));
-                }])
-                ->withCount(['eventParticipants as confirmed' => function ($query) use ($sportId) {
-                    $query->where('status', 'confirmed')->when($sportId, fn ($query) => $query->whereHas('event', fn ($query) => $query->where('sport_id', $sportId)));
-                }])
-                ->withCount(['eventParticipants as rejected' => function ($query) use ($sportId) {
-                    $query->where('status', 'rejected')->when($sportId, fn ($query) => $query->whereHas('event', fn ($query) => $query->where('sport_id', $sportId)));
-                }])
+                ->withCount([
+                    'eventParticipants as total' => function ($query) use ($sportId, $status) {
+                        if ($sportId) {
+                            $query->whereHas('event', fn ($query) => $query->where('sport_id', $sportId));
+                        }
+                        if ($status) {
+                            $query->where('status', $status);
+                        }
+                    },
+                    'eventParticipants as pending' => function ($query) use ($sportId) {
+                        $query->where('status', 'pending')->when($sportId, fn ($query) => $query->whereHas('event', fn ($query) => $query->where('sport_id', $sportId)));
+                    },
+                    'eventParticipants as confirmed' => function ($query) use ($sportId) {
+                        $query->where('status', 'confirmed')->when($sportId, fn ($query) => $query->whereHas('event', fn ($query) => $query->where('sport_id', $sportId)));
+                    },
+                    'eventParticipants as rejected' => function ($query) use ($sportId) {
+                        $query->where('status', 'rejected')->when($sportId, fn ($query) => $query->whereHas('event', fn ($query) => $query->where('sport_id', $sportId)));
+                    },
+                ])
                 ->orderBy('name')
                 ->get(['id', 'name']), collect());
 
