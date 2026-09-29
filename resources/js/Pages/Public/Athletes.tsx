@@ -4,6 +4,7 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import PublicErrorState from '@/components/PublicErrorState';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicLoadingState from '@/components/PublicLoadingState';
+import SafeImage from '@/components/SafeImage';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
@@ -96,10 +97,13 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t('Athletes & Teams')} intro={t('Meet the confirmed athletes and teams taking part in the competition.')} icon={<Users className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
                     <section className="public-card p-5 sm:p-7">
-                        <div className="flex flex-wrap items-end gap-6">
-                            <Stat value={stats?.teams ?? 0} label={t('teams')} />
-                            <Stat value={stats?.athletes ?? 0} label={t('athletes')} />
-                            <Stat value={stats?.officials ?? 0} label={t('officials')} />
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex flex-wrap items-end gap-6">
+                                <Stat value={stats?.teams ?? 0} label={t('teams')} />
+                                <Stat value={stats?.athletes ?? 0} label={t('athletes')} />
+                                <Stat value={stats?.officials ?? 0} label={t('officials')} />
+                            </div>
+                            <SafeImage src="/images/mascots/pose-semangat.webp" alt={locale === 'ms' ? 'Maskot SAF 20 memberi semangat kepada atlet' : 'SAF 20 mascot cheering on athletes'} loading="lazy" decoding="async" className="h-32 w-auto max-w-[30%] object-contain drop-shadow-xl sm:h-40" />
                         </div>
 
                         <Tabs value={view} onValueChange={value => applyFilters({ view: value as View, letter: '' })} className="mt-7">

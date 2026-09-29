@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Maskot utama `pose-welcome.webp` pada hero homepage dibesarkan sehingga 560px pada desktop dan diskalakan untuk skrin lebih kecil supaya lebih menonjol sebagai identiti SAF 20.
+- Halaman `/pengerusi-permainan` kini memaparkan maskot SAF 20 kecil pada setiap satu daripada 23 kad untuk memudahkan imbasan visual.
+- Container kandungan public diseragamkan kepada `max-w-7xl` seperti header/menu; blok teks panjang kekal dibatasi untuk keselesaan membaca.
+- Homepage kini menggunakan `PublicPageHero` dan breadcrumb shared seperti semua halaman awam lain, sambil mengekalkan CTA, maskot dan banner SAF.
+- Halaman Jawatankuasa Induk dan Jawatankuasa Pelaksana kini menggunakan hero dan breadcrumb shared seperti halaman maklumat lain; logo dikekalkan pada kad kandungan.
+- Refine portal awam merentasi 11 template melalui layout/hero/tipografi shared, dengan penambahbaikan khusus pada homepage, jadual, FAQ dan muat turun.
+- Halaman Muat Turun kini memaparkan enam PDF rasmi SAF 20; pautan FAQ membawa pelawat terus ke jadual/keputusan atau urus setia.
+- Homepage kini mendahulukan tajuk, tarikh dan CTA sebelum poster; hero jadual lebih padat, masa dipaparkan konsisten dalam waktu Malaysia dan tajuk seksyen awam diseragamkan.
+- Aksen jingga mendatar pada puncak hero homepage dibuang supaya ia tidak kelihatan seperti sempadan bawah menu.
+- Palet default tema portal awam dilaras mengikut banner SAF 20: navy gelap dan ungu/biru elektrik; aksen merah/jingga dikekalkan, latar kandungan kekal cerah.
+- Jalur latar navigasi public kini mengikut warna gelap tema supaya ruang di belakang menu tidak menjadi putih.
+- Header awam kini menggunakan aliran dokumen supaya tidak menindih kandungan; hero menggunakan jarak yang konsisten tanpa padding pampasan.
+- Halaman public dalaman kini mempunyai breadcrumb; direktori fakulti/venue boleh dicari dan Tarikh Penting bertukar kepada senarai responsif pada skrin kecil.
+- Gaya hero shared public portal dipermudah dan ruang navbar diperjelas; kad menggunakan elevasi minimum, footer mempunyai pautan berkelompok, active state navigasi lebih jelas, senarai sekretariat mesra telefon dan latar homepage tanpa animasi dekoratif.
+- Jarak atas hero ditambah 16px pada semua halaman public, termasuk homepage, untuk memberi ruang yang lebih selesa di bawah navbar.
+- Poster hero, maskot awam dan peta venue kini menggunakan aset WebP yang dioptimumkan; PNG/JPEG asal dikekalkan untuk sumber kualiti.
+- Dialog peta venue kini menggunakan Radix Dialog untuk pengurusan fokus/keyboard dan target butang minimum 44px.
+- Jadual awam kini menunjukkan status fixture belum diterbitkan bersama tarikh pertandingan dan pautan ke jadual umum rasmi, Tarikh Penting serta Program Sukan; public HTML menerima metadata awal khusus route/locale.
+- Event sukan tanpa venue kini memaut ke direktori venue; label dokumen awam menggugurkan tahun apabila ia bercanggah dengan tahun dalam nama fail.
+- Maskot larian pada hero `/schedule` dibesarkan untuk desktop dan telefon tanpa memotong imej.
+- Pose maskot baharu kini muncul pada Medal standings, Athletes & Teams, Venues, Downloads dan General Information; semua asset diletakkan dalam `public/images/mascots`.
+- Semua imej maskot dan ikon sukan public kini dikekalkan sepenuhnya tanpa crop, dibesarkan mengikut ruang dan diberi bayang lembut.
+- Pose maskot bendera turut dipaparkan pada seksyen “Competition overview” homepage.
+- Pose maskot thumbs-up, juara, larian dan bendera kini muncul pada halaman Contact, medal standings, Schedule dan General Information; imej tersedia daripada `public/images/mascots` untuk deployment.
+- Homepage hero kini menggunakan maskot pose sambutan di sebelah tajuk sebagai asset statik dalam `public/images/mascots`; kemajuan pertandingan dan perlawanan seterusnya dipindahkan ke panel bawah hero.
+- Homepage “Explore the sports” kini memaparkan semua sukan dalam grid responsif dengan maskot besar yang dipusatkan pada kad.
+
+### Fixed
+- Direktori sukan awam menggunakan ikon daripada rekod sukan yang diuruskan, dengan fallback ikon sedia ada apabila imej tidak tersedia. Cache portal dibersihkan selepas sukan ditambah, dikemas kini atau dipadam.
+
+- **24 Sep 2026 — Public card variants:** Menambah tiga gaya kad semantik berasaskan tema SAF 20: `default`, `primary` dan `secondary`.
+
+- **24 Sep 2026 — Public document delivery:** Membetulkan pautan PDF borang supaya menggunakan route unik `/public-files` dan fallback Laravel, mengelakkan konflik dengan route vendor `/storage` pada IIS.
+
+- **24 Sep 2026 — Student forms & documents:** Menambah enam PDF SAF 20 ke `public/documents/forms` dan memaparkan seksyen muat turun dwibahasa pada halaman General Information.
+
+- **24 Sep 2026 — Interactive venue maps:** Menambah dua peta venue SAF 20 ke halaman `/venues` melalui `public/images/venues`, dengan kad pratonton, paparan modal, navigasi sebelumnya/seterusnya dan alt text dwibahasa.
+
 - **24 Sep 2026 — Student committee page redesign:** Menyamakan halaman Jawatankuasa Pelaksana dengan layout dokumen Jawatankuasa Induk, termasuk logo UTeM/SAF dan susunan jawatan dua kolum.
 
 - **24 Sep 2026 — Committee page redesign:** Menyusun semula Jawatankuasa Induk kepada layout dokumen berpusat dengan logo UTeM/SAF, jadual jawatan dua kolum, pegawai universiti dan senarai ahli jawatankuasa.

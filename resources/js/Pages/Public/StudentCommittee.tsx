@@ -1,9 +1,11 @@
 import PublicLayout from '@/Layouts/PublicLayout';
+import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import SafeImage from '@/components/SafeImage';
 import { useI18n } from '@/lib/i18n';
 import { type PageProps } from '@/types';
 import { usePage } from '@inertiajs/react';
+import { Users } from 'lucide-react';
 
 type Props = {
     app_name: string;
@@ -48,14 +50,15 @@ export default function PublicStudentCommittee({ app_name, competition, updated_
         session_branding?: { logo_url?: string | null; inverse_logo_url?: string | null };
     }>().props;
     const isMalay = locale === 'ms';
-    const title = isMalay ? 'JAWATANKUASA PELAKSANA' : 'EXECUTIVE COMMITTEE';
+    const title = isMalay ? 'Jawatankuasa Pelaksana' : 'Executive Committee';
     const organizationLogo = settings.logo_url ?? settings.inverse_logo_url;
     const sessionLogo = sessionBranding.logo_url ?? sessionBranding.inverse_logo_url;
 
     return (
-        <PublicLayout title={`${title} | ${competition?.name || app_name}`} appName={app_name} current="information" description={t('Student committee information for the faculty sports championship.')} canonical={route('public.student-committee')}>
+        <PublicLayout title={`${title} | ${competition?.name || app_name}`} appName={app_name} current="student-committee" description={t('Student committee information for the faculty sports championship.')} canonical={route('public.student-committee')}>
             <main>
-                <div className="mx-auto max-w-5xl px-4 pb-12 pt-32 sm:px-6 sm:pb-16 sm:pt-40">
+                <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={title} intro={t('Student committee information for the faculty sports championship.')} icon={<Users className="size-4" />} />
+                <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
                     <div className="mb-6 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>
                     <article className="public-card p-6 sm:p-10 lg:p-14">
                         <header className="text-center">
@@ -65,7 +68,7 @@ export default function PublicStudentCommittee({ app_name, competition, updated_
                                 {sessionLogo && <SafeImage src={sessionLogo} alt="" className="h-14 w-auto max-w-[10rem] object-contain sm:h-16" />}
                             </div>}
                             <p className="mt-7 text-sm font-black uppercase tracking-[.12em] text-[var(--public-primary)]">{isMalay ? 'JAWATANKUASA PELAKSANA (PELAJAR)' : 'STUDENT EXECUTIVE COMMITTEE'}</p>
-                            <h1 className="mx-auto mt-4 max-w-3xl text-2xl font-black uppercase leading-tight text-[var(--public-text)] sm:text-3xl">{title}</h1>
+                            <h2 className="mx-auto mt-4 max-w-3xl text-2xl font-black uppercase leading-tight text-[var(--public-text)] sm:text-3xl">{title}</h2>
                             <p className="mt-3 text-sm font-semibold uppercase tracking-wide text-[var(--public-dark-faint)]">{competition?.name || app_name}</p>
                         </header>
 

@@ -272,4 +272,16 @@ class DashboardTest extends TestCase
             ->get(route('dashboard'))
             ->assertRedirect(route('dean.dashboard'));
     }
+
+    public function test_legacy_faculty_registrations_url_redirects_to_dashboard_workspace(): void
+    {
+        $organization = Organization::factory()->create();
+        $participant = Participant::factory()->create(['organization_id' => $organization->id]);
+        $facultyRepresentative = $this->createUserInOrganization($organization, ['participant_id' => $participant->id]);
+        $facultyRepresentative->assignRole(Role::firstOrCreate(['name' => 'faculty-representative', 'guard_name' => 'web']));
+
+        $response = $this->actingAs($facultyRepresentative)->get(route('faculty.registrations'));
+
+        $this->assertStringEndsWith('/dashboard#my-registrations', $response->headers->get('Location'));
+    }
 }

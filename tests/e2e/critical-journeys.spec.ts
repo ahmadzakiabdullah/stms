@@ -72,6 +72,9 @@ test('all public routes pass serious axe checks and expose a keyboard focus targ
         await expect(page.locator('main')).toBeVisible();
         await expect(page.locator('#public-content')).toHaveAttribute('aria-busy', 'false');
         await expectAccessible(page);
+        const navigationBottom = await page.locator('[data-public-header]').evaluate(element => element.getBoundingClientRect().bottom);
+        const pageHeadingTop = await page.locator('main h1').first().evaluate(element => element.getBoundingClientRect().top);
+        expect(pageHeadingTop, `${path} page heading should start below the public header`).toBeGreaterThanOrEqual(navigationBottom);
 
         if (path === '/') await expect(page.locator('[data-slot="button"]:visible').first()).toBeVisible();
         if (path === '/schedule') await expect(page.locator('[data-slot="input"]:visible, [data-slot="button"]:visible').first()).toBeVisible();
@@ -208,9 +211,9 @@ test('public pages emit no CSP violations in the browser console', async ({ page
 });
 
 test('public images and external links have accessible and resilient contracts', async ({ page }) => {
-    await page.route('**/images/banner/banner-saf-20-2026.jpeg', (route) => route.fulfill({
+    await page.route('**/images/banner/banner-saf-20-2026.webp', (route) => route.fulfill({
         status: 404,
-        contentType: 'image/jpeg',
+        contentType: 'image/webp',
         body: '',
     }));
 
@@ -241,6 +244,28 @@ test('public shell stays usable on mobile and tablet with reduced motion', async
         await page.setViewportSize(viewport);
         await page.goto('/');
         await expect(page.locator('main')).toBeVisible();
+
+        for (const path of ['/general-information', '/jawatankuasa-induk']) {
+            await page.goto(path);
+            const navigationBottom = await page.locator('[data-public-header]').evaluate(element => element.getBoundingClientRect().bottom);
+            const pageHeadingTop = await page.locator('main h1').first().evaluate(element => element.getBoundingClientRect().top);
+            expect(pageHeadingTop, `${viewport.name} ${path} heading should start below the public header`).toBeGreaterThanOrEqual(navigationBottom);
+        }
+        await page.goto('/tarikh-penting');
+        if (viewport.width < 1280) {
+            await expect(page.locator('main ol[aria-label]')).toBeVisible();
+            await expect(page.locator('main table')).toBeHidden();
+        } else {
+            await expect(page.locator('main table')).toBeVisible();
+            await expect(page.locator('main ol[aria-label]')).toBeHidden();
+        }
+        await page.goto('/');
+
+        if (viewport.width < 1024) {
+            await page.goto('/contact-us');
+            await expect(page.getByRole('heading', { name: 'Catur Campuran', exact: true })).toBeVisible();
+            await expect(page.locator('table').first()).toBeHidden();
+        }
 
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         expect(overflow, `${viewport.name} horizontal overflow`).toBeLessThanOrEqual(1);

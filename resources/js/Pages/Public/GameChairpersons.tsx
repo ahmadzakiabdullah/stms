@@ -1,6 +1,7 @@
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
+import SafeImage from '@/components/SafeImage';
 import { useI18n } from '@/lib/i18n';
 import { Trophy } from 'lucide-react';
 
@@ -36,13 +37,22 @@ const games = [
     { name: 'Lawn Bowls', chairperson: 'Presiden Kelab Lawn Bowls', officials: 'Bilangan Teknikal & Pengadil' },
 ];
 
+const mascotPoses = [
+    '/images/mascots/pose-semangat.webp',
+    '/images/mascots/pose-run.webp',
+    '/images/mascots/pose-good.webp',
+    '/images/mascots/pose-tunjuk.webp',
+    '/images/mascots/pose-juara.webp',
+    '/images/mascots/pose-piala.webp',
+];
+
 export default function PublicGameChairpersons({ app_name, competition, updated_at }: Props) {
     const { t, locale } = useI18n();
     const isMalay = locale === 'ms';
     const title = isMalay ? 'PENGERUSI PERMAINAN' : 'GAME CHAIRPERSONS';
 
     return (
-        <PublicLayout title={`${title} | ${competition?.name || app_name}`} appName={app_name} current="information" description={t('Game chairperson information for the faculty sports championship.')} canonical={route('public.game-chairpersons')}>
+        <PublicLayout title={`${title} | ${competition?.name || app_name}`} appName={app_name} current="game-chairpersons" description={t('Game chairperson information for the faculty sports championship.')} canonical={route('public.game-chairpersons')}>
             <main>
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={title} intro={isMalay ? 'Pengerusi permainan serta keperluan teknikal dan pengadil bagi setiap acara.' : 'Game chairpersons and technical and referee requirements for each event.'} icon={<Trophy className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
@@ -50,8 +60,13 @@ export default function PublicGameChairpersons({ app_name, competition, updated_
                     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                         {games.map((game, index) => (
                             <article key={game.name} className="public-card p-6 sm:p-8">
-                                <p className="relative z-10 text-sm font-black text-[var(--public-primary)]">{String(index + 1).padStart(2, '0')}</p>
-                                <h2 className="relative z-10 mt-3 text-xl font-black leading-tight text-[var(--public-text)]">{game.name}</h2>
+                                <div className="relative z-10 flex items-center justify-between gap-4">
+                                    <span className="flex size-14 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)]" aria-hidden="true">
+                                        <SafeImage src={mascotPoses[index % mascotPoses.length]} alt="" loading="lazy" decoding="async" className="size-12 object-contain drop-shadow-md" />
+                                    </span>
+                                    <span className="text-xs font-black tracking-[.18em] text-[var(--public-primary)] tabular-nums">{String(index + 1).padStart(2, '0')}</span>
+                                </div>
+                                <h2 className="relative z-10 mt-5 text-xl font-black leading-tight text-[var(--public-text)]">{game.name}</h2>
                                 <div className="relative z-10 mt-5 space-y-3 border-t border-[var(--public-dark-border)] pt-4 text-sm leading-6 text-[var(--public-dark-faint)]">
                                     <p><span className="font-bold text-[var(--public-text)]">{isMalay ? 'Pengerusi:' : 'Chairperson:'}</span> {localizeGameChairperson(game.chairperson, locale)}</p>
                                     <p>{localizeGameOfficials(game.officials, locale)}</p>

@@ -79,7 +79,6 @@ const navSections: NavSection[] = [
         items: [
             { label: 'Participants', icon: Users, href: 'participants.index', active: 'participants.index', roles: systemRoles.administrators },
             { label: 'Register Events', icon: Calendar, href: 'faculty.register-events', active: 'faculty.register-events', roles: systemRoles.faculty },
-            { label: 'My Registrations & Squads', icon: ClipboardList, href: 'faculty.registrations', anchor: '#my-registrations', active: 'faculty.registrations', roles: systemRoles.faculty },
             { label: 'Registrations & Squads', icon: ClipboardList, href: 'event-participants.index', active: 'event-participants.index', roles: systemRoles.administrators },
             { label: 'Participation Confirmation', icon: FileCheck2, href: 'participation-confirmations.index', active: 'participation-confirmations.index', roles: [...systemRoles.administrators, ...systemRoles.faculty, ...systemRoles.dean] },
         ],

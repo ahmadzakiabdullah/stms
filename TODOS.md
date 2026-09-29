@@ -95,6 +95,31 @@
 
 ## P1 — Public UI/UX dan accessibility
 
+- [x] Besarkan maskot utama `pose-welcome.webp` pada hero homepage secara responsif.
+- [x] Tambah maskot SAF 20 kecil pada semua 23 kad `/pengerusi-permainan`.
+
+- [x] Seragamkan lebar container utama semua halaman public kepada `max-w-7xl` sejajar dengan header/menu; kekalkan max-width untuk long-form copy.
+- [x] Pastikan semua 11 template awam menggunakan `PublicPageHero` dan breadcrumb shared; homepage mengekalkan tindakan, maskot dan poster sebagai kandungan hero.
+- [x] Samakan hero dan breadcrumb halaman Jawatankuasa Induk/Pelaksana dengan `PublicPageHero` shared; kekalkan logo dan kandungan dokumen dalam kad halaman.
+- [x] Selaraskan lapisan shared pada semua 11 template public serta semak kandungan khusus homepage, jadual, FAQ dan Downloads.
+- [x] Lengkapkan halaman Muat Turun dengan enam PDF rasmi SAF 20 dan jadikan jawapan FAQ pautan tindakan ke Jadual & Keputusan atau Hubungi Kami.
+- [x] Dahulukan tajuk, tarikh dan tindakan utama homepage sebelum poster; padatkan hero jadual, seragamkan tipografi seksyen awam dan umumkan hasil penapis kepada assistive technology.
+- [x] Buang aksen jingga mendatar di atas hero homepage yang kelihatan seperti garis bawah menu.
+- [x] Selaraskan warna default portal awam dengan banner SAF 20: navy, ungu/biru elektrik, merah dan jingga sambil mengekalkan permukaan kandungan cerah.
+- [x] Samakan latar penuh kawasan header awam dengan warna gelap tema untuk mengelakkan jalur cerah di belakang menu.
+
+- [x] Letakkan header awam dalam aliran dokumen, seragamkan jarak hero dan tambah ujian regressi supaya tajuk semua public page tidak bertindih dengan navigasi.
+- [x] Tambah breadcrumb, carian dan empty states pada direktori fakulti/venue; tukar Tarikh Penting kepada paparan mudah baca pada skrin kecil.
+- [x] Audit 19 guest routes dan seragamkan visual shell: hero, card, footer serta latar homepage statik tanpa animasi dekoratif. Inventori dan skop perubahan: `docs/public-page-inventory.md`.
+- [x] Besarkan pose larian pada hero `/schedule` mengikut viewport tanpa crop.
+- [x] Letakkan pose piala di standings, semangat di direktori atlet, tunjuk arah di venues, pose tunjuk di downloads dan pose rehat di maklumat am.
+- [x] Pastikan imej maskot/ikon sukan public tidak terpotong, mempunyai bayang dan saiz yang jelas pada desktop serta mobile.
+- [x] Paparkan pose maskot bendera pada seksyen “Competition overview” homepage.
+- [x] Letakkan pose maskot thumbs-up di Contact, pose juara di standings, pose larian di Schedule dan pose bendera di General Information.
+- [x] Paparkan maskot pose sambutan di hero homepage dan kekalkan kemajuan pertandingan pada panel di bawah hero.
+- [x] Paparkan semua sukan pada homepage “Explore the sports” sebagai grid responsif dengan maskot besar daripada katalog.
+- [x] Gunakan ikon yang dimuat naik/dikonfigurasi pada pengurusan sukan di direktori awam `/sports`; kekalkan ikon nama sebagai fallback dan invalidate cache portal selepas perubahan katalog.
+
 - [x] Lengkapkan navigasi mobile/tablet supaya Competition dan Information tidak hilang berbanding desktop.
 - [x] Redesign public Venues directory dengan kad venue yang boleh membuka jadual mengikut venue.
 - [x] Redesign homepage public supaya state sebelum jadual diterbitkan mempunyai CTA jelas ke sukan, venue dan atlet.
@@ -107,11 +132,20 @@
 - [x] Tambah maklumat Hadiah pada halaman General Information: 30 pingat emas, 30 perak dan 30 gangsa.
 - [x] Redesign halaman Jawatankuasa Induk mengikut lampiran dengan logo UTeM/SAF dan susun atur jawatan dua kolum.
 - [x] Selaraskan halaman Jawatankuasa Pelaksana dengan susun atur dokumen dan branding logo yang sama.
+- [x] Paparkan dua peta venue SAF 20 pada `/venues` dengan galeri pratonton, modal zoom dan navigasi antara peta.
+- [x] Paparkan enam borang/dokumen rasmi SAF 20 sebagai pautan muat turun pada `/general-information`.
+- [x] Gunakan route `/public-files` untuk serving dokumen awam melalui Laravel apabila route `/storage` bertembung dengan route vendor/IIS.
+- [x] Tambah tiga variant card public berasaskan visual SAF 20: gradient edge, stadium dark dan competition ticket.
 - [x] Sediakan state loading, empty, stale, error dan permission untuk semua public routes. `PublicLayout` mengumumkan loading Inertia dan `aria-busy`; homepage serta semua halaman public mempunyai error state dengan retry, empty/stale/loading state yang relevan; permission state kekal backend HTTP 403/404 kerana route ini anonymous by design.
 - [x] Gunakan komponen shadcn untuk filter, input, select, tabs, pagination, alert dan accordion secara konsisten. Public filter/search controls, athlete tabs/pagination, FAQ/roster disclosure, error alert dan refresh actions kini menggunakan primitive shared di `components/ui`.
 - [x] Jalankan keyboard navigation, focus management, screen-reader labels dan axe pada semua public routes; production smoke Playwright lulus **6/6** pada 21 September 2026.
 - [ ] Uji viewport mobile/tablet/desktop, zoom 200%, contrast, reduced motion dan touch target minimum 44px. Smoke production 1/1 lulus untuk viewport 390/768/1440px, reduced motion dan touch target; browser zoom 200% sebenar masih memerlukan verifikasi manual.
 - [x] Tambah metadata SEO yang konsisten: title, description, canonical, Open Graph/Twitter, sitemap lengkap dan robots policy; tambah E2E regression check.
+- [x] Sediakan metadata title/description/Open Graph/Twitter khusus route dalam HTML awal, termasuk locale, dan tunjukkan status fixture belum diterbitkan dengan pautan ke jadual umum, tarikh penting dan program sukan.
+- [x] Elakkan tahun bercanggah pada label dokumen sukan awam dan sediakan pautan daripada event tanpa venue ke direktori venue.
+- [x] Optimumkan aset utama public portal kepada WebP dan tukar modal peta kepada Radix Dialog dengan pengurusan fokus keyboard.
+- [x] Tambah ruang atas 16px untuk semua hero public: hero bersama, homepage dan halaman jawatankuasa.
+- [ ] Lengkapkan venue pada 23/30 event yang masih tiada lokasi dalam live data; gunakan nilai yang diluluskan dalam admin selepas venue setiap acara disahkan.
 - [x] Semak alt text, external links, image loading dan fallback apabila asset atau public data gagal. `SafeImage` kini menyediakan fallback untuk branding, banner dan ikon sport; `ParticipantLogo` kembali kepada initials apabila logo gagal; external links menetapkan `noopener noreferrer`; regression E2E ditambah. Verifikasi browser zoom 200% masih manual dan kekal pada item viewport di atas.
 
 ## P1 — Authenticated UI/UX

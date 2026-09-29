@@ -10,6 +10,7 @@ use App\Http\Requests\Sport\UpdateSportRequest;
 use App\Models\Session;
 use App\Models\Sport;
 use App\Services\SportIconService;
+use App\Services\PublicPortalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -40,7 +41,7 @@ class SportController extends Controller
         ]);
     }
 
-    public function store(StoreSportRequest $request, CreateSport $action, SportIconService $iconService): RedirectResponse
+    public function store(StoreSportRequest $request, CreateSport $action, SportIconService $iconService, PublicPortalService $publicPortal): RedirectResponse
     {
         Gate::authorize('create', Sport::class);
 
@@ -51,13 +52,14 @@ class SportController extends Controller
             $data['icon'] = $iconService->store($request->file('icon_file'));
         }
 
-        $action->handle($data);
+        $sport = $action->handle($data);
+        $publicPortal->forgetForOrganization($sport->organization_id);
 
         return redirect()->route('sports.index')
             ->with('success', 'Sport created successfully.');
     }
 
-    public function update(UpdateSportRequest $request, Sport $sport, UpdateSport $action, SportIconService $iconService): RedirectResponse
+    public function update(UpdateSportRequest $request, Sport $sport, UpdateSport $action, SportIconService $iconService, PublicPortalService $publicPortal): RedirectResponse
     {
         Gate::authorize('update', $sport);
 
@@ -72,6 +74,7 @@ class SportController extends Controller
         }
 
         $action->handle($sport, $data);
+        $publicPortal->forgetForOrganization($sport->organization_id);
 
         if ($previousIcon !== null) {
             $iconService->delete($previousIcon);
@@ -81,11 +84,13 @@ class SportController extends Controller
             ->with('success', 'Sport updated successfully.');
     }
 
-    public function destroy(Sport $sport, DeleteSport $action): RedirectResponse
+    public function destroy(Sport $sport, DeleteSport $action, PublicPortalService $publicPortal): RedirectResponse
     {
         Gate::authorize('delete', $sport);
 
+        $organizationId = $sport->organization_id;
         $action->handle($sport);
+        $publicPortal->forgetForOrganization($organizationId);
 
         return redirect()->route('sports.index')
             ->with('success', 'Sport deleted successfully.');

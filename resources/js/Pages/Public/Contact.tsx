@@ -2,6 +2,7 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import PublicErrorState from '@/components/PublicErrorState';
 import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
+import SafeImage from '@/components/SafeImage';
 import { useI18n } from '@/lib/i18n';
 import { router } from '@inertiajs/react';
 import { Clock, ExternalLink, Mail, MapPin, MessageCircle, Phone, Share2 } from 'lucide-react';
@@ -79,9 +80,9 @@ export default function PublicContact({ app_name, contact, updated_at, error = n
                     intro={t('For competition, schedule and participation enquiries, please contact the secretariat through UTeM Sports Centre.')}
                     icon={<MessageCircle className="size-4" />}
                 />
-                <div className="mx-auto flex max-w-5xl justify-end px-4 pt-8 sm:px-6"><PublicStaleDataNotice updatedAt={updated_at} /></div>
+                <div className="mx-auto flex max-w-7xl justify-end px-4 pt-8 sm:px-6"><PublicStaleDataNotice updatedAt={updated_at} /></div>
 
-                <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:py-20">
+                <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
                     <div className="grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
                         <div className="public-card p-7 sm:p-10">
                             <p className="text-[10px] font-black uppercase tracking-[.22em] text-[var(--public-primary)]">{t('Secretariat')}</p>
@@ -153,6 +154,9 @@ export default function PublicContact({ app_name, contact, updated_at, error = n
                                 </dl>
                                 <p className="mt-4 border-t border-[var(--public-dark-border)] pt-3 text-xs text-[var(--public-dark-faint)]">{t('Closed on public holidays')}</p>
                             </div>
+                            <figure className="rounded-[2rem]">
+                                <SafeImage src="/images/mascots/pose-good.webp" alt={locale === 'ms' ? 'Maskot SAF 20 menunjukkan tanda bagus' : 'SAF 20 mascot giving a thumbs up'} loading="lazy" decoding="async" className="max-h-80 w-full object-contain drop-shadow-xl" />
+                            </figure>
                         </aside>
                     </div>
                 </section>
@@ -162,7 +166,28 @@ export default function PublicContact({ app_name, contact, updated_at, error = n
                         <p className="text-[10px] font-black uppercase tracking-[.22em] text-[var(--public-primary)]">{t('Secretariat')}</p>
                         <h2 id="secretariat-games" className="mt-2 text-2xl font-black tracking-[-.02em] text-[var(--public-text)]">{t('Coordinators & Game Chairpersons')}</h2>
                     </div>
-                    <div className="public-card overflow-x-auto">
+                    <div className="grid gap-3 lg:hidden">
+                        {secretariatGames.map(game => <article key={game.bil} className="public-card p-4 sm:p-5">
+                            <div className="flex items-start gap-3">
+                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--public-primary-soft)] text-sm font-black text-[var(--public-primary)]">{game.bil}</span>
+                                <h3 className="pt-1 text-base font-bold leading-6 text-[var(--public-text)]">{game.event}</h3>
+                            </div>
+                            <dl className="mt-4 grid gap-4 border-t border-[var(--public-dark-border)] pt-4 sm:grid-cols-2">
+                                <div>
+                                    <dt className="text-xs font-bold uppercase tracking-wide text-[var(--public-dark-faint)]">{t('Staff Event Coordinator')}</dt>
+                                    <dd className="mt-1 text-sm font-semibold leading-6 text-[var(--public-text)]">{localizeSecretariatName(game.staffName, locale)}</dd>
+                                    {game.staffPhone && <dd><a href={`tel:${game.staffPhone.replace(/[^\d+]/g, '')}`} className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--public-primary)] underline underline-offset-2">{game.staffPhone}</a></dd>}
+                                </div>
+                                <div>
+                                    <dt className="text-xs font-bold uppercase tracking-wide text-[var(--public-dark-faint)]">{t('Sports Event Chairperson')}</dt>
+                                    <dd className="mt-1 text-sm font-semibold leading-6 text-[var(--public-text)]">{game.chairperson}</dd>
+                                    <dd className="text-sm leading-6 text-[var(--public-dark-faint)]">{localizeSecretariatRole(game.chairRole, locale)}</dd>
+                                    <dd><a href={`tel:${game.chairPhone.replace(/[^\d+]/g, '')}`} className="inline-flex min-h-11 items-center text-sm font-medium text-[var(--public-primary)] underline underline-offset-2">{game.chairPhone}</a></dd>
+                                </div>
+                            </dl>
+                        </article>)}
+                    </div>
+                    <div className="public-card hidden overflow-x-auto lg:block">
                         <table className="w-full min-w-[900px] border-collapse text-left text-sm">
                             <caption className="sr-only">{t('List of event coordinators and sports event chairpersons')}</caption>
                             <thead className="bg-[var(--public-dark)] text-white">

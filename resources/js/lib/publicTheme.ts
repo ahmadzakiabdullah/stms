@@ -10,9 +10,9 @@ export type PublicThemeSettings = {
 };
 
 const DEFAULTS = {
-    // SAF 20 2026 palette: midnight navy, electric blue, red and orange.
-    dark: '#09091A',
-    primary: '#3020A8',
+    // SAF 20 2026 banner palette: deep navy, electric violet-blue, red and orange.
+    dark: '#10091F',
+    primary: '#3515B8',
     accent: '#F21D32',
     highlight: '#FF8614',
     background: '#F7F6FC',

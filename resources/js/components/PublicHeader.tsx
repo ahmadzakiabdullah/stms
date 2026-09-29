@@ -8,37 +8,37 @@ import { useI18n } from '@/lib/i18n';
 import { type PublicThemeSettings } from '@/lib/publicTheme';
 import { Link } from '@inertiajs/react';
 
-export type PublicHeaderCurrent = 'home' | 'sports' | 'schedule' | 'athletes' | 'contact' | 'information';
+export type PublicHeaderCurrent = 'home' | 'sports' | 'faculties' | 'venues' | 'schedule' | 'athletes' | 'contact' | 'news' | 'downloads' | 'faq' | 'about' | 'general-information' | 'committee' | 'student-committee' | 'game-chairpersons' | 'important-dates';
 type Props = { appName: string; settings: { logo_url?: string | null; inverse_logo_url?: string | null } & PublicThemeSettings; sessionBranding?: { logo_url?: string | null; inverse_logo_url?: string | null }; current?: PublicHeaderCurrent };
 
 export default function PublicHeader({ appName, settings, sessionBranding, current }: Props) {
     const { t } = useI18n();
     const organizationLogoUrl = settings.inverse_logo_url ?? settings.logo_url;
     const sessionLogoUrl = sessionBranding?.inverse_logo_url ?? sessionBranding?.logo_url;
-    const information = { label: t('Information'), links: [
-        { href: route('public.general-information'), label: t('General Information') },
-        { href: route('public.committee'), label: t('Jawatankuasa Induk') },
-        { href: route('public.student-committee'), label: t('Jawatankuasa Pelaksana') },
-        { href: route('public.game-chairpersons'), label: t('Pengerusi Permainan') },
-        { href: route('public.important-dates'), label: t('Tarikh Penting') },
+    const information = { label: t('Information'), current: ['news', 'downloads', 'faq', 'about', 'general-information', 'committee', 'student-committee', 'game-chairpersons', 'important-dates'].includes(current || ''), links: [
+        { href: route('public.general-information'), label: t('General Information'), current: current === 'general-information' },
+        { href: route('public.committee'), label: t('Jawatankuasa Induk'), current: current === 'committee' },
+        { href: route('public.student-committee'), label: t('Jawatankuasa Pelaksana'), current: current === 'student-committee' },
+        { href: route('public.game-chairpersons'), label: t('Pengerusi Permainan'), current: current === 'game-chairpersons' },
+        { href: route('public.important-dates'), label: t('Tarikh Penting'), current: current === 'important-dates' },
     ] };
-    const competition = { label: t('Competition'), links: [
+    const competition = { label: t('Competition'), current: current === 'sports' || current === 'faculties' || current === 'venues', links: [
             { href: route('public.sports'), label: t('Sports'), current: current === 'sports' },
-            { href: route('public.faculties'), label: t('Faculties') },
-            { href: route('public.venues'), label: t('Venues') },
+            { href: route('public.faculties'), label: t('Faculties'), current: current === 'faculties' },
+            { href: route('public.venues'), label: t('Venues'), current: current === 'venues' },
     ] };
     const items: PublicMenuItem[] = [
         { type: 'link', link: { href: route('public.index'), label: t('Public Home'), current: current === 'home' } },
-        { type: 'group', group: { ...information, current: current === 'information' } },
+        { type: 'group', group: information },
         { type: 'group', group: competition },
         { type: 'link', link: { href: route('public.schedule'), label: t('Public Schedule & Results'), current: current === 'schedule' } },
         { type: 'link', link: { href: route('public.athletes'), label: t('Athletes & Teams'), current: current === 'athletes' } },
         { type: 'link', link: { href: route('public.contact'), label: t('Public Contact'), current: current === 'contact' } },
     ];
 
-    return <div className="absolute inset-x-0 top-0 z-50">
+    return <div className="relative z-50 bg-[var(--public-dark)]">
         <PublicAnnouncementBar />
-        <header className="px-3 pt-3 sm:px-6 sm:pt-5">
+        <header data-public-header className="px-3 pt-3 sm:px-6 sm:pt-5">
             <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-4 rounded-2xl border border-white/15 bg-[color:var(--public-dark)] px-4 py-2.5 text-white shadow-2xl sm:px-5 xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
                 <Link href={route('public.index')} className="flex min-h-11 min-w-0 flex-col items-start justify-center gap-1 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-highlight)]">
                     {(organizationLogoUrl || sessionLogoUrl) && <span className="flex shrink-0 items-center gap-2">

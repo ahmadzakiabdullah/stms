@@ -72,12 +72,24 @@ export default function PublicImportantDates({ app_name, competition, updated_at
     const title = isMalay ? 'TARIKH – TARIKH PENTING' : 'IMPORTANT DATES';
 
     return (
-        <PublicLayout title={`${title} | ${competition?.name || app_name}`} appName={app_name} current="information" description={t('Important dates for the faculty sports championship.')} canonical={route('public.important-dates')}>
+        <PublicLayout title={`${title} | ${competition?.name || app_name}`} appName={app_name} current="important-dates" description={t('Important dates for the faculty sports championship.')} canonical={route('public.important-dates')}>
             <main>
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={title} intro={isMalay ? 'Jadual mesyuarat, persediaan dan acara utama kejohanan.' : 'Schedule of meetings, preparations and key championship events.'} icon={<CalendarDays className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
                     <div className="mb-6 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>
-                    <div className="public-card overflow-x-auto">
+                    <ol aria-label={title} className="grid list-none gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:hidden">
+                        {importantDates.map(([number, item, date]) => <li key={number} value={Number(number)} className="public-card p-4 sm:p-5">
+                            <div className="flex items-start gap-3">
+                                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--public-primary-soft)] text-sm font-black text-[var(--public-primary)]">{number}</span>
+                                <h2 className="pt-1 text-sm font-bold leading-6 text-[var(--public-text)]">{isMalay ? item : importantDateEnglish[number]?.[0] || item}</h2>
+                            </div>
+                            <dl className="mt-4 border-t border-[var(--public-dark-border)] pt-3">
+                                <dt className="text-xs font-bold uppercase tracking-wide text-[var(--public-dark-faint)]">{isMalay ? 'Tarikh' : 'Date'}</dt>
+                                <dd className="mt-1 text-sm font-semibold leading-6 text-[var(--public-text)]">{isMalay ? date : importantDateEnglish[number]?.[1] || date}</dd>
+                            </dl>
+                        </li>)}
+                    </ol>
+                    <div className="public-card hidden overflow-x-auto xl:block">
                         <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                             <caption className="sr-only">{isMalay ? 'Tarikh-tarikh penting Kejohanan Sukan Antara Fakulti' : 'Important dates for the Inter-Faculty Sports Championship'}</caption>
                             <thead className="bg-[var(--public-dark)] text-white">

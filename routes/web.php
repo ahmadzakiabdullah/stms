@@ -45,6 +45,9 @@ Route::get('/health', HealthCheckController::class)
 Route::get('/storage/{path}', PublicStorageController::class)
     ->where('path', '.*')
     ->name('public-storage.show');
+Route::get('/public-files/{path}', PublicStorageController::class)
+    ->where('path', '.*')
+    ->name('public-files.show');
 
 // Some IIS deployments send a non-GET method when resolving the application
 // directory default document. Keep the clean root URL available while the
@@ -114,7 +117,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
 
     // Faculty squad management (faculty-representative role)
     Route::middleware('role:faculty-representative')->group(function () {
-        Route::get('/faculty/registrations', [DashboardController::class, 'index'])->name('faculty.registrations');
+        Route::redirect('/faculty/registrations', '/dashboard#my-registrations')->name('faculty.registrations');
         Route::post('/faculty/squad', [FacultyDashboardController::class, 'storeSquad'])->name('faculty.squad.store');
         Route::post('/faculty/squad/import', [FacultyDashboardController::class, 'importSquad'])->name('faculty.squad.import');
         Route::get('/faculty/squad/template', [FacultyDashboardController::class, 'downloadTemplate'])->name('faculty.squad.template');

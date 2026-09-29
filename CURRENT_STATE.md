@@ -1,5 +1,47 @@
 # CURRENT STATE
 
+## Perubahan Homepage — 28 September 2026
+
+- Homepage mendahulukan tajuk acara, tindakan Jadual/Program Sukan, tarikh dan maskot sebelum poster rasmi; poster masih dikekalkan selepas kandungan pengenalan. Saiz tajuk seksyen shared lebih terkawal.
+- Hero Jadual dipendekkan; waktu, kumpulan tarikh dan tarikh acara menggunakan `Asia/Kuala_Lumpur`, dan kiraan hasil penapis diumumkan kepada pembaca skrin.
+- Halaman Muat Turun memaparkan enam PDF rasmi SAF 20 yang sama seperti Maklumat Am; FAQ memberi pautan terus ke Jadual & Keputusan dan Hubungi Kami.
+- Kesemua 11 template React awam kini menggunakan layout, navigasi, footer, token tema, `PublicPageHero` dan breadcrumb shared. Homepage mengekalkan CTA, maskot dan poster di dalam komposisi hero; logo serta kandungan dokumen jawatankuasa kekal pada kad kandungan.
+- Container utama halaman public kini seragam kepada `max-w-7xl`, sejajar dengan header/menu; teks panjang di Maklumat Am dan About kekal dihadkan lebarnya untuk kebolehbacaan.
+- Palet tema public kini lebih dekat dengan banner SAF 20: navy `#10091F`, ungu/biru `#3515B8`, merah `#F21D32` dan jingga `#FF8614`; latar kandungan kekal cerah untuk kebolehbacaan.
+- Aksen jingga mendatar di puncak hero homepage dibuang kerana ia kelihatan seperti garisan bawah menu dan tidak membawa maklumat tambahan.
+- Jalur latar di sekeliling navigasi public kini menggunakan warna gelap tema yang sama dengan header, supaya latar global cerah tidak kelihatan sebagai jalur putih pada halaman berhero gelap.
+
+- Hero homepage kini memaparkan maskot pose sambutan di sebelah tajuk dari `public/images/mascots/pose-welcome.webp`, manakala kad kemajuan dan perlawanan seterusnya berada pada panel tepat di bawah hero.
+- Pose bendera turut dipaparkan di sisi tajuk seksyen “Competition overview” pada homepage.
+- Semua imej pose dan maskot sukan awam menggunakan `object-contain` agar tidak terpotong, dengan bayang lembut dan saiz besar yang responsif.
+- Pose thumbs-up, juara, larian dan bendera turut digunakan masing-masing pada `/contact-us`, seksyen pingat homepage, `/schedule` dan `/general-information`; semua fail disediakan sebagai asset statik dalam `public/images/mascots`.
+- Pose maskot terkini disalin ke `public/images/mascots`: trofi di Medal standings, semangat di `/athletes`, arah di CTA `/venues`, tunjuk di `/downloads` dan rehat/hidrasi di `/general-information`.
+- Maskot larian pada hero `/schedule` dibesarkan secara responsif dan mengekalkan nisbah imej penuh.
+- Shared public UI kini menggunakan hero lebih ringkas, kad dengan sempadan/elevasi terkawal, latar homepage statik tanpa animasi dekoratif, footer dengan pautan berkelompok, serta active state pautan Competition dan Information yang sepadan. Jadual sekretariat Contact beralih kepada senarai bertindan pada skrin kecil. Inventori dan dapatan audit: [`docs/public-page-inventory.md`](docs/public-page-inventory.md).
+- Header public kini berada dalam aliran dokumen supaya tidak menindih kandungan; padding hero tekaan dikurangkan dan breadcrumb ditambah pada halaman dalaman.
+- Direktori fakulti dan venue mempunyai carian, kiraan hasil, tindakan kosongkan serta empty state; Tarikh Penting memaparkan senarai bertindan pada tablet/telefon.
+
+## Public UI/UX follow-up — 28 September 2026
+
+- Halaman `/schedule` kini menerangkan dengan jelas bahawa fixture belum diterbitkan, menunjukkan tarikh pertandingan yang diketahui dan memaut ke Tarikh Penting serta Program Sukan.
+- HTML awal bagi setiap public route kini mengandungi title, description dan Open Graph/Twitter metadata khusus route dan locale; metadata canonical kekal khusus URL.
+- Direktori sukan tidak lagi memaparkan tahun bercanggah antara tajuk dokumen dengan nama fail; venue yang belum ditetapkan memaut ke direktori venue.
+- Pemeriksaan perubahan kod dibuat, tetapi browser visual/keyboard dan production deployment evidence masih perlu dijalankan sebelum release.
+- Poster hero, semua maskot public dan peta venue kini mempunyai aset WebP yang lebih ringan; rujukan public menggunakan WebP dan fail asal dikekalkan sebagai sumber.
+- Dialog peta venue menggunakan primitive Radix/shadcn untuk focus trap, fokus awal/pulangan dan Escape; butang dialog memenuhi target 44px.
+- Status jadual kosong kini memaut terus ke jadual umum rasmi, tarikh penting dan program sukan. Jadual PDF rasmi menyatakan acara utama berlangsung 22–25 Oktober; tarikh penerbitan fixture tidak dinyatakan.
+- Semakan read-only portal mendapati 7 daripada 30 event mempunyai venue tersimpan. Event tanpa lokasi kekal dilabel Venue TBD dan memaut ke peta; lokasi tidak direka atau diisi secara pukal.
+- Semua 23 pautan peraturan sukan awam memberi HTTP 200. Tajuk PDF sepadan dengan sukan; dokumen Sofbol tidak mencetak tahun edisi pada halaman tajuk walaupun nama fail mengandungi 2025.
+- Poster utama dikurangkan daripada kira-kira 4.8 MB kepada 283 KB; maskot hero daripada 1.6 MB kepada 103 KB; peta venue daripada 1.6 MB kepada 226 KB.
+
+## Perubahan Public Portal — 24 September 2026
+
+- Homepage section “Explore the sports” kini memaparkan semua sukan dalam grid kad responsif dengan maskot daripada katalog sukan dan fallback ikon sedia ada.
+- Direktori `/sports` kini menggunakan ikon yang disimpan pada katalog sukan; ikon nama sukan sedia ada menjadi fallback apabila imej tersimpan tiada atau gagal dimuatkan. Cache portal dibersihkan selepas perubahan sukan.
+- Halaman `/venues` kini memaparkan dua peta venue SAF 20 daripada aset WebP `/images/venues/venue-saf20-1.webp` dan `venue-saf20-2.webp`; fail PNG asal dikekalkan.
+- Asset venue production disalin ke `public/images/venues` supaya boleh dilayan terus oleh web server tanpa bergantung pada symlink `public/storage`; salinan asal kekal dalam `storage/app/public/venues`.
+- Halaman `/general-information` kini mempunyai seksyen “Borang & Dokumen Pelajar” dengan pautan keenam-enam PDF rasmi SAF 20 melalui route `/public-files` daripada `storage/app/public/documents/forms`; route ini menggunakan fallback Laravel yang serasi dengan IIS.
+
 > Snapshot jujur STMS/SAF pada **22 September 2026** selepas public accessibility/SEO hardening dan repository quality-gate verification. Bukti audit asal dan addendum: [`docs/audits/2026-08-17-full-project-and-production-audit.md`](docs/audits/2026-08-17-full-project-and-production-audit.md).
 
 ## Status Keseluruhan
@@ -22,8 +64,8 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 173 application routes |
-| Migrations | 71 migration files |
+| Laravel routes | 175 application routes |
+| Migrations | 77 migration files |
 | Controllers | 42 controller files |
 | Form Requests | 35 |
 | Policies | 22 fail |
@@ -216,4 +258,4 @@ Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam 
 4. Deployment disahkan melalui worker/scheduler restart, authenticated smoke/Playwright dan release tag.
 5. Reset-password mail delivery direkod sebelum email verification diaktifkan.
 
-**Last updated:** 22 September 2026.
+**Last updated:** 28 September 2026.

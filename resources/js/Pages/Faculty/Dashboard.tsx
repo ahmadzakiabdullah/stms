@@ -275,6 +275,7 @@ export default function FacultyDashboard({
     const squadWindowOpen = Boolean(squadRegistrationStartDate && new Date(squadRegistrationStartDate) <= today
         && effectiveSquadDeadline && new Date(effectiveSquadDeadline) >= today);
     const confirmedCount = confirmedRegistrations.length;
+    const openRegistrationCount = unregisteredEvents.length;
 
     return (
         <AuthenticatedLayout
@@ -284,17 +285,10 @@ export default function FacultyDashboard({
                     description={participant ? participant.name : t('No faculty profile linked')}
                     leading={participant ? <ParticipantLogo participant={participant} size="lg" className="sm:size-14" alt="" /> : undefined}
                     actions={
-                        <>
-                            <Button asChild variant="outline" disabled={!participant}>
-                                <Link href={route('faculty.register-events')}>
-                                    {t('Register Events Page')}
-                                </Link>
-                            </Button>
-                            <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
-                                <Plus className="mr-2 size-4" />
-                                {t('Register for Events')}
-                            </Button>
-                        </>
+                        <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
+                            <Plus className="mr-2 size-4" />
+                            {t('Register for Events')}
+                        </Button>
                     }
                 />
             }
@@ -353,31 +347,74 @@ export default function FacultyDashboard({
                         </div>
                     </section>
 
+                    <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5" aria-labelledby="faculty-next-action-title">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-start gap-3">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><ArrowRight className="size-5" /></span>
+                                <div>
+                                    <h2 id="faculty-next-action-title" className="text-sm font-bold">{t('Next steps')}</h2>
+                                    {!participant ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{t('No faculty profile linked')}</p>
+                                    ) : pendingRegistrations.length > 0 ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{pendingRegistrations.length} {t('registrations awaiting confirmation')}</p>
+                                    ) : incompleteRegistrations.length > 0 ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{incompleteRegistrations.length} {t('squads need attention')}</p>
+                                    ) : rejectedRegistrations.length > 0 ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{rejectedRegistrations.length} {t('registrations require review')}</p>
+                                    ) : openRegistrationCount > 0 && eventWindowOpen ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{t('Choose events')}</p>
+                                    ) : (
+                                        <p className="mt-1 text-sm text-muted-foreground">{t('All current actions are complete.')}</p>
+                                    )}
+                                </div>
+                            </div>
+                            {pendingRegistrations.length > 0 ? (
+                                <Button asChild variant="outline" className="shrink-0">
+                                    <Link href={route('participation-confirmations.index')}>{t('Review your submission status')}<ArrowRight className="ml-2 size-4" /></Link>
+                                </Button>
+                            ) : incompleteRegistrations.length > 0 ? (
+                                <Button variant="outline" className="shrink-0" onClick={() => setActiveRegId(incompleteRegistrations[0].id)}>{t('Complete athletes and officials')}<ArrowRight className="ml-2 size-4" /></Button>
+                            ) : rejectedRegistrations.length > 0 ? (
+                                <Button variant="outline" className="shrink-0" onClick={() => setActiveRegId(rejectedRegistrations[0].id)}>{t('Check the reason before re-registering')}<ArrowRight className="ml-2 size-4" /></Button>
+                            ) : openRegistrationCount > 0 && eventWindowOpen ? (
+                                <Button className="shrink-0" onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }}><Plus className="mr-2 size-4" />{t('Register for Events')}</Button>
+                            ) : null}
+                        </div>
+                    </section>
+
                     <div className="grid gap-4 md:grid-cols-4">
+                        <a href="#my-registrations" className="block transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                         <Card>
                             <CardHeader className="pb-2">
                                 <CardDescription>{t('Events Registered')}</CardDescription>
                                 <CardTitle className="text-3xl">{registrations.length}</CardTitle>
                             </CardHeader>
                         </Card>
+                        </a>
+                        <a href="#my-registrations" className="block transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                         <Card>
                             <CardHeader className="pb-2">
                                 <CardDescription>{t('Male Athletes')}</CardDescription>
                                 <CardTitle className="text-3xl">{totals.male}</CardTitle>
                             </CardHeader>
                         </Card>
+                        </a>
+                        <a href="#my-registrations" className="block transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                         <Card>
                             <CardHeader className="pb-2">
                                 <CardDescription>{t('Female Athletes')}</CardDescription>
                                 <CardTitle className="text-3xl">{totals.female}</CardTitle>
                             </CardHeader>
                         </Card>
+                        </a>
+                        <a href="#my-registrations" className="block transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                         <Card>
                             <CardHeader className="pb-2">
                                 <CardDescription>{t('Officials')}</CardDescription>
                                 <CardTitle className="text-3xl">{totals.officials}</CardTitle>
                             </CardHeader>
                         </Card>
+                        </a>
                     </div>
 
                     <Card>
@@ -455,6 +492,9 @@ export default function FacultyDashboard({
                                                 ? q.currentAthletes >= q.totalAthletes
                                                 : (q.male === 0 || q.currentMale >= q.male) && (q.female === 0 || q.currentFemale >= q.female);
                                             const squadComplete = reg.status === 'confirmed' && athleteQuotaFull && q.currentOfficials >= q.officials;
+                                            const quotaTotal = (q.isTotalBased ? q.totalAthletes : q.male + q.female) + q.officials;
+                                            const quotaCurrent = q.currentAthletes + q.currentOfficials;
+                                            const quotaPercent = quotaTotal > 0 ? Math.min(100, Math.round((quotaCurrent / quotaTotal) * 100)) : 0;
                                             return (
                                                 <div key={reg.id} className="rounded-lg border">
                                                     <button
@@ -482,6 +522,10 @@ export default function FacultyDashboard({
                                                             <div className="text-xs text-muted-foreground">
                                                                 {reg.event?.sport?.name} · {reg.event?.sport_category?.name}
                                                                 {' · '}{reg.event?.tournament?.name}
+                                                            </div>
+                                                            <div className="mt-2 flex max-w-sm items-center gap-2">
+                                                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${squadComplete ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${quotaPercent}%` }} /></div>
+                                                                <span className="shrink-0 text-[11px] font-medium text-muted-foreground">{quotaPercent}% {t('squad complete')}</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-3 shrink-0 ml-3">

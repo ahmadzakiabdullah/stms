@@ -30,7 +30,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v11:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v12:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::flexible($cacheKey, [120, 600], function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -82,6 +82,7 @@ class PublicPortalService
                 Cache::forget('public-portal:v9:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v10:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v11:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v12:'.$sessionId.':'.$limit);
             }
             Cache::forget('public-athletes:v1:'.$sessionId);
             Cache::forget('public-athletes:v2:'.$sessionId);
@@ -536,7 +537,7 @@ class PublicPortalService
 
         // Reuse the catalog for counts, names and venues instead of querying events repeatedly.
         $catalogEvents = (clone $eventQuery)->with([
-            'sport:id,name',
+            'sport:id,name,icon',
             'sportCategory:id,name,quota_mode,max_athletes_total,max_male_athletes,max_female_athletes,min_male_athletes,min_female_athletes,max_officials',
             'sport.documents' => fn ($query) => $query
                 ->where('organization_id', $organizationId)
@@ -559,6 +560,7 @@ class PublicPortalService
             'sports_catalog' => $catalogEvents
                 ->groupBy('sport_id')->map(fn ($events) => [
                     'name' => $events->first()->sport?->name,
+                    'icon' => $events->first()->sport?->icon,
                     'categories' => $events->map(fn ($event) => $event->sportCategory?->name)->filter()->unique()->sort()->values()->all(),
                     'events' => $events->map(fn ($event) => [
                         'name' => $event->name,
