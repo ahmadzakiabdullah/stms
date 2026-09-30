@@ -1,0 +1,7 @@
+🛡️ Sentinel: [CRITICAL] Fix path traversal in participant logo selection
+
+🚨 Severity: CRITICAL
+💡 Vulnerability: The `logo_path_existing` and `inverse_logo_path_existing` validation rules allowed strings containing directory traversal patterns (`../`) to pass through.
+🎯 Impact: Attackers could manipulate file operations in controllers that use these paths (such as `Storage::disk('public')->delete(...)`), potentially resulting in arbitrary file deletion or access.
+🔧 Fix: Appended the `not_regex:/\.\./` validation rule to ensure that directory traversal strings are explicitly rejected by Laravel's validator.
+✅ Verification: Ran `php artisan test` and `npm run test:e2e` to verify existing functionality is intact and no regressions were introduced.
