@@ -131,6 +131,21 @@ function facultyName(participant: Pick<Participant, 'name' | 'name_ms'>, locale:
     return locale === 'ms' ? (participant.name_ms || participant.name) : participant.name;
 }
 
+function FacultyMark({ participant, locale }: { participant: Participant; locale: string }) {
+    const name = facultyName(participant, locale);
+
+    return (
+        <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-xs font-semibold text-primary">
+            <SafeImage
+                src={participant.logo_url ?? undefined}
+                alt=""
+                className="size-full object-contain p-1"
+                fallback={initialsOf(name)}
+            />
+        </span>
+    );
+}
+
 function SportMark({ sport, size = 'md' }: { sport?: { name?: string; icon?: string | null }; size?: 'sm' | 'md' }) {
     return (
         <span className={`flex shrink-0 items-center justify-center rounded-xl bg-primary/10 ${size === 'sm' ? 'size-9' : 'size-11'}`}>
@@ -1239,9 +1254,7 @@ export default function EventParticipantsIndex({
                                                     {!isFacultyRepresentative && (
                                                         <TableCell>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                                                    {initialsOf(facultyName(participant, locale))}
-                                                                </span>
+                                                                <FacultyMark participant={participant} locale={locale} />
                                                                 <span className="truncate text-sm">{facultyName(participant, locale)}</span>
                                                             </div>
                                                         </TableCell>

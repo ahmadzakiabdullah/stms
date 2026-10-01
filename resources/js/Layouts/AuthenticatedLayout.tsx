@@ -118,6 +118,20 @@ function initials(name = 'User'): string {
         .join('');
 }
 
+function roleLabel(user: User, t: (value: string) => string): string {
+    const role = user.roles?.[0]?.name;
+    const labels: Record<string, string> = {
+        'super-admin': 'Super Administrator',
+        'org-admin': 'Organization Administrator',
+        'admin-sport': 'Sport Administrator',
+        staff: 'Staff',
+        'faculty-representative': 'Faculty Representative',
+        dean: 'Dean',
+    };
+
+    return t(labels[role ?? ''] ?? 'User');
+}
+
 interface SidebarProps {
     user: User;
     mobile?: boolean;
@@ -226,7 +240,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                     </Avatar>
                     <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{user.name}</div>
-                        <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+                        <div className="truncate text-xs text-muted-foreground">{roleLabel(user, t)}</div>
                     </div>
                 </div>
             </div>

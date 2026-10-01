@@ -102,7 +102,7 @@ final class EventParticipantIndexService
                 ->with(['eventParticipants:id,participant_id,event_id'])
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'name_ms']);
+                ->get(['id', 'name', 'name_ms', 'logo_path', 'inverse_logo_path']);
         }, function () {
             $this->dataLoadFailed = true;
 
