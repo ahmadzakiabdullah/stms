@@ -21,6 +21,7 @@ class Participant extends Model
         'organization_id',
         'session_id',
         'name',
+        'name_ms',
         'slug',
         'email',
         'phone',

@@ -7,9 +7,12 @@ import { Menu, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export type PublicMenuLink = { href: string; label: string; current?: boolean };
-export type PublicMenuGroup = { label: string; links: PublicMenuLink[] };
+export type PublicMenuGroup = { label: string; links: PublicMenuLink[]; current?: boolean };
+export type PublicMenuItem =
+    | { type: 'link'; link: PublicMenuLink }
+    | { type: 'group'; group: PublicMenuGroup };
 
-export default function PublicMobileMenu({ links, groups = [] }: { links: PublicMenuLink[]; groups?: PublicMenuGroup[] }) {
+export default function PublicMobileMenu({ items }: { items: PublicMenuItem[] }) {
     const { t } = useI18n();
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -89,24 +92,23 @@ export default function PublicMobileMenu({ links, groups = [] }: { links: Public
                     aria-label={t('Public navigation')}
                     className="absolute right-0 top-14 z-50 w-72 overflow-hidden rounded-2xl border border-white/15 bg-[var(--public-dark)] p-2 text-white shadow-2xl"
                 >
-                    {links.map(link => (
+                    {items.map(item => item.type === 'link' ? (
                         <Link
-                            key={`${link.href}-${link.label}`}
-                            href={link.href}
-                            aria-current={link.current ? 'page' : undefined}
+                            key={`${item.link.href}-${item.link.label}`}
+                            href={item.link.href}
+                            aria-current={item.link.current ? 'page' : undefined}
                             onClick={() => setOpen(false)}
-                            className={`flex min-h-11 items-center rounded-xl px-3 text-sm font-bold transition hover:bg-white/10 ${link.current ? 'bg-white/10 text-[var(--public-highlight)]' : 'text-white/75 hover:text-white'}`}
+                            className={`flex min-h-11 items-center rounded-xl px-3 text-sm font-bold transition hover:bg-white/10 ${item.link.current ? 'bg-white/10 text-[var(--public-highlight)]' : 'text-white/75 hover:text-white'}`}
                         >
-                            {link.label}
+                            {item.link.label}
                         </Link>
-                    ))}
-                    {groups.map(group => (
-                        <section key={group.label} className="mt-2 border-t border-white/10 pt-2" aria-labelledby={`public-mobile-${group.label.toLowerCase()}`}>
-                            <h2 id={`public-mobile-${group.label.toLowerCase()}`} className="px-3 py-2 text-xs font-black uppercase tracking-[.16em] text-[var(--public-accent)]">
-                                {group.label}
+                    ) : (
+                        <section key={item.group.label} className="mt-2 border-t border-white/10 pt-2" aria-labelledby={`public-mobile-${item.group.label.toLowerCase()}`}>
+                            <h2 id={`public-mobile-${item.group.label.toLowerCase()}`} className="px-3 py-2 text-xs font-black uppercase tracking-[.16em] text-[var(--public-accent)]">
+                                {item.group.label}
                             </h2>
                             <div className="space-y-0.5">
-                                {group.links.map(link => (
+                                {item.group.links.map(link => (
                                     <Link
                                         key={`${link.href}-${link.label}`}
                                         href={link.href}

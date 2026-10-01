@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
 use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Organization;
@@ -125,6 +126,61 @@ class EventTest extends TestCase
         $this->assertDatabaseHas('events', ['name' => 'Test Event']);
     }
 
+    public function test_authorized_user_can_store_event_draw_configuration(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createStaffUser($org);
+        $manager->assignRole('tournament-manager');
+
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+        $sport = Sport::factory()->create(['organization_id' => $org->id]);
+        $cat = SportCategory::factory()->forSport($sport)->create();
+
+        $response = $this->actingAs($manager)->post(route('events.store'), [
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $cat->id,
+            'name' => 'Configured Event',
+            'start_date' => now()->toDateString(),
+            'format' => 'group_knockout',
+            'pool_size' => 4,
+            'qualifiers_per_pool' => 2,
+        ]);
+
+        $response->assertRedirect(route('events.index'));
+        $this->assertDatabaseHas('events', [
+            'name' => 'Configured Event',
+            'format' => 'group_knockout',
+            'pool_size' => 4,
+            'qualifiers_per_pool' => 2,
+        ]);
+    }
+
+    public function test_event_draw_configuration_rejects_qualifiers_greater_than_pool_size(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createStaffUser($org);
+        $manager->assignRole('tournament-manager');
+
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+        $sport = Sport::factory()->create(['organization_id' => $org->id]);
+        $cat = SportCategory::factory()->forSport($sport)->create();
+
+        $response = $this->actingAs($manager)->post(route('events.store'), [
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $cat->id,
+            'name' => 'Invalid Configured Event',
+            'start_date' => now()->toDateString(),
+            'format' => 'group_knockout',
+            'pool_size' => 3,
+            'qualifiers_per_pool' => 4,
+        ]);
+
+        $response->assertSessionHasErrors('qualifiers_per_pool');
+        $this->assertDatabaseMissing('events', ['name' => 'Invalid Configured Event']);
+    }
+
     public function test_event_creation_rejects_parent_relations_from_another_organization(): void
     {
         $orgA = Organization::factory()->create();
@@ -221,5 +277,89 @@ class EventTest extends TestCase
         $this->assertDatabaseHas('matches', ['id' => $noVenue->id, 'venue' => 'Stadium Mini UTeM']);
         $this->assertDatabaseHas('matches', ['id' => $blankVenue->id, 'venue' => 'Stadium Mini UTeM']);
         $this->assertDatabaseHas('matches', ['id' => $alreadySet->id, 'venue' => 'Existing Stadium']);
+    }
+
+    public function test_batch_delete_requires_a_reason(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+        $sport = Sport::factory()->create(['organization_id' => $org->id]);
+        $category = SportCategory::factory()->forSport($sport)->create();
+        $event = Event::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $category->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('events.batch-destroy'), ['ids' => [$event->id]])
+            ->assertSessionHasErrors('reason');
+
+        $this->assertNotSoftDeleted('events', ['id' => $event->id]);
+    }
+
+    public function test_batch_delete_records_reason_and_summary_activity(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+        $sport = Sport::factory()->create(['organization_id' => $org->id]);
+        $category = SportCategory::factory()->forSport($sport)->create();
+        $eventA = Event::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $category->id,
+        ]);
+        $eventB = Event::factory()->create([
+            'organization_id' => $org->id,
+            'tournament_id' => $tournament->id,
+            'sport_id' => $sport->id,
+            'sport_category_id' => $category->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('events.batch-destroy'), [
+                'ids' => [$eventA->id, $eventB->id],
+                'reason' => 'Duplicate events created during setup review.',
+            ])
+            ->assertRedirect(route('events.index'))
+            ->assertSessionHas('success', '2 events deleted successfully.');
+
+        $this->assertSoftDeleted('events', ['id' => $eventA->id]);
+        $this->assertSoftDeleted('events', ['id' => $eventB->id]);
+
+        $summary = Activity::query()
+            ->where('event', 'bulk_deleted')
+            ->where('subject_type', Organization::class)
+            ->where('subject_id', $org->id)
+            ->firstOrFail();
+
+        $this->assertSame('events.batch_destroy', $summary->properties['bulk_action']);
+        $this->assertSame('Duplicate events created during setup review.', $summary->properties['reason']);
+        $this->assertSame(2, $summary->properties['deleted_count']);
+        $this->assertNotEmpty($summary->properties['bulk_action_id']);
+    }
+
+    public function test_batch_delete_rejects_events_from_multiple_organizations(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $superAdmin = $this->createSuperAdmin();
+        $eventA = Event::factory()->create(['organization_id' => $orgA->id]);
+        $eventB = Event::factory()->create(['organization_id' => $orgB->id]);
+
+        $this->actingAs($superAdmin)
+            ->post(route('events.batch-destroy'), [
+                'ids' => [$eventA->id, $eventB->id],
+                'reason' => 'Cross-organization cleanup attempt.',
+            ])
+            ->assertRedirect(route('events.index'))
+            ->assertSessionHas('error', 'Bulk delete can only be applied to events from one organization at a time.');
+
+        $this->assertNotSoftDeleted('events', ['id' => $eventA->id]);
+        $this->assertNotSoftDeleted('events', ['id' => $eventB->id]);
     }
 }

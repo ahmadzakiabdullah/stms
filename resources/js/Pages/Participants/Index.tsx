@@ -39,10 +39,12 @@ import { Eye, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import type { Participant, Session, Paginated } from '@/types';
+import axios from 'axios';
 
 const participantSchema = z.object({
     session_id: z.string().nullable().optional().default(''),
     name: z.string().min(1, 'Name is required'),
+    name_ms: z.string().optional().default(''),
     slug: z.string().regex(/^[a-zA-Z0-9_-]*$/, 'Must be alphanumeric with dashes or underscores').optional().default(''),
     email: z.string().email('Invalid email address').optional().or(z.literal('')).default(''),
     phone: z.string().optional().default(''),
@@ -74,7 +76,8 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ParticipantsIndex({ participants: participantsProp, sessions: sessionsProp = [], importPreview = null, availableLogos = [] }: ParticipantsIndexProps) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
+    const displayParticipantName = (participant: ParticipantRow | null | undefined) => participant ? (locale === 'ms' ? (participant.name_ms || participant.name) : participant.name) : '';
     const [open, setOpen] = useState(false);
     const [importOpen, setImportOpen] = useState(false);
     const [editingParticipant, setEditingParticipant] = useState<ParticipantRow | null>(null);
@@ -191,7 +194,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-3">
                                             <ParticipantLogo participant={participant} size="sm" alt="" />
-                                            <span className="truncate">{participant.name}</span>
+                                            <span className="truncate">{displayParticipantName(participant)}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-sm">
@@ -249,7 +252,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                 title={t('Delete Participant?')}
                 description={
                     <>
-                        Are you sure you want to delete <strong>{deleteParticipant?.name}</strong>? This will also remove all their tournament registrations. This action cannot be undone.
+                        Are you sure you want to delete <strong>{displayParticipantName(deleteParticipant)}</strong>? This will also remove all their tournament registrations. This action cannot be undone.
                     </>
                 }
                 confirmLabel={t('Yes, Delete')}
@@ -264,7 +267,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                         <div className="flex items-center gap-3">
                             {viewParticipant && <ParticipantLogo participant={viewParticipant} size="lg" alt="" />}
                             <div>
-                                <DialogTitle>{viewParticipant?.name}</DialogTitle>
+                                <DialogTitle>{displayParticipantName(viewParticipant)}</DialogTitle>
                                 <DialogDescription>{t('Full participant details')}</DialogDescription>
                             </div>
                         </div>
@@ -289,17 +292,17 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                             <div>
                                 <h4 className="mb-2 font-semibold text-foreground">{t('Participant Information')}</h4>
                                 <div className="grid grid-cols-2 gap-3 rounded-md border bg-muted/30 p-3">
-                                    <div><span className="text-muted-foreground">{t('Name')}</span><p className="font-medium">{viewParticipant.name}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Name')}</span><p className="font-medium">{displayParticipantName(viewParticipant)}</p></div>
                                     <div><span className="text-muted-foreground">{t('Slug')}</span><p className="font-medium">{viewParticipant.slug}</p></div>
                                     <div><span className="text-muted-foreground">{t('Email')}</span><p className="font-medium">{viewParticipant.email || '—'}</p></div>
                                     <div><span className="text-muted-foreground">{t('Phone')}</span><p className="font-medium">{viewParticipant.phone || '—'}</p></div>
                                     <div><span className="text-muted-foreground">{t('Type')}</span><p className="font-medium capitalize">{viewParticipant.participant_type}</p></div>
                                     <div><span className="text-muted-foreground">{t('Team Name')}</span><p className="font-medium">{viewParticipant.team_name || '—'}</p></div>
                                     <div><span className="text-muted-foreground">{t('Status')}</span><p className="font-medium capitalize">{viewParticipant.status}</p></div>
-                                    <div><span className="text-muted-foreground">Active</span><p className="font-medium">{viewParticipant.is_active ? t('Yes') : t('No')}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Active')}</span><p className="font-medium">{viewParticipant.is_active ? t('Yes') : t('No')}</p></div>
                                     <div className="col-span-2"><span className="text-muted-foreground">{t('Notes')}</span><p className="font-medium">{viewParticipant.notes || '—'}</p></div>
-                                    <div><span className="text-muted-foreground">Created</span><p className="font-medium">{new Date(viewParticipant.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</p></div>
-                                    <div><span className="text-muted-foreground">Updated</span><p className="font-medium">{new Date(viewParticipant.updated_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Created')}</span><p className="font-medium">{new Date(viewParticipant.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</p></div>
+                                    <div><span className="text-muted-foreground">{t('Updated')}</span><p className="font-medium">{new Date(viewParticipant.updated_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</p></div>
                                 </div>
                             </div>
 
@@ -312,7 +315,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
                                                 <div><span className="text-muted-foreground">{t('Name')}</span><p className="font-medium">{u.name}</p></div>
                                                 <div><span className="text-muted-foreground">{t('Email')}</span><p className="font-medium">{u.email}</p></div>
                                                 <div className="col-span-2">
-                                                    <span className="text-muted-foreground">Roles</span>
+                                                    <span className="text-muted-foreground">{t('Roles')}</span>
                                                     <p className="font-medium">
                                                         {u.roles && u.roles.length > 0
                                                             ? u.roles.map(r => r.name).join(', ')
@@ -359,6 +362,7 @@ export default function ParticipantsIndex({ participants: participantsProp, sess
 interface FormData {
     session_id: string;
     name: string;
+    name_ms: string;
     slug: string;
     email: string;
     phone: string;
@@ -374,6 +378,7 @@ function ParticipantFormDialog({ participant, sessions, availableLogos, onClose 
     const [formData, setFormData] = useState<FormData>(() => participant ? {
         session_id: participant.session_id || '',
         name: participant.name,
+        name_ms: participant.name_ms || '',
         slug: participant.slug,
         email: participant.email || '',
         phone: participant.phone || '',
@@ -385,6 +390,7 @@ function ParticipantFormDialog({ participant, sessions, availableLogos, onClose 
     } : {
         session_id: sessions.length > 0 ? sessions[0].id : '',
         name: '',
+        name_ms: '',
         slug: '',
         email: '',
         phone: '',
@@ -515,7 +521,18 @@ function ParticipantFormDialog({ participant, sessions, availableLogos, onClose 
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="slug">Slug</Label>
+                    <Label htmlFor="name_ms">{t('Name (Bahasa Malaysia)')}</Label>
+                    <Input
+                        id="name_ms"
+                        value={formData.name_ms}
+                        onChange={e => set('name_ms', e.target.value)}
+                        placeholder={t('e.g. Fakulti Teknologi Maklumat dan Komunikasi')}
+                    />
+                    {errors.name_ms && <p className="text-sm text-destructive">{errors.name_ms}</p>}
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="slug">{t('Slug')}</Label>
                     <Input
                         id="slug"
                         value={formData.slug}
@@ -658,6 +675,7 @@ function ParticipantFormDialog({ participant, sessions, availableLogos, onClose 
 
 interface ImportPreviewRowData {
     name: string;
+    name_ms?: string;
     participant_type: string;
     team_name?: string;
     email?: string;
@@ -679,16 +697,47 @@ interface ImportPreview {
     errors: string[];
 }
 
+interface TransferStatus {
+    id: string;
+    type: string;
+    status: 'pending' | 'running' | 'completed' | 'completed_with_errors' | 'failed';
+    progress: number;
+    processed: number;
+    total: number | null;
+    failure_report: string[];
+    download_url: string | null;
+}
+
 function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessions: Session[]; initialPreview: ImportPreview | null; onClose: () => void }) {
     const { t } = useI18n();
     const [file, setFile] = useState<File | null>(null);
     const [sessionId, setSessionId] = useState('');
     const [preview, setPreview] = useState<ImportPreview | null>(initialPreview);
     const [busy, setBusy] = useState(false);
+    const [transfer, setTransfer] = useState<TransferStatus | null>(null);
+    const [queueError, setQueueError] = useState<string | null>(null);
 
     useEffect(() => {
         setPreview(initialPreview);
     }, [initialPreview]);
+
+    useEffect(() => {
+        if (!transfer || ['completed', 'completed_with_errors', 'failed'].includes(transfer.status)) {
+            return;
+        }
+
+        const timer = window.setInterval(async () => {
+            try {
+                const response = await axios.get<{ data: TransferStatus }>(route('data-transfers.show', transfer.id));
+                setTransfer(response.data.data);
+            } catch {
+                setQueueError(t('Unable to refresh import status.'));
+                window.clearInterval(timer);
+            }
+        }, 2000);
+
+        return () => window.clearInterval(timer);
+    }, [transfer?.id, transfer?.status]);
 
     const handleUpload = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -707,25 +756,32 @@ function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessi
         });
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!preview || busy) return;
 
         setBusy(true);
-        router.post(route('participants.import.confirm'), { token: preview.token }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                setPreview(null);
-                setFile(null);
-                onClose();
-            },
-            onFinish: () => setBusy(false),
-        });
+        setQueueError(null);
+
+        try {
+            const response = await axios.post<{ data: TransferStatus }>(route('participants.import.queue'), { token: preview.token });
+            setTransfer(response.data.data);
+            setPreview(null);
+            setFile(null);
+        } catch (error) {
+            const message = axios.isAxiosError(error)
+                ? (error.response?.data?.message ?? t('Unable to queue import.'))
+                : t('Unable to queue import.');
+            setQueueError(message);
+        } finally {
+            setBusy(false);
+        }
     };
 
     const resetPreview = () => {
         setPreview(null);
         setFile(null);
+        setTransfer(null);
+        setQueueError(null);
     };
 
     return (
@@ -745,6 +801,35 @@ function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessi
             </a>
 
             {!preview ? (
+                transfer ? (
+                    <div className="mt-4 grid gap-3">
+                        <div className="rounded-md border bg-muted/30 p-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-sm font-medium">{t('Queued participant import')}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t(transfer.status)} · {transfer.progress}%
+                                        {transfer.total !== null && ` · ${transfer.processed}/${transfer.total}`}
+                                    </p>
+                                </div>
+                                {['completed', 'completed_with_errors', 'failed'].includes(transfer.status) && (
+                                    <Button type="button" variant="outline" onClick={() => router.reload({ only: ['participants'] })}>
+                                        {t('Refresh list')}
+                                    </Button>
+                                )}
+                            </div>
+                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-background">
+                                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${transfer.progress}%` }} />
+                            </div>
+                            {transfer.failure_report.length > 0 && (
+                                <p className="mt-2 text-xs text-yellow-700">{transfer.failure_report.join(' ')}</p>
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={onClose}>{t('Close')}</Button>
+                        </DialogFooter>
+                    </div>
+                ) : (
                 <form onSubmit={handleUpload} className="mt-4 grid gap-4">
                     <div className="grid gap-2">
                         <Label htmlFor="import_session">{t('Session')}</Label>
@@ -786,8 +871,10 @@ function ImportParticipantsDialog({ sessions, initialPreview, onClose }: { sessi
                         </Button>
                     </DialogFooter>
                 </form>
+                )
             ) : (
                 <div className="mt-4 grid gap-3">
+                    {queueError && <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{queueError}</p>}
                     <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-sm">
                         <span>
                             <strong>{preview.valid_count}</strong> {t('valid')} ·{' '}

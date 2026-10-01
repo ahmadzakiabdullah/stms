@@ -11,6 +11,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 interface ConfirmDialogProps {
     open: boolean;
@@ -30,11 +31,13 @@ export function ConfirmDialog({
     title,
     description,
     confirmLabel,
-    cancelLabel = 'Cancel',
+    cancelLabel,
     destructive = false,
     processing = false,
     onConfirm,
 }: ConfirmDialogProps) {
+    const { t } = useI18n();
+
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent>
@@ -43,7 +46,7 @@ export function ConfirmDialog({
                     {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={processing}>{cancelLabel}</AlertDialogCancel>
+                    <AlertDialogCancel disabled={processing}>{cancelLabel ?? t('Cancel')}</AlertDialogCancel>
                     <AlertDialogAction
                         disabled={processing}
                         className={cn(

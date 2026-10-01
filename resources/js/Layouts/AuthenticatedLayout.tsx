@@ -37,6 +37,7 @@ interface NavItem {
     label: string;
     icon: LucideIcon;
     href: string;
+    anchor?: string;
     active: string;
     roles?: string[];
 }
@@ -88,6 +89,7 @@ const navSections: NavSection[] = [
             { label: 'Matches', icon: Swords, href: 'matches.index', active: 'matches.index', roles: systemRoles.competition },
             { label: 'Results', icon: Trophy, href: 'results.index', active: 'results.index', roles: systemRoles.competition },
             { label: 'Rankings', icon: Award, href: 'rankings.index', active: 'rankings.index', roles: systemRoles.competition },
+            { label: 'Public Schedule & Results', icon: Calendar, href: 'public.schedule', active: 'public.schedule', roles: systemRoles.faculty },
         ],
     },
     {
@@ -114,6 +116,20 @@ function initials(name = 'User'): string {
         .slice(0, 2)
         .map((part) => part[0]?.toUpperCase())
         .join('');
+}
+
+function roleLabel(user: User, t: (value: string) => string): string {
+    const role = user.roles?.[0]?.name;
+    const labels: Record<string, string> = {
+        'super-admin': 'Super Administrator',
+        'org-admin': 'Organization Administrator',
+        'admin-sport': 'Sport Administrator',
+        staff: 'Staff',
+        'faculty-representative': 'Faculty Representative',
+        dean: 'Dean',
+    };
+
+    return t(labels[role ?? ''] ?? 'User');
 }
 
 interface SidebarProps {
@@ -175,7 +191,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                                     return (
                                         <Link
                                             key={item.label}
-                                            href={route(item.href)}
+                                            href={`${route(item.href)}${item.anchor ?? ''}`}
                                             onClick={onNavigate}
                                             className={
                                                 'group relative flex min-h-11 items-center gap-3 rounded-lg px-2 py-1 text-sm font-medium transition ' +
@@ -224,7 +240,7 @@ function Sidebar({ user, mobile = false, onNavigate = () => {}, isSuperAdmin = f
                     </Avatar>
                     <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{user.name}</div>
-                        <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+                        <div className="truncate text-xs text-muted-foreground">{roleLabel(user, t)}</div>
                     </div>
                 </div>
             </div>
@@ -303,7 +319,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                     <div className="fixed inset-0 z-40 lg:hidden">
                         <button
                             type="button"
-                            aria-label="Close navigation"
+                            aria-label={t('Close navigation')}
                             className="absolute inset-0 bg-black/20"
                             onClick={() => setMobileOpen(false)}
                         />

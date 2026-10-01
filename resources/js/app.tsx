@@ -22,7 +22,7 @@ createInertiaApp({
 
         root.render(
             <>
-                <Toaster />
+                <Toaster locale={props.locale} />
                 <FlashListener />
                 <App {...props} />
             </>,

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Organization;
 use App\Models\Session;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
@@ -109,5 +111,29 @@ class SessionTest extends TestCase
             'end_date' => '2026-01-15',
         ]);
         $response->assertSessionHasErrors('slug');
+    }
+
+    public function test_org_admin_can_upload_session_logo_variants(): void
+    {
+        Storage::fake('public');
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+
+        $response = $this->actingAs($admin)->post(route('sessions.store'), [
+            'name' => 'SAF 20 2026',
+            'slug' => 'saf-20-2026',
+            'start_date' => '2026-10-22',
+            'end_date' => '2026-10-25',
+            'logo' => UploadedFile::fake()->image('saf-logo.png'),
+            'inverse_logo' => UploadedFile::fake()->image('saf-logo-inverse.png'),
+        ]);
+
+        $response->assertRedirect(route('sessions.index'));
+        $session = Session::where('slug', 'saf-20-2026')->firstOrFail();
+
+        $this->assertNotNull($session->logo_path);
+        $this->assertNotNull($session->inverse_logo_path);
+        Storage::disk('public')->assertExists($session->logo_path);
+        Storage::disk('public')->assertExists($session->inverse_logo_path);
     }
 }

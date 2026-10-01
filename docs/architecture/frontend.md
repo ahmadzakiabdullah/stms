@@ -2,7 +2,7 @@
 
 > **Current update — 21 August 2026:** Public UI includes `/athletes` and athlete profiles, shared responsive match cards with participant-grouped scorers, and a score editor with keyboard/accessibility-friendly increment controls.
 
-Frontend menggunakan React 18, Inertia React 2, TypeScript, Tailwind CSS 3, Vite 8 dan komponen shadcn/ui/Radix. Repositori mempunyai 43 Inertia page files. Semua page adalah TSX; beberapa shared UI/layout compatibility files masih `.jsx`, jadi migrasi TypeScript belum menyeluruh.
+Frontend menggunakan React 18, Inertia React 2, TypeScript, Tailwind CSS 3, Vite 8 dan komponen shadcn/ui/Radix. Repositori mempunyai 47 Inertia page files. Semua page adalah TSX; beberapa shared UI/layout compatibility files masih `.jsx`, jadi migrasi TypeScript belum menyeluruh.
 
 ## Struktur
 
@@ -20,6 +20,6 @@ Route `/` merender `Public/Index`; `/portal` dan `/index.php` redirect 301 ke `/
 
 ## Build dan Aksesibiliti
 
-Quality gate frontend: typecheck, Vite production build, bundle budget, Playwright smoke dan axe. Build semasa lulus dengan JS terbesar kira-kira 351 KB dan CSS kira-kira 92 KB di bawah budget 400/100 KB. Playwright/axe tempatan lulus 8/8 desktop/mobile dan CI #112 mengesahkan browser E2E serta build pada `4b04c46`.
+Quality gate frontend: typecheck, Vite production build, bundle budget, Playwright smoke dan axe. Build semasa lulus dengan JS terbesar kira-kira 380 KB dan CSS kira-kira 109 KB di bawah budget 400/120 KB (runner lokal 22 September). Playwright/axe tempatan lulus 8/8 desktop/mobile dan CI #112 mengesahkan browser E2E serta build pada `4b04c46`.
 
 Fontsource membundel font yang digunakan dan Blade tidak lagi memuat Bunny Fonts. Guest menerima manifest Ziggy terhad dan global Vite prefetch telah dibuang. Dark-mode CSS tersedia, tetapi theme-toggle pengguna tidak ditemui; dokumentasi tidak boleh mendakwa kawalan itu sudah dilaksanakan.

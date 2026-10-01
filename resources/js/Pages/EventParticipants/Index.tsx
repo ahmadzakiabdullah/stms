@@ -31,12 +31,15 @@ import Pagination from '@/components/Pagination';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { PageHeader } from '@/components/PageHeader';
+import SafeImage from '@/components/SafeImage';
+import { SportIcon } from '@/lib/sportIcons';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AlertTriangle, Ban, CalendarDays, Check, CheckCircle2, ChevronDown, CircleDashed, CircleX, Clock, ClipboardList, Download, FileText, Filter, Inbox, LayoutGrid, List, LogOut, Pencil, Phone, Plus, RotateCcw, Search, SearchX, Trash2, Upload, UserPlus, Users, X, XCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { useI18n } from '@/lib/i18n';
+import axios from 'axios';
 import type {
     Event as EventType,
     EventParticipant as EventParticipantType,
@@ -45,9 +48,20 @@ import type {
     SquadMember,
 } from '@/types';
 
+interface TransferStatus {
+    id: string;
+    type: string;
+    status: 'pending' | 'running' | 'completed' | 'completed_with_errors' | 'failed';
+    progress: number;
+    processed: number;
+    total: number | null;
+    failure_report: string[];
+    download_url: string | null;
+}
+
 interface ParticipantWithEvents extends Participant {
     event_participants?: (EventParticipantType & {
-        event?: EventType & { sport?: { name: string }; sport_category?: { name: string }; tournament?: { name: string } };
+        event?: EventType & { sport?: { name: string; icon?: string | null }; sport_category?: { name: string }; tournament?: { name: string } };
     })[];
 }
 
@@ -64,11 +78,15 @@ interface ScheduleConflict {
 
 interface EventParticipantsIndexProps {
     participants: Paginated<ParticipantWithEvents> | ParticipantWithEvents[];
-    events: (EventType & { sport?: { name: string }; sport_category?: { name: string }; tournament?: { name: string } })[];
+    events: (EventType & { sport?: { name: string; icon?: string | null }; sport_category?: { name: string }; tournament?: { name: string } })[];
     faculties?: ParticipantWithEvents[];
     isFacultyRepresentative?: boolean;
     statusCounts?: Record<string, number>;
     conflicts?: Record<string, ScheduleConflict[]>;
+    eventRegistrationDeadline?: string | null;
+    eventRegistrationStartDate?: string | null;
+    squadRegistrationStartDate?: string | null;
+    squadRegistrationDeadline?: string | null;
 }
 
 const squadRoleConfig: Record<string, { label: string; class: string }> = {
@@ -109,19 +127,36 @@ function initialsOf(name = ''): string {
     return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
 }
 
-const sportIcon: Record<string, string> = {
-    badminton: '🏸', 'bola sepak': '⚽', 'bola keranjang': '🏀', 'bola tampar': '🏐',
-    hoki: '🏑', ragbi: '🏉', olahraga: '🏃', renang: '🏊', memanah: '🎯',
-    pingpong: '🏓', taekwondo: '🥋', silat: '⚔️', catur: '♟️', efootball: '🎮',
-};
+function facultyName(participant: Pick<Participant, 'name' | 'name_ms'>, locale: string): string {
+    return locale === 'ms' ? (participant.name_ms || participant.name) : participant.name;
+}
 
-function getSportIcon(name?: string): string {
-    if (!name) return '🏅';
-    const lower = name.toLowerCase();
-    for (const [key, icon] of Object.entries(sportIcon)) {
-        if (lower.includes(key)) return icon;
-    }
-    return '🏅';
+function FacultyMark({ participant, locale }: { participant: Participant; locale: string }) {
+    const name = facultyName(participant, locale);
+
+    return (
+        <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-xs font-semibold text-primary">
+            <SafeImage
+                src={participant.logo_url ?? undefined}
+                alt=""
+                className="size-full object-contain p-1"
+                fallback={initialsOf(name)}
+            />
+        </span>
+    );
+}
+
+function SportMark({ sport, size = 'md' }: { sport?: { name?: string; icon?: string | null }; size?: 'sm' | 'md' }) {
+    return (
+        <span className={`flex shrink-0 items-center justify-center rounded-xl bg-primary/10 ${size === 'sm' ? 'size-9' : 'size-11'}`}>
+            <SafeImage
+                src={sport?.icon ?? undefined}
+                alt=""
+                className={size === 'sm' ? 'size-6 object-contain' : 'size-7 object-contain'}
+                fallback={<SportIcon name={sport?.name ?? ''} className={size === 'sm' ? 'size-5' : 'size-6'} />}
+            />
+        </span>
+    );
 }
 
 const sportColors: Record<string, string> = {
@@ -149,7 +184,7 @@ function AddEventDialog({
     events: EventParticipantsIndexProps['events'];
     participants?: ParticipantWithEvents[];
 }) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
     const [selectedParticipantId, setSelectedParticipantId] = useState(participantId);
     const [search, setSearch] = useState('');
@@ -171,6 +206,23 @@ function AddEventDialog({
         const p = participants?.find(p => p.id === pid);
         return p?.event_participants?.map(ep => ep.event_id) ?? [];
     }, [selectedParticipantId, participantId, participants]);
+
+    const selectedEventsPreview = useMemo(() => selectedEventIds
+        .map((id) => events.find((event) => event.id === id))
+        .filter((event): event is EventParticipantsIndexProps['events'][number] => Boolean(event))
+        .map((event) => {
+            const deadlinePassed = Boolean((event as any).registration_deadline && new Date((event as any).registration_deadline) < new Date());
+            const alreadyRegistered = registeredIds.includes(event.id);
+
+            return {
+                id: event.id,
+                name: event.name,
+                meta: [event.sport?.name, event.sport_category?.name, event.tournament?.name].filter(Boolean).join(' · '),
+                status: alreadyRegistered ? 'registered' : deadlinePassed ? 'deadline' : 'eligible',
+            };
+        }), [selectedEventIds, events, registeredIds]);
+
+    const selectedEligibleCount = selectedEventsPreview.filter((event) => event.status === 'eligible').length;
 
     const filtered = useMemo(() => {
         const q = search.toLowerCase();
@@ -228,7 +280,7 @@ function AddEventDialog({
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">{t('-- Select Participant --')}</SelectItem>
-                                    {participants.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                {participants.map((p) => <SelectItem key={p.id} value={p.id}>{facultyName(p, locale)}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -267,7 +319,7 @@ function AddEventDialog({
                                             <input type="checkbox" value={evt.id}
                                                 checked={selectedEventIds.includes(evt.id)}
                                                 onChange={() => toggleEvent(evt.id)} className="size-4 rounded" />
-                                            <span className="text-lg">{getSportIcon(evt.sport?.name)}</span>
+                                            <SportMark sport={evt.sport} size="sm" />
                                             <div className="min-w-0 flex-1">
                                                 <div className="truncate">{evt.name}</div>
                                                 <div className="text-xs text-muted-foreground">{evt.sport?.name}{evt.sport_category?.name ? ` · ${evt.sport_category.name}` : ''}{evt.tournament?.name ? ` · ${evt.tournament.name}` : ''}</div>
@@ -283,21 +335,52 @@ function AddEventDialog({
                         {t('event(s) selected')}.
                         {selectedEventIds.length > 0 && <button type="button" className="ml-2 text-primary underline" onClick={() => setSelectedEventIds([])}>{t('Clear selection')}</button>}
                     </div>
+                    {selectedEventsPreview.length > 0 && (
+                        <div className="rounded-md border bg-muted/30 p-3">
+                            <p className="text-sm font-medium">{selectedEligibleCount} {t('will be registered')}</p>
+                            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                                {selectedEventsPreview.slice(0, 6).map((event) => (
+                                    <li key={event.id} className="flex items-start justify-between gap-3">
+                                        <span className="min-w-0">
+                                            <span className="block truncate">{event.name}</span>
+                                            {event.meta && <span className="block truncate text-xs">{event.meta}</span>}
+                                        </span>
+                                        <span className={`shrink-0 text-xs font-medium ${event.status === 'eligible' ? 'text-emerald-700' : event.status === 'deadline' ? 'text-destructive' : 'text-amber-700'}`}>
+                                            {event.status === 'eligible' ? t('Ready') : event.status === 'deadline' ? t('Deadline passed') : t('Already registered')}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                            {selectedEventsPreview.length > 6 && <p className="mt-2 text-xs text-muted-foreground">+{selectedEventsPreview.length - 6} {t('more')}</p>}
+                        </div>
+                    )}
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={reset}>{t('Cancel')}</Button>
-                    <Button onClick={handleRegister} disabled={selectedEventIds.length === 0 || (!selectedParticipantId && !participantId)}><Plus className="mr-2 size-4" />{t('Register selected')}</Button>
+                    <Button onClick={handleRegister} disabled={selectedEventIds.length === 0 || selectedEligibleCount === 0 || (!selectedParticipantId && !participantId)}><Plus className="mr-2 size-4" />{t('Register selected')}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
 
-function BatchRejectDialog({ open, onClose, count, onConfirm }: {
-    open: boolean; onClose: () => void; count: number; onConfirm: (notes: string) => void;
+type BatchRegistrationPreviewRow = {
+    id: string;
+    participantName: string;
+    eventName: string;
+    status: string;
+};
+
+function BatchStatusDialog({ open, action, rows, onClose, onConfirm }: {
+    open: boolean;
+    action: 'confirmed' | 'rejected';
+    rows: BatchRegistrationPreviewRow[];
+    onClose: () => void;
+    onConfirm: (notes?: string) => void;
 }) {
     const { t } = useI18n();
     const [notes, setNotes] = useState('');
+    const isReject = action === 'rejected';
 
     useEffect(() => {
         if (open) setNotes('');
@@ -307,21 +390,40 @@ function BatchRejectDialog({ open, onClose, count, onConfirm }: {
         <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{t('Reject registrations?')}</DialogTitle>
-                    <DialogDescription>Reject <strong>{count}</strong> pending registration(s)? The faculty representatives will be notified.</DialogDescription>
+                    <DialogTitle>{isReject ? t('Reject registrations?') : t('Approve registrations?')}</DialogTitle>
+                    <DialogDescription>
+                        {isReject ? t('Review the selected registrations and record a reason before rejecting them.') : t('Review the selected registrations before approving them.')}
+                    </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-2">
-                    <Label htmlFor="batch-reject-notes">
-                        {t('Reason')} <span className="text-destructive">*</span>
-                    </Label>
-                    <textarea id="batch-reject-notes" value={notes} onChange={(e) => setNotes(e.target.value)} required
-                        placeholder={t('e.g. Entry over quota / not eligible')}
-                        className="flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" />
+                <div className="space-y-4">
+                    <div className="rounded-md border bg-muted/30 p-3">
+                        <p className="text-sm font-medium">{rows.length} {t('selected')}</p>
+                        <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                            {rows.slice(0, 6).map((row) => (
+                                <li key={row.id} className="truncate">
+                                    - {row.participantName} · {row.eventName} ({t(statusConfig[row.status]?.label ?? row.status)})
+                                </li>
+                            ))}
+                        </ul>
+                        {rows.length > 6 && <p className="mt-2 text-xs text-muted-foreground">+{rows.length - 6} {t('more')}</p>}
+                    </div>
+                    {isReject && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="batch-status-notes">
+                                {t('Reason')} <span className="text-destructive">*</span>
+                            </Label>
+                            <textarea id="batch-status-notes" value={notes} onChange={(e) => setNotes(e.target.value)} required
+                                placeholder={t('e.g. Entry over quota / not eligible')}
+                                className="flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" />
+                            <p className="text-xs text-muted-foreground">{t('This reason will be stored in the activity log.')}</p>
+                        </div>
+                    )}
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>{t('Cancel')}</Button>
-                    <Button variant="destructive" disabled={!notes.trim()} onClick={() => onConfirm(notes.trim())}>
-                        <CircleX className="mr-2 size-4" />{t('Reject')}
+                    <Button variant={isReject ? 'destructive' : 'default'} disabled={rows.length === 0 || (isReject && notes.trim().length < 5)} onClick={() => onConfirm(isReject ? notes.trim() : undefined)}>
+                        {isReject ? <CircleX className="mr-2 size-4" /> : <Check className="mr-2 size-4" />}
+                        {isReject ? t('Reject') : t('Approve')}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -332,31 +434,73 @@ function BatchRejectDialog({ open, onClose, count, onConfirm }: {
 function ImportDialog({ open, onClose, participantId, faculties }: {
     open: boolean; onClose: () => void; participantId: string; faculties?: ParticipantWithEvents[];
 }) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const { data, setData, post, reset, processing, errors } = useForm({
         participant_id: participantId,
         file: null as File | null,
     });
+    const [transfer, setTransfer] = useState<TransferStatus | null>(null);
+    const [queueError, setQueueError] = useState<string | null>(null);
+    const [queueing, setQueueing] = useState(false);
 
     useEffect(() => {
-        if (open) setData({ participant_id: participantId, file: null });
+        if (open) {
+            setData({ participant_id: participantId, file: null });
+            setTransfer(null);
+            setQueueError(null);
+        }
     }, [open, participantId]);
+
+    useEffect(() => {
+        if (!transfer || ['completed', 'completed_with_errors', 'failed'].includes(transfer.status)) {
+            return;
+        }
+
+        const timer = window.setInterval(async () => {
+            try {
+                const response = await axios.get<{ data: TransferStatus }>(route('data-transfers.show', transfer.id));
+                setTransfer(response.data.data);
+            } catch {
+                setQueueError(t('Unable to refresh import status.'));
+                window.clearInterval(timer);
+            }
+        }, 2000);
+
+        return () => window.clearInterval(timer);
+    }, [transfer?.id, transfer?.status]);
 
     const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
         setData('file', e.target.files?.[0] ?? null);
     };
 
-    const submit = (e: FormEvent) => {
+    const submit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!data.file) return;
-        post(route('event-participants.import'), {
-            forceFormData: true,
-            preserveScroll: true,
-            onSuccess: () => { reset(); onClose(); },
-        });
+        if (!data.file || queueing) return;
+
+        setQueueing(true);
+        setQueueError(null);
+
+        const form = new FormData();
+        form.append('participant_id', data.participant_id);
+        form.append('file', data.file);
+
+        try {
+            const response = await axios.post<{ data: TransferStatus }>(route('event-participants.import.queue'), form, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            setTransfer(response.data.data);
+            reset();
+        } catch (error) {
+            const message = axios.isAxiosError(error)
+                ? (error.response?.data?.message ?? t('Unable to queue import.'))
+                : t('Unable to queue import.');
+            setQueueError(message);
+        } finally {
+            setQueueing(false);
+        }
     };
 
-    const close = () => { reset(); onClose(); };
+    const close = () => { reset(); setTransfer(null); setQueueError(null); onClose(); };
 
     return (
         <Dialog open={open} onOpenChange={(o) => { if (!o) close(); }}>
@@ -366,6 +510,31 @@ function ImportDialog({ open, onClose, participantId, faculties }: {
                     <DialogDescription>{t('Upload a CSV or Excel file listing the events to register for the selected faculty.')}</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={submit} className="grid gap-4 py-4">
+                    {transfer && (
+                        <div className="rounded-md border bg-muted/30 p-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-sm font-medium">{t('Queued registration import')}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t(transfer.status)} · {transfer.progress}%
+                                        {transfer.total !== null && ` · ${transfer.processed}/${transfer.total}`}
+                                    </p>
+                                </div>
+                                {['completed', 'completed_with_errors', 'failed'].includes(transfer.status) && (
+                                    <Button type="button" variant="outline" size="sm" onClick={() => router.reload({ only: ['registrations'] })}>
+                                        {t('Refresh list')}
+                                    </Button>
+                                )}
+                            </div>
+                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-background">
+                                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${transfer.progress}%` }} />
+                            </div>
+                            {transfer.failure_report.length > 0 && (
+                                <p className="mt-2 text-xs text-yellow-700">{transfer.failure_report.join(' ')}</p>
+                            )}
+                        </div>
+                    )}
+                    {queueError && <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{queueError}</p>}
                     {faculties && (
                         <div className="grid gap-2">
                             <Label htmlFor="import-participant">{t('Faculty')}</Label>
@@ -375,7 +544,7 @@ function ImportDialog({ open, onClose, participantId, faculties }: {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">{t('-- Select Faculty --')}</SelectItem>
-                                    {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                                    {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{facultyName(f, locale)}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                             {errors.participant_id && <p className="text-xs text-destructive">{errors.participant_id}</p>}
@@ -403,8 +572,8 @@ function ImportDialog({ open, onClose, participantId, faculties }: {
                     </div>
                     <DialogFooter className="pt-2">
                         <Button type="button" variant="outline" onClick={close}>{t('Cancel')}</Button>
-                        <Button type="submit" disabled={processing || !data.file || !data.participant_id}>
-                            <Upload className="mr-2 size-4" />{t('Import')}
+                        <Button type="submit" disabled={processing || queueing || !data.file || !data.participant_id}>
+                            <Upload className="mr-2 size-4" />{queueing ? t('Queueing...') : t('Import')}
                         </Button>
                     </DialogFooter>
                 </form>
@@ -534,10 +703,10 @@ function SquadEditForm({ epId, member, onCancel }: { epId: string; member: Squad
 
 export default function EventParticipantsIndex({
     participants: participantsProp, events: eventsProp = [], faculties: facultiesProp = [],
-    isFacultyRepresentative = false, statusCounts: statusCountsProp = {}, conflicts: conflictsProp = {},
+    isFacultyRepresentative = false, statusCounts: statusCountsProp = {}, conflicts: conflictsProp = {}, eventRegistrationStartDate = null, eventRegistrationDeadline = null, squadRegistrationStartDate = null, squadRegistrationDeadline = null,
 }: EventParticipantsIndexProps) {
     const { auth } = usePage().props;
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const userRoles = auth?.user?.roles?.map((r) => r.name) ?? [];
     const canManageSquad = userRoles.includes('super-admin') || userRoles.includes('org-admin');
     const participantsList = Array.isArray(participantsProp) ? participantsProp : participantsProp?.data ?? [];
@@ -548,7 +717,7 @@ export default function EventParticipantsIndex({
 
     const defaultTab = isFacultyRepresentative ? 'events' : 'registrations';
     const [activeTab, setActiveTab] = useState<'registrations' | 'events'>(defaultTab);
-    const [viewMode, setViewMode] = useState<'grid' | 'table'>(isFacultyRepresentative ? 'grid' : 'table');
+    const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>(isFacultyRepresentative ? 'list' : 'table');
 
     const searchTimerRef = useRef<ReturnType<typeof setTimeout>>();
     const filtersRef = useRef({ search: '', sport_id: '', category_id: '', participant_id: '', status: '' });
@@ -656,7 +825,7 @@ export default function EventParticipantsIndex({
     const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
     const [squadDeleteTarget, setSquadDeleteTarget] = useState<{ epId: string; memberId: string; memberName: string } | null>(null);
     const [selectedRegIds, setSelectedRegIds] = useState<string[]>([]);
-    const [batchRejectOpen, setBatchRejectOpen] = useState(false);
+    const [batchStatusAction, setBatchStatusAction] = useState<'confirmed' | 'rejected' | null>(null);
     const [importOpen, setImportOpen] = useState(false);
 
     const toggleSelect = (id: string) => {
@@ -671,20 +840,15 @@ export default function EventParticipantsIndex({
             : [...new Set([...current, ...batchSelectableIds])]);
     };
 
-    const handleBatchApprove = () => {
-        router.post(route('event-participants.batch-status'), { ids: selectedRegIds, status: 'confirmed' }, {
+    const handleBatchStatus = (notes?: string) => {
+        const status = batchStatusAction;
+        if (! status) return;
+        router.post(route('event-participants.batch-status'), { ids: selectedRegIds, status, notes }, {
             preserveScroll: true, preserveState: true,
-            onSuccess: () => setSelectedRegIds([]),
+            onSuccess: () => { setSelectedRegIds([]); setBatchStatusAction(null); },
         });
     };
 
-    const handleBatchReject = (notes: string) => {
-        setBatchRejectOpen(false);
-        router.post(route('event-participants.batch-status'), { ids: selectedRegIds, status: 'rejected', notes }, {
-            preserveScroll: true, preserveState: true,
-            onSuccess: () => setSelectedRegIds([]),
-        });
-    };
 
     const withdrawRegistration = (epId: string) => {
         router.post(route('event-participants.withdraw', epId), {}, {
@@ -763,11 +927,28 @@ export default function EventParticipantsIndex({
         () => registrationRows.filter((r) => r.ep.status === 'pending' || r.ep.status === 'rejected').map((r) => r.ep.id),
         [registrationRows],
     );
+    const selectedRegistrationRows = useMemo(
+        () => registrationRows
+            .filter((row) => selectedRegIds.includes(row.ep.id))
+            .map((row) => ({
+                id: row.ep.id,
+                participantName: facultyName(row.participant, locale),
+                eventName: row.event.name,
+                status: row.ep.status,
+            })),
+        [registrationRows, selectedRegIds],
+    );
     const allSelected = batchSelectableIds.length > 0 && batchSelectableIds.every((id) => selectedRegIds.includes(id));
 
     const tabLabel = isFacultyRepresentative
         ? { registrations: t('My Registrations'), events: t('Available Events') }
         : { registrations: t('All Registrations'), events: t('All Events') };
+
+    const formatEventDate = (date: string | null | undefined) => date
+        ? new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date))
+        : t('Not set');
+    const effectiveDeadline = (event: (typeof events)[number]) => isFacultyRepresentative ? eventRegistrationDeadline : event.registration_deadline;
+    const effectiveStart = () => isFacultyRepresentative ? eventRegistrationStartDate : null;
 
     return (
         <AuthenticatedLayout
@@ -796,6 +977,39 @@ export default function EventParticipantsIndex({
         >
             <Head title={t('Registrations & Squads')} />
 
+            {isFacultyRepresentative && (
+                <section className="mb-6 overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.08] via-card to-card shadow-sm">
+                    <div className="flex flex-col gap-6 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="max-w-2xl">
+                            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                <ClipboardList className="size-3.5" /> {t('Faculty registration workspace')}
+                            </div>
+                            <h2 className="text-2xl font-bold tracking-tight">{t('Register your faculty for the competition')}</h2>
+                            <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('Choose an event first. After Dean approval, return here to complete your officials and athlete squad.')}</p>
+                        </div>
+                        <Button onClick={() => setActiveTab('events')} className="shrink-0">
+                            <Plus className="mr-2 size-4" /> {t('Browse available events')}
+                        </Button>
+                    </div>
+                    <div className="grid border-t bg-background/60 sm:grid-cols-3">
+                        <div className="flex items-center gap-3 border-b p-4 sm:border-b-0 sm:border-r"><span className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary"><CalendarDays className="size-4" /></span><div><p className="text-sm font-semibold">01 · {t('Choose event')}</p><p className="text-xs text-muted-foreground">{t('Select available events')}</p></div></div>
+                        <div className="flex items-center gap-3 border-b p-4 sm:border-b-0 sm:border-r"><span className="flex size-9 items-center justify-center rounded-full bg-amber-100 text-amber-700"><Clock className="size-4" /></span><div><p className="text-sm font-semibold">02 · {t('Await approval')}</p><p className="text-xs text-muted-foreground">{t('Dean reviews your registration')}</p></div></div>
+                        <div className="flex items-center gap-3 p-4"><span className="flex size-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 className="size-4" /></span><div><p className="text-sm font-semibold">03 · {t('Complete squad')}</p><p className="text-xs text-muted-foreground">{t('Add officials and athletes')}</p></div></div>
+                    </div>
+                </section>
+            )}
+
+            {isFacultyRepresentative && (
+                <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950">
+                    <Clock className="mt-0.5 size-4 shrink-0 text-amber-700" />
+                    <div className="text-sm">
+                        <p className="font-semibold">{t('Event registration')}: {eventRegistrationStartDate ? formatEventDate(eventRegistrationStartDate) : t('Now')} → {eventRegistrationDeadline ? formatEventDate(eventRegistrationDeadline) : t('Not configured')}</p>
+                        <p className="mt-0.5 text-xs text-amber-800">{t('Officials and athletes')}: {squadRegistrationStartDate ? formatEventDate(squadRegistrationStartDate) : t('After event registration')} → {squadRegistrationDeadline ? formatEventDate(squadRegistrationDeadline) : t('Not configured')}</p>
+                        <p className="mt-0.5 text-xs text-amber-800">{t('Dean approval is still required before squad registration opens.')}</p>
+                    </div>
+                </div>
+            )}
+
             {/* Status stat cards */}
             <div className="mb-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
                 {statusCards.map((card) => {
@@ -822,7 +1036,7 @@ export default function EventParticipantsIndex({
                     </span>
                     <span className="min-w-0">
                         <span className="block text-xl font-semibold leading-none tabular-nums">{events.length}</span>
-                        <span className="mt-1 block truncate text-xs font-medium text-muted-foreground">Events</span>
+                        <span className="mt-1 block truncate text-xs font-medium text-muted-foreground">{t('Events')}</span>
                     </span>
                 </div>
             </div>
@@ -868,6 +1082,11 @@ export default function EventParticipantsIndex({
                         <button onClick={() => setViewMode('grid')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                             title="Grid view"><LayoutGrid className="size-3.5" /></button>
+                        {isFacultyRepresentative && (
+                            <button onClick={() => setViewMode('list')}
+                                className={`rounded-md p-1.5 transition ${viewMode === 'list' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
+                                title={t('List view')}><List className="size-3.5" /></button>
+                        )}
                         <button onClick={() => setViewMode('table')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                             title="Table view"><List className="size-3.5" /></button>
@@ -916,7 +1135,7 @@ export default function EventParticipantsIndex({
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">{t('All Faculties')}</SelectItem>
-                            {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                            {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{facultyName(f, locale)}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 )}
@@ -971,10 +1190,10 @@ export default function EventParticipantsIndex({
                             <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-primary/20 bg-primary/[0.04] px-3 py-2">
                                 <span className="text-sm font-medium tabular-nums">{selectedRegIds.length} {t('selected')}</span>
                                 <div className="ml-auto flex items-center gap-2">
-                                    <Button size="sm" className="h-8" onClick={handleBatchApprove}>
+                                    <Button size="sm" className="h-8" onClick={() => setBatchStatusAction('confirmed')}>
                                         <Check className="size-3.5 mr-1" /> {t('Approve selected')}
                                     </Button>
-                                    <Button size="sm" variant="outline" className="h-8 text-destructive" onClick={() => setBatchRejectOpen(true)}>
+                                    <Button size="sm" variant="outline" className="h-8 text-destructive" onClick={() => setBatchStatusAction('rejected')}>
                                         <CircleX className="size-3.5 mr-1" /> {t('Reject selected')}
                                     </Button>
                                     <Button size="sm" variant="ghost" className="h-8" onClick={() => setSelectedRegIds([])}>
@@ -1016,14 +1235,14 @@ export default function EventParticipantsIndex({
                                                 <TableRow className={isExpanded ? 'bg-muted/40' : undefined}>
                                                     <TableCell>
                                                         <input type="checkbox" className="size-4 rounded border-input"
-                                                            aria-label={`Select ${participant.name} - ${evt.name}`}
+                                                    aria-label={`Select ${facultyName(participant, locale)} - ${evt.name}`}
                                                             checked={selectedRegIds.includes(ep.id)}
                                                             disabled={ep.status !== 'pending' && ep.status !== 'rejected'}
                                                             onChange={() => toggleSelect(ep.id)} />
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center gap-2.5">
-                                                            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-sm">{getSportIcon(evt.sport?.name)}</span>
+                                                            <SportMark sport={evt.sport} size="sm" />
                                                             <div className="min-w-0">
                                                                 <div className="truncate text-sm font-medium">{evt.name}</div>
                                                                 <div className="truncate text-xs text-muted-foreground">
@@ -1035,10 +1254,8 @@ export default function EventParticipantsIndex({
                                                     {!isFacultyRepresentative && (
                                                         <TableCell>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                                                    {initialsOf(participant.name)}
-                                                                </span>
-                                                                <span className="truncate text-sm">{participant.name}</span>
+                                                                <FacultyMark participant={participant} locale={locale} />
+                                                                <span className="truncate text-sm">{facultyName(participant, locale)}</span>
                                                             </div>
                                                         </TableCell>
                                                     )}
@@ -1080,7 +1297,7 @@ export default function EventParticipantsIndex({
                                                                 href={route('event-participants.team-form', ep.id)}
                                                                 className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-primary hover:text-primary-foreground"
                                                                  title={t('Team registration form')}
-                                                                aria-label={`View team form for ${participant.name} - ${evt.name}`}
+                                                                aria-label={`View team form for ${facultyName(participant, locale)} - ${evt.name}`}
                                                             >
                                                                 <FileText className="size-3.5" />
                                                             </Link>
@@ -1090,7 +1307,7 @@ export default function EventParticipantsIndex({
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"                                                                          title={t('Approve')}>
                                                                         <Check className="size-3.5" />
                                                                     </button>
-                                                                    <button onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                    <button onClick={() => setRejectTarget({ epId: ep.id, participantName: facultyName(participant, locale), eventName: evt.name })}
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-rose-200 text-rose-600 transition hover:bg-rose-600 hover:text-white"                                                                          title={t('Reject')}>
                                                                         <CircleX className="size-3.5" />
                                                                     </button>
@@ -1102,7 +1319,7 @@ export default function EventParticipantsIndex({
                                                                     <LogOut className="size-3.5" />
                                                                 </button>
                                                             )}
-                                                             <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                             <button onClick={() => setUnregTarget({ id: ep.id, participantName: facultyName(participant, locale), eventName: evt.name })}
                                                                  className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')}>
                                                                 <X className="size-3.5" />
                                                             </button>
@@ -1116,7 +1333,7 @@ export default function EventParticipantsIndex({
                                                                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                                                                     <div className="flex items-center gap-2">
                                                                         <Users className="size-4 text-primary" />
-                                                                        <span className="text-sm font-semibold">Squad Members</span>
+                                                                        <span className="text-sm font-semibold">{t('Squad Members')}</span>
                                                                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary tabular-nums">{members.length}</span>
                                                                     </div>
                                                                     <div className="flex items-center gap-1.5 text-xs font-medium">
@@ -1160,14 +1377,14 @@ export default function EventParticipantsIndex({
                                                                     </div>
                                                                 ) : (
                                                                     <div className="rounded-lg border border-dashed bg-background px-4 py-6 text-center">
-                                                                        <p className="text-sm font-medium text-muted-foreground">No squad members yet</p>
-                                                                        <p className="mt-0.5 text-xs text-muted-foreground/70">Officials should be added first, followed by athletes.</p>
+                                                                        <p className="text-sm font-medium text-muted-foreground">{t('No squad members yet')}</p>
+                                                                        <p className="mt-0.5 text-xs text-muted-foreground/70">{t('Officials should be added first, followed by athletes.')}</p>
                                                                     </div>
                                                                 )}
                                                                 {!isConfirmed && canManageSquad && (
                                                                     <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                                                                         <Clock className="mt-0.5 size-3.5 shrink-0" />
-                                                                        <span><strong>Pending approval.</strong> Squad members can only be added after this registration is confirmed.</span>
+                                                                        <span><strong>{t('Pending approval.')}</strong> {t('Squad members can only be added after this registration is confirmed.')}</span>
                                                                     </p>
                                                                 )}
                                                                 {canManageThisSquad && <SquadAddForm epId={ep.id} />}
@@ -1212,7 +1429,9 @@ export default function EventParticipantsIndex({
                                         const regEntry = eventRegistry.find(e => e.event.id === evt.id);
                                         const isRegistered = regEntry?.isRegistered ?? false;
                                         const registrations = regEntry?.registrations ?? [];
-                                        const deadlinePassed = (evt as any).registration_deadline && new Date((evt as any).registration_deadline) < new Date();
+                                        const deadline = effectiveDeadline(evt);
+                                        const deadlinePassed = deadline && new Date(deadline) < new Date();
+                                        const registrationNotOpen = effectiveStart() && new Date(effectiveStart() as string) > new Date();
                                         return (
                                             <TableRow key={evt.id}>
                                                 <TableCell className="text-sm font-medium">{evt.name}</TableCell>
@@ -1221,8 +1440,9 @@ export default function EventParticipantsIndex({
                                                 <TableCell className="text-xs">{isRegistered ? `${registrations.length} faculty` : '-'}</TableCell>
                                                 <TableCell>
                                                     {isFacultyRepresentative ? (
-                                                         isRegistered ? <span className="text-xs font-medium text-emerald-600">Registered</span> : deadlinePassed
-                                                             ? <span className="text-xs text-destructive">Deadline passed</span>
+                                                         isRegistered ? <span className="text-xs font-medium text-emerald-600">{t('Registered')}</span> : registrationNotOpen
+                                                             ? <span className="text-xs text-amber-700">Opens {formatEventDate(effectiveStart())}</span> : deadlinePassed
+                                                             ? <span className="text-xs text-destructive">{t('Deadline passed')}</span>
                                                              : <Button variant="outline" size="sm" onClick={() => quickRegister(evt.id)} className="h-7 text-xs">{t('Register')}</Button>
                                                     ) : (
                                                          <Button variant="outline" size="sm" onClick={() => setAddTarget({ id: '', name: evt.name })} className="h-7 text-xs">
@@ -1237,24 +1457,70 @@ export default function EventParticipantsIndex({
                             </Table>
                         </CardContent>
                     </Card>
+                ) : viewMode === 'list' ? (
+                    <div className="space-y-2">
+                        {events.map((evt) => {
+                            const regEntry = eventRegistry.find((entry) => entry.event.id === evt.id);
+                            const isRegistered = regEntry?.isRegistered ?? false;
+                            const registration = regEntry?.registrations[0]?.ep;
+                            const deadline = effectiveDeadline(evt);
+                            const deadlinePassed = Boolean(deadline && new Date(deadline) < new Date());
+                            const registrationNotOpen = Boolean(effectiveStart() && new Date(effectiveStart() as string) > new Date());
+                            const cfg = registration ? (statusConfig[registration.status] ?? statusConfig.pending) : null;
+
+                            return (
+                                <div key={evt.id} className="flex flex-col gap-3 rounded-xl border bg-card p-3 shadow-sm transition hover:border-primary/30 hover:shadow-md sm:flex-row sm:items-center sm:p-4">
+                                    <SportMark sport={evt.sport} />
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <h3 className="truncate text-sm font-semibold">{evt.name}</h3>
+                                            {cfg && <Badge variant={cfg.variant} className="gap-1.5 text-xs"><span className={`size-1.5 rounded-full ${statusDot[registration?.status ?? ''] ?? 'bg-muted-foreground'}`} />{cfg.label}</Badge>}
+                                        </div>
+                                        <p className="mt-1 truncate text-xs text-muted-foreground">{evt.sport?.name}{evt.sport_category?.name ? ` · ${evt.sport_category.name}` : ''} · {evt.tournament?.name || t('Tournament')}</p>
+                                        <p className={`mt-1 flex items-center gap-1 text-xs ${deadlinePassed ? 'font-medium text-rose-600' : registrationNotOpen ? 'font-medium text-amber-700' : 'text-muted-foreground'}`}>
+                                            <Clock className="size-3.5" />
+                                            {registrationNotOpen ? `${t('Registration opens')} ${formatEventDate(effectiveStart())}` : deadline ? `${t('Registration closes')} ${formatEventDate(deadline)}` : t('No registration deadline set')}
+                                        </p>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-2 sm:ml-auto">
+                                        {isRegistered ? (
+                                            <span className="text-xs font-medium text-emerald-700">{t('Registered')}</span>
+                                        ) : registrationNotOpen ? (
+                                            <span className="text-xs font-medium text-amber-700">{t('Not open yet')}</span>
+                                        ) : deadlinePassed ? (
+                                            <span className="text-xs font-medium text-rose-600">{t('Deadline passed')}</span>
+                                        ) : (
+                                            <Button variant="outline" size="sm" onClick={() => quickRegister(evt.id)}><Plus className="mr-1.5 size-3.5" />{t('Register')}</Button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                         {events.map((evt) => {
                             const regEntry = eventRegistry.find(e => e.event.id === evt.id);
                             const isRegistered = regEntry?.isRegistered ?? false;
                             const registrations = regEntry?.registrations ?? [];
-                            const deadlinePassed = (evt as any).registration_deadline && new Date((evt as any).registration_deadline) < new Date();
+                            const deadline = effectiveDeadline(evt);
+                            const deadlinePassed = deadline && new Date(deadline) < new Date();
+                            const registrationNotOpen = Boolean(effectiveStart() && new Date(effectiveStart() as string) > new Date());
 
                             return (
                                 <div key={evt.id} className={`rounded-lg border bg-card text-card-foreground shadow-xs overflow-hidden ${getSportBorder(evt.sport?.name)} border-l-4`}>
                                     <div className="px-3 py-2.5 flex items-center gap-2">
-                                        <span className="text-lg shrink-0">{getSportIcon(evt.sport?.name)}</span>
+                                        <SportMark sport={evt.sport} />
                                         <div className="min-w-0 flex-1 leading-tight">
                                             <div className="text-sm font-semibold truncate">{evt.name}</div>
                                             <div className="text-xs text-muted-foreground truncate">{evt.sport?.name}{evt.sport_category?.name ? ` · ${evt.sport_category.name}` : ''}</div>
+                                            <div className="mt-1 truncate text-[11px] text-muted-foreground/80">
+                                                {evt.tournament?.name || t('Tournament')}
+                                                {deadline && ` · ${t('Closes')} ${formatEventDate(deadline)}`}
+                                            </div>
                                         </div>
                                         {isFacultyRepresentative ? (
-                                            !isRegistered && !deadlinePassed && (
+                                            !isRegistered && !deadlinePassed && !registrationNotOpen && (
                                                 <Button variant="outline" size="sm" onClick={() => quickRegister(evt.id)} className="h-7 text-xs px-2.5 shrink-0">
                                                     <Plus className="size-3 mr-0.5" />{t('Register')}
                                                 </Button>
@@ -1271,12 +1537,12 @@ export default function EventParticipantsIndex({
                                                 const cfg = statusConfig[ep.status] ?? statusConfig.pending;
                                                 return (
                                                     <div key={ep.id} className="flex items-center gap-2 py-1 text-xs group">
-                                                        <span className="truncate flex-1 min-w-0 font-medium">{p.name}</span>
+                                                        <span className="truncate flex-1 min-w-0 font-medium">{facultyName(p, locale)}</span>
                                                         <Badge variant={cfg.variant} className="gap-1 h-4 text-xs px-1 shrink-0">
                                                             <span className={`size-1 rounded-full ${statusDot[ep.status] ?? 'bg-muted-foreground'}`} />
                                                             {cfg.label}
                                                         </Badge>
-                                                        <button onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
+                                                        <button onClick={() => setUnregTarget({ id: ep.id, participantName: facultyName(p, locale), eventName: evt.name })}
                                                             className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
                                                             <X className="size-2.5" />
                                                         </button>
@@ -1284,6 +1550,9 @@ export default function EventParticipantsIndex({
                                                 );
                                             })}
                                         </div>
+                                    )}
+                                    {!isRegistered && deadlinePassed && (
+                                        <div className="border-t bg-rose-50/70 px-3 py-2 text-xs font-medium text-rose-700">{t('Registration deadline passed')}</div>
                                     )}
                                 </div>
                             );
@@ -1305,7 +1574,7 @@ export default function EventParticipantsIndex({
                 open={!!unregTarget}
                 onOpenChange={(open) => { if (!open) setUnregTarget(null); }}
                 title={`${t('Unregister')} ${unregTarget?.participantName ?? ''}?`}
-                description={<>Remove <strong>{unregTarget?.participantName ?? ''}</strong> from <strong>{unregTarget?.eventName ?? ''}</strong>? This action cannot be undone.</>}
+                description={<>{t('Remove')} <strong>{unregTarget?.participantName ?? ''}</strong> {t('from')} <strong>{unregTarget?.eventName ?? ''}</strong>? {t('This action cannot be undone.')}</>}
                 confirmLabel={t('Yes, Unregister')}
                 cancelLabel={t('Cancel')}
                 destructive
@@ -1316,15 +1585,15 @@ export default function EventParticipantsIndex({
                 open={!!rejectTarget}
                 onOpenChange={(open) => { if (!open) setRejectTarget(null); }}
                 title={t('Reject registration?')}
-                description={<>Reject <strong>{rejectTarget?.participantName ?? ''}</strong> from <strong>{rejectTarget?.eventName ?? ''}</strong>? The faculty representative will be notified.</>}
+                description={<>{t('Reject')} <strong>{rejectTarget?.participantName ?? ''}</strong> {t('from')} <strong>{rejectTarget?.eventName ?? ''}</strong>? {t('The faculty representative will be notified.')}</>}
                 confirmLabel={t('Yes, Reject')}
                 cancelLabel={t('Cancel')}
                 destructive
                 onConfirm={rejectRegistration}
             />
 
-            <BatchRejectDialog open={batchRejectOpen} onClose={() => setBatchRejectOpen(false)}
-                count={selectedRegIds.length} onConfirm={handleBatchReject} />
+            <BatchStatusDialog open={batchStatusAction !== null} action={batchStatusAction ?? 'confirmed'}
+                rows={selectedRegistrationRows} onClose={() => setBatchStatusAction(null)} onConfirm={handleBatchStatus} />
 
             <ImportDialog open={importOpen} onClose={() => setImportOpen(false)}
                 participantId={isFacultyRepresentative ? (auth?.user?.participant_id ?? '') : ''}
@@ -1334,7 +1603,7 @@ export default function EventParticipantsIndex({
                 open={!!squadDeleteTarget}
                 onOpenChange={(open) => { if (!open) setSquadDeleteTarget(null); }}
                 title={t('Remove squad member?')}
-                description={<>Remove <strong>{squadDeleteTarget?.memberName ?? ''}</strong> from the squad? This action cannot be undone.</>}
+                description={<>{t('Remove')} <strong>{squadDeleteTarget?.memberName ?? ''}</strong> {t('from the squad?')} {t('This action cannot be undone.')}</>}
                 confirmLabel={t('Yes, Remove')}
                 cancelLabel={t('Cancel')}
                 destructive

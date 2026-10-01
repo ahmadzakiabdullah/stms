@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -233,11 +234,17 @@ export default function Dashboard({
     if (!user) return null;
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <PageHeader
+                    title={t('Dashboard')}
+                    description={t('Monitor registrations, competition readiness and operational tasks.')}
+                />
+            }
+        >
             <Head title={t('Dashboard')} />
 
-            <main className="-m-4 min-h-[calc(100vh-4rem)] bg-muted/40 p-4 sm:-m-6 sm:p-6">
-                <div className="mx-auto max-w-[1600px] space-y-6">
+            <div className="w-full space-y-6">
                     <section className="relative overflow-hidden rounded-xl bg-primary px-6 py-7 text-primary-foreground shadow-xl shadow-black/10 sm:px-8 sm:py-9">
                         <div className="pointer-events-none absolute -right-20 -top-28 size-80 rounded-full bg-primary-foreground/10 blur-3xl" />
                         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -387,8 +394,7 @@ export default function Dashboard({
                             <Card className="rounded-xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Tournaments')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeTournaments.slice(0, 4).map((tournament) => <div key={tournament.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{tournament.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{tournament.session?.name ?? t('Session')}</p></div><CheckCircle2 className="size-4 shrink-0 text-emerald-600" /></div>)}</CardContent></Card>
                         </section>
                     )}
-                </div>
-            </main>
+            </div>
         </AuthenticatedLayout>
     );
 }

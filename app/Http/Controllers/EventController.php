@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Actions\Events\CreateEvent;
 use App\Actions\Events\DeleteEvent;
 use App\Actions\Events\UpdateEvent;
+use App\Http\Requests\Event\BatchDestroyEventsRequest;
 use App\Http\Requests\Event\StoreEventRequest;
 use App\Http\Requests\Event\UpdateEventRequest;
 use App\Models\Event;
+use App\Models\Organization;
 use App\Services\EventIndexService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,16 +79,22 @@ class EventController extends Controller
             ->with('success', 'Event deleted successfully.');
     }
 
-    public function batchDestroy(Request $request): RedirectResponse
+    public function batchDestroy(BatchDestroyEventsRequest $request): RedirectResponse
     {
-        $ids = $request->input('ids', []);
+        $validated = $request->validated();
+        $ids = array_values(array_unique($validated['ids']));
+        $reason = trim($validated['reason']);
+        $events = Event::whereIn('id', $ids)->get();
 
-        if (empty($ids)) {
+        if ($events->count() !== count($ids)) {
             return redirect()->route('events.index')
-                ->with('error', 'No events selected.');
+                ->with('error', 'Some selected events could not be found in your organization.');
         }
 
-        $events = Event::whereIn('id', $ids)->get();
+        if ($events->pluck('organization_id')->unique()->count() !== 1) {
+            return redirect()->route('events.index')
+                ->with('error', 'Bulk delete can only be applied to events from one organization at a time.');
+        }
 
         foreach ($events as $event) {
             Gate::authorize('delete', $event);
@@ -95,8 +103,10 @@ class EventController extends Controller
         $deleted = 0;
 
         try {
-            DB::transaction(function () use ($events, &$deleted) {
+            DB::transaction(function () use ($events, $reason, $request, &$deleted) {
                 $idsToDelete = $events->pluck('id')->toArray();
+                $organizationId = (string) $events->first()->organization_id;
+                $bulkActionId = (string) str()->uuid();
 
                 // Perform a single query to soft delete all events, avoiding N soft-delete queries.
                 Event::whereIn('id', $idsToDelete)->delete();
@@ -108,8 +118,31 @@ class EventController extends Controller
                 foreach ($events as $event) {
                     activity()
                         ->performedOn($event)
+                        ->causedBy($request->user())
+                        ->withProperties([
+                            'bulk_action_id' => $bulkActionId,
+                            'bulk_action' => 'events.batch_destroy',
+                            'reason' => $reason,
+                            'selected_count' => $deleted,
+                        ])
                         ->event('deleted')
-                        ->log('deleted');
+                        ->log('Event deleted by bulk action');
+                }
+
+                $organization = Organization::withoutGlobalScopes()->find($organizationId);
+                if ($organization) {
+                    activity()
+                        ->performedOn($organization)
+                        ->causedBy($request->user())
+                        ->withProperties([
+                            'bulk_action_id' => $bulkActionId,
+                            'bulk_action' => 'events.batch_destroy',
+                            'reason' => $reason,
+                            'event_ids' => $idsToDelete,
+                            'deleted_count' => $deleted,
+                        ])
+                        ->event('bulk_deleted')
+                        ->log('Events bulk deleted');
                 }
             });
         } catch (\Throwable $e) {

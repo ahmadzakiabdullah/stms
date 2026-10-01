@@ -2,7 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Event;
+use App\Models\EventParticipant;
 use App\Models\Organization;
+use App\Models\Participant;
+use App\Models\Session;
+use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Notification;
@@ -117,6 +122,36 @@ class NotificationTest extends TestCase
                 ->component('Notifications/Index')
                 ->has('notifications.data', 2)
             );
+    }
+
+    public function test_legacy_notifications_are_enriched_with_current_malay_participant_name(): void
+    {
+        $organization = Organization::factory()->create();
+        $session = Session::factory()->create(['organization_id' => $organization->id]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $event = Event::factory()->forTournament($tournament)->create();
+        $participant = Participant::factory()->create([
+            'organization_id' => $organization->id,
+            'session_id' => $session->id,
+            'name' => 'Faculty of Engineering',
+            'name_ms' => 'Fakulti Kejuruteraan',
+        ]);
+        $eventParticipant = EventParticipant::factory()->create([
+            'organization_id' => $organization->id,
+            'event_id' => $event->id,
+            'participant_id' => $participant->id,
+        ]);
+        $user = User::factory()->create(['organization_id' => $organization->id]);
+        $user->notify(new TestNotification([
+            'type' => 'new_registration',
+            'event_participant_id' => $eventParticipant->id,
+            'faculty_name' => 'Faculty of Engineering',
+        ]));
+
+        $this->actingAs($user)->get(route('notifications.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('notifications.data.0.data.faculty_name_ms', 'Fakulti Kejuruteraan'));
     }
 
     public function test_user_can_fetch_notifications_via_json(): void

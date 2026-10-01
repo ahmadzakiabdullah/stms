@@ -74,6 +74,11 @@ class ExampleTest extends TestCase
             ->assertSee(route('public.index'), false)
             ->assertSee(route('public.news'), false)
             ->assertSee(route('public.faq'), false)
+            ->assertSee(route('public.general-information'), false)
+            ->assertSee(route('public.committee'), false)
+            ->assertSee(route('public.student-committee'), false)
+            ->assertSee(route('public.game-chairpersons'), false)
+            ->assertSee(route('public.important-dates'), false)
             ->assertSee(route('public.contact'), false);
 
         $this->get('/robots.txt')

@@ -3,6 +3,7 @@ import { PageProps as InertiaPageProps } from '@inertiajs/core';
 export interface Organization {
     id: string;
     name: string;
+    name_ms: string | null;
     slug: string;
     organization_type: string;
     parent_id: string | null;
@@ -16,6 +17,7 @@ export interface User {
     id: string;
     uuid: string;
     name: string;
+    name_ms: string | null;
     username: string;
     email: string;
     organization_id: string;
@@ -32,6 +34,7 @@ export interface User {
 export interface Role {
     id: number;
     name: string;
+    name_ms: string | null;
     guard_name: string;
 }
 
@@ -40,9 +43,16 @@ export interface Sport {
     id: string;
     organization_id: string;
     name: string;
+    name_ms: string | null;
     slug: string;
     icon: string | null;
     scoring_mode?: 'none' | 'individual' | string;
+    scoring_profile?: {
+        score_unit?: string | null;
+        max_score?: number | null;
+        allow_draw?: boolean;
+        scoring_event_types?: string[];
+    } | null;
     is_active: boolean;
     categories?: SportCategory[];
     documents?: SportDocument[];
@@ -58,6 +68,7 @@ export interface SportCategory {
     organization_id: string;
     sport_id: string;
     name: string;
+    name_ms: string | null;
     slug: string;
     quota_mode: 'gender_based' | 'open_total' | 'mixed_total';
     max_athletes_total: number | null;
@@ -80,8 +91,16 @@ export interface Session {
     name: string;
     slug: string;
     description: string | null;
+    logo_path?: string | null;
+    logo_url?: string | null;
+    inverse_logo_path?: string | null;
+    inverse_logo_url?: string | null;
     start_date: string;
     end_date: string;
+    event_registration_start_date: string | null;
+    event_registration_deadline: string | null;
+    squad_registration_start_date: string | null;
+    squad_registration_deadline: string | null;
     is_active: boolean;
     ranking_strategy: string | null;
     ranking_rules?: RankingRules | null;
@@ -127,6 +146,7 @@ export interface Event {
     sport_id: string;
     sport_category_id: string;
     name: string;
+    name_ms: string | null;
     slug: string;
     description: string | null;
     venues: string[] | null;
@@ -146,6 +166,7 @@ export interface Event {
     participants_count?: number;
     format?: string | null;
     pool_size?: number | null;
+    qualifiers_per_pool?: number | null;
     created_at: string;
     updated_at: string;
 }
@@ -167,6 +188,7 @@ export interface Participant {
     organization_id: string;
     session_id: string | null;
     name: string;
+    name_ms: string | null;
     slug: string;
     email: string | null;
     phone: string | null;

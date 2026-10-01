@@ -3,6 +3,7 @@ import PublicEmptyState from '@/components/PublicEmptyState';
 import PublicErrorState from '@/components/PublicErrorState';
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicMatchCard, { type PublicMatch } from '@/components/PublicMatchCard';
+import PublicPageHero from '@/components/PublicPageHero';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicTeamRow from '@/components/PublicTeamRow';
@@ -15,13 +16,15 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Activity, ArrowRight, CalendarDays, CheckCircle2, Clock3, MapPin, Medal, RefreshCw, Trophy, Users } from 'lucide-react';
 import { type ComponentType, useEffect, useState } from 'react';
 
-type Faculty = { name: string; logo_url?: string | null; inverse_logo_url?: string | null } | null;
-type MedalRow = { rank: number; participant_name: string; logo_url?: string | null; inverse_logo_url?: string | null; gold: number; silver: number; bronze: number; total_medals: number };
+type Faculty = { name: string; name_ms?: string | null; logo_url?: string | null; inverse_logo_url?: string | null } | null;
+type SportCatalogEntry = { name: string; icon: string | null };
+type MedalRow = { rank: number; participant_name: string; participant_name_ms?: string | null; logo_url?: string | null; inverse_logo_url?: string | null; gold: number; silver: number; bronze: number; total_medals: number };
 type Props = {
     app_name: string;
     competition: { name: string; description: string | null; start_date: string | null; end_date: string | null; organization: string | null } | null;
     stats: { sports: number; events: number; faculties: number; completed_matches: number; total_matches: number };
     sports: string[];
+    sports_catalog: SportCatalogEntry[];
     faculties: Faculty[];
     upcoming: PublicMatch[];
     results: PublicMatch[];
@@ -50,7 +53,7 @@ const countdownParts = (target: number, now: number) => {
     };
 };
 
-export default function PublicIndex({ app_name, competition, stats, sports, faculties, upcoming, results, medals, updated_at, error = null }: Props) {
+export default function PublicIndex({ app_name, competition, stats, sports_catalog, faculties, upcoming, results, medals, updated_at, error = null }: Props) {
     const { t, locale } = useI18n();
     const [refreshing, setRefreshing] = useState(false);
     const [refreshStatus, setRefreshStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -96,66 +99,72 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
     return (
         <PublicLayout title={competition?.name || app_name} appName={app_name} current="home" description={competition?.description || t('Official competition schedules, results, athletes and medal standings.')} canonical={route('public.index')}>
             <Head>
-                <link rel="preload" as="image" href="/images/banner/banner-saf-20-2026.jpeg" fetchPriority="high" />
+                <link rel="preload" as="image" href="/images/banner/banner-saf-20-2026.webp" fetchPriority="high" />
+                <link rel="preload" as="image" href="/images/mascots/pose-welcome.webp" />
             </Head>
             <main>
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Competition data unavailable')} description={error} onRetry={() => router.reload()} /></div>}
-                <section className="relative isolate overflow-hidden bg-[var(--public-dark)] pb-16 pt-32 text-white sm:pb-20 sm:pt-40">
-                    <CosmicBackground />
-                    <div className="mx-auto grid min-h-[520px] max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.08fr_.92fr] xl:gap-20">
-                        <div className="relative z-10 max-w-3xl">
-                            <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[.24em] text-[var(--public-accent)] sm:text-xs">
-                                <span className="h-px w-8 bg-[var(--public-accent)]" />
-                                {competition?.organization || t('Universiti Teknikal Malaysia Melaka')}
-                            </p>
-                            <h1 className="mt-6 text-4xl font-black leading-[.98] tracking-[-.05em] sm:text-6xl xl:text-7xl">{competition?.name || app_name}</h1>
-                            <p className="mt-6 max-w-xl text-base leading-7 text-white/65 sm:text-lg">{competition?.description || t('Follow schedules, latest results and medal standings in one official view.')}</p>
-                            <div className="mt-8 flex flex-wrap items-center gap-3">
-                                <Button asChild size="lg" className="public-cosmic-bezel min-h-11 bg-[var(--public-highlight)] px-5 text-sm font-black text-[var(--public-dark)] hover:brightness-105 sm:min-h-11">
+                <PublicPageHero
+                    eyebrow={competition?.organization || t('Universiti Teknikal Malaysia Melaka')}
+                    title={competition?.name || app_name}
+                    intro={competition?.description || t('Follow schedules, latest results and medal standings in one official view.')}
+                    icon={<Trophy className="size-4" />}
+                    media={
+                        <div className="relative mx-auto flex min-h-72 w-full max-w-[20rem] items-end justify-center sm:min-h-96 sm:max-w-[26rem] lg:min-h-[45rem] lg:max-w-[36rem]">
+                            <div aria-hidden="true" className="absolute bottom-5 size-64 rounded-full bg-[var(--public-primary)]/25 blur-3xl sm:size-80 lg:size-[28rem]" />
+                            <SafeImage src="/images/mascots/pose-welcome.webp" alt={locale === 'ms' ? 'Maskot SAF 20 menyambut pengunjung' : 'SAF 20 mascot welcoming visitors'} className="relative z-10 h-72 w-auto max-w-full object-contain drop-shadow-2xl sm:h-96 lg:h-[45rem]" loading="eager" decoding="async" />
+                        </div>
+                    }
+                >
+                    <div className="mt-7">
+                            <div className="flex flex-wrap items-center gap-3">
+                                <Button asChild size="lg" className="public-action-highlight min-h-11 bg-[var(--public-highlight)] px-5 text-sm font-bold text-[var(--public-dark)] hover:brightness-105">
                                     <Link href={hasPublishedFixtures ? route('public.schedule') : route('public.sports')}>{t(hasPublishedFixtures ? 'View schedule & results' : 'Explore sports programme')}<ArrowRight className="size-4" /></Link>
                                 </Button>
-                                <Button asChild variant="outline" size="lg" className="min-h-11 border-white/15 bg-white/5 px-5 text-sm font-bold text-white hover:bg-white/10 hover:text-white sm:min-h-11">
+                                <Button asChild variant="outline" size="lg" className="min-h-11 border-white/15 bg-white/5 px-5 text-sm font-bold text-white hover:bg-white/10 hover:text-white">
                                     <Link href={route('public.athletes')}>{t('Athletes & Teams')}</Link>
                                 </Button>
                             </div>
-                            <div className="mt-8 flex flex-wrap items-center gap-3">
+                            <div className="mt-5 flex flex-wrap items-center gap-3">
                                 {competition?.start_date && <div className="inline-flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-white/10 text-[var(--public-highlight)]"><CalendarDays className="size-4" /></span><span><small className="block text-xs font-black uppercase tracking-[.16em] text-white/75">{t('Competition dates')}</small>{formatDate(competition.start_date, locale)}{competition.end_date && ` — ${formatDate(competition.end_date, locale)}`}</span></div>}
                                 {countdown && <div className="inline-flex items-center gap-3 rounded-xl border border-[var(--public-highlight)]/25 bg-[var(--public-highlight)]/10 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-[var(--public-highlight)]/15 text-[var(--public-highlight)]"><Clock3 className="size-4" /></span><span><small className="block text-xs font-black uppercase tracking-[.16em] text-[var(--public-highlight)]">{t('Starts in')}</small><b className="font-black tabular-nums text-white">{countdown.days}d {countdown.hours}h {countdown.minutes}m</b></span></div>}
                             </div>
-                        </div>
+                    </div>
+                </PublicPageHero>
+                <section className="bg-[var(--public-dark)] px-4 pb-10 sm:pb-14">
+                    <figure className="mx-auto max-w-7xl overflow-hidden rounded-[1.5rem] border border-white/15 bg-white/[.07] shadow-2xl">
+                        <SafeImage
+                            src="/images/banner/banner-saf-20-2026.webp"
+                            alt={competition?.name ? `${t('Official banner')} — ${competition.name}` : t('Official banner')}
+                            className="max-h-64 w-full object-cover object-top sm:max-h-96 lg:max-h-[30rem]"
+                            loading="eager"
+                            decoding="async"
+                            fetchPriority="high"
+                            fallback={<div role="img" data-image-fallback="official-banner" aria-label={t('Official banner')} className="flex min-h-40 items-center justify-center bg-[var(--public-dark)] px-6 text-center text-sm font-black text-white/75 sm:min-h-56">{t('Official banner')}</div>}
+                        />
+                    </figure>
+                </section>
 
-                        <aside className="relative mx-auto w-full max-w-lg rounded-[1.75rem] border border-white/15 bg-white/[.07] p-3 shadow-2xl backdrop-blur-md">
-                            <div className="rounded-[1.35rem] border border-white/10 bg-black/15 p-5 sm:p-7">
-                                <div className="flex items-start justify-between gap-5">
-                                    <div><p className="text-xs font-black uppercase tracking-[.2em] text-[var(--public-accent)]">{t('Competition progress')}</p><p className="public-display mt-3 text-6xl font-extrabold tracking-[-.04em] sm:text-7xl">{progress}%</p></div>
-                                    <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-highlight)] text-[var(--public-dark)]"><Activity className="size-5" /></span>
-                                </div>
-                                {hasPublishedFixtures ? <>
-                                    <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-label={t('Competition progress')} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-gradient-to-r from-[var(--public-primary)] via-[var(--public-accent)] to-[var(--public-highlight)]" style={{ width: `${progress}%` }} /></div>
-                                    <div className="mt-6 grid grid-cols-2 gap-3"><ProgressMetric value={stats.completed_matches} label={t('Fixtures completed')} icon={CheckCircle2} /><ProgressMetric value={stats.total_matches} label={t('Total Matches')} icon={Trophy} /></div>
-                                </> : <div className="mt-5 rounded-2xl border border-[var(--public-highlight)]/20 bg-[var(--public-highlight)]/10 p-4" aria-live="polite"><p className="text-sm font-black text-white">{t('Schedule will be shown after publication.')}</p><p className="mt-1 text-xs leading-5 text-white/65">{t('Explore the official sports, venues and participating faculties while fixtures are prepared.')}</p></div>}
-
-                                <div className="mt-5 border-t border-white/10 pt-5">
-                                    <div className="flex items-center justify-between gap-3"><p className="text-xs font-black uppercase tracking-[.18em] text-white/75">{t('Next fixture')}</p><Clock3 className="size-4 text-[var(--public-accent)]" /></div>
-                                    {nextMatch ? <div className="mt-4"><p className="truncate text-xs font-bold text-[var(--public-accent)]"><span className="inline-flex items-center gap-1.5"><SportIcon name={nextMatch.sport || ''} className="text-sm leading-none" />{nextMatch.sport} · {nextMatch.event}</span></p><div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3"><PublicTeamRow team={nextMatch.home} surface="dark" size="lg" /><span className="rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-black">VS</span><PublicTeamRow team={nextMatch.away} surface="dark" size="lg" right /></div><p className="mt-3 flex items-center gap-1.5 text-xs text-white/75"><CalendarDays className="size-3.5" />{nextMatch.scheduled_at ? formatDate(nextMatch.scheduled_at, locale, true) : nextMeta || t('To be determined')}</p></div> : <p className="mt-3 text-sm text-white/75">{t('Schedule will be shown after publication.')}</p>}
-                                </div>
+                <section aria-label={t('Competition progress')} className="relative z-20 mx-auto -mt-8 max-w-7xl px-4 sm:px-6">
+                    <div className="grid gap-4 rounded-3xl border border-[var(--public-dark-border)] bg-white p-4 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] md:grid-cols-[.8fr_1.2fr] sm:p-6">
+                        <div className="p-2 sm:p-4">
+                            <div className="flex items-start justify-between gap-5">
+                                <div><p className="text-xs font-black uppercase tracking-[.2em] text-[var(--public-primary)]">{t('Competition progress')}</p><p className="public-display mt-3 text-6xl font-extrabold tracking-[-.04em] text-[var(--public-text)] sm:text-7xl">{progress}%</p></div>
+                                <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-highlight-soft)] text-[var(--public-dark)]"><Activity className="size-5" /></span>
                             </div>
-                        </aside>
+                            {hasPublishedFixtures ? <>
+                                <div className="mt-5 h-2 overflow-hidden rounded-full bg-[var(--public-dark-soft)]" role="progressbar" aria-label={t('Competition progress')} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-gradient-to-r from-[var(--public-primary)] via-[var(--public-accent)] to-[var(--public-highlight)]" style={{ width: `${progress}%` }} /></div>
+                                <div className="mt-5 grid grid-cols-2 gap-3"><ProgressMetric value={stats.completed_matches} label={t('Fixtures completed')} icon={CheckCircle2} /><ProgressMetric value={stats.total_matches} label={t('Total Matches')} icon={Trophy} /></div>
+                            </> : <div className="mt-5 rounded-2xl border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] p-4" aria-live="polite"><p className="text-sm font-black text-[var(--public-text)]">{t('Schedule will be shown after publication.')}</p><p className="mt-1 text-xs leading-5 text-[var(--public-dark-faint)]">{t('Explore the official sports, venues and participating faculties while fixtures are prepared.')}</p></div>}
+                        </div>
+                        <div className="rounded-2xl bg-[var(--public-dark)] p-5 text-white sm:p-6">
+                            <div className="flex items-center justify-between gap-3"><p className="text-xs font-black uppercase tracking-[.18em] text-white/75">{t('Next fixture')}</p><Clock3 className="size-4 text-[var(--public-accent)]" /></div>
+                            {nextMatch ? <div className="mt-4"><p className="truncate text-xs font-bold text-[var(--public-accent)]"><span className="inline-flex items-center gap-1.5"><SportIcon name={nextMatch.sport || ''} className="text-sm leading-none" />{nextMatch.sport} · {nextMatch.event}</span></p><div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3"><PublicTeamRow team={nextMatch.home} surface="dark" size="lg" /><span className="rounded-lg bg-white/10 px-2.5 py-1.5 text-xs font-black">{t('VS')}</span><PublicTeamRow team={nextMatch.away} surface="dark" size="lg" right /></div><p className="mt-3 flex items-center gap-1.5 text-xs text-white/75"><CalendarDays className="size-3.5" />{nextMatch.scheduled_at ? formatDate(nextMatch.scheduled_at, locale, true) : nextMeta || t('To be determined')}</p></div> : <p className="mt-3 text-sm text-white/75">{t('Schedule will be shown after publication.')}</p>}
+                        </div>
                     </div>
                 </section>
 
                 <section aria-label={competition?.name || app_name} className="mx-auto max-w-7xl px-4 pt-14 sm:px-6 sm:pt-16">
-                    <figure className="overflow-hidden rounded-[1.75rem] border border-[var(--public-dark-border)] shadow-[0_32px_80px_-48px_rgba(7,27,51,.9)]">
-                        <SafeImage
-                            src="/images/banner/banner-saf-20-2026.jpeg"
-                            alt={competition?.name ? `${t('Official banner')} — ${competition.name}` : t('Official banner')}
-                            className="max-h-56 w-full object-cover object-top sm:max-h-80 lg:max-h-[26rem]"
-                            loading="eager"
-                            decoding="async"
-                            fetchPriority="high"
-                            fallback={<div role="img" data-image-fallback="official-banner" aria-label={t('Official banner')} className="flex min-h-56 items-center justify-center bg-[var(--public-dark)] px-6 text-center text-sm font-black text-white/75 sm:min-h-80 lg:min-h-[26rem]">{t('Official banner')}</div>}
-                        />
-                    </figure>
                     {liveMatches.length > 0 && (
                         <Link href={route('public.schedule')} className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-black text-red-700 transition hover:border-red-300 hover:bg-red-100">
                             <span className="inline-flex items-center gap-2"><span className="size-2 animate-pulse rounded-full bg-red-500" />{liveMatches.length} {t('Live')} {t('matches')}</span>
@@ -165,8 +174,13 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                 </section>
 
                 <section id="overview" className="public-below-fold relative mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 sm:py-24">
-                    <PublicSectionHeading eyebrow={t('At a glance')} title={t('Competition overview')} description={t('Everything you need for SAF 2026')} />
-                    <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map(({ value, label, description, icon: Icon, href }) => <Link key={label} href={href} className="group rounded-[1.6rem] border border-[var(--public-dark-border)] bg-white p-6 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)]"><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Icon className="size-5" /></span><b className="mt-9 block text-5xl font-black tracking-[-.06em]">{value}</b><h3 className="mt-5 text-xs font-black uppercase tracking-[.16em]">{label}</h3><p className="mt-1 text-sm text-[var(--public-dark-faint)]">{description}</p></Link>)}</div>
+                    <div className="grid grid-cols-[auto_1fr] items-center gap-4 sm:gap-8">
+                        <figure className="mx-auto flex h-56 w-40 items-center justify-center sm:mx-0 sm:h-72 sm:w-52">
+                            <SafeImage src="/images/mascots/pose-with-flag.webp" alt={locale === 'ms' ? 'Maskot SAF 20 mengibarkan bendera UTeM' : 'SAF 20 mascot holding the UTeM flag'} loading="lazy" decoding="async" className="size-full object-contain drop-shadow-xl" />
+                        </figure>
+                        <PublicSectionHeading eyebrow={t('At a glance')} title={t('Competition overview')} description={t('Everything you need for SAF 2026')} />
+                    </div>
+                    <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map(({ value, label, description, icon: Icon, href }) => <Link key={label} href={href} className="public-card public-card--primary group p-6"><span className="relative z-10 flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Icon className="size-5" /></span><b className="relative z-10 mt-9 block text-5xl font-black tracking-[-.06em]">{value}</b><h3 className="relative z-10 mt-5 text-xs font-black uppercase tracking-[.16em]">{label}</h3><p className="relative z-10 mt-1 text-sm text-[var(--public-dark-faint)]">{description}</p></Link>)}</div>
                     {stats.total_matches === 0 && (
                         <p className="mt-6 flex items-start gap-3 rounded-2xl border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] px-5 py-4 text-sm font-semibold text-[var(--public-text)]">
                             <CalendarDays className="mt-0.5 size-5 shrink-0 text-[var(--public-primary)]" />
@@ -183,9 +197,9 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
                         <div className="mx-auto max-w-7xl px-4 sm:px-6">
                             <PublicSectionHeading eyebrow={t('Explore now')} title={t('Everything you need before the fixtures')} description={t('Explore the official sports, venues and participating faculties while fixtures are prepared.')} />
                             <div className="mt-10 grid gap-4 md:grid-cols-3">
-                                <Link href={route('public.sports')} className="group rounded-[1.5rem] border border-[var(--public-dark-border)] bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]"><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Trophy className="size-5" /></span><h3 className="mt-6 text-lg font-black">{t('Explore the sports')}</h3><p className="mt-2 text-sm leading-6 text-[var(--public-dark-faint)]">{t('Every official sport and event in the competition.')}</p><span className="mt-5 inline-flex items-center gap-1.5 text-sm font-black text-[var(--public-primary)]">{t('View all sports')}<ArrowRight className="size-4" /></span></Link>
-                                <Link href={route('public.venues')} className="group rounded-[1.5rem] border border-[var(--public-dark-border)] bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]"><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><MapPin className="size-5" /></span><h3 className="mt-6 text-lg font-black">{t('Plan your visit')}</h3><p className="mt-2 text-sm leading-6 text-[var(--public-dark-faint)]">{t('Competition locations and venues used for official fixtures.')}</p><span className="mt-5 inline-flex items-center gap-1.5 text-sm font-black text-[var(--public-primary)]">{t('View venues')}<ArrowRight className="size-4" /></span></Link>
-                                <Link href={route('public.athletes')} className="group rounded-[1.5rem] border border-[var(--public-dark-border)] bg-white p-6 transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]"><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Users className="size-5" /></span><h3 className="mt-6 text-lg font-black">{t('Athletes & Teams')}</h3><p className="mt-2 text-sm leading-6 text-[var(--public-dark-faint)]">{t('Browse confirmed athletes and teams')}</p><span className="mt-5 inline-flex items-center gap-1.5 text-sm font-black text-[var(--public-primary)]">{t('View all')}<ArrowRight className="size-4" /></span></Link>
+                                <Link href={route('public.sports')} className="public-card group p-6"><span className="relative z-10 flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Trophy className="size-5" /></span><h3 className="relative z-10 mt-6 text-lg font-black">{t('Explore the sports')}</h3><p className="relative z-10 mt-2 text-sm leading-6 text-[var(--public-dark-faint)]">{t('Every official sport and event in the competition.')}</p><span className="relative z-10 mt-5 inline-flex items-center gap-1.5 text-sm font-black text-[var(--public-primary)]">{t('View all sports')}<ArrowRight className="size-4" /></span></Link>
+                                <Link href={route('public.venues')} className="public-card group p-6"><span className="relative z-10 flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><MapPin className="size-5" /></span><h3 className="relative z-10 mt-6 text-lg font-black">{t('Plan your visit')}</h3><p className="relative z-10 mt-2 text-sm leading-6 text-[var(--public-dark-faint)]">{t('Competition locations and venues used for official fixtures.')}</p><span className="relative z-10 mt-5 inline-flex items-center gap-1.5 text-sm font-black text-[var(--public-primary)]">{t('View venues')}<ArrowRight className="size-4" /></span></Link>
+                                <Link href={route('public.athletes')} className="public-card group p-6"><span className="relative z-10 flex size-11 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] transition group-hover:bg-[var(--public-primary)] group-hover:text-white"><Users className="size-5" /></span><h3 className="relative z-10 mt-6 text-lg font-black">{t('Athletes & Teams')}</h3><p className="relative z-10 mt-2 text-sm leading-6 text-[var(--public-dark-faint)]">{t('Browse confirmed athletes and teams')}</p><span className="relative z-10 mt-5 inline-flex items-center gap-1.5 text-sm font-black text-[var(--public-primary)]">{t('View all')}<ArrowRight className="size-4" /></span></Link>
                             </div>
                         </div>
                     </section>
@@ -193,7 +207,16 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
                 <section id="sports" className="public-below-fold relative scroll-mt-24 border-y border-[var(--public-dark-border)] bg-[var(--public-dark-soft)] py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><PublicSectionHeading eyebrow={t('Sports programme')} title={t('Explore the sports')} description={t('Every official sport and event in the competition.')} /><Link href={route('public.sports')} className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] sm:self-auto">{t('View all sports')}<ArrowRight className="size-4" /></Link></div>
-                    <div className="mt-12 flex flex-wrap gap-2.5">{sports.slice(0, 12).map(sport => <Link key={sport} href={route('public.sports')} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--public-dark-border)] bg-white py-1 pl-1.5 pr-4 text-sm font-bold transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)]"><span className="flex size-7 items-center justify-center rounded-full bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><SportIcon name={sport} /></span>{sport}</Link>)}{sports.length > 12 && <Link href={route('public.sports')} className="inline-flex min-h-10 items-center rounded-full border border-dashed border-[var(--public-primary-border)] px-4 text-sm font-black text-[var(--public-primary)]">+{sports.length - 12} {t('more')}</Link>}</div>
+                    <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                        {sports_catalog.map(sport => (
+                            <Link key={sport.name} href={route('public.schedule', { sport: sport.name })} aria-label={`${sport.name} — ${t('View fixtures')}`} className="public-card group flex min-w-0 flex-col items-center p-3 text-center transition hover:-translate-y-1 sm:p-4">
+                                <span className="flex aspect-square w-full max-h-56 items-center justify-center overflow-hidden rounded-2xl bg-[var(--public-primary-soft)]">
+                                    <SafeImage src={sport.icon} alt={`${sport.name} mascot`} className="size-full object-contain p-1 drop-shadow-lg transition-transform duration-300 group-hover:scale-105" fallback={<SportIcon name={sport.name} className="text-6xl leading-none" />} />
+                                </span>
+                                <span className="mt-3 line-clamp-2 text-sm font-black text-[var(--public-text)] sm:text-base">{sport.name}</span>
+                            </Link>
+                        ))}
+                    </div>
                 </div></section>
 
                 <section className="public-below-fold border-y border-[var(--public-dark-border)] bg-white py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -204,22 +227,27 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
 
                 <section className="public-below-fold border-y border-[var(--public-dark-border)] bg-[var(--public-background)] py-20 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6">
                     <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><PublicSectionHeading eyebrow={t('Contingents')} title={t('Participating faculties')} description={t('Meet the faculties taking part in the competition.')} /><Link href={route('public.faculties')} className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-[var(--public-dark-border)] bg-white px-4 text-sm font-black transition hover:border-[var(--public-primary-border)] hover:text-[var(--public-primary)] sm:self-auto">{t('View all')}<ArrowRight className="size-4" /></Link></div>
-                    <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{faculties.map(faculty => <Link key={faculty?.name} href={route('public.faculties')} aria-label={faculty?.name ?? t('Faculty')} className="group flex min-h-36 flex-col items-center justify-center rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 text-center transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]"><ParticipantLogo participant={faculty} size="xl" alt="" className="size-20" /><span className="mt-3 line-clamp-2 text-xs font-black text-[var(--public-text)]">{faculty?.name ?? t('Faculty')}</span></Link>)}</div>
+                    <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{faculties.map(faculty => { const facultyName = locale === 'ms' ? (faculty?.name_ms || faculty?.name) : faculty?.name; return <Link key={faculty?.name} href={route('public.faculties')} aria-label={facultyName ?? t('Faculty')} className="public-card group flex min-h-36 flex-col items-center justify-center p-4 text-center"><span className="relative z-10"><ParticipantLogo participant={faculty ? { ...faculty, name: facultyName || faculty.name } : faculty} size="xl" alt="" className="size-20" /></span><span className="relative z-10 mt-3 line-clamp-2 text-xs font-black text-[var(--public-text)]">{facultyName ?? t('Faculty')}</span></Link>; })}</div>
                 </div></section>
 
                 <section id="medals" className="public-below-fold relative scroll-mt-24 overflow-hidden bg-[var(--public-dark-soft)] py-20 sm:py-24">
                     <div className="absolute -right-32 -top-32 size-96 rounded-full bg-[var(--public-highlight-soft)] blur-3xl" />
                     <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
-                        <PublicSectionHeading eyebrow={t('Standings')} title={t('Medal standings')} description={t('Official standings based on confirmed results.')} />
+                        <div className="grid items-center gap-6 sm:grid-cols-[1fr_auto]">
+                            <PublicSectionHeading eyebrow={t('Standings')} title={t('Medal standings')} description={t('Official standings based on confirmed results.')} />
+                            <figure className="mx-auto h-64 w-44 overflow-hidden rounded-2xl sm:mx-0 sm:h-80 sm:w-56">
+                                <SafeImage src="/images/mascots/pose-piala.webp" alt={locale === 'ms' ? 'Maskot SAF 20 meraikan kemenangan dengan piala dan pingat' : 'SAF 20 mascot celebrating with a trophy and medal'} loading="lazy" decoding="async" className="size-full object-contain drop-shadow-xl" />
+                            </figure>
+                        </div>
                         {hasMedals ? (
                             <div className="mt-10 grid gap-4 lg:grid-cols-[1.1fr_.9fr]">
-                                <div className="rounded-[1.75rem] border border-[var(--public-dark-border)] bg-white p-5 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] sm:p-7">
+                                <div className="public-card p-5 sm:p-7">
                                     <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.18em] text-[var(--public-primary)]">{t('Leading contingents')}</p><h3 className="mt-2 text-2xl font-black tracking-tight">{t('The podium')}</h3></div><span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--public-highlight-soft)] text-[var(--public-highlight)]"><Trophy className="size-5" /></span></div>
-                                    <div className="mt-8 grid grid-cols-3 items-end gap-2 sm:gap-4">{medals.slice(0, 3).map(row => <PodiumCard key={row.participant_name} row={row} t={t} />)}</div>
+                                    <div className="mt-8 grid grid-cols-3 items-end gap-2 sm:gap-4">{medals.slice(0, 3).map(row => <PodiumCard key={row.participant_name} row={row} t={t} locale={locale} />)}</div>
                                 </div>
                                 <div className="rounded-[1.75rem] border border-white/10 bg-[var(--public-dark)] p-5 text-white shadow-[0_24px_70px_-48px_rgba(0,0,0,.9)] sm:p-7">
                                     <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-black uppercase tracking-[.18em] text-[var(--public-accent)]">{t('Current table')}</p><h3 className="mt-2 text-2xl font-black tracking-tight">{t('Medal tally')}</h3></div><Medal className="size-5 text-[var(--public-highlight)]" /></div>
-                                    <div className="mt-7 divide-y divide-white/10">{medals.slice(3, 6).map(row => <MedalListRow key={row.participant_name} row={row} t={t} />)}</div>
+                                    <div className="mt-7 divide-y divide-white/10">{medals.slice(3, 6).map(row => <MedalListRow key={row.participant_name} row={row} t={t} locale={locale} />)}</div>
                                     {medals.length > 6 && <p className="mt-5 text-xs font-semibold text-white/55">{t('Showing the top six standings')}</p>}
                                 </div>
                             </div>
@@ -231,35 +259,27 @@ export default function PublicIndex({ app_name, competition, stats, sports, facu
     );
 }
 
-function PodiumCard({ row, t }: { row: MedalRow; t: Translate }) {
+function PodiumCard({ row, t, locale }: { row: MedalRow; t: Translate; locale: string }) {
+    const displayName = locale === 'ms' ? (row.participant_name_ms || row.participant_name) : row.participant_name;
     const isWinner = row.rank === 1;
     const medalTone = row.rank === 1 ? 'bg-[var(--public-highlight)] text-[var(--public-dark)]' : row.rank === 2 ? 'bg-[var(--public-dark-border)] text-[var(--public-text)]' : 'bg-amber-700 text-white';
 
     return <article className={`flex min-w-0 flex-col items-center text-center ${isWinner ? 'order-2' : row.rank === 2 ? 'order-1' : 'order-3'}`}>
         <div className={`relative flex ${isWinner ? 'size-20 sm:size-24' : 'size-16 sm:size-20'} items-center justify-center rounded-[1.5rem] ${medalTone} shadow-lg`}>
-            <ParticipantLogo participant={{ name: row.participant_name, logo_url: row.logo_url, inverse_logo_url: row.inverse_logo_url }} size={isWinner ? 'xl' : 'lg'} alt="" className={isWinner ? 'size-16 sm:size-20' : 'size-12 sm:size-16'} />
+            <ParticipantLogo participant={{ name: displayName, logo_url: row.logo_url, inverse_logo_url: row.inverse_logo_url }} size={isWinner ? 'xl' : 'lg'} alt="" className={isWinner ? 'size-16 sm:size-20' : 'size-12 sm:size-16'} />
             <span className={`absolute -bottom-2 flex size-7 items-center justify-center rounded-full border-4 border-white text-xs font-black ${medalTone}`}>{row.rank}</span>
         </div>
-        <h4 className={`mt-5 w-full truncate font-black ${isWinner ? 'text-base' : 'text-sm'}`}>{row.participant_name}</h4>
+        <h4 className={`mt-5 w-full truncate font-black ${isWinner ? 'text-base' : 'text-sm'}`}>{displayName}</h4>
         <p className="mt-1 text-xs text-[var(--public-dark-faint)]">{row.gold} {t('Gold')} · {row.silver} {t('Silver')} · {row.bronze} {t('Bronze')}</p>
         <b className={`mt-3 inline-flex items-center rounded-full px-3 py-1 text-sm ${isWinner ? 'bg-[var(--public-highlight-soft)] text-[var(--public-dark)]' : 'bg-[var(--public-background)] text-[var(--public-dark)]'}`}>{row.total_medals} {t('medals')}</b>
     </article>;
 }
 
-function MedalListRow({ row, t }: { row: MedalRow; t: Translate }) {
-    return <div className="flex items-center gap-3 py-4 first:pt-0 last:pb-0"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-black text-[var(--public-highlight)]">{row.rank}</span><ParticipantLogo participant={{ name: row.participant_name, logo_url: row.logo_url, inverse_logo_url: row.inverse_logo_url }} surface="dark" size="sm" alt="" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-black">{row.participant_name}</p><p className="mt-0.5 text-xs text-white/55">{row.gold}G · {row.silver}S · {row.bronze}B</p></div><b className="text-xl text-white">{row.total_medals}</b></div>;
+function MedalListRow({ row, t, locale }: { row: MedalRow; t: Translate; locale: string }) {
+    const displayName = locale === 'ms' ? (row.participant_name_ms || row.participant_name) : row.participant_name;
+    return <div className="flex items-center gap-3 py-4 first:pt-0 last:pb-0"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-black text-[var(--public-highlight)]">{row.rank}</span><ParticipantLogo participant={{ name: displayName, logo_url: row.logo_url, inverse_logo_url: row.inverse_logo_url }} surface="dark" size="sm" alt="" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-black">{displayName}</p><p className="mt-0.5 text-xs text-white/55">{row.gold}G · {row.silver}S · {row.bronze}B</p></div><b className="text-xl text-white">{row.total_medals}</b></div>;
 }
 
-function CosmicBackground() {
-    return <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--public-dark)] via-[var(--public-primary)] to-[var(--public-dark)]" />
-        <div className="absolute -right-24 -top-32 size-[34rem] rounded-full bg-[var(--public-accent)] opacity-20 blur-3xl" />
-        <div className="absolute -bottom-48 -left-32 size-[30rem] rounded-full bg-[var(--public-primary)] opacity-30 blur-3xl" />
-        <div className="public-cosmic-orbit absolute right-[8%] top-[14%] size-[32rem] rounded-full border border-white/10" />
-        <div className="public-cosmic-orbit public-cosmic-orbit-delayed absolute right-[14%] top-[22%] size-[22rem] rounded-full border border-white/10" />
-        <div className="public-cosmic-grid absolute inset-0 opacity-20" />
-    </div>;
-}
-function ProgressMetric({ value, label, icon: Icon }: { value: number; label: string; icon: ComponentType<{ className?: string }> }) { return <div className="rounded-2xl border border-white/10 bg-white/5 p-4"><Icon className="size-4 text-[var(--public-highlight)]" /><b className="public-display mt-4 block text-3xl font-extrabold">{value}</b><span className="text-xs text-white/75">{label}</span></div>; }
-function MatchColumn({ id, title, href, matches, variant, t, loading = false }: { id: string; title: string; href: string; matches: PublicMatch[]; variant: 'upcoming' | 'result'; t: Translate; loading?: boolean }) { return <div id={id} className="scroll-mt-24"><div className="mb-5 flex items-center justify-between gap-3"><div className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]">{variant === 'result' ? <CheckCircle2 className="size-5" /> : <Clock3 className="size-5" />}</span><h3 className="text-xl font-black">{title}</h3></div><Link href={href} className="inline-flex items-center gap-1.5 text-xs font-black text-[var(--public-primary)] transition hover:underline">{t('View all')}<ArrowRight className="size-3.5" /></Link></div><div className="grid gap-3">{loading ? [0, 1, 2].map(i => <div key={i} className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-4"><div className="flex items-center justify-between gap-3"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-16" /></div><div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-6 w-8 rounded-lg" /><Skeleton className="h-10 w-full" /></div></div>) : <>{matches.map(match => <PublicMatchCard key={match.id} match={match} variant={variant} />)}{matches.length === 0 && <PublicEmptyState text={variant === 'result' ? t('No official results recorded yet.') : t('Schedule will be shown after publication.')} />}</>}</div></div>; }
-function MedalCard({ row, t }: { row: MedalRow; t: Translate }) { return <article className="flex items-center gap-4 rounded-2xl border border-[var(--public-dark-border)] bg-white p-5"><span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--public-dark)] text-lg font-black text-[var(--public-highlight)]">{row.rank}</span><ParticipantLogo participant={{ name: row.participant_name, logo_url: row.logo_url, inverse_logo_url: row.inverse_logo_url }} size="xl" alt="" /><div className="min-w-0 flex-1"><h3 className="truncate font-black">{row.participant_name}</h3><p className="mt-1 text-xs text-[var(--public-dark-faint)]">{row.gold} {t('Gold')} · {row.silver} {t('Silver')} · {row.bronze} {t('Bronze')}</p></div><b className="text-2xl">{row.total_medals}</b></article>; }
+function ProgressMetric({ value, label, icon: Icon }: { value: number; label: string; icon: ComponentType<{ className?: string }> }) { return <div className="rounded-2xl border border-[var(--public-dark-border)] bg-[var(--public-background)] p-4"><Icon className="size-4 text-[var(--public-primary)]" /><b className="public-display mt-4 block text-3xl font-extrabold text-[var(--public-text)]">{value}</b><span className="text-xs text-[var(--public-dark-faint)]">{label}</span></div>; }
+function MatchColumn({ id, title, href, matches, variant, t, loading = false }: { id: string; title: string; href: string; matches: PublicMatch[]; variant: 'upcoming' | 'result'; t: Translate; loading?: boolean }) { return <div id={id} className="scroll-mt-24"><div className="mb-5 flex items-center justify-between gap-3"><div className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]">{variant === 'result' ? <CheckCircle2 className="size-5" /> : <Clock3 className="size-5" />}</span><h3 className="text-xl font-black">{title}</h3></div><Link href={href} className="inline-flex items-center gap-1.5 text-xs font-black text-[var(--public-primary)] transition hover:underline">{t('View all')}<ArrowRight className="size-3.5" /></Link></div><div className="grid gap-3">{loading ? [0, 1, 2].map(i => <div key={i} className="public-card p-4"><div className="flex items-center justify-between gap-3"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-16" /></div><div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-6 w-8 rounded-lg" /><Skeleton className="h-10 w-full" /></div></div>) : <>{matches.map(match => <PublicMatchCard key={match.id} match={match} variant={variant} />)}{matches.length === 0 && <PublicEmptyState text={variant === 'result' ? t('No official results recorded yet.') : t('Schedule will be shown after publication.')} />}</>}</div></div>; }
+function MedalCard({ row, t }: { row: MedalRow; t: Translate }) { return <article className="public-card flex items-center gap-4 p-5"><span className="relative z-10 flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--public-dark)] text-lg font-black text-[var(--public-highlight)]">{row.rank}</span><span className="relative z-10"><ParticipantLogo participant={{ name: row.participant_name, logo_url: row.logo_url, inverse_logo_url: row.inverse_logo_url }} size="xl" alt="" /></span><div className="relative z-10 min-w-0 flex-1"><h3 className="truncate font-black">{row.participant_name}</h3><p className="mt-1 text-xs text-[var(--public-dark-faint)]">{row.gold} {t('Gold')} · {row.silver} {t('Silver')} · {row.bronze} {t('Bronze')}</p></div><b className="relative z-10 text-2xl">{row.total_medals}</b></article>; }

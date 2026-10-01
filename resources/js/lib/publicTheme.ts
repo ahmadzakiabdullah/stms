@@ -10,12 +10,13 @@ export type PublicThemeSettings = {
 };
 
 const DEFAULTS = {
-    dark: '#071B33',
-    primary: '#0057A8',
-    accent: '#20B8E6',
-    highlight: '#F4B942',
-    background: '#F4F7FA',
-    text: '#102A43',
+    // SAF 20 2026 banner palette: deep navy, electric violet-blue, red and orange.
+    dark: '#10091F',
+    primary: '#3515B8',
+    accent: '#F21D32',
+    highlight: '#FF8614',
+    background: '#F7F6FC',
+    text: '#17132F',
 };
 
 const hexToRgba = (hex: string, alpha: number): string => {

@@ -8,9 +8,11 @@ use App\Models\Event;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
+use App\Models\Tournament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
 
@@ -211,6 +213,25 @@ class ParticipantTest extends TestCase
             'participant_id' => $participant->id,
             'status' => 'pending',
         ]);
+    }
+
+    public function test_session_registration_deadline_blocks_event_registration(): void
+    {
+        $org = Organization::factory()->create();
+        $session = Session::factory()->create([
+            'organization_id' => $org->id,
+            'event_registration_deadline' => now()->subDay()->toDateString(),
+        ]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $event = Event::factory()->forTournament($tournament)->create(['organization_id' => $org->id]);
+        $participant = Participant::factory()->create([
+            'organization_id' => $org->id,
+            'session_id' => $session->id,
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        app(RegisterParticipantToEvent::class)->handle($participant, $event->id);
     }
 
     public function test_withdraw_participant_from_event_via_action(): void

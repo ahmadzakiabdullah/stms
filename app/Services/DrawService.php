@@ -22,23 +22,26 @@ class DrawService
      */
     public function drawGroups(Event $event): array
     {
-        $confirmedParticipants = EventParticipant::where('event_id', $event->id)
-            ->where('status', 'confirmed')
-            ->with('participant')
-            ->get();
+        return DB::transaction(function () use ($event) {
+            // Serialize draw/reset/move operations for this event. The event row
+            // is the stable lock target even when two requests start together.
+            $event = Event::query()->whereKey($event->id)->lockForUpdate()->firstOrFail();
+            $confirmedParticipants = EventParticipant::where('event_id', $event->id)
+                ->where('status', 'confirmed')
+                ->with('participant')
+                ->get();
 
-        if ($confirmedParticipants->count() < 2) {
-            throw new \InvalidArgumentException('Need at least 2 confirmed participants to draw.');
-        }
+            if ($confirmedParticipants->count() < 2) {
+                throw new \InvalidArgumentException('Need at least 2 confirmed participants to draw.');
+            }
 
-        return DB::transaction(function () use ($event, $confirmedParticipants) {
             // Hard-delete previous fixtures (and their results via cascade) so
             // match numbers restart cleanly at 1 on every re-draw.
             Fixture::where('event_id', $event->id)->forceDelete();
             EventParticipant::where('event_id', $event->id)->update(['pool_id' => null]);
             Pool::where('event_id', $event->id)->forceDelete();
 
-            $orgId = $event->organization_id ?? Auth::user()->organization_id;
+            $orgId = $event->organization_id ?? Auth::user()?->organization_id;
             $poolSize = $event->pool_size ?? 4;
             $total = $confirmedParticipants->count();
 
@@ -92,13 +95,22 @@ class DrawService
      */
     public function generateFixtures(Event $event): array
     {
-        $pools = $event->pools()->orderBy('sort_order')->get();
+        return DB::transaction(function () use ($event) {
+            $event = Event::query()->whereKey($event->id)->lockForUpdate()->firstOrFail();
+            $pools = $event->pools()->orderBy('sort_order')->get();
 
-        if ($pools->isEmpty()) {
-            throw new \InvalidArgumentException('Cannot generate fixtures: no draw has been performed yet.');
-        }
+            if ($pools->isEmpty()) {
+                throw new \InvalidArgumentException('Cannot generate fixtures: no draw has been performed yet.');
+            }
 
-        return DB::transaction(function () use ($event, $pools) {
+            // A retried/duplicate request must be a no-op once fixtures exist.
+            if (Fixture::where('event_id', $event->id)->exists()) {
+                return [
+                    'pools' => $pools->count(),
+                    'fixtures' => 0,
+                ];
+            }
+
             $fixturesCreated = 0;
             foreach ($pools as $pool) {
                 $fixturesCreated += $this->generateRoundRobinFixtures($event, $pool);
@@ -129,6 +141,7 @@ class DrawService
     public function resetDraw(Event $event): void
     {
         DB::transaction(function () use ($event) {
+            $event = Event::query()->whereKey($event->id)->lockForUpdate()->firstOrFail();
             $this->recordSnapshot($event, 'before_reset');
             Fixture::where('event_id', $event->id)->forceDelete();
             EventParticipant::where('event_id', $event->id)->update(['pool_id' => null]);
@@ -275,6 +288,7 @@ class DrawService
     public function moveParticipantToPool(Event $event, string $eventParticipantId, string $targetPoolId, ?int $seedNumber = null): bool
     {
         return DB::transaction(function () use ($event, $eventParticipantId, $targetPoolId, $seedNumber) {
+            $event = Event::query()->whereKey($event->id)->lockForUpdate()->firstOrFail();
             if (Fixture::where('event_id', $event->id)->whereIn('status', ['in_progress', 'completed'])->exists()) {
                 throw new \InvalidArgumentException('Cannot modify pools after a match has started.');
             }

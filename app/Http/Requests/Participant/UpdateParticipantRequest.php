@@ -46,6 +46,7 @@ class UpdateParticipantRequest extends FormRequest
                 Rule::exists('event_sessions', 'id')->where('organization_id', $organizationId),
             ],
             'name' => ['required', 'string', 'max:255'],
+            'name_ms' => ['nullable', 'string', 'max:255'],
             'slug' => [
                 'nullable',
                 'string',

@@ -29,6 +29,8 @@
 /bootstrap/cache/*.php
 /storage/*.key
 /storage/app/backups/
+/storage/app/production-smoke-*.json
+/storage/app/query-profile-*.json
 /storage/app/public/*
 /storage/framework/cache/*
 /storage/framework/sessions/*

@@ -60,19 +60,24 @@ test('public home and contact pages support keyboard navigation and accessibilit
     const contactResponse = await page.goto('/contact-us');
     expect(contactResponse?.status()).toBeLessThan(400);
     await expect(page.locator('main')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Coordinators & Game Chairpersons', exact: true })).toBeVisible();
+    await expect(page.getByText('Catur Campuran', { exact: true })).toBeVisible();
     await expectAccessible(page);
 });
 
 test('all public routes pass serious axe checks and expose a keyboard focus target', async ({ page }) => {
-    for (const path of ['/', '/schedule', '/athletes', '/sports', '/faculties', '/venues', '/contact-us', '/news', '/downloads', '/faq', '/about']) {
+    for (const path of ['/', '/schedule', '/athletes', '/sports', '/faculties', '/venues', '/contact-us', '/news', '/downloads', '/faq', '/about', '/general-information', '/jawatankuasa-induk', '/jawatankuasa-pelaksana', '/pengerusi-permainan', '/tarikh-penting']) {
         const response = await page.goto(path);
         expect(response?.status(), path).toBeLessThan(400);
         await expect(page.locator('main')).toBeVisible();
         await expect(page.locator('#public-content')).toHaveAttribute('aria-busy', 'false');
         await expectAccessible(page);
+        const navigationBottom = await page.locator('[data-public-header]').evaluate(element => element.getBoundingClientRect().bottom);
+        const pageHeadingTop = await page.locator('main h1').first().evaluate(element => element.getBoundingClientRect().top);
+        expect(pageHeadingTop, `${path} page heading should start below the public header`).toBeGreaterThanOrEqual(navigationBottom);
 
         if (path === '/') await expect(page.locator('[data-slot="button"]:visible').first()).toBeVisible();
-      if (path === '/schedule') await expect(page.locator('[data-slot="input"]:visible, [data-slot="button"]:visible').first()).toBeVisible();
+        if (path === '/schedule') await expect(page.locator('[data-slot="input"]:visible, [data-slot="button"]:visible').first()).toBeVisible();
         if (path === '/athletes') await expect(page.locator('[data-slot="tabs-list"]')).toBeVisible();
         if (path === '/sports') await expect(page.locator('[data-slot="input"]')).toBeVisible();
         if (path === '/faq') await expect(page.locator('[data-slot="accordion"]')).toBeVisible();
@@ -141,7 +146,7 @@ test('public pages avoid horizontal overflow and support locale switching', asyn
     await expect(mobileNav.getByRole('heading', { name: 'Competition', exact: true })).toBeVisible();
     await expect(mobileNav.getByRole('heading', { name: 'Information', exact: true })).toBeVisible();
     await expect(mobileNav.getByRole('link', { name: 'Sports', exact: true })).toBeVisible();
-    await expect(mobileNav.getByRole('link', { name: 'News', exact: true })).toBeVisible();
+    await expect(mobileNav.getByRole('link', { name: 'News', exact: true })).toHaveCount(0);
     const ms = mobileNav.getByRole('button', { name: 'MS' }).first();
     await expect(ms).toBeVisible();
     await ms.click();
@@ -151,7 +156,7 @@ test('public pages avoid horizontal overflow and support locale switching', asyn
 test('desktop and mobile public navigation stay in sync', async ({ page }) => {
     const primaryLinks = ['Home', 'Schedule & Results', 'Athletes & Teams', 'Contact'];
     const competitionLinks = ['Sports', 'Faculties', 'Venues'];
-    const informationLinks = ['News', 'Downloads', 'FAQ', 'About'];
+    const informationLinks = ['General Information', 'Main Committee', 'Student Executive Committee', 'Game Chairpersons', 'Important Dates'];
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
@@ -170,6 +175,9 @@ test('desktop and mobile public navigation stay in sync', async ({ page }) => {
     for (const label of informationLinks) {
         await expect(desktopNav.getByRole('link', { name: label })).toBeVisible();
     }
+    for (const label of ['About', 'Download', 'News', 'FAQ']) {
+        await expect(desktopNav.getByRole('link', { name: label, exact: true })).toHaveCount(0);
+    }
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
@@ -179,7 +187,7 @@ test('desktop and mobile public navigation stay in sync', async ({ page }) => {
         .filter((anchor) => anchor.getAttribute('aria-label') !== 'Log in')
         .map((anchor) => anchor.textContent?.trim() ?? '')));
 
-    expect(mobileLinks).toEqual([...primaryLinks, ...competitionLinks, ...informationLinks]);
+    expect(mobileLinks).toEqual(['Home', ...informationLinks, ...competitionLinks, ...primaryLinks.slice(1)]);
     await expect(mobileNav.getByRole('heading', { name: 'Competition', exact: true })).toBeVisible();
     await expect(mobileNav.getByRole('heading', { name: 'Information', exact: true })).toBeVisible();
 });
@@ -203,9 +211,9 @@ test('public pages emit no CSP violations in the browser console', async ({ page
 });
 
 test('public images and external links have accessible and resilient contracts', async ({ page }) => {
-    await page.route('**/images/banner/banner-saf-20-2026.jpeg', (route) => route.fulfill({
+    await page.route('**/images/banner/banner-saf-20-2026.webp', (route) => route.fulfill({
         status: 404,
-        contentType: 'image/jpeg',
+        contentType: 'image/webp',
         body: '',
     }));
 
@@ -236,6 +244,28 @@ test('public shell stays usable on mobile and tablet with reduced motion', async
         await page.setViewportSize(viewport);
         await page.goto('/');
         await expect(page.locator('main')).toBeVisible();
+
+        for (const path of ['/general-information', '/jawatankuasa-induk']) {
+            await page.goto(path);
+            const navigationBottom = await page.locator('[data-public-header]').evaluate(element => element.getBoundingClientRect().bottom);
+            const pageHeadingTop = await page.locator('main h1').first().evaluate(element => element.getBoundingClientRect().top);
+            expect(pageHeadingTop, `${viewport.name} ${path} heading should start below the public header`).toBeGreaterThanOrEqual(navigationBottom);
+        }
+        await page.goto('/tarikh-penting');
+        if (viewport.width < 1280) {
+            await expect(page.locator('main ol[aria-label]')).toBeVisible();
+            await expect(page.locator('main table')).toBeHidden();
+        } else {
+            await expect(page.locator('main table')).toBeVisible();
+            await expect(page.locator('main ol[aria-label]')).toBeHidden();
+        }
+        await page.goto('/');
+
+        if (viewport.width < 1024) {
+            await page.goto('/contact-us');
+            await expect(page.getByRole('heading', { name: 'Catur Campuran', exact: true })).toBeVisible();
+            await expect(page.locator('table').first()).toBeHidden();
+        }
 
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         expect(overflow, `${viewport.name} horizontal overflow`).toBeLessThanOrEqual(1);

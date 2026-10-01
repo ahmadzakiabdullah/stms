@@ -67,4 +67,14 @@ Accreditation and dedicated Schedule domain models are not implemented in the cu
 
 ## Schedule Conflict Validation
 
-Before a match is created or updated, `MatchScheduleConflictValidator` (in `app/Services`) rejects any fixture whose time window overlaps an existing scheduled fixture on the same day within a 120-minute window when they share a venue, or when the same participant appears in more than one match in that window. The gate is applied in `MatchController::store` and `update`; the submitted fixture is not persisted until the conflicts are resolved.
+Before a match is created or updated, `MatchScheduleConflictValidator` (in `app/Services`) rejects any fixture whose time window overlaps an existing scheduled fixture on the same day within a 120-minute window when they share a venue, or when the same participant appears in more than one match in that window. The controller provides immediate feedback, and `MatchService` repeats the check inside the write transaction while holding the organization lock; the submitted fixture is not persisted until the conflicts are resolved.
+
+## Write-side Concurrency
+
+The service layer is the authoritative boundary for duplicate-request safety.
+Draw operations lock the event row, result entry locks the match row, result
+correction/status transitions lock the result row, and participant registration
+locks the event-participant key before relying on its unique index. Fixture
+generation is idempotent after the first successful generation. See
+[`ADR-010`](../adr/ADR-010-write-side-concurrency-safety.md) and
+[`docs/testing/concurrency.md`](../testing/concurrency.md).

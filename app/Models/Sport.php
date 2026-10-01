@@ -17,14 +17,17 @@ class Sport extends Model
     protected $fillable = [
         'organization_id',
         'name',
+        'name_ms',
         'slug',
         'icon',
         'scoring_mode',
+        'scoring_profile',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'scoring_profile' => 'array',
     ];
 
     public function organization()
