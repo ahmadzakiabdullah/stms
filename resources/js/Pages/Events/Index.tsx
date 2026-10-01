@@ -46,6 +46,7 @@ const eventSchema = z.object({
     sport_id: z.string().min(1, 'Sport is required'),
     sport_category_id: z.string().min(1, 'Category is required'),
     name: z.string().min(1, 'Name is required'),
+    name_ms: z.string().max(255).optional().default(''),
     slug: z.string().optional().default(''),
     description: z.string().optional().default(''),
     venues: z.array(z.object({ value: z.string() })).optional().default([]),
@@ -62,7 +63,7 @@ type EventForm = z.infer<typeof eventSchema>;
 interface EventRow extends Omit<Event, 'tournament' | 'sport' | 'sport_category'> {
     tournament?: { name: string } | null;
     sport?: { name: string } | null;
-    sport_category?: { name: string } | null;
+    sport_category?: { name: string; name_ms?: string | null } | null;
 }
 
 interface EventsIndexProps {
@@ -115,6 +116,7 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
             sport_id: '',
             sport_category_id: '',
             name: '',
+            name_ms: '',
             slug: '',
             description: '',
             venues: [],
@@ -211,6 +213,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             sport_id: '',
             sport_category_id: '',
             name: '',
+            name_ms: '',
             slug: '',
             description: '',
             venues: [],
@@ -232,6 +235,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             sport_id: event.sport_id,
             sport_category_id: event.sport_category_id,
             name: event.name,
+            name_ms: event.name_ms || '',
             slug: event.slug,
             description: event.description || '',
             venues: (event.venues ?? []).map((value) => ({ value })),
@@ -423,6 +427,8 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             placeholder="e.g. Men's Football - Group A"
                                             required
                                         />
+                                        <Label htmlFor="name_ms">{t('Event Name (Bahasa Malaysia)')}</Label>
+                                        <Input id="name_ms" {...register('name_ms')} placeholder={t('Optional Malay name')} />
                                         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                                     </div>
 

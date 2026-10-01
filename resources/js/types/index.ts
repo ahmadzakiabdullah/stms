@@ -3,6 +3,7 @@ import { PageProps as InertiaPageProps } from '@inertiajs/core';
 export interface Organization {
     id: string;
     name: string;
+    name_ms: string | null;
     slug: string;
     organization_type: string;
     parent_id: string | null;
@@ -16,6 +17,7 @@ export interface User {
     id: string;
     uuid: string;
     name: string;
+    name_ms: string | null;
     username: string;
     email: string;
     organization_id: string;
@@ -32,6 +34,7 @@ export interface User {
 export interface Role {
     id: number;
     name: string;
+    name_ms: string | null;
     guard_name: string;
 }
 
@@ -40,6 +43,7 @@ export interface Sport {
     id: string;
     organization_id: string;
     name: string;
+    name_ms: string | null;
     slug: string;
     icon: string | null;
     scoring_mode?: 'none' | 'individual' | string;
@@ -64,6 +68,7 @@ export interface SportCategory {
     organization_id: string;
     sport_id: string;
     name: string;
+    name_ms: string | null;
     slug: string;
     quota_mode: 'gender_based' | 'open_total' | 'mixed_total';
     max_athletes_total: number | null;
@@ -141,6 +146,7 @@ export interface Event {
     sport_id: string;
     sport_category_id: string;
     name: string;
+    name_ms: string | null;
     slug: string;
     description: string | null;
     venues: string[] | null;

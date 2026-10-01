@@ -18,6 +18,7 @@ class SportCategory extends Model
         'organization_id',
         'sport_id',
         'name',
+        'name_ms',
         'slug',
         'quota_mode',
         'max_athletes_total',

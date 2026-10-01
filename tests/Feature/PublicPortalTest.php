@@ -106,7 +106,7 @@ class PublicPortalTest extends TestCase
         config(['app.public_org_slug' => $organization->slug, 'app.public_session_slug' => $session->slug]);
         $tournament = Tournament::factory()->forSession($session)->create();
         $event = Event::factory()->forTournament($tournament)->create();
-        $faculty = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Sukan', 'is_active' => true]);
+        $faculty = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Sukan', 'name_ms' => 'Fakulti Sukan Kejuruteraan', 'is_active' => true]);
         $registration = EventParticipant::factory()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'participant_id' => $faculty->id, 'status' => 'confirmed']);
         SquadMember::factory()->create(['organization_id' => $organization->id, 'event_participant_id' => $registration->id, 'name' => 'Atlet Awam', 'role' => 'athlete_male', 'identification_no' => 'RAHSIA-123', 'phone' => '0129999999', 'is_active' => true]);
         SquadMember::factory()->create(['organization_id' => $organization->id, 'event_participant_id' => $registration->id, 'name' => 'Atlet Tidak Aktif', 'role' => 'athlete_female', 'is_active' => false]);
@@ -183,7 +183,12 @@ class PublicPortalTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('athletes.total', 3)
-                ->where('faculties.0', 'Fakulti Sukan'));
+                ->where('faculties.0.name', 'Fakulti Sukan')
+                ->where('faculties.0.name_ms', 'Fakulti Sukan Kejuruteraan'));
+
+        $this->get(route('public.athletes', ['view' => 'athletes', 'q' => 'Kejuruteraan']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('athletes.total', 3));
 
         $this->get(route('public.athletes', ['view' => 'athletes', 'faculty' => 'Fakulti Lain']))
             ->assertOk()

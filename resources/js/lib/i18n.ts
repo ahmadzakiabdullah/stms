@@ -2672,6 +2672,12 @@ Object.assign(ms, {
     'No chairpersons match your search.': 'Tiada pengerusi sepadan dengan carian anda.',
 });
 
+Object.assign(en, {
+    'Search team, athlete or faculty': 'Search team, athlete or faculty',
+    'Athlete directory unavailable': 'Athlete directory unavailable',
+    'athlete_directory_unavailable': 'The athlete directory is unavailable. Please try again.',
+});
+
 const dictionaries: Record<string, Translations> = { en, ms };
 
 export function translate(locale: string, key: string): string {
@@ -3017,6 +3023,9 @@ Object.assign(ms, {
     'previous': 'sebelumnya',
     'Refresh': 'Muat Semula',
     'Refreshing': 'Sedang Memuat Semula',
+    'Search team, athlete or faculty': 'Cari pasukan, atlet atau fakulti',
+    'Athlete directory unavailable': 'Direktori atlet tidak tersedia',
+    'athlete_directory_unavailable': 'Direktori atlet tidak dapat dimuatkan. Sila cuba lagi.',
     'Registration approved': 'Pendaftaran diluluskan',
     'Registration rejected': 'Pendaftaran ditolak',
     'Result recorded': 'Keputusan direkodkan',

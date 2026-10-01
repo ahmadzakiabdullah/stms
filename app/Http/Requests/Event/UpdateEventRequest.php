@@ -49,6 +49,7 @@ class UpdateEventRequest extends FormRequest
                     ->ignore($event),
             ],
             'name' => ['required', 'string', 'max:255'],
+            'name_ms' => ['nullable', 'string', 'max:255'],
             'slug' => [
                 'nullable',
                 'string',

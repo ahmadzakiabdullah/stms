@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Halaman `/athletes` kini memaparkan nama fakulti BM dalam dropdown, menyokong carian nama fakulti BM, menggunakan filter fakulti merentas tab pasukan/atlet, dan mempunyai fallback ralat direktori yang diterjemahkan.
 - Halaman lupa kata laluan kini mempunyai pautan jelas `Kembali ke log masuk` selepas borang reset dihantar.
 - Halaman login kini memaparkan maskot `pose-welcome.webp` secara responsif di sisi kad login pada desktop dan di bawah logo pada telefon.
 - Halaman login kini memaparkan logo UTeM bersebelahan logo SAF tanpa mengubah background atau susun atur asal.

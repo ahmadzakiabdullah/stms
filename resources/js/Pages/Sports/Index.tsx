@@ -44,6 +44,7 @@ import { useI18n } from '@/lib/i18n';
 
 const sportSchema = z.object({
     name: z.string().min(1, 'Name is required').max(255),
+    name_ms: z.string().max(255).optional().default(''),
     slug: z.string().min(1, 'Slug is required').regex(/^[a-zA-Z0-9_-]+$/, 'Slug must be alpha-numeric with dashes or underscores'),
     icon: z.string().optional().default(''),
     scoring_mode: z.enum(['none', 'individual']).default('none'),
@@ -58,6 +59,7 @@ type SportForm = z.infer<typeof sportSchema>;
 
 const categorySchema = z.object({
     name: z.string().min(1, 'Name is required').max(255),
+    name_ms: z.string().max(255).optional().default(''),
     slug: z.string().regex(/^[a-zA-Z0-9_-]+$/, 'Slug must be alpha-numeric with dashes or underscores').optional().default(''),
     quota_mode: z.enum(['gender_based', 'open_total', 'mixed_total']).default('gender_based'),
     max_athletes_total: z.union([z.coerce.number().int().min(0), z.literal(''), z.literal(undefined)]).optional().transform(v => v === '' || v === undefined ? null : v),
@@ -113,7 +115,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
 
     const sportForm = useForm<SportForm>({
         resolver: zodResolver(sportSchema),
-        defaultValues: { name: '', slug: '', icon: '', scoring_mode: 'none', score_unit: 'points', max_score: null, allow_draw: true, scoring_event_types: 'goal', is_active: true },
+        defaultValues: { name: '', name_ms: '', slug: '', icon: '', scoring_mode: 'none', score_unit: 'points', max_score: null, allow_draw: true, scoring_event_types: 'goal', is_active: true },
     });
     const { register, control, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = sportForm;
     const name = watch('name');
@@ -131,7 +133,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
         setServerError(null);
         setIconFile(null);
         autoSlugRef.current = true;
-        reset({ name: '', slug: '', icon: '', scoring_mode: 'none', score_unit: 'points', max_score: null, allow_draw: true, scoring_event_types: 'goal', is_active: true });
+        reset({ name: '', name_ms: '', slug: '', icon: '', scoring_mode: 'none', score_unit: 'points', max_score: null, allow_draw: true, scoring_event_types: 'goal', is_active: true });
         setOpen(true);
     };
 
@@ -142,6 +144,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
         autoSlugRef.current = false;
         reset({
             name: sport.name,
+            name_ms: sport.name_ms || '',
             slug: sport.slug,
             icon: sport.icon || '',
             scoring_mode: sport.scoring_mode === 'individual' ? 'individual' : 'none',
@@ -167,6 +170,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
 
         const fd = new FormData();
         fd.append('name', formData.name);
+        fd.append('name_ms', formData.name_ms || '');
         fd.append('slug', formData.slug);
         fd.append('icon', formData.icon ?? '');
         fd.append('scoring_mode', formData.scoring_mode);
@@ -212,6 +216,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
         resolver: zodResolver(categorySchema),
         defaultValues: {
             name: '',
+            name_ms: '',
             slug: '',
             quota_mode: 'gender_based',
             max_athletes_total: null,
@@ -268,6 +273,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
         setCatServerError(null);
         catReset({
             name: cat.name,
+            name_ms: cat.name_ms || '',
             slug: cat.slug,
             quota_mode: cat.quota_mode ?? 'gender_based',
             max_athletes_total: cat.max_athletes_total,
@@ -511,6 +517,10 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                 {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                             </div>
                             <div className="grid gap-2">
+                                <Label htmlFor="name_ms">{t('Sport Name (Bahasa Malaysia)')}</Label>
+                                <Input id="name_ms" {...register('name_ms')} placeholder={t('Optional Malay name')} />
+                            </div>
+                            <div className="grid gap-2">
                                 <Label htmlFor="slug">{t('Slug (unique)')}</Label>
                                 <Input
                                     id="slug" {...register('slug')} placeholder={t('badminton')} required
@@ -645,6 +655,10 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                 <Label htmlFor="cat-name">{t('Category Name')}</Label>
                                 <Input id="cat-name" {...catReg('name')} placeholder={t("e.g. Men's Singles")} required />
                                 {catErrors.name && <p className="text-sm text-destructive">{catErrors.name.message}</p>}
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="cat-name-ms">{t('Category Name (Bahasa Malaysia)')}</Label>
+                                <Input id="cat-name-ms" {...catReg('name_ms')} placeholder={t('Optional Malay name')} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="cat-slug">{t('Slug (unique per sport)')}</Label>

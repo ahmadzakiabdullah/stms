@@ -17,6 +17,7 @@ class Sport extends Model
     protected $fillable = [
         'organization_id',
         'name',
+        'name_ms',
         'slug',
         'icon',
         'scoring_mode',

@@ -48,6 +48,7 @@ import { useI18n } from '@/lib/i18n';
 const categorySchema = z.object({
     sport_id: z.string().uuid('Sport is required'),
     name: z.string().min(1, 'Name is required').max(255),
+    name_ms: z.string().max(255).optional().default(''),
     slug: z.string().regex(/^[a-zA-Z0-9_-]+$/, 'Slug must be alpha-numeric with dashes or underscores').optional().default(''),
     quota_mode: z.enum(['gender_based', 'open_total', 'mixed_total']).default('gender_based'),
     max_athletes_total: z.union([z.coerce.number().int().min(0), z.literal(''), z.literal(undefined)]).optional().transform(v => v === '' || v === undefined ? null : v),
@@ -83,6 +84,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
         defaultValues: {
             sport_id: sports.length > 0 ? sports[0].id : '',
             name: '',
+            name_ms: '',
             slug: '',
             quota_mode: 'gender_based',
             max_athletes_total: null,
@@ -146,6 +148,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
         reset({
             sport_id: sports.length > 0 ? sports[0].id : '',
             name: '',
+            name_ms: '',
             slug: '',
             quota_mode: 'gender_based',
             max_athletes_total: null,
@@ -164,6 +167,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
         reset({
             sport_id: category.sport_id,
             name: category.name,
+            name_ms: category.name_ms || '',
             slug: category.slug,
             quota_mode: category.quota_mode ?? 'gender_based',
             max_athletes_total: category.max_athletes_total,
@@ -278,6 +282,8 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                                             placeholder={t("e.g. Men's Singles")}
                                             required
                                         />
+                                        <Label htmlFor="name_ms">{t('Category Name (Bahasa Malaysia)')}</Label>
+                                        <Input id="name_ms" {...register('name_ms')} placeholder={t('Optional Malay name')} />
                                         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                                     </div>
 

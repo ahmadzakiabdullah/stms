@@ -121,7 +121,16 @@ class PublicPortalService
             return $this->emptyAthleteDirectory($view, $q, $sport, $category, $faculty, $letter, $sort);
         }
 
-        $base = Cache::flexible('public-athletes:v2:'.$session->id, [120, 600], fn (): array => $this->buildAthleteDirectory($session));
+        try {
+            $base = Cache::flexible('public-athletes:v2:'.$session->id, [120, 600], fn (): array => $this->buildAthleteDirectory($session));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return [
+                ...$this->emptyAthleteDirectory($view, $q, $sport, $category, $faculty, $letter, $sort),
+                'error' => 'athlete_directory_unavailable',
+            ];
+        }
 
         $athletes = $this->sortRows($this->filterAthleteRows($base['athletes'], $q, $sport, $category, $faculty, $letter), $sort);
         $rosters = $this->sortRows($this->filterRosterRows($base['rosters'], $q, $sport, $category, $faculty, $letter), $sort);
@@ -173,9 +182,9 @@ class PublicPortalService
             ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds)->where('organization_id', $session->organization_id))
             ->with([
                 'participant:id,name,name_ms,logo_path,inverse_logo_path',
-                'event:id,name,sport_id,sport_category_id',
-                'event.sport:id,name',
-                'event.sportCategory:id,name',
+                'event:id,name,name_ms,sport_id,sport_category_id',
+                'event.sport:id,name,name_ms',
+                'event.sportCategory:id,name,name_ms',
                 'squadMembers' => fn ($query) => $query->where('is_active', true)->ordered(),
             ])->get();
 
@@ -194,8 +203,11 @@ class PublicPortalService
                 'inverse_logo_url' => $participant?->inverse_logo_url,
                 'events' => $entries->map(fn (EventParticipant $entry) => [
                     'name' => $entry->event?->name,
+                    'name_ms' => $entry->event?->name_ms,
                     'sport' => $entry->event?->sport?->name,
+                    'sport_ms' => $entry->event?->sport?->name_ms,
                     'category' => $entry->event?->sportCategory?->name,
+                    'category_ms' => $entry->event?->sportCategory?->name_ms,
                 ])->unique(fn (array $event) => implode('|', [$event['name'], $event['sport'], $event['category']]))->sortBy('name')->values()->all(),
                 'members' => $members->map(fn (SquadMember $member) => [
                     'name' => $member->name,
@@ -218,8 +230,11 @@ class PublicPortalService
                 'faculty_inverse_logo_url' => $participant?->inverse_logo_url,
                 'events' => [[
                     'name' => $entry->event?->name,
+                    'name_ms' => $entry->event?->name_ms,
                     'sport' => $entry->event?->sport?->name,
+                    'sport_ms' => $entry->event?->sport?->name_ms,
                     'category' => $entry->event?->sportCategory?->name,
+                    'category_ms' => $entry->event?->sportCategory?->name_ms,
                 ]],
             ]);
         })->groupBy('key')->map(function ($entries) {
@@ -239,9 +254,19 @@ class PublicPortalService
         return [
             'rosters' => $rosters->all(),
             'athletes' => $athletes->all(),
-            'faculties' => $athletes->pluck('faculty')->filter()->unique()->sort()->values()->all(),
-            'sports' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sport?->name)->filter()->unique()->sort()->values()->all(),
-            'categories' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sportCategory?->name)->filter()->unique()->sort()->values()->all(),
+            'faculties' => $rosters->map(fn (array $roster) => [
+                'name' => $roster['name'],
+                'name_ms' => $roster['name_ms'],
+            ])->filter(fn (array $faculty) => filled($faculty['name']))
+                ->unique('name')->sortBy('name')->values()->all(),
+            'sports' => $registrations->map(fn (EventParticipant $entry) => [
+                'name' => $entry->event?->sport?->name,
+                'name_ms' => $entry->event?->sport?->name_ms,
+            ])->filter(fn (array $sport) => filled($sport['name']))->unique('name')->sortBy('name')->values()->all(),
+            'categories' => $registrations->map(fn (EventParticipant $entry) => [
+                'name' => $entry->event?->sportCategory?->name,
+                'name_ms' => $entry->event?->sportCategory?->name_ms,
+            ])->filter(fn (array $category) => filled($category['name']))->unique('name')->sortBy('name')->values()->all(),
             'stats' => [
                 'teams' => $rosters->count(),
                 'athletes' => $athletes->count(),
@@ -262,8 +287,15 @@ class PublicPortalService
         return array_values(array_filter($athletes, function (array $athlete) use ($needle, $sport, $category, $faculty, $letter): bool {
             if ($needle !== '') {
                 $haystack = array_merge(
-                    [$athlete['name'] ?? null, $athlete['faculty'] ?? null],
-                    array_map(fn (array $event) => $event['name'] ?? null, $athlete['events'] ?? []),
+                    [$athlete['name'] ?? null, $athlete['faculty'] ?? null, $athlete['faculty_ms'] ?? null],
+                    array_merge(...array_map(fn (array $event) => [
+                        $event['name'] ?? null,
+                        $event['name_ms'] ?? null,
+                        $event['sport'] ?? null,
+                        $event['sport_ms'] ?? null,
+                        $event['category'] ?? null,
+                        $event['category_ms'] ?? null,
+                    ], $athlete['events'] ?? [])),
                 );
 
                 if (! $this->containsNeedle($haystack, $needle)) {
@@ -291,9 +323,16 @@ class PublicPortalService
         return array_values(array_filter($rosters, function (array $roster) use ($needle, $sport, $category, $faculty, $letter): bool {
             if ($needle !== '') {
                 $haystack = array_merge(
-                    [$roster['name'] ?? null],
+                    [$roster['name'] ?? null, $roster['name_ms'] ?? null],
                     array_map(fn (array $member) => $member['name'] ?? null, $roster['members'] ?? []),
-                    array_map(fn (array $event) => $event['name'] ?? null, $roster['events'] ?? []),
+                    array_merge(...array_map(fn (array $event) => [
+                        $event['name'] ?? null,
+                        $event['name_ms'] ?? null,
+                        $event['sport'] ?? null,
+                        $event['sport_ms'] ?? null,
+                        $event['category'] ?? null,
+                        $event['category_ms'] ?? null,
+                    ], $roster['events'] ?? [])),
                 );
 
                 if (! $this->containsNeedle($haystack, $needle)) {
@@ -426,8 +465,8 @@ class PublicPortalService
             ->with([
                 'eventParticipant.participant:id,name,name_ms,logo_path,inverse_logo_path',
                 'eventParticipant.event:id,name,sport_id,sport_category_id',
-                'eventParticipant.event.sport:id,name',
-                'eventParticipant.event.sportCategory:id,name',
+                'eventParticipant.event.sport:id,name,name_ms',
+                'eventParticipant.event.sportCategory:id,name,name_ms',
             ])->first();
 
         if (! $member) {
@@ -478,8 +517,11 @@ class PublicPortalService
                 'logo_url' => $participant->logo_url,
                 'inverse_logo_url' => $participant->inverse_logo_url,
                 'sport' => $entry->event?->sport?->name,
+                'sport_ms' => $entry->event?->sport?->name_ms,
                 'category' => $entry->event?->sportCategory?->name,
+                'category_ms' => $entry->event?->sportCategory?->name_ms,
                 'event' => $entry->event?->name,
+                'event_ms' => $entry->event?->name_ms,
             ],
             'stats' => [
                 'matches' => $matches->where('status', 'completed')->count(),

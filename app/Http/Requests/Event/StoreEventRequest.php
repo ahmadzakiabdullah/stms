@@ -55,6 +55,7 @@ class StoreEventRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'name' => ['required', 'string', 'max:255'],
+            'name_ms' => ['nullable', 'string', 'max:255'],
             'slug' => [
                 'nullable',
                 'string',
