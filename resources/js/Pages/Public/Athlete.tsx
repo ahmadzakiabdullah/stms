@@ -8,8 +8,8 @@ import { useI18n } from '@/lib/i18n';
 import { Link, router } from '@inertiajs/react';
 import { ArrowLeft, CalendarDays, CheckCircle2, Clock3, MapPin, Trophy, Users, XCircle } from 'lucide-react';
 
-type Athlete = { id: string; name: string; role: string; faculty: string | null; logo_url: string | null; inverse_logo_url: string | null; sport: string | null; category: string | null; event: string | null };
-type Match = { id: string; event: string | null; opponent: string | null; score_for: number | null; score_against: number | null; scheduled_at: string | null; venue: string | null; status: string; outcome: 'win' | 'draw' | 'loss' | null };
+type Athlete = { id: string; name: string; role: string; faculty: string | null; faculty_ms: string | null; logo_url: string | null; inverse_logo_url: string | null; sport: string | null; category: string | null; event: string | null };
+type Match = { id: string; event: string | null; opponent: string | null; opponent_ms: string | null; score_for: number | null; score_against: number | null; scheduled_at: string | null; venue: string | null; status: string; outcome: 'win' | 'draw' | 'loss' | null };
 type Props = { app_name: string; competition: { name: string; organization: string | null } | null; athlete: Athlete; stats: { matches: number; wins: number; draws: number; losses: number }; matches: Match[]; updated_at?: string; error?: string | null };
 
 export default function PublicAthlete({ app_name, competition, athlete, stats, matches = [], updated_at, error = null }: Props) {
@@ -26,7 +26,7 @@ export default function PublicAthlete({ app_name, competition, athlete, stats, m
                     <section className="public-card mt-6 p-6 sm:p-8">
                         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
                             <ParticipantLogo participant={athlete} size="xl" />
-                            <div className="min-w-0 flex-1"><h1 className="text-2xl font-black tracking-[-.03em] text-[var(--public-text)] sm:text-3xl">{athlete.name}</h1><p className="mt-2 text-sm font-bold text-[var(--public-dark-faint)]">{athlete.faculty || t('Faculty')}</p><div className="mt-3 flex flex-wrap gap-2">{athlete.sport && <span className="rounded-full bg-[var(--public-primary-soft)] px-3 py-1 text-xs font-black text-[var(--public-primary)]">{athlete.sport}</span>}{athlete.category && <span className="rounded-full border border-[var(--public-dark-border)] px-3 py-1 text-xs font-black text-[var(--public-dark-faint)]">{athlete.category}</span>}</div></div>
+                            <div className="min-w-0 flex-1"><h1 className="text-2xl font-black tracking-[-.03em] text-[var(--public-text)] sm:text-3xl">{athlete.name}</h1><p className="mt-2 text-sm font-bold text-[var(--public-dark-faint)]">{(locale === 'ms' ? athlete.faculty_ms : athlete.faculty) || athlete.faculty || t('Faculty')}</p><div className="mt-3 flex flex-wrap gap-2">{athlete.sport && <span className="rounded-full bg-[var(--public-primary-soft)] px-3 py-1 text-xs font-black text-[var(--public-primary)]">{athlete.sport}</span>}{athlete.category && <span className="rounded-full border border-[var(--public-dark-border)] px-3 py-1 text-xs font-black text-[var(--public-dark-faint)]">{athlete.category}</span>}</div></div>
                         </div>
                         <div className="mt-8 grid grid-cols-2 gap-3 border-t border-[var(--public-dark-border)] pt-6 sm:grid-cols-4"><PerformanceStat value={stats.matches} label={t('matches')} /><PerformanceStat value={stats.wins} label={t('Wins')} tone="text-emerald-600" /><PerformanceStat value={stats.draws} label={t('Draws')} /><PerformanceStat value={stats.losses} label={t('Losses')} tone="text-rose-600" /></div>
                     </section>

@@ -62,6 +62,7 @@ final class EventParticipantIndexService
                 ->when($search, function ($query, $value) {
                     $query->where(function ($query) use ($value) {
                         $query->where('name', 'like', "%{$value}%")
+                            ->orWhere('name_ms', 'like', "%{$value}%")
                             ->orWhereHas('eventParticipants.event', fn ($query) => $query->where('name', 'like', "%{$value}%"))
                             ->orWhereHas('eventParticipants.event.sport', fn ($query) => $query->where('name', 'like', "%{$value}%"))
                             ->orWhereHas('eventParticipants.event.sportCategory', fn ($query) => $query->where('name', 'like', "%{$value}%"));
@@ -101,7 +102,7 @@ final class EventParticipantIndexService
                 ->with(['eventParticipants:id,participant_id,event_id'])
                 ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name']);
+                ->get(['id', 'name', 'name_ms']);
         }, function () {
             $this->dataLoadFailed = true;
 
@@ -110,7 +111,7 @@ final class EventParticipantIndexService
 
         $statusCounts = $this->safeCollectionQuery(function () use ($hasParticipant, $isFacultyRepresentative, $user, $search, $sportId, $categoryId, $participantId) {
             $query = EventParticipant::query()
-                ->when($search, fn ($query, $value) => $query->where(fn ($query) => $query->whereHas('participant', fn ($query) => $query->where('name', 'like', "%{$value}%"))
+                ->when($search, fn ($query, $value) => $query->where(fn ($query) => $query->whereHas('participant', fn ($query) => $query->where('name', 'like', "%{$value}%")->orWhere('name_ms', 'like', "%{$value}%"))
                     ->orWhereHas('event', fn ($query) => $query->where('name', 'like', "%{$value}%"))
                     ->orWhereHas('event.sport', fn ($query) => $query->where('name', 'like', "%{$value}%"))
                     ->orWhereHas('event.sportCategory', fn ($query) => $query->where('name', 'like', "%{$value}%"))))

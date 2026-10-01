@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
 import { formatDateTime, formatNumber, useI18n } from '@/lib/i18n';
-import { AlertTriangle, Archive, CheckCircle2, DatabaseZap, Download, Scale, ServerCog, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Archive, CheckCircle2, DatabaseZap, Download, RefreshCw, Scale, ServerCog, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
@@ -25,10 +25,12 @@ interface FixturesByStatus {
 interface RecentResult {
     id: string;
     home: string;
+    home_ms?: string;
     away: string;
+    away_ms?: string;
     score: string;
     tournament: string;
-    created_at: string;
+    created_at: string | null;
 }
 
 interface OperationsSummary {
@@ -89,6 +91,7 @@ interface ReportsProps {
     operations: OperationsSummary;
     dataQuality: DataQualitySummary;
     governance: GovernanceSummary;
+    reportMeta: { status: 'ok' | 'degraded' | 'unavailable'; issues: string[] };
 }
 
 interface TransferStatus {
@@ -102,14 +105,24 @@ interface TransferStatus {
     download_url: string | null;
 }
 
-export default function ReportsIndex({ stats, fixturesByStatus, recentResults, operations, dataQuality, governance }: ReportsProps) {
+export default function ReportsIndex({ stats, fixturesByStatus, recentResults, fixturesByTournament, operations, dataQuality, governance, reportMeta }: ReportsProps) {
     const { locale, t } = useI18n();
     const [queuedExport, setQueuedExport] = useState<TransferStatus | null>(null);
     const [queueError, setQueueError] = useState<string | null>(null);
     const [queueingType, setQueueingType] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
     const completionRate = stats.total_fixtures > 0
         ? Math.round((stats.completed_fixtures / stats.total_fixtures) * 100)
         : 0;
+    const statusLabel = (status: string) => t(status === 'in_progress' || status === 'In Progress' ? 'In Progress' : status === 'completed' || status === 'Completed' ? 'Completed' : status === 'pending' || status === 'Pending' ? 'Pending' : status === 'ok' ? 'Clear' : status);
+    const refreshReports = () => {
+        setRefreshing(true);
+        router.reload({
+            only: ['stats', 'fixturesByStatus', 'fixturesByTournament', 'recentResults', 'operations', 'dataQuality', 'governance', 'reportMeta'],
+            preserveScroll: true,
+            onFinish: () => setRefreshing(false),
+        });
+    };
 
     useEffect(() => {
         if (!queuedExport || ['completed', 'completed_with_errors', 'failed'].includes(queuedExport.status)) {
@@ -157,6 +170,26 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults, o
             <Head title={t('Reports')} />
 
             <div className="space-y-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-sm text-muted-foreground">{t('Report data is scoped to your organization.')}</p>
+                        {reportMeta.status !== 'ok' && <p role="alert" className="mt-1 text-sm text-yellow-700">{t('Some report data may be incomplete. Please review the warning details or try again.')}</p>}
+                    </div>
+                    <button type="button" onClick={refreshReports} disabled={refreshing} className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-60">
+                        <RefreshCw className={`size-4 ${refreshing ? 'animate-spin' : ''}`} />
+                        {t(refreshing ? 'Refreshing' : 'Refresh')}
+                    </button>
+                </div>
+
+                {reportMeta.issues.length > 0 && (
+                    <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800" role="status">
+                        <p className="font-semibold">{t('Report warnings')}</p>
+                        <ul className="mt-2 list-disc space-y-1 pl-5">
+                            {reportMeta.issues.map((issue) => <li key={issue}>{t(`report_issue_${issue}`)}</li>)}
+                        </ul>
+                    </div>
+                )}
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <StatCard title={t('Total Fixtures')} value={stats.total_fixtures} />
@@ -174,12 +207,12 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults, o
                         <div className="mb-4 flex items-start justify-between gap-4">
                             <div>
                                 <h3 className="text-lg font-semibold">{t('Operations Monitor')}</h3>
-                                <p className="mt-1 text-sm text-muted-foreground">{operations.incident_signal}</p>
+                                <p className="mt-1 text-sm text-muted-foreground">{t(`incident_${operations.incident_signal}`)}</p>
                             </div>
                             <StatusBadge status={operations.status === 'ok' ? 'ok' : 'warning'} label={operations.status === 'ok' ? t('Healthy') : t('Attention')} />
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
-                            <MetricTile icon={ServerCog} label={t('Queue Pending')} value={operations.queue.pending} hint={t(operations.queue.status)} />
+                            <MetricTile icon={ServerCog} label={t('Queue Pending')} value={operations.queue.pending} hint={statusLabel(operations.queue.status)} />
                             <MetricTile icon={AlertTriangle} label={t('Failed Jobs')} value={operations.queue.failed} hint={operations.queue.failed === 0 ? t('Clear') : t('Needs review')} tone={operations.queue.failed > 0 ? 'error' : 'default'} />
                             <MetricTile icon={DatabaseZap} label={t('Active Sessions')} value={operations.active_sessions.domain} hint={operations.active_sessions.application === null ? t('App session table unavailable') : `${formatNumber(operations.active_sessions.application, locale)} ${t('app sessions')}`} />
                             <MetricTile icon={CheckCircle2} label={t('Data Freshness')} value={operations.data_freshness.last_result_update ? t('Updated') : t('No results')} hint={operations.data_freshness.last_result_update ? formatDateTime(operations.data_freshness.last_result_update, locale) : (operations.data_freshness.last_match_update ? formatDateTime(operations.data_freshness.last_match_update, locale) : t('No match updates'))} />
@@ -291,7 +324,7 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults, o
                 <div className="rounded-lg border bg-card p-6 shadow-sm">
                     <h3 className="text-lg font-semibold mb-4">{t('Fixture Completion Rate')}</h3>
                     <div className="flex items-center gap-4">
-                        <div className="flex-1 bg-muted rounded-full h-6 overflow-hidden">
+                        <div className="flex-1 bg-muted rounded-full h-6 overflow-hidden" role="progressbar" aria-label={t('Fixture Completion Rate')} aria-valuenow={completionRate} aria-valuemin={0} aria-valuemax={100}>
                             <div
                                 className="bg-green-500 h-full transition-all"
                                 style={{ width: `${completionRate}%` }}
@@ -300,7 +333,7 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults, o
                         <span className="text-2xl font-bold">{completionRate}%</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                        {stats.completed_fixtures} of {stats.total_fixtures} fixtures completed
+                        {formatNumber(stats.completed_fixtures, locale)} {t('of')} {formatNumber(stats.total_fixtures, locale)} {t('fixtures completed')}
                     </p>
                 </div>
 
@@ -310,7 +343,7 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults, o
                     <div className="space-y-3">
                         {fixturesByStatus.map((item) => (
                             <div key={item.status} className="flex items-center gap-3">
-                                <span className="w-28 text-sm">{t(item.status)}</span>
+                                <span className="w-28 text-sm">{statusLabel(item.status)}</span>
                                 <div className="flex-1 bg-muted rounded-full h-4 overflow-hidden">
                                     <div
                                         className={`h-full rounded-full ${
@@ -323,12 +356,54 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults, o
                                                 ? `${(item.count / stats.total_fixtures) * 100}%`
                                                 : '0%',
                                         }}
+                                        role="progressbar"
+                                        aria-label={`${statusLabel(item.status)} ${t('fixtures')}`}
+                                        aria-valuenow={item.count}
+                                        aria-valuemin={0}
+                                        aria-valuemax={stats.total_fixtures}
                                     />
                                 </div>
                                 <span className="w-10 text-right text-sm font-medium">{item.count}</span>
                             </div>
                         ))}
                     </div>
+                </div>
+
+                {/* Fixtures by Tournament */}
+                <div className="rounded-lg border bg-card p-6 shadow-sm">
+                    <h3 className="mb-4 text-lg font-semibold">{t('Fixtures by Tournament')}</h3>
+                    {Object.keys(fixturesByTournament).length === 0 ? (
+                        <p className="text-sm text-muted-foreground">{t('No tournament fixture breakdown available.')}</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b">
+                                        <th className="py-2 text-left font-medium">{t('Tournament')}</th>
+                                        <th className="py-2 text-left font-medium">{t('Pending')}</th>
+                                        <th className="py-2 text-left font-medium">{t('In Progress')}</th>
+                                        <th className="py-2 text-left font-medium">{t('Completed')}</th>
+                                        <th className="py-2 text-right font-medium">{t('Total')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.entries(fixturesByTournament).map(([tournament, rows]) => {
+                                        const counts = rows.reduce<Record<string, number>>((acc, row) => ({ ...acc, [row.status]: row.count }), {});
+                                        const total = rows.reduce((sum, row) => sum + row.count, 0);
+                                        return (
+                                            <tr key={tournament} className="border-b last:border-0">
+                                                <td className="py-2 font-medium">{tournament}</td>
+                                                <td className="py-2">{counts.pending ?? counts.Pending ?? 0}</td>
+                                                <td className="py-2">{counts.in_progress ?? counts['In Progress'] ?? 0}</td>
+                                                <td className="py-2">{counts.completed ?? counts.Completed ?? 0}</td>
+                                                <td className="py-2 text-right font-semibold">{total}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
                 {/* Recent Results */}
@@ -352,9 +427,9 @@ export default function ReportsIndex({ stats, fixturesByStatus, recentResults, o
                                     {recentResults.map((r) => (
                                         <tr key={r.id} className="border-b last:border-0">
                                             <td className="py-2">{r.tournament}</td>
-                                            <td className="py-2">{r.home}</td>
+                                            <td className="py-2">{locale === 'ms' ? (r.home_ms ?? r.home) : r.home}</td>
                                             <td className="py-2 text-center font-mono font-bold">{r.score}</td>
-                                            <td className="py-2">{r.away}</td>
+                                            <td className="py-2">{locale === 'ms' ? (r.away_ms ?? r.away) : r.away}</td>
                                             <td className="py-2 text-right text-muted-foreground">{formatDateTime(r.created_at, locale)}</td>
                                         </tr>
                                     ))}

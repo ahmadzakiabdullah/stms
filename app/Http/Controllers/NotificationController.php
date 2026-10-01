@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EventParticipant;
 use App\Models\Organization;
+use App\Models\Result;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,6 +52,46 @@ class NotificationController extends Controller
         }
 
         $notifications = $query->paginate(20)->withQueryString();
+
+        // Older database notifications contain only the English participant
+        // name. Enrich the current page from live records so the locale
+        // switch also works for notifications created before name_ms existed.
+        $notificationItems = collect($notifications->items());
+        $eventParticipants = EventParticipant::query()
+            ->whereIn('id', $notificationItems->pluck('data.event_participant_id')->filter()->values())
+            ->with('participant:id,name,name_ms')
+            ->get()
+            ->keyBy('id');
+        $results = Result::query()
+            ->whereIn('id', $notificationItems->pluck('data.result_id')->filter()->values())
+            ->with([
+                'match.homeParticipant:id,name,name_ms',
+                'match.awayParticipant:id,name,name_ms',
+                'winner:id,name,name_ms',
+            ])
+            ->get()
+            ->keyBy('id');
+
+        $notifications->setCollection($notificationItems->map(function ($notification) use ($eventParticipants, $results) {
+            $data = $notification->data ?? [];
+            $eventParticipant = $eventParticipants->get($data['event_participant_id'] ?? null);
+            $result = $results->get($data['result_id'] ?? null);
+
+            if ($eventParticipant?->participant) {
+                $data['faculty_name_ms'] = $eventParticipant->participant->name_ms;
+                $data['faculty_name'] = $eventParticipant->participant->name;
+            }
+
+            if ($result?->match) {
+                $data['home_name_ms'] = $result->match->homeParticipant?->name_ms;
+                $data['away_name_ms'] = $result->match->awayParticipant?->name_ms;
+                $data['winner_name_ms'] = $result->winner?->name_ms;
+            }
+
+            $notification->data = $data;
+
+            return $notification;
+        }));
 
         $actionRequiredQuery = $user->notifications()
             ->where('data->type', 'new_registration')

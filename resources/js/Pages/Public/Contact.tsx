@@ -24,7 +24,7 @@ type Props = {
     error?: string | null;
 };
 
-type SecretariatGame = {
+export type SecretariatGame = {
     bil: string;
     event: string;
     staffName: string;
@@ -34,7 +34,7 @@ type SecretariatGame = {
     chairPhone: string;
 };
 
-const secretariatGames: SecretariatGame[] = [
+export const secretariatGames: SecretariatGame[] = [
     { bil: '1', event: 'Catur Campuran', staffName: 'En. Ahmad Rhafee bin Samsudin', staffPhone: '012 – 2646902', chairperson: 'Muhammad Zamzamin Bin Zamzuri', chairRole: 'Pengerusi Kelab Catur', chairPhone: '013-9367803' },
     { bil: '2', event: 'Tenis Campuran', staffName: 'Pn. Norasikin binti Md Isa', staffPhone: '017-3068061', chairperson: 'Ahmad Rayyan Bin Nor Anuar', chairRole: 'Pengerusi Kelab Tenis', chairPhone: '016-2218914' },
     { bil: '3', event: 'Hoki 9 Sebelah (L&W)', staffName: '—', chairperson: 'Nabil Ilham Bin Abdul Jamal', chairRole: 'Pengerusi Kelab Hoki', chairPhone: '013-2244845' },

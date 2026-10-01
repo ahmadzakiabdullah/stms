@@ -69,7 +69,7 @@ const importantDateEnglish: Record<string, [string, string]> = {
 export default function PublicImportantDates({ app_name, competition, updated_at }: Props) {
     const { t, locale } = useI18n();
     const isMalay = locale === 'ms';
-    const title = isMalay ? 'TARIKH – TARIKH PENTING' : 'IMPORTANT DATES';
+    const title = isMalay ? 'Tarikh – Tarikh Penting' : 'Important Dates';
 
     return (
         <PublicLayout title={`${title} | ${competition?.name || app_name}`} appName={app_name} current="important-dates" description={t('Important dates for the faculty sports championship.')} canonical={route('public.important-dates')}>

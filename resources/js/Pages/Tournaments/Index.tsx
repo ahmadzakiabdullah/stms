@@ -224,7 +224,7 @@ export default function TournamentsIndex({ tournaments: tournamentsProp, session
                 open={!!deleteTournament}
                 onOpenChange={(isOpen) => !isOpen && setDeleteTournament(null)}
                 title={t('Delete Tournament?')}
-                description={<>Are you sure you want to delete <strong>{deleteTournament?.name}</strong>? This action cannot be undone.</>}
+                description={<>{t('Are you sure you want to delete')} <strong>{deleteTournament?.name}</strong>? {t('This action cannot be undone.')}</>}
                 confirmLabel={t('Yes, Delete')}
                 cancelLabel={t('Cancel')}
                 destructive
@@ -330,7 +330,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose, t }: {
                 </div>
 
                 <div className="grid gap-2">
-                    <Label>Sports</Label>
+                    <Label>{t('Sports')}</Label>
                     <div className="grid grid-cols-2 gap-1 max-h-40 overflow-y-auto rounded-md border border-input p-2">
                         {allSports.length === 0 && <p className="text-xs text-muted-foreground col-span-2">{t('No sports available')}</p>}
                         {allSports.map((sport) => (
@@ -361,7 +361,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose, t }: {
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="slug">Slug</Label>
+                    <Label htmlFor="slug">{t('Slug')}</Label>
                     <Input
                         id="slug"
                         value={formData.slug}
@@ -372,7 +372,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose, t }: {
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">{t('Description')}</Label>
                     <textarea
                         id="description"
                         className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -384,7 +384,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose, t }: {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="start_date">Start Date</Label>
+                        <Label htmlFor="start_date">{t('Start Date')}</Label>
                         <Input
                             id="start_date"
                             type="date"
@@ -396,7 +396,7 @@ function TournamentFormDialog({ tournament, sessions, allSports, onClose, t }: {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="end_date">End Date</Label>
+                        <Label htmlFor="end_date">{t('End Date')}</Label>
                         <Input
                             id="end_date"
                             type="date"

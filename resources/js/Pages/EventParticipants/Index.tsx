@@ -127,6 +127,10 @@ function initialsOf(name = ''): string {
     return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
 }
 
+function facultyName(participant: Pick<Participant, 'name' | 'name_ms'>, locale: string): string {
+    return locale === 'ms' ? (participant.name_ms || participant.name) : participant.name;
+}
+
 function SportMark({ sport, size = 'md' }: { sport?: { name?: string; icon?: string | null }; size?: 'sm' | 'md' }) {
     return (
         <span className={`flex shrink-0 items-center justify-center rounded-xl bg-primary/10 ${size === 'sm' ? 'size-9' : 'size-11'}`}>
@@ -165,7 +169,7 @@ function AddEventDialog({
     events: EventParticipantsIndexProps['events'];
     participants?: ParticipantWithEvents[];
 }) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
     const [selectedParticipantId, setSelectedParticipantId] = useState(participantId);
     const [search, setSearch] = useState('');
@@ -261,7 +265,7 @@ function AddEventDialog({
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">{t('-- Select Participant --')}</SelectItem>
-                                    {participants.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                {participants.map((p) => <SelectItem key={p.id} value={p.id}>{facultyName(p, locale)}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -415,7 +419,7 @@ function BatchStatusDialog({ open, action, rows, onClose, onConfirm }: {
 function ImportDialog({ open, onClose, participantId, faculties }: {
     open: boolean; onClose: () => void; participantId: string; faculties?: ParticipantWithEvents[];
 }) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const { data, setData, post, reset, processing, errors } = useForm({
         participant_id: participantId,
         file: null as File | null,
@@ -525,7 +529,7 @@ function ImportDialog({ open, onClose, participantId, faculties }: {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">{t('-- Select Faculty --')}</SelectItem>
-                                    {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                                    {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{facultyName(f, locale)}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                             {errors.participant_id && <p className="text-xs text-destructive">{errors.participant_id}</p>}
@@ -913,7 +917,7 @@ export default function EventParticipantsIndex({
             .filter((row) => selectedRegIds.includes(row.ep.id))
             .map((row) => ({
                 id: row.ep.id,
-                participantName: row.participant.name,
+                participantName: facultyName(row.participant, locale),
                 eventName: row.event.name,
                 status: row.ep.status,
             })),
@@ -1017,7 +1021,7 @@ export default function EventParticipantsIndex({
                     </span>
                     <span className="min-w-0">
                         <span className="block text-xl font-semibold leading-none tabular-nums">{events.length}</span>
-                        <span className="mt-1 block truncate text-xs font-medium text-muted-foreground">Events</span>
+                        <span className="mt-1 block truncate text-xs font-medium text-muted-foreground">{t('Events')}</span>
                     </span>
                 </div>
             </div>
@@ -1116,7 +1120,7 @@ export default function EventParticipantsIndex({
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">{t('All Faculties')}</SelectItem>
-                            {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                            {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{facultyName(f, locale)}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 )}
@@ -1216,7 +1220,7 @@ export default function EventParticipantsIndex({
                                                 <TableRow className={isExpanded ? 'bg-muted/40' : undefined}>
                                                     <TableCell>
                                                         <input type="checkbox" className="size-4 rounded border-input"
-                                                            aria-label={`Select ${participant.name} - ${evt.name}`}
+                                                    aria-label={`Select ${facultyName(participant, locale)} - ${evt.name}`}
                                                             checked={selectedRegIds.includes(ep.id)}
                                                             disabled={ep.status !== 'pending' && ep.status !== 'rejected'}
                                                             onChange={() => toggleSelect(ep.id)} />
@@ -1236,9 +1240,9 @@ export default function EventParticipantsIndex({
                                                         <TableCell>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                                                    {initialsOf(participant.name)}
+                                                                    {initialsOf(facultyName(participant, locale))}
                                                                 </span>
-                                                                <span className="truncate text-sm">{participant.name}</span>
+                                                                <span className="truncate text-sm">{facultyName(participant, locale)}</span>
                                                             </div>
                                                         </TableCell>
                                                     )}
@@ -1280,7 +1284,7 @@ export default function EventParticipantsIndex({
                                                                 href={route('event-participants.team-form', ep.id)}
                                                                 className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-primary hover:text-primary-foreground"
                                                                  title={t('Team registration form')}
-                                                                aria-label={`View team form for ${participant.name} - ${evt.name}`}
+                                                                aria-label={`View team form for ${facultyName(participant, locale)} - ${evt.name}`}
                                                             >
                                                                 <FileText className="size-3.5" />
                                                             </Link>
@@ -1290,7 +1294,7 @@ export default function EventParticipantsIndex({
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"                                                                          title={t('Approve')}>
                                                                         <Check className="size-3.5" />
                                                                     </button>
-                                                                    <button onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                    <button onClick={() => setRejectTarget({ epId: ep.id, participantName: facultyName(participant, locale), eventName: evt.name })}
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-rose-200 text-rose-600 transition hover:bg-rose-600 hover:text-white"                                                                          title={t('Reject')}>
                                                                         <CircleX className="size-3.5" />
                                                                     </button>
@@ -1302,7 +1306,7 @@ export default function EventParticipantsIndex({
                                                                     <LogOut className="size-3.5" />
                                                                 </button>
                                                             )}
-                                                             <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                             <button onClick={() => setUnregTarget({ id: ep.id, participantName: facultyName(participant, locale), eventName: evt.name })}
                                                                  className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')}>
                                                                 <X className="size-3.5" />
                                                             </button>
@@ -1316,7 +1320,7 @@ export default function EventParticipantsIndex({
                                                                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                                                                     <div className="flex items-center gap-2">
                                                                         <Users className="size-4 text-primary" />
-                                                                        <span className="text-sm font-semibold">Squad Members</span>
+                                                                        <span className="text-sm font-semibold">{t('Squad Members')}</span>
                                                                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary tabular-nums">{members.length}</span>
                                                                     </div>
                                                                     <div className="flex items-center gap-1.5 text-xs font-medium">
@@ -1360,14 +1364,14 @@ export default function EventParticipantsIndex({
                                                                     </div>
                                                                 ) : (
                                                                     <div className="rounded-lg border border-dashed bg-background px-4 py-6 text-center">
-                                                                        <p className="text-sm font-medium text-muted-foreground">No squad members yet</p>
-                                                                        <p className="mt-0.5 text-xs text-muted-foreground/70">Officials should be added first, followed by athletes.</p>
+                                                                        <p className="text-sm font-medium text-muted-foreground">{t('No squad members yet')}</p>
+                                                                        <p className="mt-0.5 text-xs text-muted-foreground/70">{t('Officials should be added first, followed by athletes.')}</p>
                                                                     </div>
                                                                 )}
                                                                 {!isConfirmed && canManageSquad && (
                                                                     <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                                                                         <Clock className="mt-0.5 size-3.5 shrink-0" />
-                                                                        <span><strong>Pending approval.</strong> Squad members can only be added after this registration is confirmed.</span>
+                                                                        <span><strong>{t('Pending approval.')}</strong> {t('Squad members can only be added after this registration is confirmed.')}</span>
                                                                     </p>
                                                                 )}
                                                                 {canManageThisSquad && <SquadAddForm epId={ep.id} />}
@@ -1423,9 +1427,9 @@ export default function EventParticipantsIndex({
                                                 <TableCell className="text-xs">{isRegistered ? `${registrations.length} faculty` : '-'}</TableCell>
                                                 <TableCell>
                                                     {isFacultyRepresentative ? (
-                                                         isRegistered ? <span className="text-xs font-medium text-emerald-600">Registered</span> : registrationNotOpen
+                                                         isRegistered ? <span className="text-xs font-medium text-emerald-600">{t('Registered')}</span> : registrationNotOpen
                                                              ? <span className="text-xs text-amber-700">Opens {formatEventDate(effectiveStart())}</span> : deadlinePassed
-                                                             ? <span className="text-xs text-destructive">Deadline passed</span>
+                                                             ? <span className="text-xs text-destructive">{t('Deadline passed')}</span>
                                                              : <Button variant="outline" size="sm" onClick={() => quickRegister(evt.id)} className="h-7 text-xs">{t('Register')}</Button>
                                                     ) : (
                                                          <Button variant="outline" size="sm" onClick={() => setAddTarget({ id: '', name: evt.name })} className="h-7 text-xs">
@@ -1520,12 +1524,12 @@ export default function EventParticipantsIndex({
                                                 const cfg = statusConfig[ep.status] ?? statusConfig.pending;
                                                 return (
                                                     <div key={ep.id} className="flex items-center gap-2 py-1 text-xs group">
-                                                        <span className="truncate flex-1 min-w-0 font-medium">{p.name}</span>
+                                                        <span className="truncate flex-1 min-w-0 font-medium">{facultyName(p, locale)}</span>
                                                         <Badge variant={cfg.variant} className="gap-1 h-4 text-xs px-1 shrink-0">
                                                             <span className={`size-1 rounded-full ${statusDot[ep.status] ?? 'bg-muted-foreground'}`} />
                                                             {cfg.label}
                                                         </Badge>
-                                                        <button onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
+                                                        <button onClick={() => setUnregTarget({ id: ep.id, participantName: facultyName(p, locale), eventName: evt.name })}
                                                             className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
                                                             <X className="size-2.5" />
                                                         </button>
@@ -1557,7 +1561,7 @@ export default function EventParticipantsIndex({
                 open={!!unregTarget}
                 onOpenChange={(open) => { if (!open) setUnregTarget(null); }}
                 title={`${t('Unregister')} ${unregTarget?.participantName ?? ''}?`}
-                description={<>Remove <strong>{unregTarget?.participantName ?? ''}</strong> from <strong>{unregTarget?.eventName ?? ''}</strong>? This action cannot be undone.</>}
+                description={<>{t('Remove')} <strong>{unregTarget?.participantName ?? ''}</strong> {t('from')} <strong>{unregTarget?.eventName ?? ''}</strong>? {t('This action cannot be undone.')}</>}
                 confirmLabel={t('Yes, Unregister')}
                 cancelLabel={t('Cancel')}
                 destructive
@@ -1568,7 +1572,7 @@ export default function EventParticipantsIndex({
                 open={!!rejectTarget}
                 onOpenChange={(open) => { if (!open) setRejectTarget(null); }}
                 title={t('Reject registration?')}
-                description={<>Reject <strong>{rejectTarget?.participantName ?? ''}</strong> from <strong>{rejectTarget?.eventName ?? ''}</strong>? The faculty representative will be notified.</>}
+                description={<>{t('Reject')} <strong>{rejectTarget?.participantName ?? ''}</strong> {t('from')} <strong>{rejectTarget?.eventName ?? ''}</strong>? {t('The faculty representative will be notified.')}</>}
                 confirmLabel={t('Yes, Reject')}
                 cancelLabel={t('Cancel')}
                 destructive
@@ -1586,7 +1590,7 @@ export default function EventParticipantsIndex({
                 open={!!squadDeleteTarget}
                 onOpenChange={(open) => { if (!open) setSquadDeleteTarget(null); }}
                 title={t('Remove squad member?')}
-                description={<>Remove <strong>{squadDeleteTarget?.memberName ?? ''}</strong> from the squad? This action cannot be undone.</>}
+                description={<>{t('Remove')} <strong>{squadDeleteTarget?.memberName ?? ''}</strong> {t('from the squad?')} {t('This action cannot be undone.')}</>}
                 confirmLabel={t('Yes, Remove')}
                 cancelLabel={t('Cancel')}
                 destructive

@@ -313,8 +313,8 @@ class ParticipantController extends Controller
         Gate::authorize('create', Participant::class);
 
         return response()->streamDownload(function () {
-            echo "name,participant_type,team_name,email,phone,status,is_active,slug\n";
-            echo "Fakulti Kejuruteraan Elektronik,team,FKE,fke@example.com,0123456789,registered,true,\n";
+            echo "name,name_ms,participant_type,team_name,email,phone,status,is_active,slug\n";
+            echo "Faculty of Electronics Engineering,Fakulti Kejuruteraan Elektronik,team,FKE,fke@example.com,0123456789,registered,true,\n";
             echo "Ahmad bin Ali,individual,,ahmad@example.com,,registered,true,\n";
         }, 'participants-template.csv', ['Content-Type' => 'text/csv']);
     }

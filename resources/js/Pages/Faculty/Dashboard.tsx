@@ -104,7 +104,8 @@ export default function FacultyDashboard({
     availableEvents,
     sportCategories,
 }: FacultyDashboardProps) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
+    const participantName = participant ? (locale === 'ms' ? (participant.name_ms || participant.name) : participant.name) : '';
     const [activeRegId, setActiveRegId] = useState<string | null>(null);
     const [addSquadOpen, setAddSquadOpen] = useState(false);
     const [newRegOpen, setNewRegOpen] = useState(false);
@@ -282,7 +283,7 @@ export default function FacultyDashboard({
             header={
                 <PageHeader
                     title={t('Faculty Dashboard')}
-                    description={participant ? participant.name : t('No faculty profile linked')}
+                    description={participant ? participantName : t('No faculty profile linked')}
                     leading={participant ? <ParticipantLogo participant={participant} size="lg" className="sm:size-14" alt="" /> : undefined}
                     actions={
                         <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
@@ -626,16 +627,16 @@ export default function FacultyDashboard({
             <Dialog open={newRegOpen} onOpenChange={(o) => { if (!o) { setNewRegOpen(false); setRegSearch(''); setSelectedEventIds([]); } }}>
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>Register for Events</DialogTitle>
+                        <DialogTitle>{t('Register for Events')}</DialogTitle>
                         <DialogDescription>
-                            {participant ? `Select one or more sports for ${participant.name}` : 'Select events to register'}
+                            {participant ? `${t('Select one or more sports for')} ${participantName}` : t('Select events to register')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                                placeholder="Search by event, sport, or tournament..."
+                                placeholder={t('Search by event, sport, or tournament...')}
                                 value={regSearch}
                                 onChange={(e) => setRegSearch(e.target.value)}
                                 className="pl-9"
@@ -644,7 +645,7 @@ export default function FacultyDashboard({
 
                         <div className="grid gap-2">
                             <div className="flex items-center justify-between">
-                                <Label>Available Events</Label>
+                                <Label>{t('Available Events')}</Label>
                                 {filteredUnregEvents.length > 0 && (
                                     <button
                                         type="button"
@@ -655,14 +656,14 @@ export default function FacultyDashboard({
                                         )}
                                         className="text-xs text-primary underline-offset-4 hover:underline"
                                     >
-                                        {selectedEventIds.length === filteredUnregEvents.length ? 'Clear all' : 'Select all'}
+                                        {selectedEventIds.length === filteredUnregEvents.length ? t('Clear all') : t('Select all')}
                                     </button>
                                 )}
                             </div>
                             <div className="max-h-64 overflow-y-auto rounded-md border">
                                 {filteredUnregEvents.length === 0 && (
                                     <p className="p-3 text-sm text-muted-foreground">
-                                        {regSearch ? 'No matching events.' : 'Already registered for all events.'}
+                                        {regSearch ? t('No matching events.') : t('Already registered for all events.')}
                                     </p>
                                 )}
                                 {Object.entries(filteredUnregGrouped).map(([tournamentName, evts]) => (
@@ -725,11 +726,11 @@ export default function FacultyDashboard({
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => { setNewRegOpen(false); setRegSearch(''); setSelectedEventIds([]); }}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button onClick={handleNewRegistration} disabled={selectedEventIds.length === 0}>
                             <Plus className="mr-2 size-4" />
-                            Register ({selectedEventIds.length})
+                            {t('Register')} ({selectedEventIds.length})
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -739,18 +740,18 @@ export default function FacultyDashboard({
             <Dialog open={addSquadOpen} onOpenChange={setAddSquadOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Add Squad Member</DialogTitle>
+                        <DialogTitle>{t('Add Squad Member')}</DialogTitle>
                         <DialogDescription>
                             {activeReg ? `For ${activeReg.event?.name}` : ''}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="member-name">Full Name <span className="text-destructive">*</span></Label>
+                            <Label htmlFor="member-name">{t('Full Name')} <span className="text-destructive">*</span></Label>
                             <Input id="member-name" value={squadForm.name} onChange={(e) => setSquadForm({ ...squadForm, name: e.target.value })} placeholder="e.g. Ali bin Ahmad" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="member-role">Role <span className="text-destructive">*</span></Label>
+                            <Label htmlFor="member-role">{t('Role')} <span className="text-destructive">*</span></Label>
                             <Select value={squadForm.role} onValueChange={(value) => setSquadForm({ ...squadForm, role: value as SquadMember['role'] })}>
                                 <SelectTrigger id="member-role" className="h-9 w-full">
                                     <SelectValue />
@@ -768,29 +769,29 @@ export default function FacultyDashboard({
                             </p>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="member-matrix">Matrix No. <span className="text-destructive">*</span></Label>
+                            <Label htmlFor="member-matrix">{t('Matrix No.')} <span className="text-destructive">*</span></Label>
                             <Input id="member-matrix" value={squadForm.matrix_no} onChange={(e) => setSquadForm({ ...squadForm, matrix_no: e.target.value })} placeholder="e.g. B062310001" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="member-ic">IC / Passport</Label>
+                                <Label htmlFor="member-ic">{t('IC / Passport')}</Label>
                                 <Input id="member-ic" value={squadForm.identification_no} onChange={(e) => setSquadForm({ ...squadForm, identification_no: e.target.value })} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="member-phone">
-                                    Phone {officialRoles.includes(squadForm.role as any) && <span className="text-destructive">*</span>}
+                                    {t('Phone')} {officialRoles.includes(squadForm.role as any) && <span className="text-destructive">*</span>}
                                 </Label>
                                 <Input id="member-phone" value={squadForm.phone} onChange={(e) => setSquadForm({ ...squadForm, phone: e.target.value })} />
                             </div>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setAddSquadOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setAddSquadOpen(false)}>{t('Cancel')}</Button>
                         <Button
                             onClick={handleAddSquad}
                             disabled={!squadForm.name || !squadForm.matrix_no || (officialRoles.includes(squadForm.role as any) && !squadForm.phone)}
                         >
-                            Add
+                            {t('Add')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -800,9 +801,9 @@ export default function FacultyDashboard({
             <Dialog open={importOpen} onOpenChange={(o) => { if (!o) { setImportOpen(false); setImportFile(null); } }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Import Squad Members</DialogTitle>
+                        <DialogTitle>{t('Import Squad Members')}</DialogTitle>
                         <DialogDescription>
-                            Upload an Excel/CSV file with squad members for the selected event.
+                            {t('Upload an Excel/CSV file with squad members for the selected event.')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -810,21 +811,21 @@ export default function FacultyDashboard({
                             href={route('faculty.squad.template')}
                             className="flex items-center gap-2 text-sm text-primary hover:underline"
                         >
-                            <Download className="size-4" /> Download template
+                            <Download className="size-4" /> {t('Download template')}
                         </Link>
                         <div className="grid gap-2">
-                            <Label htmlFor="import-file">Excel/CSV File</Label>
+                            <Label htmlFor="import-file">{t('Excel/CSV File')}</Label>
                             <Input
                                 id="import-file"
                                 type="file"
                                 accept=".xlsx,.xls,.csv"
                                 onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
                             />
-                            <p className="text-xs text-muted-foreground">Columns: name, role, matrix_no, ic_passport, phone</p>
+                            <p className="text-xs text-muted-foreground">{t('Columns: name, role, matrix_no, ic_passport, phone')}</p>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => { setImportOpen(false); setImportFile(null); }}>Cancel</Button>
+                        <Button variant="outline" onClick={() => { setImportOpen(false); setImportFile(null); }}>{t('Cancel')}</Button>
                         <Button onClick={handleImport} disabled={!importFile}>
                             <Upload className="mr-2 size-4" /> Import
                         </Button>

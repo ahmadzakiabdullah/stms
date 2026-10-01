@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Organization;
 use App\Models\Setting;
+use App\Services\PublicPortalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Middleware;
@@ -81,6 +82,14 @@ class HandleInertiaRequests extends Middleware
                 return [
                     'name' => $appName ?? config('app.name', 'STMS Portal'),
                 ];
+            },
+            'session_branding' => function () {
+                try {
+                    return app(PublicPortalService::class)->publicContext()['session_branding']
+                        ?? ['logo_url' => null, 'inverse_logo_url' => null];
+                } catch (\Throwable $e) {
+                    return ['logo_url' => null, 'inverse_logo_url' => null];
+                }
             },
         ];
 

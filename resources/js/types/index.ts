@@ -182,6 +182,7 @@ export interface Participant {
     organization_id: string;
     session_id: string | null;
     name: string;
+    name_ms: string | null;
     slug: string;
     email: string | null;
     phone: string | null;

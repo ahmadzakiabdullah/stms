@@ -675,17 +675,17 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     <TableCell className="text-right space-x-2">
                                         {(event.pools_count ?? 0) > 0 && (
                                             <Link href={route('events.draw-result', event.slug)}>
-                                                <Button variant="secondary" size="sm" title="View draw result">
+                                                <Button variant="secondary" size="sm" title={t('View draw result')}>
                                                     <Eye className="mr-1 size-3" /> {t('View Draw')}
                                                 </Button>
                                             </Link>
                                         )}
                                         {(event.pools_count ?? 0) === 0 ? (
-                                            <Button variant="outline" size="sm" onClick={() => handleDraw(event)} title="Randomly assign participants into groups">
+                                            <Button variant="outline" size="sm" onClick={() => handleDraw(event)} title={t('Randomly assign participants into groups')}>
                                                 <Target className="mr-1 size-3" /> {t('Draw')}
                                             </Button>
                                         ) : (event.matches_count ?? 0) === 0 ? (
-                                            <Button variant="outline" size="sm" onClick={() => setRedrawEvent(event)} title="Discard the current grouping and draw again">
+                                            <Button variant="outline" size="sm" onClick={() => setRedrawEvent(event)} title={t('Discard the current grouping and draw again')}>
                                                 <RefreshCw className="mr-1 size-3" /> {t('Re-draw')}
                                             </Button>
                                         ) : (
@@ -694,7 +694,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                                 size="sm"
                                                 className="text-red-600 hover:text-red-700"
                                                 onClick={() => setResetDrawEvent(event)}
-                                                title="Delete all groups and fixtures and restart the draw"
+                                                title={t('Delete all groups and fixtures and restart the draw')}
                                             >
                                                 <RotateCcw className="mr-1 size-3" /> {t('Reset Draw')}
                                             </Button>
@@ -772,32 +772,32 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             <Dialog open={!!drawEvent} onOpenChange={(o) => { if (!o) setDrawEvent(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Draw Groups?</DialogTitle>
+                        <DialogTitle>{t('Draw Groups?')}</DialogTitle>
                         <DialogDescription>
                             Randomly assign confirmed participants into groups for <strong>{drawEvent?.name}</strong>.
                             You can review and adjust the groups before generating fixtures. Any existing grouping will be replaced.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-2 py-2">
-                        <Label htmlFor="draw_format">Format</Label>
+                        <Label htmlFor="draw_format">{t('Format')}</Label>
                         <Select value={drawFormat} onValueChange={setDrawFormat}>
                             <SelectTrigger id="draw_format" className="h-9 w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="group_knockout">Group + Knockout</SelectItem>
-                                <SelectItem value="league">League (Round Robin)</SelectItem>
-                                <SelectItem value="knockout">Knockout</SelectItem>
+                                <SelectItem value="group_knockout">{t('Group + Knockout')}</SelectItem>
+                                <SelectItem value="league">{t('League (Round Robin)')}</SelectItem>
+                                <SelectItem value="knockout">{t('Knockout')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDrawEvent(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setDrawEvent(null)}>{t('Cancel')}</Button>
                         <Button onClick={() => {
                             const e = drawEvent;
                             setDrawEvent(null);
                             if (e) router.post(route('events.draw', e.slug), { format: drawFormat }, { preserveScroll: true });
-                        }}>Yes, Draw</Button>
+                        }}>{t('Yes, Draw')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -807,15 +807,15 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             <Dialog open={!!redrawEvent} onOpenChange={(o) => { if (!o) setRedrawEvent(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Re-draw Groups?</DialogTitle>
+                        <DialogTitle>{t('Re-draw Groups?')}</DialogTitle>
                         <DialogDescription>
                             This will discard the current grouping for <strong>{redrawEvent?.name}</strong> and randomly
                             assign participants into new groups. No fixtures exist yet.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setRedrawEvent(null)}>Cancel</Button>
-                        <Button onClick={submitRedraw}>Yes, Re-draw</Button>
+                        <Button variant="outline" onClick={() => setRedrawEvent(null)}>{t('Cancel')}</Button>
+                        <Button onClick={submitRedraw}>{t('Yes, Re-draw')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -825,15 +825,15 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             <Dialog open={!!resetDrawEvent} onOpenChange={(o) => { if (!o) setResetDrawEvent(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Reset Draw?</DialogTitle>
+                        <DialogTitle>{t('Reset Draw?')}</DialogTitle>
                         <DialogDescription>
                             Delete all groups and fixtures for <strong>{resetDrawEvent?.name}</strong> and restart the
                             draw from scratch. This cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setResetDrawEvent(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={submitResetDraw}>Yes, Reset Draw</Button>
+                        <Button variant="outline" onClick={() => setResetDrawEvent(null)}>{t('Cancel')}</Button>
+                        <Button variant="destructive" onClick={submitResetDraw}>{t('Yes, Reset Draw')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -164,7 +164,9 @@
 - [ ] Sediakan operations dashboard untuk queue, failed jobs, data freshness, active sessions dan incident signal.
 - [ ] Jadikan format pertandingan, scoring, ranking dan tie-break configurable; jangan hardcode peraturan sukan.
 - [ ] Tambah data quality checks untuk duplicate peserta, missing parent relation, orphan result dan invalid timeline.
-- [ ] Tambah report comparison, export governance, retention/archive policy dan data ownership yang jelas.
+- [x] Tambah report comparison, export governance, retention/archive policy dan data ownership yang jelas.
+- [x] Lengkapkan halaman reports dengan pecahan perlawanan mengikut kejohanan, refresh manual, amaran data separa, terjemahan status dan accessibility progress bar.
+- [ ] Tambah penapis laporan mengikut sesi, kejohanan, sukan, tarikh dan status apabila keperluan operasi dimuktamadkan.
 - [ ] Selepas MVP stabil, nilai REST API versioning, mobile/offline workflow, realtime updates, accreditation dan analytics berdasarkan keperluan sebenar.
 
 ## Definition of Done untuk setiap item berisiko tinggi

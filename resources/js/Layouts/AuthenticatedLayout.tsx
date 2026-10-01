@@ -305,7 +305,7 @@ export default function AuthenticatedLayout({ header, children }: AuthenticatedL
                     <div className="fixed inset-0 z-40 lg:hidden">
                         <button
                             type="button"
-                            aria-label="Close navigation"
+                            aria-label={t('Close navigation')}
                             className="absolute inset-0 bg-black/20"
                             onClick={() => setMobileOpen(false)}
                         />

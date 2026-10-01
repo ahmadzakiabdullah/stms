@@ -38,6 +38,33 @@ class ReportingDashboardTest extends TestCase
             ->has('dataQuality.checks', 4));
     }
 
+    public function test_reports_include_fixture_breakdown_by_tournament(): void
+    {
+        $organization = Organization::factory()->create();
+        $session = Session::factory()->create(['organization_id' => $organization->id]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $event = Event::factory()->forTournament($tournament)->create();
+        Fixture::factory()->count(2)->create([
+            'organization_id' => $organization->id,
+            'event_id' => $event->id,
+            'status' => 'pending',
+        ]);
+        Fixture::factory()->create([
+            'organization_id' => $organization->id,
+            'event_id' => $event->id,
+            'status' => 'completed',
+        ]);
+        $user = $this->createStaffUser($organization);
+
+        $response = $this->actingAs($user)->get(route('reports.index'));
+
+        $response->assertOk()->assertInertia(fn ($page) => $page->where('reportMeta.status', 'ok'));
+        $breakdown = collect($response->viewData('page')['props']['fixturesByTournament'][$tournament->name] ?? [])->keyBy('status');
+
+        $this->assertSame(2, $breakdown['pending']['count'] ?? null);
+        $this->assertSame(1, $breakdown['completed']['count'] ?? null);
+    }
+
     public function test_reports_surface_data_quality_attention_for_current_tenant_only(): void
     {
         $organization = Organization::factory()->create();

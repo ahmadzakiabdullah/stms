@@ -16,7 +16,7 @@ import { SportIcon } from '@/lib/sportIcons';
 import SafeImage from '@/components/SafeImage';
 import { type ComponentType, useMemo, useRef, useState } from 'react';
 
-type Team = { name: string; logo_url: string | null; inverse_logo_url: string | null } | null;
+type Team = { name: string; name_ms: string | null; logo_url: string | null; inverse_logo_url: string | null } | null;
 type SportDocument = { title: string; url: string; file_name: string; mime_type: string; file_size: number };
 type SportQuota = { mode: string | null; total: number | null; male: number | null; female: number | null; officials: number | null; min_male: number | null; min_female: number | null };
 type SportEvent = { name: string; category: string | null; venues: string[]; quota: SportQuota };
@@ -41,7 +41,7 @@ const venueMaps = [
 ];
 
 export default function PublicDirectory({ section, app_name, competition, sports_catalog, faculties, venues, updated_at, error = null }: Props) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const meta = labels[section];
     const Icon = meta.icon;
 
@@ -52,23 +52,24 @@ export default function PublicDirectory({ section, app_name, competition, sports
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t(meta.title)} intro={t(meta.intro)} icon={<Icon className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
                     <div className="mb-6 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>
-                    <DirectoryContent section={section} sports_catalog={sports_catalog} faculties={faculties} venues={venues} t={t} />
+                    <DirectoryContent section={section} sports_catalog={sports_catalog} faculties={faculties} venues={venues} t={t} locale={locale} />
                 </div>
             </main>
         </PublicLayout>
     );
 }
 
-function DirectoryContent({ section, sports_catalog, faculties, venues, t }: { section: Props['section']; sports_catalog: Props['sports_catalog']; faculties: Team[]; venues: string[]; t: (key: string) => string }) {
+function DirectoryContent({ section, sports_catalog, faculties, venues, t, locale }: { section: Props['section']; sports_catalog: Props['sports_catalog']; faculties: Team[]; venues: string[]; t: (key: string) => string; locale: string }) {
     if (section === 'sports') return <SportsDirectory sports_catalog={sports_catalog} t={t} />;
-    if (section === 'faculties') return <FacultiesDirectory faculties={faculties} t={t} />;
+    if (section === 'faculties') return <FacultiesDirectory faculties={faculties} t={t} locale={locale} />;
     return <VenuesDirectory venues={venues} t={t} />;
 }
 
-function FacultiesDirectory({ faculties, t }: { faculties: Team[]; t: (key: string) => string }) {
+function FacultiesDirectory({ faculties, t, locale }: { faculties: Team[]; t: (key: string) => string; locale: string }) {
     const [query, setQuery] = useState('');
     const normalized = query.trim().toLocaleLowerCase();
-    const filtered = useMemo(() => faculties.filter(faculty => (faculty?.name || 'TBC').toLocaleLowerCase().includes(normalized)), [faculties, normalized]);
+    const facultyName = (faculty: Team) => locale === 'ms' ? (faculty?.name_ms || faculty?.name || 'TBC') : (faculty?.name || 'TBC');
+    const filtered = useMemo(() => faculties.filter(faculty => facultyName(faculty).toLocaleLowerCase().includes(normalized)), [faculties, normalized, locale]);
 
     if (faculties.length === 0) return <PublicEmptyState text={t('No faculties published yet.')} />;
 
@@ -84,7 +85,7 @@ function FacultiesDirectory({ faculties, t }: { faculties: Team[]; t: (key: stri
         <p aria-live="polite" className="mt-5 text-xs font-bold text-[var(--public-dark-faint)]">{t('Showing')} {filtered.length} {t(filtered.length === 1 ? 'faculty' : 'faculties')} {t('of')} {faculties.length} {t(faculties.length === 1 ? 'faculty' : 'faculties')}</p>
         {filtered.length === 0
             ? <div className="mt-3"><PublicEmptyState text={t('No faculties match your search.')}><Button type="button" variant="outline" onClick={() => setQuery('')}>{t('Clear search')}</Button></PublicEmptyState></div>
-            : <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{filtered.map((faculty, index) => <article key={`${faculty?.name}-${index}`} className="public-card p-5 text-center"><div className="relative z-10 flex justify-center"><ParticipantLogo participant={faculty} size="xl" /></div><h2 className="relative z-10 mt-4 text-sm font-black">{faculty?.name || 'TBC'}</h2></article>)}</div>}
+            : <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{filtered.map((faculty, index) => <article key={`${faculty?.name}-${index}`} className="public-card p-5 text-center"><div className="relative z-10 flex justify-center"><ParticipantLogo participant={faculty ? { ...faculty, name: facultyName(faculty) } : faculty} size="xl" /></div><h2 className="relative z-10 mt-4 text-sm font-black">{facultyName(faculty)}</h2></article>)}</div>}
     </section>;
 }
 

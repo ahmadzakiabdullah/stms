@@ -20,8 +20,8 @@ import { useEffect, useState } from 'react';
 
 type EventEntry = { name: string | null; sport: string | null; category: string | null };
 type Member = { name: string; role: 'athlete_male' | 'athlete_female' | 'assistant_manager' | 'manager' | 'coach' | 'physio' };
-type Roster = { id: string | null; name: string | null; logo_url: string | null; inverse_logo_url: string | null; events: EventEntry[]; members: Member[] };
-type Athlete = { id: string; name: string; faculty: string | null; faculty_logo_url: string | null; faculty_inverse_logo_url: string | null; events: EventEntry[] };
+type Roster = { id: string | null; name: string | null; name_ms: string | null; logo_url: string | null; inverse_logo_url: string | null; events: EventEntry[]; members: Member[] };
+type Athlete = { id: string; name: string; faculty: string | null; faculty_ms: string | null; faculty_logo_url: string | null; faculty_inverse_logo_url: string | null; events: EventEntry[] };
 type PaginatorLink = { url: string | null; label: string; active: boolean };
 type Paginator<T> = { data: T[]; current_page: number; last_page: number; per_page: number; total: number; from: number | null; to: number | null; links: PaginatorLink[] };
 type View = 'teams' | 'athletes';
@@ -165,7 +165,7 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                         </div>
                     ) : (
                         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {(items as Athlete[]).map((athlete, index) => <AthleteCard key={`${athlete.name}-${athlete.faculty}-${index}`} athlete={athlete} t={t} />)}
+                            {(items as Athlete[]).map((athlete, index) => <AthleteCard key={`${athlete.name}-${athlete.faculty}-${index}`} athlete={athlete} t={t} locale={locale} />)}
                         </div>
                     )}
 
@@ -200,11 +200,12 @@ function Chip({ active, onClick, disabled, children }: { active: boolean; onClic
     return <Button type="button" variant={active ? 'default' : 'outline'} size="sm" onClick={onClick} disabled={disabled} aria-pressed={active} className="min-h-10 rounded-full px-3.5 text-xs font-black">{children}</Button>;
 }
 
-function AthleteCard({ athlete, t }: { athlete: Athlete; t: (key: string) => string }) {
+function AthleteCard({ athlete, t, locale }: { athlete: Athlete; t: (key: string) => string; locale: string }) {
+    const facultyName = locale === 'ms' ? (athlete.faculty_ms || athlete.faculty) : athlete.faculty;
     return <article className="public-card p-4">
         <div className="flex items-center gap-3">
-            <ParticipantLogo participant={{ name: athlete.faculty, logo_url: athlete.faculty_logo_url, inverse_logo_url: athlete.faculty_inverse_logo_url }} size="md" />
-            <div className="min-w-0"><h2 className="truncate text-sm font-black">{athlete.name}</h2><p className="mt-1 truncate text-xs font-semibold text-[var(--public-dark-faint)]">{athlete.faculty || t('Faculty')}</p></div>
+            <ParticipantLogo participant={{ name: facultyName, logo_url: athlete.faculty_logo_url, inverse_logo_url: athlete.faculty_inverse_logo_url }} size="md" />
+            <div className="min-w-0"><h2 className="truncate text-sm font-black">{athlete.name}</h2><p className="mt-1 truncate text-xs font-semibold text-[var(--public-dark-faint)]">{facultyName || t('Faculty')}</p></div>
         </div>
         <div className="mt-4 flex flex-wrap gap-1.5">{athlete.events.map(event => <span key={`${event.name}-${event.category}`} className="rounded-md bg-[var(--public-primary-soft)] px-2 py-1 text-xs font-bold text-[var(--public-primary)]">{event.sport}{event.category ? ` · ${event.category}` : ''}</span>)}</div>
         <Link href={route('public.athletes.show', athlete.id)} className="mt-4 inline-flex min-h-10 items-center text-xs font-black text-[var(--public-primary)] hover:underline">{t('View athlete profile')} →</Link>
@@ -216,6 +217,8 @@ function formatUpdatedAt(value: string, locale: string) {
 }
 
 function RosterCard({ roster, t }: { roster: Roster; t: (key: string) => string }) {
+    const { locale } = useI18n();
+    const rosterName = locale === 'ms' ? (roster.name_ms || roster.name) : roster.name;
     const athletes = roster.members.filter(member => member.role === 'athlete_male' || member.role === 'athlete_female');
     const officials = roster.members.filter(member => !athletes.includes(member));
 
@@ -224,7 +227,7 @@ function RosterCard({ roster, t }: { roster: Roster; t: (key: string) => string 
             <div className="flex items-start gap-4">
                 <ParticipantLogo participant={roster} size="lg" />
                 <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-lg font-black">{roster.name}</h2>
+                    <h2 className="truncate text-lg font-black">{rosterName}</h2>
                     <div className="mt-2 flex flex-wrap gap-1.5">{roster.events.map(event => <span key={`${event.name}-${event.category}`} className="rounded-md bg-[var(--public-primary-soft)] px-2 py-1 text-xs font-bold text-[var(--public-primary)]">{event.sport}{event.category ? ` · ${event.category}` : ''}</span>)}</div>
                 </div>
             </div>

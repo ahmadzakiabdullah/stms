@@ -483,7 +483,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
                     open={!!deleteCategory}
                     onOpenChange={(isOpen) => !isOpen && setDeleteCategory(null)}
                     title={t('Delete Category?')}
-                    description={<>Are you sure you want to delete <strong>{deleteCategory?.name}</strong>? This action cannot be undone.</>}
+                    description={<>{t('Are you sure you want to delete')} <strong>{deleteCategory?.name}</strong>? {t('This action cannot be undone.')}</>}
                     confirmLabel={t('Yes, Delete')}
                     cancelLabel={t('Cancel')}
                     destructive
@@ -493,7 +493,7 @@ export default function SportCategoriesIndex({ categories: categoriesProp, sport
             )}
 
             <div className="mt-6 text-xs text-muted-foreground">
-                M2: Categories are managed per sport. Next: Sessions and Tournaments.
+                {t('M2: Categories are managed per sport. Next: Sessions and Tournaments.')}
             </div>
         </AuthenticatedLayout>
     );

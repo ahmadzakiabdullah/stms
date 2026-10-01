@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Halaman lupa kata laluan kini mempunyai pautan jelas `Kembali ke log masuk` selepas borang reset dihantar.
+- Halaman login kini memaparkan maskot `pose-welcome.webp` secara responsif di sisi kad login pada desktop dan di bawah logo pada telefon.
+- Halaman login kini memaparkan logo UTeM bersebelahan logo SAF tanpa mengubah background atau susun atur asal.
+- Notifikasi lama kini diperkaya semula daripada rekod peserta/keputusan semasa page dibuka, supaya nama fakulti BM turut berfungsi untuk data yang telah wujud sebelum medan `name_ms` ditambah.
+- Halaman `/notifications` kini menterjemah tajuk, filter, jenis/severity dan mesej notifikasi mengikut bahasa pilihan; notifikasi baharu turut menyimpan nama BM peserta untuk fallback yang lebih baik.
+- Halaman `/reports` kini memaparkan pecahan perlawanan mengikut kejohanan, menyokong refresh manual, amaran data separa, format tarikh ISO, nama peserta Bahasa Malaysia dan label status yang diterjemahkan.
+- Progress bar laporan kini mempunyai metadata accessibility dan ujian backend memastikan breakdown kejohanan dihantar mengikut tenant.
 - Maskot utama `pose-welcome.webp` pada hero homepage dibesarkan sehingga 560px pada desktop dan diskalakan untuk skrin lebih kecil supaya lebih menonjol sebagai identiti SAF 20.
 - Halaman `/pengerusi-permainan` kini memaparkan maskot SAF 20 kecil pada setiap satu daripada 23 kad untuk memudahkan imbasan visual.
 - Container kandungan public diseragamkan kepada `max-w-7xl` seperti header/menu; blok teks panjang kekal dibatasi untuk keselesaan membaca.

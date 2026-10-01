@@ -270,7 +270,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                         {selectedSessionData && (
                             <form onSubmit={updateStrategy} className="flex flex-wrap items-end gap-3 border-t pt-4 md:col-span-2">
                                 <div className="min-w-44">
-                                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Strategy</label>
+                                    <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Strategy')}</label>
                                     <Select
                                         value={data.ranking_strategy}
                                         onValueChange={(value) => setData('ranking_strategy', value)}
@@ -352,7 +352,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                             disabled={availableTiebreakers.length === 0 || selectedTiebreakers.length >= maxTiebreakers}
                                         >
                                             <SelectTrigger className="h-9">
-                                                <SelectValue placeholder="Add field" />
+                                                <SelectValue placeholder={t('Add field')} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {availableTiebreakers.map((option) => (
@@ -368,7 +368,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                                             size="icon"
                                             className="h-9 w-9 shrink-0"
                                             disabled={availableTiebreakers.length === 0 || selectedTiebreakers.length >= maxTiebreakers}
-                                            aria-label="Add next available tiebreaker"
+                                                    aria-label={t('Add next available tiebreaker')}
                                             onClick={() => availableTiebreakers[0] && addTiebreaker(selectedStrategy, availableTiebreakers[0].value)}
                                         >
                                             <Plus className="size-4" />
@@ -383,7 +383,7 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                         {selectedSessionData && (
                             <div className="w-full text-xs text-muted-foreground" id="ranking-rules-help">
                                 Arrange tie-breakers in priority order. Each field can only be used once.
-                                {Object.keys(errors).length > 0 && <span className="ml-2 text-destructive">Check the ranking rule values.</span>}
+                                {Object.keys(errors).length > 0 && <span className="ml-2 text-destructive">{t('Check the ranking rule values.')}</span>}
                             </div>
                         )}
 {selectedSessionData && (
@@ -445,18 +445,18 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-16">Rank</TableHead>
-                                        <TableHead>Participant</TableHead>
+                                        <TableHead className="w-16">{t('Rank')}</TableHead>
+                                        <TableHead>{t('Participant')}</TableHead>
                                         <TableHead className="w-20 text-center">
-                                            <span className="inline-flex items-center gap-1 text-yellow-600"><Medal className="size-3.5" /> Gold</span>
+                                            <span className="inline-flex items-center gap-1 text-yellow-600"><Medal className="size-3.5" /> {t('Gold')}</span>
                                         </TableHead>
                                         <TableHead className="w-20 text-center">
-                                            <span className="inline-flex items-center gap-1 text-gray-500"><Medal className="size-3.5" /> Silver</span>
+                                            <span className="inline-flex items-center gap-1 text-gray-500"><Medal className="size-3.5" /> {t('Silver')}</span>
                                         </TableHead>
                                         <TableHead className="w-20 text-center">
-                                            <span className="inline-flex items-center gap-1 text-amber-600"><Medal className="size-3.5" /> Bronze</span>
+                                            <span className="inline-flex items-center gap-1 text-amber-600"><Medal className="size-3.5" /> {t('Bronze')}</span>
                                         </TableHead>
-                                        <TableHead className="w-24 text-center">Total</TableHead>
+                                        <TableHead className="w-24 text-center">{t('Total')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -493,17 +493,17 @@ export default function RankingsIndex({ sessions, selectedSession, tournaments, 
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-16">Rank</TableHead>
-                                        <TableHead>Participant</TableHead>
-                                        <TableHead className="text-center">Played</TableHead>
-                                        <TableHead className="text-center">W</TableHead>
-                                        <TableHead className="text-center">D</TableHead>
-                                        <TableHead className="text-center">L</TableHead>
-                                        <TableHead className="text-center">GF</TableHead>
-                                        <TableHead className="text-center">GA</TableHead>
-                                        <TableHead className="text-center">GD</TableHead>
+                                        <TableHead className="w-16">{t('Rank')}</TableHead>
+                                        <TableHead>{t('Participant')}</TableHead>
+                                        <TableHead className="text-center">{t('Played')}</TableHead>
+                                        <TableHead className="text-center">{t('W')}</TableHead>
+                                        <TableHead className="text-center">{t('D')}</TableHead>
+                                        <TableHead className="text-center">{t('L')}</TableHead>
+                                        <TableHead className="text-center">{t('GF')}</TableHead>
+                                        <TableHead className="text-center">{t('GA')}</TableHead>
+                                        <TableHead className="text-center">{t('GD')}</TableHead>
                                         <TableHead className="text-center">
-                                            {isWinRate ? 'Win %' : 'Pts'}
+                                            {isWinRate ? t('Win %') : t('Pts')}
                                         </TableHead>
                                     </TableRow>
                                 </TableHeader>

@@ -42,8 +42,11 @@ class ReportingController extends Controller implements HasMiddleware
                 'operations' => $this->emptyOperations(),
                 'dataQuality' => ['status' => 'ok', 'total_issues' => 0, 'checks' => []],
                 'governance' => $this->emptyGovernance(),
+                'reportMeta' => ['status' => 'unavailable', 'issues' => ['organization_context']],
             ]);
         }
+
+        $reportIssues = [];
 
         try {
             $fixtureStats = DB::table('matches')
@@ -63,6 +66,7 @@ class ReportingController extends Controller implements HasMiddleware
                 [$org->id, $org->id, $org->id, $org->id]
             );
         } catch (\Throwable $e) {
+            $reportIssues[] = 'summary_counts';
             Log::warning('Report count fallback activated.', [
                 'exception' => $e,
                 'correlation_id' => $request->attributes->get('correlation_id'),
@@ -100,12 +104,15 @@ class ReportingController extends Controller implements HasMiddleware
                 ->map(fn ($r) => [
                     'id' => $r->id,
                     'home' => $r->match?->homeParticipant?->name ?? '-',
+                    'home_ms' => $r->match?->homeParticipant?->name_ms ?: ($r->match?->homeParticipant?->name ?? '-'),
                     'away' => $r->match?->awayParticipant?->name ?? '-',
+                    'away_ms' => $r->match?->awayParticipant?->name_ms ?: ($r->match?->awayParticipant?->name ?? '-'),
                     'score' => ($r->score_home ?? 0).' - '.($r->score_away ?? 0),
                     'tournament' => $r->match?->event?->tournament?->name ?? '-',
-                    'created_at' => $r->created_at->format('d M Y H:i'),
+                    'created_at' => $r->created_at?->toIso8601String(),
                 ]);
         } catch (\Throwable $e) {
+            $reportIssues[] = 'recent_results';
             Log::warning('Report recent results fallback activated.', [
                 'exception' => $e,
                 'correlation_id' => $request->attributes->get('correlation_id'),
@@ -130,6 +137,7 @@ class ReportingController extends Controller implements HasMiddleware
                     ])->values();
                 });
         } catch (\Throwable $e) {
+            $reportIssues[] = 'tournament_breakdown';
             Log::warning('Report tournament breakdown fallback activated.', [
                 'exception' => $e,
                 'correlation_id' => $request->attributes->get('correlation_id'),
@@ -148,6 +156,10 @@ class ReportingController extends Controller implements HasMiddleware
             'operations' => $this->operationsSummary($org->id, $health->check()),
             'dataQuality' => $dataQuality->summary($org),
             'governance' => $this->governanceSummary($org->id),
+            'reportMeta' => [
+                'status' => count($reportIssues) > 0 ? 'degraded' : 'ok',
+                'issues' => $reportIssues,
+            ],
         ]);
     }
 
@@ -158,7 +170,7 @@ class ReportingController extends Controller implements HasMiddleware
             'queue' => ['pending' => 0, 'failed' => 0, 'status' => 'ok'],
             'data_freshness' => ['last_match_update' => null, 'last_result_update' => null],
             'active_sessions' => ['domain' => 0, 'application' => null],
-            'incident_signal' => 'No organization context.',
+            'incident_signal' => 'no_organization_context',
         ];
     }
 
@@ -233,8 +245,8 @@ class ReportingController extends Controller implements HasMiddleware
                 'application' => $applicationSessions === null ? null : (int) $applicationSessions,
             ],
             'incident_signal' => ($health['status'] ?? 'degraded') === 'ok'
-                ? 'No active incident signal from repository health checks.'
-                : 'Health checks report degraded components; inspect queue, cache, database and disk.',
+                ? 'healthy'
+                : 'degraded',
         ];
     }
 

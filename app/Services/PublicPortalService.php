@@ -172,7 +172,7 @@ class PublicPortalService
             ->whereHas('participant', fn ($query) => $query->where('session_id', $session->id)->where('is_active', true))
             ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds)->where('organization_id', $session->organization_id))
             ->with([
-                'participant:id,name,logo_path,inverse_logo_path',
+                'participant:id,name,name_ms,logo_path,inverse_logo_path',
                 'event:id,name,sport_id,sport_category_id',
                 'event.sport:id,name',
                 'event.sportCategory:id,name',
@@ -189,6 +189,7 @@ class PublicPortalService
             return [
                 'id' => $participant?->id,
                 'name' => $participant?->name,
+                'name_ms' => $participant?->name_ms,
                 'logo_url' => $participant?->logo_url,
                 'inverse_logo_url' => $participant?->inverse_logo_url,
                 'events' => $entries->map(fn (EventParticipant $entry) => [
@@ -212,6 +213,7 @@ class PublicPortalService
                 'key' => $participant?->id.'|'.$member->name,
                 'name' => $member->name,
                 'faculty' => $participant?->name,
+                'faculty_ms' => $participant?->name_ms,
                 'faculty_logo_url' => $participant?->logo_url,
                 'faculty_inverse_logo_url' => $participant?->inverse_logo_url,
                 'events' => [[
@@ -227,6 +229,7 @@ class PublicPortalService
                 'id' => $athlete['id'],
                 'name' => $athlete['name'],
                 'faculty' => $athlete['faculty'],
+                'faculty_ms' => $athlete['faculty_ms'],
                 'faculty_logo_url' => $athlete['faculty_logo_url'],
                 'faculty_inverse_logo_url' => $athlete['faculty_inverse_logo_url'],
                 'events' => $entries->flatMap(fn (array $entry) => $entry['events'])->unique(fn (array $event) => implode('|', [$event['name'], $event['sport'], $event['category']]))->sortBy('name')->values()->all(),
@@ -421,7 +424,7 @@ class PublicPortalService
                     ->whereHas('event', fn ($event) => $event->whereIn('tournament_id', $session->tournaments()->pluck('id'))->where('organization_id', $session->organization_id));
             })
             ->with([
-                'eventParticipant.participant:id,name,logo_path,inverse_logo_path',
+                'eventParticipant.participant:id,name,name_ms,logo_path,inverse_logo_path',
                 'eventParticipant.event:id,name,sport_id,sport_category_id',
                 'eventParticipant.event.sport:id,name',
                 'eventParticipant.event.sportCategory:id,name',
@@ -439,7 +442,7 @@ class PublicPortalService
             ->where(function ($query) use ($participant) {
                 $query->where('home_participant_id', $participant->id)->orWhere('away_participant_id', $participant->id);
             })
-            ->with(['event:id,name,venues', 'result', 'homeParticipant:id,name', 'awayParticipant:id,name'])
+            ->with(['event:id,name,venues', 'result', 'homeParticipant:id,name,name_ms', 'awayParticipant:id,name,name_ms'])
             ->orderByDesc('scheduled_at')->orderByDesc('match_number')->get();
 
         $matches = $fixtures->map(function (Fixture $fixture) use ($participant) {
@@ -456,6 +459,7 @@ class PublicPortalService
                 'id' => $fixture->id,
                 'event' => $fixture->event?->name,
                 'opponent' => $isHome ? $fixture->awayParticipant?->name : $fixture->homeParticipant?->name,
+                'opponent_ms' => $isHome ? $fixture->awayParticipant?->name_ms : $fixture->homeParticipant?->name_ms,
                 'score_for' => $isHome ? $result?->score_home : $result?->score_away,
                 'score_against' => $isHome ? $result?->score_away : $result?->score_home,
                 'scheduled_at' => $fixture->scheduled_at?->toIso8601String(),
@@ -510,7 +514,7 @@ class PublicPortalService
 
         $fixtureQuery = fn () => Fixture::query()->where('organization_id', $organizationId)
             ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds))
-            ->with(['event.sport', 'event.sportCategory', 'pool:id,name', 'homeParticipant:id,name,team_name,logo_path,inverse_logo_path', 'awayParticipant:id,name,team_name,logo_path,inverse_logo_path', 'result.scoringEvents.squadMember']);
+            ->with(['event.sport', 'event.sportCategory', 'pool:id,name', 'homeParticipant:id,name,name_ms,team_name,logo_path,inverse_logo_path', 'awayParticipant:id,name,name_ms,team_name,logo_path,inverse_logo_path', 'result.scoringEvents.squadMember']);
 
         $upcomingFixtures = $fixtureQuery()->whereIn('status', ['scheduled', 'in_progress'])
             ->orderByRaw('scheduled_at IS NULL')
@@ -586,8 +590,8 @@ class PublicPortalService
                 ])->filter(fn ($sport) => filled($sport['name']))->sortBy('name')->values()->all(),
             'sports' => $catalogEvents->pluck('sport.name')->filter()->unique()->sort()->values()->all(),
             'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()
-                ->orderBy('name')->get(['id', 'name', 'logo_path', 'inverse_logo_path'])->map(fn (Participant $participant) => [
-                    'name' => $participant->name, 'logo_url' => $participant->logo_url, 'inverse_logo_url' => $participant->inverse_logo_url,
+                ->orderBy('name')->get(['id', 'name', 'name_ms', 'logo_path', 'inverse_logo_path'])->map(fn (Participant $participant) => [
+                    'name' => $participant->name, 'name_ms' => $participant->name_ms, 'logo_url' => $participant->logo_url, 'inverse_logo_url' => $participant->inverse_logo_url,
                 ])->values()->all(),
             'venues' => collect([
                 ...$catalogEvents->pluck('venues')->flatten()->filter()->all(),
@@ -633,6 +637,7 @@ class PublicPortalService
         $participant = fn ($value) => $value ? [
             'id' => $value->id,
             'name' => $value->name,
+            'name_ms' => $value->name_ms,
             'logo_url' => $value->logo_url,
             'inverse_logo_url' => $value->inverse_logo_url,
         ] : null;

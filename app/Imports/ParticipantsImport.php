@@ -73,6 +73,11 @@ class ParticipantsImport implements ToCollection, WithCustomCsvSettings, WithHea
             $data['name'] = $name;
         }
 
+        $nameMs = trim((string) ($row['name_ms'] ?? ''));
+        if ($nameMs !== '') {
+            $data['name_ms'] = mb_substr($nameMs, 0, 255);
+        }
+
         $type = mb_strtolower(trim((string) ($row['participant_type'] ?? 'team')));
         if ($type === '' || ! in_array($type, ['individual', 'team'], true)) {
             $errors[] = "participant_type '{$type}' is invalid (allowed: individual, team).";
