@@ -136,6 +136,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'admin@saf.test',
                 'password' => bcrypt('password'),
                 'organization_id' => $defaultOrg->id,
+                'email_verified_at' => now(),
             ]
         );
         if ($testAdmin->trashed()) {
@@ -151,6 +152,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'test@example.com',
                 'password' => bcrypt('password'),
                 'organization_id' => $defaultOrg->id,
+                'email_verified_at' => now(),
             ]
         );
         if ($testUser->trashed()) {
