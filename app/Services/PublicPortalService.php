@@ -459,6 +459,8 @@ class PublicPortalService
             ];
         })->values();
 
+        $outcomes = $matches->countBy('outcome');
+
         return [
             'athlete' => [
                 'id' => $member->id,
@@ -473,9 +475,9 @@ class PublicPortalService
             ],
             'stats' => [
                 'matches' => $matches->where('status', 'completed')->count(),
-                'wins' => $matches->where('outcome', 'win')->count(),
-                'draws' => $matches->where('outcome', 'draw')->count(),
-                'losses' => $matches->where('outcome', 'loss')->count(),
+                'wins' => $outcomes->get('win', 0),
+                'draws' => $outcomes->get('draw', 0),
+                'losses' => $outcomes->get('loss', 0),
             ],
             'matches' => $matches->all(),
             'updated_at' => (($fixtures->max('updated_at') ?: $session->updated_at))->toIso8601String(),
