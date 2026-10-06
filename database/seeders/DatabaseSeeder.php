@@ -115,6 +115,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Ahmad Zaki',
                 'email' => 'ahmadzaki@utem.edu.my',
                 'password' => bcrypt('password'),
+                'email_verified_at' => now(),
                 'organization_id' => $defaultOrg->id,
             ]
         );
@@ -135,6 +136,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Super Admin SAF',
                 'email' => 'admin@saf.test',
                 'password' => bcrypt('password'),
+                'email_verified_at' => now(),
                 'organization_id' => $defaultOrg->id,
             ]
         );
@@ -150,6 +152,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Test User',
                 'email' => 'test@example.com',
                 'password' => bcrypt('password'),
+                'email_verified_at' => now(),
                 'organization_id' => $defaultOrg->id,
             ]
         );
