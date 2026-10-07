@@ -159,14 +159,16 @@ export default function Welcome() {
 
                         <div className="hidden md:block"><LocaleSwitcher compact showLabel={false} /></div>
 
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
+                            size="icon"
                             onClick={() => setMobileOpen(!mobileOpen)}
-                            className="inline-flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-foreground md:hidden"
-                            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                            className="text-muted-foreground md:hidden"
+                            aria-label={mobileOpen ? t('Close menu') : t('Open menu')}
                         >
                             {mobileOpen ? <X className="size-4" /> : <Menu className="size-4" />}
-                        </button>
+                        </Button>
                     </div>
 
                     {mobileOpen && (
