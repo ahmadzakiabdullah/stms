@@ -866,9 +866,11 @@ export default function EventParticipantsIndex({
                 {activeTab === 'events' && (
                     <div className="inline-flex items-center gap-0.5 rounded-lg border bg-muted/20 p-0.5">
                         <button onClick={() => setViewMode('grid')}
+                            aria-label={t('Grid view')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                             title="Grid view"><LayoutGrid className="size-3.5" /></button>
                         <button onClick={() => setViewMode('table')}
+                            aria-label={t('Table view')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
                             title="Table view"><List className="size-3.5" /></button>
                     </div>
@@ -1087,10 +1089,12 @@ export default function EventParticipantsIndex({
                                                             {!isFacultyRepresentative && ep.status === 'pending' && (
                                                                 <>
                                                                     <button onClick={() => approveRegistration(ep.id)}
+                                                                        aria-label={t('Approve')}
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"                                                                          title={t('Approve')}>
                                                                         <Check className="size-3.5" />
                                                                     </button>
                                                                     <button onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                        aria-label={t('Reject')}
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-rose-200 text-rose-600 transition hover:bg-rose-600 hover:text-white"                                                                          title={t('Reject')}>
                                                                         <CircleX className="size-3.5" />
                                                                     </button>
@@ -1098,11 +1102,13 @@ export default function EventParticipantsIndex({
                                                             )}
                                                              {(ep.status === 'pending' || ep.status === 'confirmed' || ep.status === 'rejected') && (
                                                                 <button onClick={() => withdrawRegistration(ep.id)}
+                                                                    aria-label={t('Withdraw')}
                                                                     className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-muted hover:text-foreground" title={t('Withdraw')}>
                                                                     <LogOut className="size-3.5" />
                                                                 </button>
                                                             )}
                                                              <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
+                                                                 aria-label={t('Unregister')}
                                                                  className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')}>
                                                                 <X className="size-3.5" />
                                                             </button>
@@ -1277,6 +1283,7 @@ export default function EventParticipantsIndex({
                                                             {cfg.label}
                                                         </Badge>
                                                         <button onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
+                                                            aria-label={t('Unregister')}
                                                             className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
                                                             <X className="size-2.5" />
                                                         </button>
