@@ -1,6 +1,6 @@
 # Database Schema
 
-> **Inventori repository (28 September 2026):** Repositori mengandungi **77 migration files**. Migrasi terkini menambah: `ranking_rules` JSON pada session/tournament; `sports.scoring_mode` + `match_scoring_events` untuk individual scoring; dan status result `draft`/`submitted`/`approved`/`locked` (`2026_08_21_130000`) bersama actor timestamps. Runtime production memerlukan migrasi melalui release runbook.
+> **Inventori repository (5 Oktober 2026):** Repositori mengandungi **80 migration files**. Migrasi dashboard menambah `dashboard_metric_snapshots` untuk sejarah metrik platform; migrations runtime production mesti dijalankan melalui release runbook.
 
 ## Domain dan Tenancy
 

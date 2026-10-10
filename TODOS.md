@@ -155,6 +155,7 @@
 - [x] Compactkan sidebar secara konsisten selepas spacing standard didapati terlalu besar.
 - [x] Kurangkan lagi whitespace sidebar tanpa menurunkan target klik menu di bawah 44px.
 - [x] Redesign dashboard mengikut workspace role: administration, competition operations dan reporting.
+- [x] Tambah trend platform berdasarkan snapshot harian sebenar dan filter analitik mengikut sesi/kejohanan; konfigurasi scheduler serta command snapshot tersedia.
 
 ## P2 — Cadangan tambah baik produk
 

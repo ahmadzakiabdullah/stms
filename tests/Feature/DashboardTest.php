@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Event;
 use App\Models\EventParticipant;
+use App\Models\DashboardMetricSnapshot;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
@@ -12,6 +13,7 @@ use App\Models\SportCategory;
 use App\Models\SquadMember;
 use App\Models\Tournament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
@@ -38,6 +40,9 @@ class DashboardTest extends TestCase
 
         // Stats should be scoped (only orgA's sessions count as 1 active)
         $this->assertEquals(1, $props['stats']['activeSessions'] ?? 0);
+        $this->assertIsArray($props['trendSnapshots'] ?? null);
+        $this->assertIsArray($props['filterSessions'] ?? null);
+        $this->assertIsArray($props['filterTournaments'] ?? null);
 
         // Recent sessions should only include orgA's
         $recent = $props['recentSessions'] ?? [];
@@ -86,6 +91,54 @@ class DashboardTest extends TestCase
         $props = $response->viewData('page')['props'] ?? [];
 
         $this->assertGreaterThanOrEqual(2, $props['stats']['activeSessions'] ?? 0);
+    }
+
+    public function test_super_admin_dashboard_filters_events_by_session_and_tournament(): void
+    {
+        $organization = Organization::factory()->create();
+        $sessionA = Session::factory()->create(['organization_id' => $organization->id]);
+        $sessionB = Session::factory()->create(['organization_id' => $organization->id]);
+        $tournamentA = Tournament::factory()->create(['organization_id' => $organization->id, 'session_id' => $sessionA->id]);
+        $tournamentB = Tournament::factory()->create(['organization_id' => $organization->id, 'session_id' => $sessionB->id]);
+        Event::factory()->forTournament($tournamentA)->create(['organization_id' => $organization->id]);
+        Event::factory()->forTournament($tournamentB)->create(['organization_id' => $organization->id]);
+        $super = $this->createSuperAdmin();
+
+        $response = $this->actingAs($super)->get(route('dashboard', ['session_id' => $sessionA->id]));
+
+        $response->assertOk();
+        $props = $response->viewData('page')['props'] ?? [];
+        $this->assertSame(1, $props['stats']['events'] ?? null);
+        $this->assertSame($sessionA->id, $props['filters']['session_id'] ?? null);
+        $this->assertCount(1, $props['filterTournaments'] ?? []);
+    }
+
+    public function test_tenant_dashboard_rejects_filter_for_another_organizations_session(): void
+    {
+        $orgA = Organization::factory()->create();
+        $orgB = Organization::factory()->create();
+        $foreignSession = Session::factory()->create(['organization_id' => $orgB->id]);
+        $staff = $this->createStaffUser($orgA);
+
+        $this->actingAs($staff)
+            ->from(route('dashboard'))
+            ->get(route('dashboard', ['session_id' => $foreignSession->id]))
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHasErrors('session_id');
+    }
+
+    public function test_dashboard_snapshot_command_is_repeatable_for_global_and_competition_scopes(): void
+    {
+        $organization = Organization::factory()->create();
+        $session = Session::factory()->create(['organization_id' => $organization->id]);
+        Tournament::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id]);
+
+        $this->artisan('stms:dashboard-snapshot')->assertSuccessful();
+        $this->artisan('stms:dashboard-snapshot')->assertSuccessful();
+
+        $this->assertSame(3, DashboardMetricSnapshot::query()->count());
+        $this->assertSame(1, DashboardMetricSnapshot::query()->where('scope_key', 'global')->count());
+        $this->assertNotNull(DashboardMetricSnapshot::query()->where('scope_key', 'session:'.$session->id)->first());
     }
 
     public function test_empty_events_are_not_counted_as_events_needing_fixtures(): void

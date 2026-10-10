@@ -1,5 +1,9 @@
 # CURRENT STATE
 
+## Perubahan Dashboard — 5 Oktober 2026
+
+- Dashboard super-admin kini mempunyai carta trend berasaskan snapshot sebenar yang dikumpulkan setiap hari, serta penapis sesi dan kejohanan untuk metrik event/perlawanan. Pengumpulan bermula selepas migration dan scheduler `stms:dashboard-snapshot` aktif; sejarah sebelum itu tidak direka.
+
 ## Perubahan Homepage — 28 September 2026
 
 - Homepage mendahulukan tajuk acara, tindakan Jadual/Program Sukan, tarikh dan maskot sebelum poster rasmi; poster masih dikekalkan selepas kandungan pengenalan. Saiz tajuk seksyen shared lebih terkawal.
@@ -64,8 +68,8 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 
 | Item | Nilai |
 |---|---:|
-| Laravel routes | 175 application routes |
-| Migrations | 77 migration files |
+| Laravel routes | 176 application routes |
+| Migrations | 80 migration files |
 | Controllers | 42 controller files |
 | Form Requests | 35 |
 | Policies | 22 fail |

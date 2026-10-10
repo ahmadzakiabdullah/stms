@@ -316,6 +316,10 @@ export interface EventParticipant {
     event?: Event;
     participant?: Participant;
     squad_members?: SquadMember[];
+    squad_members_count?: number;
+    male_athletes_count?: number;
+    female_athletes_count?: number;
+    officials_count?: number;
     created_at: string;
     updated_at: string;
 }

@@ -128,6 +128,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
     Route::get('/dean', [DeanVerificationController::class, 'index'])->name('dean.dashboard');
     Route::middleware('throttle:30,1')->group(function () {
         Route::post('/dean/approve/{eventParticipant}', [DeanVerificationController::class, 'approve'])->name('dean.approve');
+        Route::post('/dean/approve-bulk', [DeanVerificationController::class, 'approveBulk'])->name('dean.approve-bulk');
         Route::post('/dean/reject/{eventParticipant}', [DeanVerificationController::class, 'reject'])->name('dean.reject');
     });
 
