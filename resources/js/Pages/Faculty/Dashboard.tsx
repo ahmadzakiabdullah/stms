@@ -32,7 +32,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
 import ParticipantLogo from '@/components/ParticipantLogo';
 import { Head, Link, router } from '@inertiajs/react';
-import { Download, FileText, Plus, Search, Trash2, Upload, Users } from 'lucide-react';
+import { ArrowRight, CalendarClock, CheckCircle2, CircleAlert, Clock3, Download, FileText, Plus, Search, ShieldCheck, Trash2, Trophy, Upload, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { Event, EventParticipant, Participant, SportCategory, SquadMember } from '@/types';
 import { useI18n } from '@/lib/i18n';
@@ -44,7 +44,11 @@ interface FacultyDashboardProps {
         squad_members?: SquadMember[];
     })[];
     totals: { male: number; female: number; officials: number };
-    availableEvents: (Event & { sport?: { name: string }; sport_category?: { name: string }; tournament?: { name: string } })[];
+    eventRegistrationDeadline?: string | null;
+    eventRegistrationStartDate?: string | null;
+    squadRegistrationStartDate?: string | null;
+    squadRegistrationDeadline?: string | null;
+    availableEvents: (Event & { sport?: { name: string }; sport_category?: { name: string }; tournament?: { name: string }; registration_deadline?: string | null })[];
     sportCategories: (SportCategory & { sport?: { name: string } })[];
 }
 
@@ -93,10 +97,15 @@ export default function FacultyDashboard({
     participant,
     registrations,
     totals,
+    eventRegistrationDeadline = null,
+    eventRegistrationStartDate = null,
+    squadRegistrationStartDate = null,
+    squadRegistrationDeadline = null,
     availableEvents,
     sportCategories,
 }: FacultyDashboardProps) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
+    const participantName = participant ? (locale === 'ms' ? (participant.name_ms || participant.name) : participant.name) : '';
     const [activeRegId, setActiveRegId] = useState<string | null>(null);
     const [addSquadOpen, setAddSquadOpen] = useState(false);
     const [newRegOpen, setNewRegOpen] = useState(false);
@@ -243,25 +252,44 @@ export default function FacultyDashboard({
         return g;
     }, [filteredUnregEvents]);
 
+    const pendingRegistrations = registrations.filter((registration) => registration.status === 'pending');
+    const confirmedRegistrations = registrations.filter((registration) => registration.status === 'confirmed');
+    const rejectedRegistrations = registrations.filter((registration) => ['rejected', 'disqualified'].includes(registration.status));
+    const incompleteRegistrations = confirmedRegistrations.filter((registration) => {
+        const quota = getQuota(registration);
+        const athletesComplete = quota.isTotalBased
+            ? quota.currentAthletes >= quota.totalAthletes
+            : (quota.male === 0 || quota.currentMale >= quota.male) && (quota.female === 0 || quota.currentFemale >= quota.female);
+        return !athletesComplete || quota.currentOfficials < quota.officials;
+    });
+    const effectiveEventDeadline = eventRegistrationDeadline ?? availableEvents.find((event) => event.registration_deadline)?.registration_deadline ?? null;
+    const effectiveSquadDeadline = squadRegistrationDeadline;
+    const upcomingDeadlines = availableEvents
+        .filter(() => effectiveEventDeadline && new Date(effectiveEventDeadline).getTime() >= Date.now())
+        .slice(0, 3);
+    const formatDeadline = (deadline: string | null | undefined) => deadline
+        ? new Intl.DateTimeFormat('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(deadline))
+        : t('No deadline set');
+    const today = new Date();
+    const eventWindowOpen = (!eventRegistrationStartDate || new Date(eventRegistrationStartDate) <= today)
+        && (!effectiveEventDeadline || new Date(effectiveEventDeadline) >= today);
+    const squadWindowOpen = Boolean(squadRegistrationStartDate && new Date(squadRegistrationStartDate) <= today
+        && effectiveSquadDeadline && new Date(effectiveSquadDeadline) >= today);
+    const confirmedCount = confirmedRegistrations.length;
+    const openRegistrationCount = unregisteredEvents.length;
+
     return (
         <AuthenticatedLayout
             header={
                 <PageHeader
                     title={t('Faculty Dashboard')}
-                    description={participant ? participant.name : t('No faculty profile linked')}
+                    description={participant ? participantName : t('No faculty profile linked')}
                     leading={participant ? <ParticipantLogo participant={participant} size="lg" className="sm:size-14" alt="" /> : undefined}
                     actions={
-                        <>
-                            <Button asChild variant="outline" disabled={!participant}>
-                                <Link href={route('faculty.register-events')}>
-                                    {t('Register Events Page')}
-                                </Link>
-                            </Button>
-                            <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
-                                <Plus className="mr-2 size-4" />
-                                {t('Register for Events')}
-                            </Button>
-                        </>
+                        <Button onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }} disabled={!participant}>
+                            <Plus className="mr-2 size-4" />
+                            {t('Register for Events')}
+                        </Button>
                     }
                 />
             }
@@ -279,36 +307,175 @@ export default function FacultyDashboard({
                     </CardContent>
                 </Card>
             ) : (
-                <>
+                <div className="space-y-6">
+                    <section className="relative overflow-hidden rounded-2xl border bg-slate-950 text-white shadow-sm">
+                        <div className="absolute -right-20 -top-24 size-64 rounded-full bg-primary/25 blur-3xl" />
+                        <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+                            <div>
+                                <div className="mb-3 flex flex-wrap items-center gap-2">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-slate-200">
+                                        <ShieldCheck className="size-3.5" /> {t('Faculty registration workspace')}
+                                    </span>
+                                    <Badge className={eventWindowOpen ? 'border-emerald-400/30 bg-emerald-400/15 text-emerald-200' : 'border-amber-400/30 bg-amber-400/15 text-amber-200'}>
+                                        {eventWindowOpen ? t('Event registration open') : t('Event registration closed')}
+                                    </Badge>
+                                </div>
+                                <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('Prepare your faculty team')}</h2>
+                                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">{t('Register events first, follow Dean approval, then complete your officials and athletes within the squad registration window.')}</p>
+                                <div className="mt-5 flex flex-wrap gap-2">
+                                    <Button asChild className="bg-white text-slate-950 hover:bg-slate-100">
+                                        <Link href={route('faculty.register-events')}><Plus className="mr-2 size-4" />{t('Register Events')}</Link>
+                                    </Button>
+                                    <Button asChild variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                                        <Link href="#my-registrations">{t('View My Registrations')}<ArrowRight className="ml-2 size-4" /></Link>
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                                {[
+                                    { label: t('Choose events'), done: registrations.length > 0, active: eventWindowOpen },
+                                    { label: t('Dean approval'), done: confirmedCount > 0, active: pendingRegistrations.length > 0 },
+                                    { label: t('Complete squad'), done: incompleteRegistrations.length === 0 && confirmedCount > 0, active: squadWindowOpen },
+                                ].map((step, index) => (
+                                    <div key={step.label} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                                        <span className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${step.done ? 'bg-emerald-400/20 text-emerald-200' : step.active ? 'bg-primary/30 text-primary-foreground' : 'bg-white/10 text-slate-400'}`}>
+                                            {step.done ? <CheckCircle2 className="size-4" /> : `0${index + 1}`}
+                                        </span>
+                                        <span className="text-sm font-medium text-slate-200">{step.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-5" aria-labelledby="faculty-next-action-title">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-start gap-3">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><ArrowRight className="size-5" /></span>
+                                <div>
+                                    <h2 id="faculty-next-action-title" className="text-sm font-bold">{t('Next steps')}</h2>
+                                    {!participant ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{t('No faculty profile linked')}</p>
+                                    ) : pendingRegistrations.length > 0 ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{pendingRegistrations.length} {t('registrations awaiting confirmation')}</p>
+                                    ) : incompleteRegistrations.length > 0 ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{incompleteRegistrations.length} {t('squads need attention')}</p>
+                                    ) : rejectedRegistrations.length > 0 ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{rejectedRegistrations.length} {t('registrations require review')}</p>
+                                    ) : openRegistrationCount > 0 && eventWindowOpen ? (
+                                        <p className="mt-1 text-sm text-muted-foreground">{t('Choose events')}</p>
+                                    ) : (
+                                        <p className="mt-1 text-sm text-muted-foreground">{t('All current actions are complete.')}</p>
+                                    )}
+                                </div>
+                            </div>
+                            {pendingRegistrations.length > 0 ? (
+                                <Button asChild variant="outline" className="shrink-0">
+                                    <Link href={route('participation-confirmations.index')}>{t('Review your submission status')}<ArrowRight className="ml-2 size-4" /></Link>
+                                </Button>
+                            ) : incompleteRegistrations.length > 0 ? (
+                                <Button variant="outline" className="shrink-0" onClick={() => setActiveRegId(incompleteRegistrations[0].id)}>{t('Complete athletes and officials')}<ArrowRight className="ml-2 size-4" /></Button>
+                            ) : rejectedRegistrations.length > 0 ? (
+                                <Button variant="outline" className="shrink-0" onClick={() => setActiveRegId(rejectedRegistrations[0].id)}>{t('Check the reason before re-registering')}<ArrowRight className="ml-2 size-4" /></Button>
+                            ) : openRegistrationCount > 0 && eventWindowOpen ? (
+                                <Button className="shrink-0" onClick={() => { setNewRegOpen(true); setSelectedEventIds([]); }}><Plus className="mr-2 size-4" />{t('Register for Events')}</Button>
+                            ) : null}
+                        </div>
+                    </section>
+
                     <div className="grid gap-4 md:grid-cols-4">
+                        <a href="#my-registrations" className="block transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                         <Card>
                             <CardHeader className="pb-2">
                                 <CardDescription>{t('Events Registered')}</CardDescription>
                                 <CardTitle className="text-3xl">{registrations.length}</CardTitle>
                             </CardHeader>
                         </Card>
+                        </a>
+                        <a href="#my-registrations" className="block transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                         <Card>
                             <CardHeader className="pb-2">
                                 <CardDescription>{t('Male Athletes')}</CardDescription>
                                 <CardTitle className="text-3xl">{totals.male}</CardTitle>
                             </CardHeader>
                         </Card>
+                        </a>
+                        <a href="#my-registrations" className="block transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                         <Card>
                             <CardHeader className="pb-2">
                                 <CardDescription>{t('Female Athletes')}</CardDescription>
                                 <CardTitle className="text-3xl">{totals.female}</CardTitle>
                             </CardHeader>
                         </Card>
+                        </a>
+                        <a href="#my-registrations" className="block transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                         <Card>
                             <CardHeader className="pb-2">
                                 <CardDescription>{t('Officials')}</CardDescription>
                                 <CardTitle className="text-3xl">{totals.officials}</CardTitle>
                             </CardHeader>
                         </Card>
+                        </a>
                     </div>
 
-                    <div className="mt-6 grid gap-6 xl:grid-cols-2">
-                        <Card className="xl:col-span-2">
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="flex items-center gap-2 text-base"><Clock3 className="size-4 text-primary" />{t('Registration windows')}</CardTitle>
+                            <CardDescription>{t('Dates apply to all sports and events in this session.')}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-lg border p-3">
+                                <p className="text-xs font-medium text-muted-foreground">{t('Event registration')}</p>
+                                <p className="mt-1 text-sm font-semibold">{eventRegistrationStartDate ? formatDeadline(eventRegistrationStartDate) : t('Open now')} → {formatDeadline(effectiveEventDeadline)}</p>
+                            </div>
+                            <div className="rounded-lg border p-3">
+                                <p className="text-xs font-medium text-muted-foreground">{t('Officials and athletes')}</p>
+                                <p className="mt-1 text-sm font-semibold">{squadRegistrationStartDate ? formatDeadline(squadRegistrationStartDate) : t('After event registration')} → {formatDeadline(effectiveSquadDeadline)}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">{t('Dean approval is required before this phase opens.')}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {(pendingRegistrations.length > 0 || incompleteRegistrations.length > 0 || rejectedRegistrations.length > 0) && (
+                        <section className="grid gap-3 md:grid-cols-3" aria-labelledby="faculty-actions-title">
+                            <h2 id="faculty-actions-title" className="sr-only">{t('Next steps')}</h2>
+                            {pendingRegistrations.length > 0 && (
+                                <Link href={route('participation-confirmations.index')} className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 transition hover:bg-amber-100">
+                                    <CircleAlert className="size-5 shrink-0 text-amber-700" />
+                                    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-amber-950">{pendingRegistrations.length} {t('registrations awaiting confirmation')}</span><span className="block text-xs text-amber-800">{t('Review your submission status')}</span></span>
+                                </Link>
+                            )}
+                            {incompleteRegistrations.length > 0 && (
+                                <button type="button" onClick={() => setActiveRegId(incompleteRegistrations[0].id)} className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-left transition hover:bg-blue-100">
+                                    <Users className="size-5 shrink-0 text-blue-700" />
+                                    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-blue-950">{incompleteRegistrations.length} {t('squads need attention')}</span><span className="block text-xs text-blue-800">{t('Complete athletes and officials')}</span></span>
+                                </button>
+                            )}
+                            {rejectedRegistrations.length > 0 && (
+                                <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+                                    <CircleAlert className="size-5 shrink-0 text-rose-700" />
+                                    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-rose-950">{rejectedRegistrations.length} {t('registrations require review')}</span><span className="block text-xs text-rose-800">{t('Check the reason before re-registering')}</span></span>
+                                </div>
+                            )}
+                        </section>
+                    )}
+
+                    {upcomingDeadlines.length > 0 && (
+                        <Card>
+                            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><Clock3 className="size-4 text-amber-600" />{t('Upcoming registration deadlines')}</CardTitle><CardDescription>{t('Events that are closing soon')}</CardDescription></CardHeader>
+                            <CardContent className="grid gap-2 md:grid-cols-3">
+                                {upcomingDeadlines.map((event) => (
+                                    <div key={event.id} className="flex items-center gap-3 rounded-lg border p-3">
+                                        <CalendarClock className="size-4 shrink-0 text-muted-foreground" />
+                                        <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{event.name}</p><p className="text-xs text-muted-foreground">{t('Event registration closes')}: {formatDeadline(effectiveEventDeadline)}</p></div>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <div className="grid gap-6 xl:grid-cols-2">
+                        <Card id="my-registrations" className="scroll-mt-24 xl:col-span-2">
                             <CardHeader>
                                 <CardTitle>{t('My Registrations')}</CardTitle>
                                 <CardDescription>{t('Click to manage squad members for each event')}</CardDescription>
@@ -326,6 +493,9 @@ export default function FacultyDashboard({
                                                 ? q.currentAthletes >= q.totalAthletes
                                                 : (q.male === 0 || q.currentMale >= q.male) && (q.female === 0 || q.currentFemale >= q.female);
                                             const squadComplete = reg.status === 'confirmed' && athleteQuotaFull && q.currentOfficials >= q.officials;
+                                            const quotaTotal = (q.isTotalBased ? q.totalAthletes : q.male + q.female) + q.officials;
+                                            const quotaCurrent = q.currentAthletes + q.currentOfficials;
+                                            const quotaPercent = quotaTotal > 0 ? Math.min(100, Math.round((quotaCurrent / quotaTotal) * 100)) : 0;
                                             return (
                                                 <div key={reg.id} className="rounded-lg border">
                                                     <button
@@ -353,6 +523,10 @@ export default function FacultyDashboard({
                                                             <div className="text-xs text-muted-foreground">
                                                                 {reg.event?.sport?.name} · {reg.event?.sport_category?.name}
                                                                 {' · '}{reg.event?.tournament?.name}
+                                                            </div>
+                                                            <div className="mt-2 flex max-w-sm items-center gap-2">
+                                                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${squadComplete ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${quotaPercent}%` }} /></div>
+                                                                <span className="shrink-0 text-[11px] font-medium text-muted-foreground">{quotaPercent}% {t('squad complete')}</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-3 shrink-0 ml-3">
@@ -446,23 +620,23 @@ export default function FacultyDashboard({
                             </CardContent>
                         </Card>
                     </div>
-                </>
+                </div>
             )}
 
             {/* Register for Event Dialog */}
             <Dialog open={newRegOpen} onOpenChange={(o) => { if (!o) { setNewRegOpen(false); setRegSearch(''); setSelectedEventIds([]); } }}>
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>Register for Events</DialogTitle>
+                        <DialogTitle>{t('Register for Events')}</DialogTitle>
                         <DialogDescription>
-                            {participant ? `Select one or more sports for ${participant.name}` : 'Select events to register'}
+                            {participant ? `${t('Select one or more sports for')} ${participantName}` : t('Select events to register')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                                placeholder="Search by event, sport, or tournament..."
+                                placeholder={t('Search by event, sport, or tournament...')}
                                 value={regSearch}
                                 onChange={(e) => setRegSearch(e.target.value)}
                                 className="pl-9"
@@ -471,7 +645,7 @@ export default function FacultyDashboard({
 
                         <div className="grid gap-2">
                             <div className="flex items-center justify-between">
-                                <Label>Available Events</Label>
+                                <Label>{t('Available Events')}</Label>
                                 {filteredUnregEvents.length > 0 && (
                                     <button
                                         type="button"
@@ -482,14 +656,14 @@ export default function FacultyDashboard({
                                         )}
                                         className="text-xs text-primary underline-offset-4 hover:underline"
                                     >
-                                        {selectedEventIds.length === filteredUnregEvents.length ? 'Clear all' : 'Select all'}
+                                        {selectedEventIds.length === filteredUnregEvents.length ? t('Clear all') : t('Select all')}
                                     </button>
                                 )}
                             </div>
                             <div className="max-h-64 overflow-y-auto rounded-md border">
                                 {filteredUnregEvents.length === 0 && (
                                     <p className="p-3 text-sm text-muted-foreground">
-                                        {regSearch ? 'No matching events.' : 'Already registered for all events.'}
+                                        {regSearch ? t('No matching events.') : t('Already registered for all events.')}
                                     </p>
                                 )}
                                 {Object.entries(filteredUnregGrouped).map(([tournamentName, evts]) => (
@@ -500,8 +674,11 @@ export default function FacultyDashboard({
                                             <span className="font-normal text-xs">({evts.length})</span>
                                         </div>
                                         {evts.map((evt) => {
-                                            const deadlinePassed = (evt as any).registration_deadline
-                                                ? new Date((evt as any).registration_deadline) < new Date()
+                                            const deadlinePassed = effectiveEventDeadline
+                                                ? new Date(effectiveEventDeadline) < new Date()
+                                                : false;
+                                            const registrationNotOpen = eventRegistrationStartDate
+                                                ? new Date(eventRegistrationStartDate) > new Date()
                                                 : false;
 
                                             return (
@@ -518,17 +695,19 @@ export default function FacultyDashboard({
                                                         value={evt.id}
                                                         checked={selectedEventIds.includes(evt.id)}
                                                         onChange={() => toggleEvent(evt.id)}
-                                                        disabled={deadlinePassed}
+                                                        disabled={deadlinePassed || registrationNotOpen}
                                                         className="size-4"
                                                     />
-                                                    <span className="text-lg">
-                                                        {evt.sport?.name === 'Badminton' ? '🏸' : evt.sport?.name === 'Football' ? '⚽' : evt.sport?.name === 'Basketball' ? '🏀' : '🏅'}
+                                                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+                                                        <Trophy className="size-4" />
                                                     </span>
                                                     <div className="min-w-0 flex-1">
                                                         <div className="truncate">{evt.sport?.name} — {evt.sport_category?.name}</div>
                                                         <div className="text-xs text-muted-foreground truncate">{evt.name}</div>
-                                                        {deadlinePassed && (
-                                                            <span className="text-xs text-destructive">(Deadline passed)</span>
+                                                        {(deadlinePassed || registrationNotOpen) && (
+                                                            <span className={`text-xs ${registrationNotOpen ? 'text-amber-700' : 'text-destructive'}`}>
+                                                                ({registrationNotOpen ? `${t('Opens')} ${formatDeadline(eventRegistrationStartDate)}` : t('Deadline passed')})
+                                                            </span>
                                                         )}
                                                     </div>
                                                 </label>
@@ -547,11 +726,11 @@ export default function FacultyDashboard({
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => { setNewRegOpen(false); setRegSearch(''); setSelectedEventIds([]); }}>
-                            Cancel
+                            {t('Cancel')}
                         </Button>
                         <Button onClick={handleNewRegistration} disabled={selectedEventIds.length === 0}>
                             <Plus className="mr-2 size-4" />
-                            Register ({selectedEventIds.length})
+                            {t('Register')} ({selectedEventIds.length})
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -561,18 +740,18 @@ export default function FacultyDashboard({
             <Dialog open={addSquadOpen} onOpenChange={setAddSquadOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Add Squad Member</DialogTitle>
+                        <DialogTitle>{t('Add Squad Member')}</DialogTitle>
                         <DialogDescription>
                             {activeReg ? `For ${activeReg.event?.name}` : ''}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="member-name">Full Name <span className="text-destructive">*</span></Label>
+                            <Label htmlFor="member-name">{t('Full Name')} <span className="text-destructive">*</span></Label>
                             <Input id="member-name" value={squadForm.name} onChange={(e) => setSquadForm({ ...squadForm, name: e.target.value })} placeholder="e.g. Ali bin Ahmad" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="member-role">Role <span className="text-destructive">*</span></Label>
+                            <Label htmlFor="member-role">{t('Role')} <span className="text-destructive">*</span></Label>
                             <Select value={squadForm.role} onValueChange={(value) => setSquadForm({ ...squadForm, role: value as SquadMember['role'] })}>
                                 <SelectTrigger id="member-role" className="h-9 w-full">
                                     <SelectValue />
@@ -590,29 +769,29 @@ export default function FacultyDashboard({
                             </p>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="member-matrix">Matrix No. <span className="text-destructive">*</span></Label>
+                            <Label htmlFor="member-matrix">{t('Matrix No.')} <span className="text-destructive">*</span></Label>
                             <Input id="member-matrix" value={squadForm.matrix_no} onChange={(e) => setSquadForm({ ...squadForm, matrix_no: e.target.value })} placeholder="e.g. B062310001" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="member-ic">IC / Passport</Label>
+                                <Label htmlFor="member-ic">{t('IC / Passport')}</Label>
                                 <Input id="member-ic" value={squadForm.identification_no} onChange={(e) => setSquadForm({ ...squadForm, identification_no: e.target.value })} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="member-phone">
-                                    Phone {officialRoles.includes(squadForm.role as any) && <span className="text-destructive">*</span>}
+                                    {t('Phone')} {officialRoles.includes(squadForm.role as any) && <span className="text-destructive">*</span>}
                                 </Label>
                                 <Input id="member-phone" value={squadForm.phone} onChange={(e) => setSquadForm({ ...squadForm, phone: e.target.value })} />
                             </div>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setAddSquadOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setAddSquadOpen(false)}>{t('Cancel')}</Button>
                         <Button
                             onClick={handleAddSquad}
                             disabled={!squadForm.name || !squadForm.matrix_no || (officialRoles.includes(squadForm.role as any) && !squadForm.phone)}
                         >
-                            Add
+                            {t('Add')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -622,9 +801,9 @@ export default function FacultyDashboard({
             <Dialog open={importOpen} onOpenChange={(o) => { if (!o) { setImportOpen(false); setImportFile(null); } }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Import Squad Members</DialogTitle>
+                        <DialogTitle>{t('Import Squad Members')}</DialogTitle>
                         <DialogDescription>
-                            Upload an Excel/CSV file with squad members for the selected event.
+                            {t('Upload an Excel/CSV file with squad members for the selected event.')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -632,21 +811,21 @@ export default function FacultyDashboard({
                             href={route('faculty.squad.template')}
                             className="flex items-center gap-2 text-sm text-primary hover:underline"
                         >
-                            <Download className="size-4" /> Download template
+                            <Download className="size-4" /> {t('Download template')}
                         </Link>
                         <div className="grid gap-2">
-                            <Label htmlFor="import-file">Excel/CSV File</Label>
+                            <Label htmlFor="import-file">{t('Excel/CSV File')}</Label>
                             <Input
                                 id="import-file"
                                 type="file"
                                 accept=".xlsx,.xls,.csv"
                                 onChange={(e) => setImportFile(e.target.files?.[0] ?? null)}
                             />
-                            <p className="text-xs text-muted-foreground">Columns: name, role, matrix_no, ic_passport, phone</p>
+                            <p className="text-xs text-muted-foreground">{t('Columns: name, role, matrix_no, ic_passport, phone')}</p>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => { setImportOpen(false); setImportFile(null); }}>Cancel</Button>
+                        <Button variant="outline" onClick={() => { setImportOpen(false); setImportFile(null); }}>{t('Cancel')}</Button>
                         <Button onClick={handleImport} disabled={!importFile}>
                             <Upload className="mr-2 size-4" /> Import
                         </Button>

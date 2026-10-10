@@ -6,17 +6,21 @@ import PublicPageHero from '@/components/PublicPageHero';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicSectionHeading from '@/components/PublicSectionHeading';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useI18n } from '@/lib/i18n';
 import { router } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
-import { ArrowRight, FileText, MapPin, Search, Trophy, Users, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, FileText, MapPin, Search, Trophy, Users, X } from 'lucide-react';
 import { SportIcon } from '@/lib/sportIcons';
-import { type ComponentType, useMemo, useState } from 'react';
+import SafeImage from '@/components/SafeImage';
+import { type ComponentType, useMemo, useRef, useState } from 'react';
 
-type Team = { name: string; logo_url: string | null; inverse_logo_url: string | null } | null;
+type Team = { name: string; name_ms: string | null; logo_url: string | null; inverse_logo_url: string | null } | null;
 type SportDocument = { title: string; url: string; file_name: string; mime_type: string; file_size: number };
-type SportCatalogEntry = { name: string; categories: string[]; events: { name: string; category: string | null }[]; documents?: SportDocument[] };
+type SportQuota = { mode: string | null; total: number | null; male: number | null; female: number | null; officials: number | null; min_male: number | null; min_female: number | null };
+type SportEvent = { name: string; category: string | null; venues: string[]; quota: SportQuota };
+type SportCatalogEntry = { name: string; icon: string | null; categories: string[]; events: SportEvent[]; documents?: SportDocument[] };
 type Props = { section: 'sports' | 'faculties' | 'venues'; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; sports_catalog: SportCatalogEntry[]; faculties: Team[]; venues: string[]; updated_at?: string; error?: string | null };
 
 const labels: Record<Props['section'], { title: string; intro: string; icon: ComponentType<{ className?: string }> }> = {
@@ -25,34 +29,73 @@ const labels: Record<Props['section'], { title: string; intro: string; icon: Com
     venues: { title: 'Venues', intro: 'Competition locations and venues used for official fixtures.', icon: MapPin },
 };
 
+const venueMaps = [
+    {
+        src: '/images/venues/venue-saf20-1.webp',
+        alt: 'Map of SAF 20 sports venues at UTeM, group one',
+    },
+    {
+        src: '/images/venues/venue-saf20-2.webp',
+        alt: 'Map of SAF 20 sports venues at UTeM, group two',
+    },
+];
+
 export default function PublicDirectory({ section, app_name, competition, sports_catalog, faculties, venues, updated_at, error = null }: Props) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const meta = labels[section];
     const Icon = meta.icon;
 
     return (
-        <PublicLayout title={`${t(meta.title)} | ${competition?.name || app_name}`} appName={app_name} current={section === 'sports' ? section : undefined} description={t(meta.intro)} canonical={route(`public.${section}`)}>
+        <PublicLayout title={`${t(meta.title)} | ${competition?.name || app_name}`} appName={app_name} current={section === 'sports' || section === 'faculties' || section === 'venues' ? section : undefined} description={t(meta.intro)} canonical={route(`public.${section}`)}>
             <main>
                 {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Directory unavailable')} description={error} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t(meta.title)} intro={t(meta.intro)} icon={<Icon className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
                     <div className="mb-6 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>
-                    <DirectoryContent section={section} sports_catalog={sports_catalog} faculties={faculties} venues={venues} t={t} />
+                    <DirectoryContent section={section} sports_catalog={sports_catalog} faculties={faculties} venues={venues} t={t} locale={locale} />
                 </div>
             </main>
         </PublicLayout>
     );
 }
 
-function DirectoryContent({ section, sports_catalog, faculties, venues, t }: { section: Props['section']; sports_catalog: Props['sports_catalog']; faculties: Team[]; venues: string[]; t: (key: string) => string }) {
+function DirectoryContent({ section, sports_catalog, faculties, venues, t, locale }: { section: Props['section']; sports_catalog: Props['sports_catalog']; faculties: Team[]; venues: string[]; t: (key: string) => string; locale: string }) {
     if (section === 'sports') return <SportsDirectory sports_catalog={sports_catalog} t={t} />;
-    if (section === 'faculties') return faculties.length === 0
-        ? <PublicEmptyState text={t('No faculties published yet.')} />
-        : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{faculties.map((faculty, index) => <article key={`${faculty?.name}-${index}`} className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 text-center shadow-sm"><div className="flex justify-center"><ParticipantLogo participant={faculty} size="xl" /></div><h2 className="mt-4 text-sm font-black">{faculty?.name || 'TBC'}</h2></article>)}</div>;
+    if (section === 'faculties') return <FacultiesDirectory faculties={faculties} t={t} locale={locale} />;
     return <VenuesDirectory venues={venues} t={t} />;
 }
 
+function FacultiesDirectory({ faculties, t, locale }: { faculties: Team[]; t: (key: string) => string; locale: string }) {
+    const [query, setQuery] = useState('');
+    const normalized = query.trim().toLocaleLowerCase();
+    const facultyName = (faculty: Team) => locale === 'ms' ? (faculty?.name_ms || faculty?.name || 'TBC') : (faculty?.name || 'TBC');
+    const filtered = useMemo(() => faculties.filter(faculty => facultyName(faculty).toLocaleLowerCase().includes(normalized)), [faculties, normalized, locale]);
+
+    if (faculties.length === 0) return <PublicEmptyState text={t('No faculties published yet.')} />;
+
+    return <section aria-labelledby="faculty-directory-title">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <PublicSectionHeading id="faculty-directory-title" title={t('Participating faculties')} description={t('Search and browse faculties in this competition.')} />
+            <div className="relative w-full sm:max-w-sm">
+                <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--public-dark-faint)]" />
+                <Input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Search faculties')} aria-label={t('Search faculties')} className="h-11 w-full rounded-xl bg-white py-2.5 pl-10 pr-12 text-sm font-semibold" />
+                {query && <Button type="button" variant="ghost" size="icon" onClick={() => setQuery('')} aria-label={t('Clear search')} className="absolute right-0 top-1/2 size-11 -translate-y-1/2 text-[var(--public-dark-faint)]"><X className="size-4" /></Button>}
+            </div>
+        </div>
+        <p aria-live="polite" className="mt-5 text-xs font-bold text-[var(--public-dark-faint)]">{t('Showing')} {filtered.length} {t(filtered.length === 1 ? 'faculty' : 'faculties')} {t('of')} {faculties.length} {t(faculties.length === 1 ? 'faculty' : 'faculties')}</p>
+        {filtered.length === 0
+            ? <div className="mt-3"><PublicEmptyState text={t('No faculties match your search.')}><Button type="button" variant="outline" onClick={() => setQuery('')}>{t('Clear search')}</Button></PublicEmptyState></div>
+            : <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{filtered.map((faculty, index) => <article key={`${faculty?.name}-${index}`} className="public-card p-5 text-center"><div className="relative z-10 flex justify-center"><ParticipantLogo participant={faculty ? { ...faculty, name: facultyName(faculty) } : faculty} size="xl" /></div><h2 className="relative z-10 mt-4 text-sm font-black">{facultyName(faculty)}</h2></article>)}</div>}
+    </section>;
+}
+
 function VenuesDirectory({ venues, t }: { venues: string[]; t: (key: string) => string }) {
+    const [activeMap, setActiveMap] = useState<number | null>(null);
+    const mapTriggerRef = useRef<HTMLButtonElement | null>(null);
+    const [query, setQuery] = useState('');
+    const normalized = query.trim().toLocaleLowerCase();
+    const filteredVenues = useMemo(() => venues.filter(venue => venue.toLocaleLowerCase().includes(normalized)), [venues, normalized]);
+
     if (venues.length === 0) {
         return <PublicEmptyState text={t('The venue directory is not available yet.')} />;
     }
@@ -71,10 +114,40 @@ function VenuesDirectory({ venues, t }: { venues: string[]; t: (key: string) => 
                 </Link>
             </div>
 
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {venues.map((venue, index) => (
-                    <article key={venue} className="group relative isolate flex min-h-64 flex-col overflow-hidden rounded-3xl border border-[var(--public-dark-border)] bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]">
-                        <div aria-hidden="true" className="absolute -right-10 -top-12 -z-10 size-40 rounded-full border-[16px] border-[var(--public-primary-soft)] opacity-80 transition duration-300 group-hover:scale-110" />
+            <div className="mt-8 rounded-3xl border border-[var(--public-dark-border)] bg-white p-5 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] sm:p-7">
+                <PublicSectionHeading
+                    eyebrow={t('Venue maps')}
+                    title={t('Explore the SAF 20 venue map')}
+                    description={t('Open the official venue maps to plan your route between competition locations at UTeM.')}
+                />
+                <div className="mt-6 grid gap-5 md:grid-cols-2">
+                    {venueMaps.map((map, index) => (
+                        <button
+                            key={map.src}
+                            type="button"
+                            onClick={(event) => { mapTriggerRef.current = event.currentTarget; setActiveMap(index); }}
+                            className="group overflow-hidden rounded-2xl border border-[var(--public-dark-border)] bg-[var(--public-background)] text-left transition hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_20px_45px_-30px_rgba(7,27,51,.8)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-primary)]/50"
+                        >
+                            <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[var(--public-dark)]/5 p-3">
+                                <img src={map.src} alt={t(map.alt)} loading={index === 0 ? 'eager' : 'lazy'} className="h-full w-full object-contain transition duration-500 group-hover:scale-[1.02]" />
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="mt-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <PublicSectionHeading id="venue-directory-title" title={t('Venue directory')} description={t('Search the venue list or open a venue schedule.')} />
+                <div className="relative w-full sm:max-w-sm">
+                    <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--public-dark-faint)]" />
+                    <Input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Search venues')} aria-label={t('Search venues')} className="h-11 w-full rounded-xl bg-white py-2.5 pl-10 pr-12 text-sm font-semibold" />
+                    {query && <Button type="button" variant="ghost" size="icon" onClick={() => setQuery('')} aria-label={t('Clear search')} className="absolute right-0 top-1/2 size-11 -translate-y-1/2 text-[var(--public-dark-faint)]"><X className="size-4" /></Button>}
+                </div>
+            </div>
+            <p aria-live="polite" className="mt-5 text-xs font-bold text-[var(--public-dark-faint)]">{t('Showing')} {filteredVenues.length} {t(filteredVenues.length === 1 ? 'venue' : 'venues')} {t('of')} {venues.length} {t(venues.length === 1 ? 'venue' : 'venues')}</p>
+            {filteredVenues.length === 0 ? <div className="mt-3"><PublicEmptyState text={t('No venues match your search.')}><Button type="button" variant="outline" onClick={() => setQuery('')}>{t('Clear search')}</Button></PublicEmptyState></div> : <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredVenues.map((venue, index) => (
+                    <article key={venue} className="public-card public-card--secondary group flex min-h-64 flex-col p-6">
                         <div className="flex items-start justify-between gap-4">
                             <span className="flex size-12 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]">
                                 <MapPin className="size-6" aria-hidden="true" />
@@ -94,18 +167,50 @@ function VenuesDirectory({ venues, t }: { venues: string[]; t: (key: string) => 
                         </div>
                     </article>
                 ))}
-            </div>
+            </div>}
 
             <div className="mt-10 flex flex-col gap-4 rounded-3xl bg-[var(--public-dark)] p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
-                <div>
-                    <p className="text-xs font-black uppercase tracking-[.18em] text-[var(--public-accent)]">{t('Plan your visit')}</p>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">{t('Find upcoming fixtures by sport, event, venue and time.')}</p>
+                <div className="flex items-center gap-4">
+                    <SafeImage src="/images/mascots/pose-tunjuk-arah.webp" alt={t('Mascot pointing toward venue directions')} loading="lazy" decoding="async" className="h-28 w-24 shrink-0 object-contain drop-shadow-xl sm:h-36 sm:w-32" />
+                    <div>
+                        <p className="text-xs font-black uppercase tracking-[.18em] text-[var(--public-accent)]">{t('Plan your visit')}</p>
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">{t('Find upcoming fixtures by sport, event, venue and time.')}</p>
+                    </div>
                 </div>
                 <Link href={route('public.schedule')} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--public-highlight)] px-4 text-sm font-black text-[var(--public-dark)] transition hover:brightness-105">
                     {t('Explore schedule')}
                     <ArrowRight className="size-4" />
                 </Link>
             </div>
+
+            <Dialog open={activeMap !== null} onOpenChange={(open) => { if (!open) setActiveMap(null); }}>
+                {activeMap !== null && (
+                    <DialogContent showCloseButton={false} onCloseAutoFocus={(event) => { event.preventDefault(); mapTriggerRef.current?.focus(); }} className="flex max-h-[calc(100vh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border-white/10 bg-[var(--public-dark)] p-4 text-white sm:max-w-5xl sm:p-6">
+                        <DialogTitle className="sr-only">{t('Venue map')} {activeMap + 1}</DialogTitle>
+                        <DialogDescription className="sr-only">{t('Use the arrows to browse maps')}</DialogDescription>
+                        <div className="flex justify-end">
+                            <DialogClose asChild>
+                                <button type="button" aria-label={t('Close')} className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-highlight)]">
+                                    <X className="size-5" />
+                                </button>
+                            </DialogClose>
+                        </div>
+                        <div className="relative mt-1 flex min-h-0 flex-1 items-center justify-center overflow-auto rounded-2xl bg-black/20 p-2 sm:p-4">
+                            <img src={venueMaps[activeMap].src} alt={t(venueMaps[activeMap].alt)} className="max-h-[68vh] w-auto max-w-full object-contain" />
+                            <button type="button" onClick={() => setActiveMap(activeMap === 0 ? venueMaps.length - 1 : activeMap - 1)} aria-label={t('Previous map')} className="absolute left-3 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--public-dark)]/85 text-white transition hover:bg-[var(--public-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-highlight)]">
+                                <ChevronLeft className="size-5" />
+                            </button>
+                            <button type="button" onClick={() => setActiveMap(activeMap === venueMaps.length - 1 ? 0 : activeMap + 1)} aria-label={t('Next map')} className="absolute right-3 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--public-dark)]/85 text-white transition hover:bg-[var(--public-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-highlight)]">
+                                <ChevronRight className="size-5" />
+                            </button>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between text-xs font-bold text-white/60">
+                            <span>{activeMap + 1} / {venueMaps.length}</span>
+                            <span className="inline-flex items-center gap-1.5"><ArrowLeft className="size-3.5" /> {t('Use the arrows to browse maps')}</span>
+                        </div>
+                    </DialogContent>
+                )}
+            </Dialog>
         </section>
     );
 }
@@ -205,19 +310,41 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
     const documents = sport.documents ?? [];
 
     return (
-        <article className="group relative flex h-full flex-col rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[var(--public-primary-border)] hover:shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)]">
+        <article className="public-card group flex h-full flex-col p-5">
             <Link
                 href={route('public.schedule', { sport: sport.name })}
                 aria-label={`${sport.name} — ${t('View fixtures')}`}
-                className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-primary)]/40"
+                className="absolute inset-0 z-0 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-primary)]/40"
             />
-            <div className="flex items-start justify-between gap-3">
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]"><SportIcon name={sport.name} className="text-2xl leading-none" /></span>
-                <span className="rounded-full bg-[var(--public-dark-soft)] px-2.5 py-1 text-xs font-black uppercase tracking-wider text-[var(--public-dark-faint)] tabular-nums">{sport.events.length} {t('events')}</span>
+            <div className="relative flex min-h-40 items-center justify-center">
+                <span className="flex size-36 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-[var(--public-primary-soft)] text-[var(--public-primary)] sm:size-40">
+                    <SafeImage src={sport.icon} alt={`${sport.name} icon`} className="size-full object-contain p-0.5 drop-shadow-lg" fallback={<SportIcon name={sport.name} className="text-6xl leading-none" />} />
+                </span>
+                <span className="absolute right-0 top-0 rounded-full bg-[var(--public-dark-soft)] px-2.5 py-1 text-xs font-black uppercase tracking-wider text-[var(--public-dark-faint)] tabular-nums">{sport.events.length} {t('events')}</span>
             </div>
             <h2 className="mt-4 text-lg font-black leading-tight tracking-[-.02em]">{sport.name}</h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
                 {labels.map(label => <span key={label} className="rounded-md border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] px-2 py-0.5 text-xs font-bold text-[var(--public-primary)]">{label}</span>)}
+            </div>
+            <div className="relative z-10 mt-4 space-y-2 border-t border-[var(--public-dark-border)] pt-4">
+                {sport.events.map(event => (
+                    <div key={`${event.name}-${event.category ?? 'uncategorized'}`} className="rounded-xl border border-[var(--public-dark-border)] bg-[var(--public-background)] p-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <p className="text-sm font-black leading-tight">{event.name}</p>
+                            {event.category ? <span className="shrink-0 text-[10px] font-black uppercase tracking-wider text-[var(--public-dark-faint)]">{event.category}</span> : null}
+                        </div>
+                        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                            <QuotaValue label={t('Male')} value={event.quota.male} />
+                            <QuotaValue label={t('Female')} value={event.quota.female} />
+                            <QuotaValue label={t('Officials')} value={event.quota.officials} />
+                        </div>
+                        {event.quota.total !== null ? <p className="mt-2 text-xs font-bold text-[var(--public-dark-faint)]">{t('Max Total Athletes')}: <span className="font-black tabular-nums text-[var(--public-text)]">{event.quota.total}</span></p> : null}
+                        <p className="mt-3 flex items-start gap-1.5 text-xs font-semibold leading-5 text-[var(--public-dark-faint)]">
+                            <MapPin className="mt-0.5 size-3.5 shrink-0 text-[var(--public-primary)]" aria-hidden="true" />
+                            <span>{event.venues.length > 0 ? event.venues.join(', ') : <><span>{t('Venue TBD')} · </span><Link href={route('public.venues')} className="font-black text-[var(--public-primary)] underline underline-offset-2">{t('View venue information')}</Link></>}</span>
+                        </p>
+                    </div>
+                ))}
             </div>
             {documents.length > 0 ? (
                 <ul className="relative z-10 mt-3 space-y-1.5">
@@ -230,7 +357,7 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
                                 className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold text-[var(--public-primary)] underline-offset-2 hover:bg-[var(--public-primary-soft)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--public-primary)]/40"
                             >
                                 <FileText className="size-3.5 shrink-0" />
-                                {document.title}
+                                {publicDocumentTitle(document)}
                             </a>
                         </li>
                     ))}
@@ -241,5 +368,28 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
                 <span className="inline-flex items-center gap-1 text-xs font-black text-[var(--public-primary)]">{t('View fixtures')}<ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span>
             </div>
         </article>
+    );
+}
+
+function publicDocumentTitle(document: SportDocument): string {
+    const titleYears = document.title.match(/\b20\d{2}\b/g) ?? [];
+    const fileYears = document.file_name.match(/\b20\d{2}\b/g) ?? [];
+    const titleYear = titleYears.length > 0 ? titleYears[titleYears.length - 1] : undefined;
+    const fileYear = fileYears.length > 0 ? fileYears[fileYears.length - 1] : undefined;
+
+    // Avoid showing a year that conflicts with the year in the linked file name.
+    if (titleYear && fileYear && titleYear !== fileYear) {
+        return document.title.replace(new RegExp(`\\s*${titleYear}\\b`, 'g'), '').replace(/\s{2,}/g, ' ').trim();
+    }
+
+    return document.title;
+}
+
+function QuotaValue({ label, value }: { label: string; value: number | null }) {
+    return (
+        <div className="rounded-lg bg-white px-2 py-1.5">
+            <span className="block text-[10px] font-black uppercase tracking-wider text-[var(--public-dark-faint)]">{label}</span>
+            <strong className="mt-0.5 block text-sm font-black tabular-nums">{value ?? '—'}</strong>
+        </div>
     );
 }

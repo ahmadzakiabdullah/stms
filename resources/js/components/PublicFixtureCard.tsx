@@ -15,8 +15,8 @@ export type PublicFixtureCardMatch = {
     scheduled_at: string | null;
     venue: string | null;
     status: string;
-    home: (ParticipantLogoSource & { id?: string }) | null;
-    away: (ParticipantLogoSource & { id?: string }) | null;
+    home: (ParticipantLogoSource & { id?: string; name_ms?: string | null }) | null;
+    away: (ParticipantLogoSource & { id?: string; name_ms?: string | null }) | null;
     score_home: number | null;
     score_away: number | null;
     scoring_events?: Array<{ participant_id: string; name: string | null; minute: number | null; second: number | null; event_type: string }>;
@@ -47,6 +47,7 @@ export default function PublicFixtureCard({ match, mode }: Props) {
     const scorerLabel = (event: (typeof scorers)[number]) => `${event.name || t('Unknown')}${event.minute != null ? ` ${event.minute}'` : ''}`;
     const homeScorers = scorers.filter((event) => event.participant_id === match.home?.id);
     const awayScorers = scorers.filter((event) => event.participant_id === match.away?.id);
+    const teamName = (team: typeof match.home) => team ? (locale === 'ms' ? (team.name_ms || team.name) : team.name) : t('TBD');
 
     const scorerColumn = (teamName: string, events: typeof scorers, align: 'left' | 'right') => (
         <div className={align === 'right' ? 'text-right' : 'text-left'}>
@@ -56,7 +57,7 @@ export default function PublicFixtureCard({ match, mode }: Props) {
     );
 
     return (
-        <article id={`match-${match.id}`} className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 shadow-sm transition hover:border-[var(--public-primary-border)] hover:shadow-md sm:p-7">
+        <article id={`match-${match.id}`} className="public-card p-4 sm:p-7">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                     <h3 className="text-base font-black leading-tight text-[var(--public-text)] sm:text-lg">{match.event || match.sport || t('Competition')}</h3>
@@ -72,16 +73,16 @@ export default function PublicFixtureCard({ match, mode }: Props) {
             <div className="my-5 border-t border-[var(--public-dark-border)]" />
 
             <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-6">
-                <div className="flex min-w-0 items-center justify-end gap-3 text-right"><span className="line-clamp-2 text-sm font-black leading-tight text-[var(--public-text)] sm:text-base">{match.home?.name || t('TBD')}</span><ParticipantLogo participant={match.home} size="lg" alt="" /></div>
+                <div className="flex min-w-0 items-center justify-end gap-3 text-right"><span className="line-clamp-2 text-sm font-black leading-tight text-[var(--public-text)] sm:text-base">{teamName(match.home)}</span><ParticipantLogo participant={match.home ? { ...match.home, name: teamName(match.home) } : match.home} size="lg" alt="" /></div>
                 <div className="flex flex-col items-center text-center">
                     <span className="text-xs font-bold text-[var(--public-dark-faint)]">{isResult ? t('Final') : isLive ? t('Live') : t('Your Time')}</span>
                     <span className={`mt-1 rounded-lg px-3 py-1 text-xl font-black tracking-tight ${isLive ? 'bg-red-600 text-white' : isResult ? 'bg-[var(--public-dark)] text-white' : 'bg-[var(--public-dark-soft)] text-[var(--public-text)]'}`}>{isResult || isLive ? score : parts?.time || '—'}</span>
                     <span className="mt-1 text-xs font-semibold text-[var(--public-dark-faint)]">{secondary}</span>
                 </div>
-                <div className="flex min-w-0 items-center gap-3"><ParticipantLogo participant={match.away} size="lg" alt="" /><span className="line-clamp-2 text-sm font-black leading-tight text-[var(--public-text)] sm:text-base">{match.away?.name || t('TBD')}</span></div>
+                <div className="flex min-w-0 items-center gap-3"><ParticipantLogo participant={match.away ? { ...match.away, name: teamName(match.away) } : match.away} size="lg" alt="" /><span className="line-clamp-2 text-sm font-black leading-tight text-[var(--public-text)] sm:text-base">{teamName(match.away)}</span></div>
             </div>
 
-            {isResult && scorers.length > 0 && <div className="mt-4 border-t border-[var(--public-dark-border)] pt-3"><p className="text-xs font-black uppercase tracking-wide text-[var(--public-dark-faint)]">{t('Scorers')}</p><div className="mt-2 grid gap-3 sm:grid-cols-2">{scorerColumn(match.home?.name || t('Home'), homeScorers, 'left')}{scorerColumn(match.away?.name || t('Away'), awayScorers, 'right')}</div></div>}
+            {isResult && scorers.length > 0 && <div className="mt-4 border-t border-[var(--public-dark-border)] pt-3"><p className="text-xs font-black uppercase tracking-wide text-[var(--public-dark-faint)]">{t('Scorers')}</p><div className="mt-2 grid gap-3 sm:grid-cols-2">{scorerColumn(teamName(match.home), homeScorers, 'left')}{scorerColumn(teamName(match.away), awayScorers, 'right')}</div></div>}
             <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--public-dark-border)] pt-3"><PublicMatchStatus status={isLive ? 'in_progress' : isResult ? 'completed' : match.status} compact /><span className="text-xs font-black uppercase tracking-wide text-[var(--public-dark-faint)]">{match.sport || t('Competition')}</span></div>
         </article>
     );

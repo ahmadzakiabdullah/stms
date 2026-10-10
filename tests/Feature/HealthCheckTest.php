@@ -7,6 +7,7 @@ use App\Models\Session;
 use App\Services\ReleasePreflightService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
@@ -149,5 +150,42 @@ class HealthCheckTest extends TestCase
         $result = app(ReleasePreflightService::class)->check();
 
         $this->assertSame('error', $result['checks']['mail']['status']);
+    }
+
+    public function test_production_smoke_command_passes_public_and_tokened_health_checks(): void
+    {
+        Http::fake([
+            'https://saf.example.test/' => Http::response('<html>ok</html>', 200),
+            'https://saf.example.test/up' => Http::response('ok', 200),
+            'https://saf.example.test/health' => Http::response(['status' => 'ok'], 200),
+        ]);
+
+        $this->artisan('stms:production-smoke', [
+            '--url' => 'https://saf.example.test',
+            '--health-token' => 'health-token',
+            '--json' => true,
+        ])
+            ->expectsOutputToContain('"status": "ok"')
+            ->expectsOutputToContain('"homepage"')
+            ->expectsOutputToContain('"health"')
+            ->assertSuccessful();
+
+        Http::assertSentCount(3);
+    }
+
+    public function test_production_smoke_command_fails_when_required_check_is_not_ok(): void
+    {
+        Http::fake([
+            'https://saf.example.test/' => Http::response('maintenance', 503),
+            'https://saf.example.test/up' => Http::response('ok', 200),
+        ]);
+
+        $this->artisan('stms:production-smoke', [
+            '--url' => '[https://saf.example.test/](https://saf.example.test/)',
+            '--json' => true,
+        ])
+            ->expectsOutputToContain('"status": "error"')
+            ->expectsOutputToContain('"health"')
+            ->assertFailed();
     }
 }

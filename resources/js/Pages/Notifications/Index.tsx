@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Head, Link, router } from '@inertiajs/react';
 import { Activity, Bell, CheckCheck, CircleAlert, Inbox } from 'lucide-react';
 import { type Paginated } from '@/types';
-import { useI18n } from '@/lib/i18n';
+import { formatDateTime, useI18n } from '@/lib/i18n';
 
 interface NotificationItem {
     id: string;
@@ -19,8 +19,18 @@ interface NotificationItem {
         severity?: 'info' | 'success' | 'warning' | 'critical';
         event_name?: string;
         faculty_name?: string;
+        faculty_name_ms?: string | null;
         organization_id?: string;
         organization_name?: string;
+        home_name?: string | null;
+        home_name_ms?: string | null;
+        away_name?: string | null;
+        away_name_ms?: string | null;
+        winner_name?: string | null;
+        winner_name_ms?: string | null;
+        score_home?: number | null;
+        score_away?: number | null;
+        match_number?: number | null;
         action_url?: string;
     };
     read_at: string | null;
@@ -58,7 +68,37 @@ export default function NotificationsIndex({
     organizations,
     notificationTypes,
 }: Props) {
-    const { t } = useI18n();
+    const { locale, t } = useI18n();
+
+    const localized = (english?: string | null, malay?: string | null) => locale === 'ms' ? (malay || english || '-') : (english || '-');
+    const notificationTypeLabel = (type: string) => t({
+        confirmed: 'Registration approved',
+        rejected: 'Registration rejected',
+        result_recorded: 'Result recorded',
+        result_updated: 'Result updated',
+        result_removed: 'Result removed',
+    }[type] ?? type);
+    const notificationMessage = (data: NotificationItem['data']) => {
+        const event = data.event_name || t('Unknown event');
+        const faculty = localized(data.faculty_name, data.faculty_name_ms);
+
+        if (data.type === 'new_registration') return `${faculty} ${t('registered for')} '${event}'.`;
+        if (data.type === 'confirmed') return `${t('Registration for')} '${event}' ${t('has been approved')}.`;
+        if (data.type === 'rejected') return `${t('Registration for')} '${event}' ${t('has been rejected')}.`;
+
+        if (data.type?.startsWith('result_')) {
+            const action = data.type.replace('result_', '');
+            const actionLabel = t(action === 'recorded' ? 'Result recorded' : action === 'updated' ? 'Result updated' : action === 'removed' ? 'Result removed' : 'Match result changed');
+            const matchLabel = `${event}${data.match_number ? ` (${t('Match')} #${data.match_number})` : ''}`;
+            const teams = `${localized(data.home_name, data.home_name_ms)} ${t('vs')} ${localized(data.away_name, data.away_name_ms)}`;
+            const score = data.score_home !== null && data.score_home !== undefined && data.score_away !== null && data.score_away !== undefined ? ` (${data.score_home} - ${data.score_away})` : '';
+            const winner = data.winner_name ? `. ${t('Winner')}: ${localized(data.winner_name, data.winner_name_ms)}` : '';
+            const removedNote = action === 'removed' ? ` ${t('The result was deleted and rankings may change.')}` : '';
+            return `${actionLabel}: ${matchLabel} — ${teams}${score}${winner}${removedNote}`;
+        }
+
+        return data.message || t('Notification');
+    };
 
     const visit = (changes: Partial<Filters>) => {
         router.get(route('notifications.index'), { ...filters, ...changes }, {
@@ -80,7 +120,7 @@ export default function NotificationsIndex({
         <AuthenticatedLayout
             header={
                 <PageHeader
-                    title="Notifications"
+                    title={t('Notifications')}
                     description={t('Actionable updates for your account')}
                     actions={
                         <>
@@ -101,7 +141,7 @@ export default function NotificationsIndex({
         >
             <Head title={t('Notifications')} />
 
-            <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Notification views">
+            <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label={t('Notification views')}>
                 {isSuperAdmin && (
                     <Button
                         role="tab"
@@ -133,7 +173,7 @@ export default function NotificationsIndex({
                                 value={filters.status}
                                 onValueChange={(value) => visit({ status: value as Filters['status'] })}
                             >
-                                <SelectTrigger aria-label="Filter notifications by read status" className="h-9 w-full">
+                                <SelectTrigger aria-label={t('Filter notifications by read status')} className="h-9 w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -149,12 +189,12 @@ export default function NotificationsIndex({
                                 value={filters.type || 'all'}
                                 onValueChange={(value) => visit({ type: value === 'all' ? '' : value })}
                             >
-                                <SelectTrigger aria-label="Filter notifications by type" className="h-9 w-full">
+                                <SelectTrigger aria-label={t('Filter notifications by type')} className="h-9 w-full">
                                     <SelectValue placeholder={t('All types')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">{t('All types')}</SelectItem>
-                                    {notificationTypes.map((type) => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}
+                                    {notificationTypes.map((type) => <SelectItem key={type.value} value={type.value}>{notificationTypeLabel(type.value)}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </label>
@@ -165,7 +205,7 @@ export default function NotificationsIndex({
                                     value={filters.organization_id || 'all'}
                                     onValueChange={(value) => visit({ organization_id: value === 'all' ? '' : value })}
                                 >
-                                    <SelectTrigger aria-label="Filter notifications by organization" className="h-9 w-full">
+                                    <SelectTrigger aria-label={t('Filter notifications by organization')} className="h-9 w-full">
                                         <SelectValue placeholder={t('All organizations')} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -197,14 +237,14 @@ export default function NotificationsIndex({
                                         onClick={() => !notification.read_at && markAsRead(notification.id)}
                                     >
                                         <span className={`mt-0.5 rounded-full px-2 py-0.5 text-xs font-medium capitalize ${severityStyles[severity]}`}>
-                                            {severity}
+                                            {t(severity === 'critical' ? 'Critical' : severity === 'success' ? 'Success' : severity === 'warning' ? 'Warning' : 'Info')}
                                         </span>
                                         <span className="min-w-0 flex-1">
                                             <span className={`block text-sm ${!notification.read_at ? 'font-medium' : ''}`}>
-                                                {notification.data?.message || t('Notification')}
+                                                {notificationMessage(notification.data)}
                                             </span>
                                             <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                                <span>{new Date(notification.created_at).toLocaleString()}</span>
+                                                <span>{formatDateTime(notification.created_at, locale)}</span>
                                                 {notification.data?.organization_name && (
                                                     <Badge variant="outline">{notification.data.organization_name}</Badge>
                                                 )}

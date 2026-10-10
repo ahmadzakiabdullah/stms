@@ -174,6 +174,7 @@ class ParticipantService
             ->withoutOrganizationScope()
             ->where('event_id', $eventId)
             ->where('participant_id', $participant->id)
+            ->lockForUpdate()
             ->first();
 
         if ($existing) {
@@ -194,13 +195,27 @@ class ParticipantService
         }
 
         $data = array_diff_key($data, array_flip(['organization_id', 'event_id', 'participant_id']));
-        $registration = EventParticipant::create(array_merge($data, [
-            'event_id' => $eventId,
-            'participant_id' => $participant->id,
-            'organization_id' => $participant->organization_id,
-            'registration_date' => now(),
-            'status' => 'pending',
-        ], $data));
+        try {
+            $registration = EventParticipant::create(array_merge($data, [
+                'event_id' => $eventId,
+                'participant_id' => $participant->id,
+                'organization_id' => $participant->organization_id,
+                'registration_date' => now(),
+                'status' => 'pending',
+            ], $data));
+        } catch (QueryException $e) {
+            // The unique event/participant index is the final guard when two
+            // workers pass the pre-insert lookup at the same time.
+            $message = strtolower($e->getMessage());
+            if ((string) $e->getCode() === '23000'
+                && (str_contains($message, 'event_participant') || str_contains($message, 'event-participants'))) {
+                throw ValidationException::withMessages([
+                    'participant_id' => ['This participant is already registered for this event.'],
+                ]);
+            }
+
+            throw $e;
+        }
 
         Log::info('Participant registered to event', ['participant_id' => $participant->id, 'event_id' => $eventId]);
 

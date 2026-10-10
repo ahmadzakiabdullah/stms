@@ -1,8 +1,8 @@
 # ROADMAP
 
-> **Current repository update — 21 August 2026:** Athlete directory, responsive public match cards and individual scoring events for configured Hockey/Football workflows are implemented in commit `4c4ebf0c`. Production release hardening remains the active operational gate.
+> **Repository update — 22 September 2026:** Public portal/localization, concurrency regression coverage dan backend asynchronous transfer tersedia. Authorization/tenant queue dan query-budget hardening lulus ujian lokal. UI polling, distributed concurrency serta P0 production activation kekal terbuka.
 
-> Roadmap semasa STMS/SAF. Status bukti: 17 Ogos 2026.
+> Rujuk `CURRENT_STATE.md` dan `TODOS.md` untuk bukti semasa; angka production bertarikh di bawah ialah snapshot sejarah.
 
 ## MVP Produk
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Organization;
@@ -142,6 +143,18 @@ class EventParticipantStatusTest extends TestCase
         ]);
 
         Notification::assertSentToTimes($dean, NewEventRegistration::class, 2);
+
+        $summary = Activity::query()
+            ->where('event', 'bulk_registered')
+            ->where('subject_type', Participant::class)
+            ->where('subject_id', $data['facA']->id)
+            ->firstOrFail();
+
+        $this->assertSame('event_participants.batch_register', $summary->properties['bulk_action']);
+        $this->assertSame(2, $summary->properties['selected_count']);
+        $this->assertSame(2, $summary->properties['registered_count']);
+        $this->assertSame(0, $summary->properties['skipped_count']);
+        $this->assertNotEmpty($summary->properties['bulk_action_id']);
     }
 
     public function test_faculty_representative_batch_registration_skips_deadline_passed_events(): void
@@ -189,6 +202,17 @@ class EventParticipantStatusTest extends TestCase
             'event_id' => $expiredEvent->id,
             'participant_id' => $data['facA']->id,
         ]);
+
+        $summary = Activity::query()
+            ->where('event', 'bulk_registered')
+            ->where('subject_type', Participant::class)
+            ->where('subject_id', $data['facA']->id)
+            ->firstOrFail();
+
+        $this->assertSame(2, $summary->properties['selected_count']);
+        $this->assertSame(1, $summary->properties['registered_count']);
+        $this->assertSame(1, $summary->properties['skipped_count']);
+        $this->assertNotEmpty($summary->properties['failures']);
     }
 
     public function test_faculty_representative_registration_redirects_back_to_dashboard(): void

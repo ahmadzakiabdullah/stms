@@ -20,3 +20,8 @@ if (config('app.health.monitor_enabled')) {
         ->everyFiveMinutes()
         ->withoutOverlapping();
 }
+
+Schedule::command('stms:dashboard-snapshot')
+    ->dailyAt('23:55')
+    ->withoutOverlapping()
+    ->onOneServer();

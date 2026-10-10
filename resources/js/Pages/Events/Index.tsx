@@ -46,15 +46,16 @@ const eventSchema = z.object({
     sport_id: z.string().min(1, 'Sport is required'),
     sport_category_id: z.string().min(1, 'Category is required'),
     name: z.string().min(1, 'Name is required'),
+    name_ms: z.string().max(255).optional().default(''),
     slug: z.string().optional().default(''),
     description: z.string().optional().default(''),
     venues: z.array(z.object({ value: z.string() })).optional().default([]),
     start_date: z.string().min(1, 'Start date is required'),
     end_date: z.string().optional().default(''),
-    registration_deadline: z.string().optional().default(''),
     is_active: z.boolean(),
     format: z.string().optional().default(''),
     pool_size: z.coerce.number().min(2).max(32).optional().default(4),
+    qualifiers_per_pool: z.coerce.number().min(1).max(16).optional().default(2),
 });
 
 type EventForm = z.infer<typeof eventSchema>;
@@ -62,7 +63,7 @@ type EventForm = z.infer<typeof eventSchema>;
 interface EventRow extends Omit<Event, 'tournament' | 'sport' | 'sport_category'> {
     tournament?: { name: string } | null;
     sport?: { name: string } | null;
-    sport_category?: { name: string } | null;
+    sport_category?: { name: string; name_ms?: string | null } | null;
 }
 
 interface EventsIndexProps {
@@ -81,6 +82,7 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     const [deleteEvent, setDeleteEvent] = useState<EventRow | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [batchDelete, setBatchDelete] = useState(false);
+    const [batchDeleteReason, setBatchDeleteReason] = useState('');
     const [drawEvent, setDrawEvent] = useState<EventRow | null>(null);
     const [redrawEvent, setRedrawEvent] = useState<EventRow | null>(null);
     const [resetDrawEvent, setResetDrawEvent] = useState<EventRow | null>(null);
@@ -91,6 +93,7 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
     const tournaments = Array.isArray(tournamentsProp) ? tournamentsProp : (tournamentsProp ?? []);
     const sports = Array.isArray(sportsProp) ? sportsProp : (sportsProp ?? []);
     const categories = Array.isArray(categoriesProp) ? categoriesProp : (categoriesProp ?? []);
+    const selectedEvents = events.filter((event) => selectedIds.has(event.id));
 
     const applySearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -113,13 +116,16 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
             sport_id: '',
             sport_category_id: '',
             name: '',
+            name_ms: '',
             slug: '',
             description: '',
             venues: [],
             start_date: '',
             end_date: '',
-            registration_deadline: '',
             is_active: true,
+            format: '',
+            pool_size: 4,
+            qualifiers_per_pool: 2,
         },
     });
 
@@ -127,15 +133,34 @@ export default function EventsIndex({ events: eventsProp, tournaments: tournamen
 
     const selectedTournamentId = watch('tournament_id');
     const selectedSportId = watch('sport_id');
+    const selectedFormat = watch('format');
 
     const formatLabel = (format?: string | null) => {
-    const map: Record<string, string> = {
+        const map: Record<string, string> = {
             group_knockout: t('Group Knockout'),
             league: t('League'),
             knockout: t('Knockout'),
-    };
+        };
         return format ? map[format] || format : t('Not set');
-};
+    };
+
+    const formatDetail = (event: EventRow) => {
+        const format = (event as any).format;
+
+        if (!format) {
+            return t('No draw config');
+        }
+
+        if (format === 'group_knockout') {
+            return `${event.pool_size ?? 4}/pool, ${event.qualifiers_per_pool ?? 2} qualify`;
+        }
+
+        if (format === 'league') {
+            return `${event.pool_size ?? 4}/pool`;
+        }
+
+        return t('Direct elimination');
+    };
 
 const formatForDateInput = (dateStr: string | null | undefined) => {
         if (!dateStr) return '';
@@ -188,15 +213,16 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             sport_id: '',
             sport_category_id: '',
             name: '',
+            name_ms: '',
             slug: '',
             description: '',
             venues: [],
             start_date: '',
             end_date: '',
-            registration_deadline: '',
             is_active: true,
             format: '',
             pool_size: 4,
+            qualifiers_per_pool: 2,
         });
         setOpen(true);
     };
@@ -209,15 +235,16 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             sport_id: event.sport_id,
             sport_category_id: event.sport_category_id,
             name: event.name,
+            name_ms: event.name_ms || '',
             slug: event.slug,
             description: event.description || '',
             venues: (event.venues ?? []).map((value) => ({ value })),
             start_date: formatForDateInput(event.start_date),
             end_date: formatForDateInput(event.end_date),
-            registration_deadline: formatForDateInput((event as any).registration_deadline),
             is_active: event.is_active,
             format: (event as any).format || '',
             pool_size: (event as any).pool_size ?? 4,
+            qualifiers_per_pool: (event as any).qualifiers_per_pool ?? 2,
         });
         setOpen(true);
     };
@@ -290,10 +317,9 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
     };
 
     const handleBatchDelete = () => {
-        router.post(route('events.batch-destroy'), { ids: Array.from(selectedIds) }, {
+        router.post(route('events.batch-destroy'), { ids: Array.from(selectedIds), reason: batchDeleteReason.trim() }, {
             preserveScroll: true,
-            onSuccess: () => { setSelectedIds(new Set()); setBatchDelete(false); },
-            onError: () => setBatchDelete(false),
+            onSuccess: () => { setSelectedIds(new Set()); setBatchDeleteReason(''); setBatchDelete(false); },
         });
     };
 
@@ -401,6 +427,8 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             placeholder="e.g. Men's Football - Group A"
                                             required
                                         />
+                                        <Label htmlFor="name_ms">{t('Event Name (Bahasa Malaysia)')}</Label>
+                                        <Input id="name_ms" {...register('name_ms')} placeholder={t('Optional Malay name')} />
                                         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                                     </div>
 
@@ -465,18 +493,8 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             />
                                             {errors.end_date && <p className="text-sm text-destructive">{errors.end_date.message}</p>}
                                         </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="registration_deadline">{t('Registration Deadline')}</Label>
-                                            <Input
-                                                id="registration_deadline"
-                                                type="text"
-                                                placeholder="dd/mm/yyyy"
-                                                value={formatForDateDisplay(watch('registration_deadline'))}
-                                                onChange={(event) => setValue('registration_deadline', parseDateDisplay(event.target.value), { shouldValidate: true })}
-                                            />
-                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-4 sm:grid-cols-3">
                                         <div className="grid gap-2">
                                             <Label htmlFor="format">{t('Format')}</Label>
                                             <Controller
@@ -500,6 +518,19 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                         <div className="grid gap-2">
                                             <Label htmlFor="pool_size">{t('Pool Size')}</Label>
                                             <Input id="pool_size" type="number" min={2} max={32} {...register('pool_size', { valueAsNumber: true })} />
+                                            {errors.pool_size && <p className="text-sm text-destructive">{errors.pool_size.message}</p>}
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="qualifiers_per_pool">{t('Qualifiers / Pool')}</Label>
+                                            <Input
+                                                id="qualifiers_per_pool"
+                                                type="number"
+                                                min={1}
+                                                max={16}
+                                                disabled={selectedFormat !== 'group_knockout'}
+                                                {...register('qualifiers_per_pool', { valueAsNumber: true })}
+                                            />
+                                            {errors.qualifiers_per_pool && <p className="text-sm text-destructive">{errors.qualifiers_per_pool.message}</p>}
                                         </div>
                                     </div>
                                 </div>
@@ -541,7 +572,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                     {isSuperAdmin && selectedIds.size > 0 && (
                         <div className="mb-4 flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">{selectedIds.size} {t('selected')}</span>
-                            <Button variant="destructive" size="sm" onClick={() => setBatchDelete(true)}>
+                            <Button variant="destructive" size="sm" onClick={() => { setBatchDeleteReason(''); setBatchDelete(true); }}>
                                 <Trash className="mr-1 size-3" /> {t('Delete Selected')}
                             </Button>
                         </div>
@@ -561,7 +592,6 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                 <TableHead>{t('Tournament')}</TableHead>
                                 <TableHead>{t('Sport / Category')}</TableHead>
                                 <TableHead>{t('Dates')}</TableHead>
-                                <TableHead>{t('Deadline')}</TableHead>
                                 <TableHead>{t('Format')}</TableHead>
                                 <TableHead>{t('Participation')}</TableHead>
                                 <TableHead>{t('Status')}</TableHead>
@@ -571,7 +601,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                         <TableBody>
                             {events.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={isSuperAdmin ? 10 : 9} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={isSuperAdmin ? 9 : 8} className="text-center text-muted-foreground">
                                         <EmptyState title={search ? t('No events match your search.') : t('No events yet.')} />
                                     </TableCell>
                                 </TableRow>
@@ -599,11 +629,11 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     <TableCell className="text-sm text-muted-foreground">
                                         {new Date(event.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })} {event.end_date ? `→ ${new Date(event.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}` : ''}
                                     </TableCell>
-                                    <TableCell className="text-sm text-muted-foreground">
-                                        {(event as any).registration_deadline ? new Date((event as any).registration_deadline).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
-                                    </TableCell>
                                     <TableCell>
-                                        <span className="text-xs">{formatLabel((event as any).format)}</span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-xs font-medium">{formatLabel((event as any).format)}</span>
+                                            <span className="text-xs text-muted-foreground">{formatDetail(event)}</span>
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col gap-1">
@@ -651,17 +681,17 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                     <TableCell className="text-right space-x-2">
                                         {(event.pools_count ?? 0) > 0 && (
                                             <Link href={route('events.draw-result', event.slug)}>
-                                                <Button variant="secondary" size="sm" title="View draw result">
+                                                <Button variant="secondary" size="sm" title={t('View draw result')}>
                                                     <Eye className="mr-1 size-3" /> {t('View Draw')}
                                                 </Button>
                                             </Link>
                                         )}
                                         {(event.pools_count ?? 0) === 0 ? (
-                                            <Button variant="outline" size="sm" onClick={() => handleDraw(event)} title="Randomly assign participants into groups">
+                                            <Button variant="outline" size="sm" onClick={() => handleDraw(event)} title={t('Randomly assign participants into groups')}>
                                                 <Target className="mr-1 size-3" /> {t('Draw')}
                                             </Button>
                                         ) : (event.matches_count ?? 0) === 0 ? (
-                                            <Button variant="outline" size="sm" onClick={() => setRedrawEvent(event)} title="Discard the current grouping and draw again">
+                                            <Button variant="outline" size="sm" onClick={() => setRedrawEvent(event)} title={t('Discard the current grouping and draw again')}>
                                                 <RefreshCw className="mr-1 size-3" /> {t('Re-draw')}
                                             </Button>
                                         ) : (
@@ -670,7 +700,7 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                                 size="sm"
                                                 className="text-red-600 hover:text-red-700"
                                                 onClick={() => setResetDrawEvent(event)}
-                                                title="Delete all groups and fixtures and restart the draw"
+                                                title={t('Delete all groups and fixtures and restart the draw')}
                                             >
                                                 <RotateCcw className="mr-1 size-3" /> {t('Reset Draw')}
                                             </Button>
@@ -694,19 +724,49 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             </Card>
 
             {isSuperAdmin && (
-                <Dialog open={batchDelete} onOpenChange={(isOpen) => !isOpen && setBatchDelete(false)}>
+                <Dialog open={batchDelete} onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setBatchDelete(false);
+                        setBatchDeleteReason('');
+                    }
+                }}>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>{t('Delete Events')}?</DialogTitle>
                             <DialogDescription>
-                                {t('This action cannot be undone. The events and all associated data will be permanently deleted.')}
+                                {t('Review the selected events and record a reason before deleting them.')}
                             </DialogDescription>
                         </DialogHeader>
+                        <div className="space-y-4 py-2">
+                            <div className="rounded-md border bg-muted/30 p-3">
+                                <p className="text-sm font-medium">{selectedEvents.length} {t('selected')}</p>
+                                <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                                    {selectedEvents.slice(0, 6).map((event) => (
+                                        <li key={event.id} className="truncate">- {event.name}</li>
+                                    ))}
+                                </ul>
+                                {selectedEvents.length > 6 && (
+                                    <p className="mt-2 text-xs text-muted-foreground">+{selectedEvents.length - 6} {t('more')}</p>
+                                )}
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="batch-delete-reason">{t('Reason')}</Label>
+                                <textarea
+                                    id="batch-delete-reason"
+                                    value={batchDeleteReason}
+                                    onChange={(event) => setBatchDeleteReason(event.target.value)}
+                                    className="min-h-24 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    maxLength={500}
+                                    placeholder={t('Example: Duplicate events created during setup review.')}
+                                />
+                                <p className="text-xs text-muted-foreground">{t('This reason will be stored in the activity log.')}</p>
+                            </div>
+                        </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setBatchDelete(false)}>
                                 {t('Cancel')}
                             </Button>
-                            <Button variant="destructive" onClick={handleBatchDelete}>
+                            <Button variant="destructive" onClick={handleBatchDelete} disabled={selectedEvents.length === 0 || batchDeleteReason.trim().length < 5}>
                                 {t('Yes, Delete All')}
                             </Button>
                         </DialogFooter>
@@ -718,32 +778,32 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             <Dialog open={!!drawEvent} onOpenChange={(o) => { if (!o) setDrawEvent(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Draw Groups?</DialogTitle>
+                        <DialogTitle>{t('Draw Groups?')}</DialogTitle>
                         <DialogDescription>
                             Randomly assign confirmed participants into groups for <strong>{drawEvent?.name}</strong>.
                             You can review and adjust the groups before generating fixtures. Any existing grouping will be replaced.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-2 py-2">
-                        <Label htmlFor="draw_format">Format</Label>
+                        <Label htmlFor="draw_format">{t('Format')}</Label>
                         <Select value={drawFormat} onValueChange={setDrawFormat}>
                             <SelectTrigger id="draw_format" className="h-9 w-full">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="group_knockout">Group + Knockout</SelectItem>
-                                <SelectItem value="league">League (Round Robin)</SelectItem>
-                                <SelectItem value="knockout">Knockout</SelectItem>
+                                <SelectItem value="group_knockout">{t('Group + Knockout')}</SelectItem>
+                                <SelectItem value="league">{t('League (Round Robin)')}</SelectItem>
+                                <SelectItem value="knockout">{t('Knockout')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDrawEvent(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setDrawEvent(null)}>{t('Cancel')}</Button>
                         <Button onClick={() => {
                             const e = drawEvent;
                             setDrawEvent(null);
                             if (e) router.post(route('events.draw', e.slug), { format: drawFormat }, { preserveScroll: true });
-                        }}>Yes, Draw</Button>
+                        }}>{t('Yes, Draw')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -753,15 +813,15 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             <Dialog open={!!redrawEvent} onOpenChange={(o) => { if (!o) setRedrawEvent(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Re-draw Groups?</DialogTitle>
+                        <DialogTitle>{t('Re-draw Groups?')}</DialogTitle>
                         <DialogDescription>
                             This will discard the current grouping for <strong>{redrawEvent?.name}</strong> and randomly
                             assign participants into new groups. No fixtures exist yet.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setRedrawEvent(null)}>Cancel</Button>
-                        <Button onClick={submitRedraw}>Yes, Re-draw</Button>
+                        <Button variant="outline" onClick={() => setRedrawEvent(null)}>{t('Cancel')}</Button>
+                        <Button onClick={submitRedraw}>{t('Yes, Re-draw')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -771,15 +831,15 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
             <Dialog open={!!resetDrawEvent} onOpenChange={(o) => { if (!o) setResetDrawEvent(null); }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Reset Draw?</DialogTitle>
+                        <DialogTitle>{t('Reset Draw?')}</DialogTitle>
                         <DialogDescription>
                             Delete all groups and fixtures for <strong>{resetDrawEvent?.name}</strong> and restart the
                             draw from scratch. This cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setResetDrawEvent(null)}>Cancel</Button>
-                        <Button variant="destructive" onClick={submitResetDraw}>Yes, Reset Draw</Button>
+                        <Button variant="outline" onClick={() => setResetDrawEvent(null)}>{t('Cancel')}</Button>
+                        <Button variant="destructive" onClick={submitResetDraw}>{t('Yes, Reset Draw')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

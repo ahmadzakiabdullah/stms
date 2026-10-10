@@ -30,7 +30,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v10:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v12:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::flexible($cacheKey, [120, 600], function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -45,7 +45,7 @@ class PublicPortalService
     {
         $session = $this->publicSession();
         if (! $session) {
-            return ['app_name' => config('app.name'), 'competition' => null];
+            return ['app_name' => config('app.name'), 'session_branding' => ['logo_url' => null, 'inverse_logo_url' => null], 'competition' => null];
         }
 
         $appName = Setting::query()
@@ -55,6 +55,10 @@ class PublicPortalService
 
         return [
             'app_name' => filled($appName) ? $appName : config('app.name'),
+            'session_branding' => [
+                'logo_url' => $session->logo_url,
+                'inverse_logo_url' => $session->inverse_logo_url,
+            ],
             'competition' => [
                 'name' => $session->name,
                 'organization' => $session->organization?->name,
@@ -77,6 +81,8 @@ class PublicPortalService
                 Cache::forget('public-portal:v8:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v9:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v10:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v11:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v12:'.$sessionId.':'.$limit);
             }
             Cache::forget('public-athletes:v1:'.$sessionId);
             Cache::forget('public-athletes:v2:'.$sessionId);
@@ -115,7 +121,16 @@ class PublicPortalService
             return $this->emptyAthleteDirectory($view, $q, $sport, $category, $faculty, $letter, $sort);
         }
 
-        $base = Cache::flexible('public-athletes:v2:'.$session->id, [120, 600], fn (): array => $this->buildAthleteDirectory($session));
+        try {
+            $base = Cache::flexible('public-athletes:v2:'.$session->id, [120, 600], fn (): array => $this->buildAthleteDirectory($session));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return [
+                ...$this->emptyAthleteDirectory($view, $q, $sport, $category, $faculty, $letter, $sort),
+                'error' => 'athlete_directory_unavailable',
+            ];
+        }
 
         $athletes = $this->sortRows($this->filterAthleteRows($base['athletes'], $q, $sport, $category, $faculty, $letter), $sort);
         $rosters = $this->sortRows($this->filterRosterRows($base['rosters'], $q, $sport, $category, $faculty, $letter), $sort);
@@ -166,10 +181,10 @@ class PublicPortalService
             ->whereHas('participant', fn ($query) => $query->where('session_id', $session->id)->where('is_active', true))
             ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds)->where('organization_id', $session->organization_id))
             ->with([
-                'participant:id,name,logo_path,inverse_logo_path',
-                'event:id,name,sport_id,sport_category_id',
-                'event.sport:id,name',
-                'event.sportCategory:id,name',
+                'participant:id,name,name_ms,logo_path,inverse_logo_path',
+                'event:id,name,name_ms,sport_id,sport_category_id',
+                'event.sport:id,name,name_ms',
+                'event.sportCategory:id,name,name_ms',
                 'squadMembers' => fn ($query) => $query->where('is_active', true)->ordered(),
             ])->get();
 
@@ -183,12 +198,16 @@ class PublicPortalService
             return [
                 'id' => $participant?->id,
                 'name' => $participant?->name,
+                'name_ms' => $participant?->name_ms,
                 'logo_url' => $participant?->logo_url,
                 'inverse_logo_url' => $participant?->inverse_logo_url,
                 'events' => $entries->map(fn (EventParticipant $entry) => [
                     'name' => $entry->event?->name,
+                    'name_ms' => $entry->event?->name_ms,
                     'sport' => $entry->event?->sport?->name,
+                    'sport_ms' => $entry->event?->sport?->name_ms,
                     'category' => $entry->event?->sportCategory?->name,
+                    'category_ms' => $entry->event?->sportCategory?->name_ms,
                 ])->unique(fn (array $event) => implode('|', [$event['name'], $event['sport'], $event['category']]))->sortBy('name')->values()->all(),
                 'members' => $members->map(fn (SquadMember $member) => [
                     'name' => $member->name,
@@ -206,12 +225,16 @@ class PublicPortalService
                 'key' => $participant?->id.'|'.$member->name,
                 'name' => $member->name,
                 'faculty' => $participant?->name,
+                'faculty_ms' => $participant?->name_ms,
                 'faculty_logo_url' => $participant?->logo_url,
                 'faculty_inverse_logo_url' => $participant?->inverse_logo_url,
                 'events' => [[
                     'name' => $entry->event?->name,
+                    'name_ms' => $entry->event?->name_ms,
                     'sport' => $entry->event?->sport?->name,
+                    'sport_ms' => $entry->event?->sport?->name_ms,
                     'category' => $entry->event?->sportCategory?->name,
+                    'category_ms' => $entry->event?->sportCategory?->name_ms,
                 ]],
             ]);
         })->groupBy('key')->map(function ($entries) {
@@ -221,6 +244,7 @@ class PublicPortalService
                 'id' => $athlete['id'],
                 'name' => $athlete['name'],
                 'faculty' => $athlete['faculty'],
+                'faculty_ms' => $athlete['faculty_ms'],
                 'faculty_logo_url' => $athlete['faculty_logo_url'],
                 'faculty_inverse_logo_url' => $athlete['faculty_inverse_logo_url'],
                 'events' => $entries->flatMap(fn (array $entry) => $entry['events'])->unique(fn (array $event) => implode('|', [$event['name'], $event['sport'], $event['category']]))->sortBy('name')->values()->all(),
@@ -230,9 +254,19 @@ class PublicPortalService
         return [
             'rosters' => $rosters->all(),
             'athletes' => $athletes->all(),
-            'faculties' => $athletes->pluck('faculty')->filter()->unique()->sort()->values()->all(),
-            'sports' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sport?->name)->filter()->unique()->sort()->values()->all(),
-            'categories' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sportCategory?->name)->filter()->unique()->sort()->values()->all(),
+            'faculties' => $rosters->map(fn (array $roster) => [
+                'name' => $roster['name'],
+                'name_ms' => $roster['name_ms'],
+            ])->filter(fn (array $faculty) => filled($faculty['name']))
+                ->unique('name')->sortBy('name')->values()->all(),
+            'sports' => $registrations->map(fn (EventParticipant $entry) => [
+                'name' => $entry->event?->sport?->name,
+                'name_ms' => $entry->event?->sport?->name_ms,
+            ])->filter(fn (array $sport) => filled($sport['name']))->unique('name')->sortBy('name')->values()->all(),
+            'categories' => $registrations->map(fn (EventParticipant $entry) => [
+                'name' => $entry->event?->sportCategory?->name,
+                'name_ms' => $entry->event?->sportCategory?->name_ms,
+            ])->filter(fn (array $category) => filled($category['name']))->unique('name')->sortBy('name')->values()->all(),
             'stats' => [
                 'teams' => $rosters->count(),
                 'athletes' => $athletes->count(),
@@ -253,8 +287,15 @@ class PublicPortalService
         return array_values(array_filter($athletes, function (array $athlete) use ($needle, $sport, $category, $faculty, $letter): bool {
             if ($needle !== '') {
                 $haystack = array_merge(
-                    [$athlete['name'] ?? null, $athlete['faculty'] ?? null],
-                    array_map(fn (array $event) => $event['name'] ?? null, $athlete['events'] ?? []),
+                    [$athlete['name'] ?? null, $athlete['faculty'] ?? null, $athlete['faculty_ms'] ?? null],
+                    array_merge(...array_map(fn (array $event) => [
+                        $event['name'] ?? null,
+                        $event['name_ms'] ?? null,
+                        $event['sport'] ?? null,
+                        $event['sport_ms'] ?? null,
+                        $event['category'] ?? null,
+                        $event['category_ms'] ?? null,
+                    ], $athlete['events'] ?? [])),
                 );
 
                 if (! $this->containsNeedle($haystack, $needle)) {
@@ -282,9 +323,16 @@ class PublicPortalService
         return array_values(array_filter($rosters, function (array $roster) use ($needle, $sport, $category, $faculty, $letter): bool {
             if ($needle !== '') {
                 $haystack = array_merge(
-                    [$roster['name'] ?? null],
+                    [$roster['name'] ?? null, $roster['name_ms'] ?? null],
                     array_map(fn (array $member) => $member['name'] ?? null, $roster['members'] ?? []),
-                    array_map(fn (array $event) => $event['name'] ?? null, $roster['events'] ?? []),
+                    array_merge(...array_map(fn (array $event) => [
+                        $event['name'] ?? null,
+                        $event['name_ms'] ?? null,
+                        $event['sport'] ?? null,
+                        $event['sport_ms'] ?? null,
+                        $event['category'] ?? null,
+                        $event['category_ms'] ?? null,
+                    ], $roster['events'] ?? [])),
                 );
 
                 if (! $this->containsNeedle($haystack, $needle)) {
@@ -415,10 +463,10 @@ class PublicPortalService
                     ->whereHas('event', fn ($event) => $event->whereIn('tournament_id', $session->tournaments()->pluck('id'))->where('organization_id', $session->organization_id));
             })
             ->with([
-                'eventParticipant.participant:id,name,logo_path,inverse_logo_path',
+                'eventParticipant.participant:id,name,name_ms,logo_path,inverse_logo_path',
                 'eventParticipant.event:id,name,sport_id,sport_category_id',
-                'eventParticipant.event.sport:id,name',
-                'eventParticipant.event.sportCategory:id,name',
+                'eventParticipant.event.sport:id,name,name_ms',
+                'eventParticipant.event.sportCategory:id,name,name_ms',
             ])->first();
 
         if (! $member) {
@@ -433,7 +481,7 @@ class PublicPortalService
             ->where(function ($query) use ($participant) {
                 $query->where('home_participant_id', $participant->id)->orWhere('away_participant_id', $participant->id);
             })
-            ->with(['event:id,name,venues', 'result', 'homeParticipant:id,name', 'awayParticipant:id,name'])
+            ->with(['event:id,name,venues', 'result', 'homeParticipant:id,name,name_ms', 'awayParticipant:id,name,name_ms'])
             ->orderByDesc('scheduled_at')->orderByDesc('match_number')->get();
 
         $matches = $fixtures->map(function (Fixture $fixture) use ($participant) {
@@ -450,6 +498,7 @@ class PublicPortalService
                 'id' => $fixture->id,
                 'event' => $fixture->event?->name,
                 'opponent' => $isHome ? $fixture->awayParticipant?->name : $fixture->homeParticipant?->name,
+                'opponent_ms' => $isHome ? $fixture->awayParticipant?->name_ms : $fixture->homeParticipant?->name_ms,
                 'score_for' => $isHome ? $result?->score_home : $result?->score_away,
                 'score_against' => $isHome ? $result?->score_away : $result?->score_home,
                 'scheduled_at' => $fixture->scheduled_at?->toIso8601String(),
@@ -468,8 +517,11 @@ class PublicPortalService
                 'logo_url' => $participant->logo_url,
                 'inverse_logo_url' => $participant->inverse_logo_url,
                 'sport' => $entry->event?->sport?->name,
+                'sport_ms' => $entry->event?->sport?->name_ms,
                 'category' => $entry->event?->sportCategory?->name,
+                'category_ms' => $entry->event?->sportCategory?->name_ms,
                 'event' => $entry->event?->name,
+                'event_ms' => $entry->event?->name_ms,
             ],
             'stats' => [
                 'matches' => $matches->where('status', 'completed')->count(),
@@ -504,7 +556,7 @@ class PublicPortalService
 
         $fixtureQuery = fn () => Fixture::query()->where('organization_id', $organizationId)
             ->whereHas('event', fn ($query) => $query->whereIn('tournament_id', $tournamentIds))
-            ->with(['event.sport', 'event.sportCategory', 'pool:id,name', 'homeParticipant:id,name,team_name,logo_path,inverse_logo_path', 'awayParticipant:id,name,team_name,logo_path,inverse_logo_path', 'result.scoringEvents.squadMember']);
+            ->with(['event.sport', 'event.sportCategory', 'pool:id,name', 'homeParticipant:id,name,name_ms,team_name,logo_path,inverse_logo_path', 'awayParticipant:id,name,name_ms,team_name,logo_path,inverse_logo_path', 'result.scoringEvents.squadMember']);
 
         $upcomingFixtures = $fixtureQuery()->whereIn('status', ['scheduled', 'in_progress'])
             ->orderByRaw('scheduled_at IS NULL')
@@ -529,28 +581,46 @@ class PublicPortalService
         $playableCount = $fixtureQuery()->whereIn('status', ['scheduled', 'in_progress', 'completed'])->count();
         $lastUpdated = collect([$session->updated_at, $fixtureQuery()->max('updated_at')])->filter()->max();
 
+        // Reuse the catalog for counts, names and venues instead of querying events repeatedly.
+        $catalogEvents = (clone $eventQuery)->with([
+            'sport:id,name,icon',
+            'sportCategory:id,name,quota_mode,max_athletes_total,max_male_athletes,max_female_athletes,min_male_athletes,min_female_athletes,max_officials',
+            'sport.documents' => fn ($query) => $query
+                ->where('organization_id', $organizationId)
+                ->where('session_id', $session->id)
+                ->where('is_published', true),
+        ])->get();
+
         return [
             'app_name' => filled($portalSettings['app_name'] ?? null) ? $portalSettings['app_name'] : config('app.name'),
+            'session_branding' => [
+                'logo_url' => $session->logo_url,
+                'inverse_logo_url' => $session->inverse_logo_url,
+            ],
             'competition' => ['name' => $session->name, 'description' => $session->description,
                 'start_date' => $session->start_date?->toDateString(), 'end_date' => $session->end_date?->toDateString(),
                 'organization' => $session->organization?->name],
-            'stats' => ['sports' => (clone $eventQuery)->distinct()->count('sport_id'), 'events' => (clone $eventQuery)->count(),
+            'stats' => ['sports' => $catalogEvents->pluck('sport_id')->filter()->unique()->count(), 'events' => $catalogEvents->count(),
                 'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()->count(),
                 'completed_matches' => $completedFixtures->count(), 'total_matches' => $playableCount],
-            'sports_catalog' => (clone $eventQuery)->with([
-                'sport:id,name',
-                'sportCategory:id,name',
-                'sport.documents' => fn ($query) => $query
-                    ->where('organization_id', $organizationId)
-                    ->where('session_id', $session->id)
-                    ->where('is_published', true),
-            ])->get()
+            'sports_catalog' => $catalogEvents
                 ->groupBy('sport_id')->map(fn ($events) => [
                     'name' => $events->first()->sport?->name,
+                    'icon' => $events->first()->sport?->icon,
                     'categories' => $events->map(fn ($event) => $event->sportCategory?->name)->filter()->unique()->sort()->values()->all(),
                     'events' => $events->map(fn ($event) => [
                         'name' => $event->name,
                         'category' => $event->sportCategory?->name,
+                        'venues' => collect($event->venues ?? [])->filter()->values()->all(),
+                        'quota' => [
+                            'mode' => $event->sportCategory?->quota_mode,
+                            'total' => $event->sportCategory?->max_athletes_total,
+                            'male' => $event->sportCategory?->max_male_athletes,
+                            'female' => $event->sportCategory?->max_female_athletes,
+                            'officials' => $event->sportCategory?->max_officials,
+                            'min_male' => $event->sportCategory?->min_male_athletes,
+                            'min_female' => $event->sportCategory?->min_female_athletes,
+                        ],
                     ])->sortBy('name')->values()->all(),
                     'documents' => ($events->first()->sport?->documents ?? collect())->map(fn ($document) => [
                         'title' => $document->title,
@@ -560,13 +630,13 @@ class PublicPortalService
                         'file_size' => $document->file_size,
                     ])->values()->all(),
                 ])->filter(fn ($sport) => filled($sport['name']))->sortBy('name')->values()->all(),
-            'sports' => (clone $eventQuery)->with('sport:id,name')->get()->pluck('sport.name')->filter()->unique()->sort()->values()->all(),
+            'sports' => $catalogEvents->pluck('sport.name')->filter()->unique()->sort()->values()->all(),
             'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()
-                ->orderBy('name')->get(['id', 'name', 'logo_path', 'inverse_logo_path'])->map(fn (Participant $participant) => [
-                    'name' => $participant->name, 'logo_url' => $participant->logo_url, 'inverse_logo_url' => $participant->inverse_logo_url,
+                ->orderBy('name')->get(['id', 'name', 'name_ms', 'logo_path', 'inverse_logo_path'])->map(fn (Participant $participant) => [
+                    'name' => $participant->name, 'name_ms' => $participant->name_ms, 'logo_url' => $participant->logo_url, 'inverse_logo_url' => $participant->inverse_logo_url,
                 ])->values()->all(),
             'venues' => collect([
-                ...(clone $eventQuery)->pluck('venues')->flatten()->filter()->all(),
+                ...$catalogEvents->pluck('venues')->flatten()->filter()->all(),
                 ...$fixtureQuery()->whereNotNull('venue')->where('venue', '!=', '')->get(['venue'])->pluck('venue')->all(),
             ])->unique()->sort()->values()->all(),
             'upcoming' => $upcoming->all(),
@@ -609,6 +679,7 @@ class PublicPortalService
         $participant = fn ($value) => $value ? [
             'id' => $value->id,
             'name' => $value->name,
+            'name_ms' => $value->name_ms,
             'logo_url' => $value->logo_url,
             'inverse_logo_url' => $value->inverse_logo_url,
         ] : null;
@@ -633,7 +704,7 @@ class PublicPortalService
 
     private function emptyData(): array
     {
-        return ['app_name' => config('app.name'), 'competition' => null, 'stats' => ['sports' => 0, 'events' => 0, 'faculties' => 0, 'completed_matches' => 0, 'total_matches' => 0],
+        return ['app_name' => config('app.name'), 'session_branding' => ['logo_url' => null, 'inverse_logo_url' => null], 'competition' => null, 'stats' => ['sports' => 0, 'events' => 0, 'faculties' => 0, 'completed_matches' => 0, 'total_matches' => 0],
             'sports' => [], 'sports_catalog' => [], 'faculties' => [], 'venues' => [], 'upcoming' => [], 'results' => [], 'medals' => [],
             'contact' => $this->contactData([]), 'updated_at' => now()->toIso8601String(),
             'weather' => $this->weatherService->current()];

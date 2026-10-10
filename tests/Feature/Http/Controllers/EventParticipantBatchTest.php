@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Event;
 use App\Models\EventParticipant;
 use App\Models\Organization;
@@ -74,6 +75,32 @@ class EventParticipantBatchTest extends TestCase
         $this->assertDatabaseHas('event_participants', ['id' => $data['epB']->id, 'status' => 'confirmed']);
     }
 
+    public function test_batch_approve_records_summary_activity(): void
+    {
+        $user = $this->seedSuperAdmin();
+        $data = $this->seedData();
+
+        $this->actingAs($user)
+            ->post(route('event-participants.batch-status'), [
+                'ids' => [$data['epA']->id, $data['epB']->id],
+                'status' => 'confirmed',
+            ])
+            ->assertSessionHas('success', '2 registration(s) approved.');
+
+        $summary = Activity::query()
+            ->where('event', 'bulk_status_updated')
+            ->where('subject_type', Organization::class)
+            ->where('subject_id', $data['org']->id)
+            ->firstOrFail();
+
+        $this->assertSame('event_participants.batch_status', $summary->properties['bulk_action']);
+        $this->assertSame('confirmed', $summary->properties['target_status']);
+        $this->assertSame(2, $summary->properties['selected_count']);
+        $this->assertSame(2, $summary->properties['updated_count']);
+        $this->assertSame(0, $summary->properties['skipped_count']);
+        $this->assertNotEmpty($summary->properties['bulk_action_id']);
+    }
+
     public function test_admin_can_batch_reject_with_shared_reason(): void
     {
         $user = $this->seedSuperAdmin();
@@ -106,6 +133,31 @@ class EventParticipantBatchTest extends TestCase
         $this->assertDatabaseHas('event_participants', ['id' => $data['epA']->id, 'status' => 'pending']);
     }
 
+    public function test_batch_reject_records_shared_reason_in_summary_activity(): void
+    {
+        $user = $this->seedSuperAdmin();
+        $data = $this->seedData();
+
+        $this->actingAs($user)
+            ->post(route('event-participants.batch-status'), [
+                'ids' => [$data['epA']->id],
+                'status' => 'rejected',
+                'notes' => 'Over quota.',
+            ])
+            ->assertSessionHas('success', '1 registration(s) rejected.');
+
+        $summary = Activity::query()
+            ->where('event', 'bulk_status_updated')
+            ->where('subject_type', Organization::class)
+            ->where('subject_id', $data['org']->id)
+            ->firstOrFail();
+
+        $this->assertSame('rejected', $summary->properties['target_status']);
+        $this->assertSame('Over quota.', $summary->properties['notes']);
+        $this->assertSame(1, $summary->properties['selected_count']);
+        $this->assertSame(1, $summary->properties['updated_count']);
+    }
+
     public function test_batch_rejects_cannot_touch_other_organizations(): void
     {
         Role::firstOrCreate(['name' => 'org-admin']);
@@ -124,6 +176,24 @@ class EventParticipantBatchTest extends TestCase
             ->assertSessionHas('success', '0 registration(s) approved.');
 
         $this->assertDatabaseHas('event_participants', ['id' => $data['epA']->id, 'status' => 'pending']);
+    }
+
+    public function test_super_admin_batch_status_rejects_mixed_organization_selection(): void
+    {
+        $user = $this->seedSuperAdmin();
+        $tenantA = $this->seedData();
+        $tenantB = $this->seedData();
+
+        $this->actingAs($user)
+            ->post(route('event-participants.batch-status'), [
+                'ids' => [$tenantA['epA']->id, $tenantB['epA']->id],
+                'status' => 'confirmed',
+            ])
+            ->assertRedirect(route('event-participants.index'))
+            ->assertSessionHas('error', 'Bulk status updates can only be applied to registrations from one organization at a time.');
+
+        $this->assertDatabaseHas('event_participants', ['id' => $tenantA['epA']->id, 'status' => 'pending']);
+        $this->assertDatabaseHas('event_participants', ['id' => $tenantB['epA']->id, 'status' => 'pending']);
     }
 
     public function test_batch_skips_confirmed_registrations_in_approval_batch(): void
@@ -223,6 +293,18 @@ class EventParticipantBatchTest extends TestCase
         $this->assertDatabaseHas('event_participants', [
             'event_id' => $data['eventB']->id, 'participant_id' => $data['facA']->id, 'status' => 'pending',
         ]);
+
+        $summary = Activity::query()
+            ->where('event', 'bulk_imported')
+            ->where('subject_type', Participant::class)
+            ->where('subject_id', $data['facA']->id)
+            ->firstOrFail();
+
+        $this->assertSame('event_participants.import', $summary->properties['bulk_action']);
+        $this->assertSame(2, $summary->properties['selected_count']);
+        $this->assertSame(2, $summary->properties['created_count']);
+        $this->assertSame(0, $summary->properties['error_count']);
+        $this->assertNotEmpty($summary->properties['bulk_action_id']);
     }
 
     public function test_import_reports_unknown_event_and_skips_duplicates(): void
@@ -252,6 +334,17 @@ class EventParticipantBatchTest extends TestCase
         $this->assertDatabaseHas('event_participants', [
             'event_id' => $data['eventB']->id, 'participant_id' => $data['facA']->id,
         ]);
+
+        $summary = Activity::query()
+            ->where('event', 'bulk_imported')
+            ->where('subject_type', Participant::class)
+            ->where('subject_id', $data['facA']->id)
+            ->firstOrFail();
+
+        $this->assertSame('event_participants.import', $summary->properties['bulk_action']);
+        $this->assertSame(1, $summary->properties['created_count']);
+        $this->assertSame(2, $summary->properties['error_count']);
+        $this->assertNotEmpty($summary->properties['failures']);
     }
 
     public function test_import_template_download_requires_create_ability(): void

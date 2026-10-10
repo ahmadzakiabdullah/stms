@@ -9,7 +9,7 @@ Dokumen ini ialah rujukan semasa untuk public portal STMS. Public portal ialah p
 - Homepage → Schedule & Results → filter/search → fixture or result information.
 - Homepage → Athletes & Teams → search/filter → athlete or roster profile.
 - Homepage → Competition → Sports, Faculties or Venues.
-- Homepage → Information → News, Downloads, FAQ or About.
+- Homepage → Information → General Information, committees, game chairpersons or important dates.
 - Homepage/Footer → Contact → official address, email, phone and social links.
 
 ## Navigation
@@ -20,7 +20,7 @@ Primary public navigation:
 - Schedule & Results
 - Athletes & Teams
 - Competition: Sports, Faculties, Venues
-- Information: News, Downloads, FAQ, About
+- Information: General Information, Jawatankuasa Induk, Jawatankuasa Pelaksana, Pengerusi Permainan, Tarikh Penting
 - Contact
 - Login
 
@@ -33,6 +33,12 @@ Public components are composition layers over local shadcn/ui primitives and Tai
 - `Button` for actions and links.
 - `Input` and `Select` for search and filters.
 - `Tabs` for schedule/result views.
+
+Public content cards should use the shared `public-card` class so Venue, Sports, Faculty, Athlete, Committee, Contact and Fixture cards retain the same rounded 3xl surface, soft shadow, hover lift, border highlight and decorative accent.
+
+Standard pages share `PublicPageHero`, with 144px top padding on mobile and 176px from the `sm` breakpoint to keep clear space below the absolute public navigation. The homepage and committee pages use matching top padding for their custom hero/content layouts.
+
+All public UI labels and supplied information pages should support the shared `en` and `ms` locales. Official personal names, sport names and venue names remain unchanged unless an approved localized label is available.
 - `Sheet` for mobile schedule filters and navigation.
 - `Badge` for match status and compact metadata.
 - `Card`, `Skeleton`, `Alert` and shared public empty/error/loading states for content states.
@@ -71,10 +77,13 @@ Permission state is intentionally not rendered as an in-page public state: these
 - Bundle budget: passed with JS ≤ 400,000 bytes and CSS ≤ 120,000 bytes.
 - Public home/contact keyboard and accessibility smoke: passed on desktop and mobile runs.
 - Public horizontal-overflow and locale-switching test: passed on desktop and mobile runs.
+- Public route initial HTML now supplies route-specific title, description, canonical, Open Graph and Twitter metadata using the active locale; recheck previews after deployment.
+- Venue map lightbox uses the shared Radix Dialog primitive for keyboard focus management, Escape handling and focus restoration.
+- The empty schedule state links to the published general schedule, important dates and sports programme. It does not claim a fixture publication date unless one is supplied officially.
 
 ## Open work
 
-- Complete route-by-route metadata/Open Graph audit.
+- Verify route-specific initial HTML metadata on the deployed public routes and inspect social previews after deployment.
 - Measure LCP, INP and CLS after deployment.
 - Complete full public axe/keyboard audit for schedule filters, dropdowns, pagination and roster disclosure.
 - Review and consolidate historical UI/UX documents without removing business or security requirements.

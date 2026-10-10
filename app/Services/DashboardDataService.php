@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Models\EventParticipant;
+use App\Models\DashboardMetricSnapshot;
 use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;
@@ -25,7 +26,7 @@ final class DashboardDataService
     private ?User $user = null;
 
     /**
-     * @param  array{sport_id?: ?string, faculty_id?: ?string, status?: ?string}  $filters
+     * @param  array{sport_id?: ?string, faculty_id?: ?string, status?: ?string, session_id?: ?string, tournament_id?: ?string}  $filters
      * @return array<string, mixed>
      */
     public function dataFor(User $user, array $filters, bool $isSuper): array
@@ -36,27 +37,35 @@ final class DashboardDataService
         $sportId = $filters['sport_id'] ?? null;
         $facultyId = $filters['faculty_id'] ?? null;
         $status = $filters['status'] ?? null;
-        $cacheKey = 'dashboard-v6-'.($user->organization_id ?? 'all').'-'.$user->getKey().'-'.md5(implode('|', [$sportId, $facultyId, $status]));
+        $sessionId = $filters['session_id'] ?? null;
+        $tournamentId = $filters['tournament_id'] ?? null;
+        $scopeFilters = [$sportId, $facultyId, $status, $sessionId, $tournamentId];
+        $cacheKey = 'dashboard-v7-'.($user->organization_id ?? 'all').'-'.$user->getKey().'-'.md5(implode('|', $scopeFilters));
 
-        $data = Cache::remember($cacheKey, 60, function () use ($isSuper, $user, $sportId, $facultyId, $status) {
+        $data = Cache::remember($cacheKey, 60, function () use ($isSuper, $user, $sportId, $facultyId, $status, $sessionId, $tournamentId) {
+            $eventScope = fn ($query) => $query
+                ->when($sessionId, fn ($query) => $query->whereHas('tournament', fn ($query) => $query->where('session_id', $sessionId)))
+                ->when($tournamentId, fn ($query) => $query->where('tournament_id', $tournamentId));
+            $fixtureScope = fn ($query) => $query->whereHas('event', $eventScope);
             $stats = [
                 'organizations' => $isSuper ? $this->safeCount(Organization::class) : 1,
                 'activeSessions' => $this->safeCount(Session::class, fn ($query) => $query->where('is_active', true)),
                 'tournaments' => $this->safeCount(Tournament::class),
                 'sports' => $this->safeCount(Sport::class),
-                'events' => $this->safeCount(Event::class),
+                'events' => $this->safeCount(Event::class, $eventScope),
                 'participants' => $this->safeCount(Participant::class),
                 'registrations' => $this->safeCount(Registration::class),
-                'matches' => $this->safeCount(Fixture::class),
-                'results' => $this->safeCount(Result::class),
+                'matches' => $this->safeCount(Fixture::class, $fixtureScope),
+                'results' => $this->safeCount(Result::class, fn ($query) => $query->whereHas('match', fn ($query) => $fixtureScope($query))),
             ];
 
-            $totalEventRegistrations = $this->safeCount(EventParticipant::class);
+            $totalEventRegistrations = $this->safeCount(EventParticipant::class, fn ($query) => $query->whereHas('event', $eventScope));
             $participantsWithRegistrations = $this->safeCount(Participant::class, fn ($query) => $query
                 ->where('is_active', true)
-                ->whereHas('eventParticipants'));
+                ->whereHas('eventParticipants', fn ($query) => $query->whereHas('event', $eventScope)));
 
             $registrationPipeline = $this->safeQuery(fn () => EventParticipant::query()
+                ->whereHas('event', $eventScope)
                 ->selectRaw('status, count(*) as total')
                 ->groupBy('status')
                 ->pluck('total', 'status')
@@ -66,6 +75,8 @@ final class DashboardDataService
                 ->with(['sport:id,name', 'sportCategory:id,name', 'tournament:id,name'])
                 ->withCount('eventParticipants')
                 ->where('is_active', true)
+                ->when($sessionId, fn ($query) => $query->whereHas('tournament', fn ($query) => $query->where('session_id', $sessionId)))
+                ->when($tournamentId, fn ($query) => $query->where('tournament_id', $tournamentId))
                 ->where('start_date', '>=', now()->subDay())
                 ->orderBy('start_date')
                 ->limit(5)
@@ -85,6 +96,8 @@ final class DashboardDataService
                 ->selectRaw('sports.name, count(*) as total')
                 ->join('events', 'event_participants.event_id', '=', 'events.id')
                 ->join('sports', 'events.sport_id', '=', 'sports.id')
+                ->when($sessionId, fn ($query) => $query->whereIn('events.tournament_id', Tournament::query()->select('id')->where('session_id', $sessionId)))
+                ->when($tournamentId, fn ($query) => $query->where('events.tournament_id', $tournamentId))
                 ->groupBy('sports.name')
                 ->orderByDesc('total')
                 ->limit(5)
@@ -98,37 +111,44 @@ final class DashboardDataService
                 'totalEvents' => $this->safeCount(Event::class, fn ($query) => $query->where('is_active', true)),
             ];
 
-            $systemOverview = $isSuper ? $this->safeQuery(function () {
-                $row = (array) DB::query()->selectRaw("(SELECT COUNT(*) FROM users) AS users,
-                    (SELECT COUNT(*) FROM organizations WHERE is_active = 1) AS active_organizations,
-                    (SELECT COUNT(*) FROM organizations WHERE is_active = 0) AS inactive_organizations,
-                    (SELECT COUNT(*) FROM events WHERE is_active = 1) AS active_events,
-                    (SELECT COUNT(*) FROM events WHERE is_active = 0) AS inactive_events,
-                    (SELECT COUNT(*) FROM events e WHERE e.is_active = 1
-                        AND EXISTS (SELECT 1 FROM event_participants ep WHERE ep.event_id = e.id)
-                        AND NOT EXISTS (SELECT 1 FROM matches m WHERE m.event_id = e.id)) AS events_without_fixtures,
-                    (SELECT COUNT(*) FROM matches WHERE scheduled_at IS NULL AND status IN ('scheduled', 'in_progress')) AS unscheduled_fixtures,
-                    (SELECT COUNT(*) FROM matches WHERE status = 'scheduled') AS fixtures_scheduled,
-                    (SELECT COUNT(*) FROM matches WHERE status = 'in_progress') AS fixtures_in_progress,
-                    (SELECT COUNT(*) FROM matches WHERE status = 'completed') AS fixtures_completed,
-                    (SELECT COUNT(*) FROM matches WHERE status = 'cancelled') AS fixtures_cancelled")->first();
+            $systemOverview = $isSuper ? $this->safeQuery(function () use ($eventScope) {
+                $fixturesByStatus = Fixture::query()->whereHas('event', $eventScope)
+                    ->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+                $activeEvents = $eventScope(Event::query()->where('is_active', true));
+                $inactiveEvents = $eventScope(Event::query()->where('is_active', false));
+                $eventsWithoutFixtures = clone $activeEvents;
+                $eventsWithoutFixtures->whereHas('eventParticipants')->whereDoesntHave('matches');
 
                 return [
-                    'users' => (int) ($row['users'] ?? 0),
-                    'activeOrganizations' => (int) ($row['active_organizations'] ?? 0),
-                    'inactiveOrganizations' => (int) ($row['inactive_organizations'] ?? 0),
-                    'activeEvents' => (int) ($row['active_events'] ?? 0),
-                    'inactiveEvents' => (int) ($row['inactive_events'] ?? 0),
-                    'eventsWithoutFixtures' => (int) ($row['events_without_fixtures'] ?? 0),
-                    'unscheduledFixtures' => (int) ($row['unscheduled_fixtures'] ?? 0),
+                    'users' => User::query()->count(),
+                    'activeOrganizations' => Organization::query()->where('is_active', true)->count(),
+                    'inactiveOrganizations' => Organization::query()->where('is_active', false)->count(),
+                    'activeEvents' => $activeEvents->count(),
+                    'inactiveEvents' => $inactiveEvents->count(),
+                    'eventsWithoutFixtures' => $eventsWithoutFixtures->count(),
+                    'unscheduledFixtures' => Fixture::query()->whereHas('event', $eventScope)
+                        ->whereNull('scheduled_at')->whereIn('status', ['scheduled', 'in_progress'])->count(),
                     'fixturesByStatus' => [
-                        'scheduled' => (int) ($row['fixtures_scheduled'] ?? 0),
-                        'in_progress' => (int) ($row['fixtures_in_progress'] ?? 0),
-                        'completed' => (int) ($row['fixtures_completed'] ?? 0),
-                        'cancelled' => (int) ($row['fixtures_cancelled'] ?? 0),
+                        'scheduled' => (int) ($fixturesByStatus['scheduled'] ?? 0),
+                        'in_progress' => (int) ($fixturesByStatus['in_progress'] ?? 0),
+                        'completed' => (int) ($fixturesByStatus['completed'] ?? 0),
+                        'cancelled' => (int) ($fixturesByStatus['cancelled'] ?? 0),
                     ],
                 ];
             }, []) : [];
+
+            $trendSnapshots = $isSuper ? $this->safeQuery(fn () => DashboardMetricSnapshot::query()
+                ->where('scope_key', $tournamentId ? 'tournament:'.$tournamentId : ($sessionId ? 'session:'.$sessionId : 'global'))
+                ->where('snapshot_date', '>=', now()->subDays(89)->toDateString())
+                ->orderBy('snapshot_date')
+                ->get(['snapshot_date', 'organizations', 'users', 'events', 'matches'])
+                ->map(fn ($snapshot) => [
+                    'date' => $snapshot->snapshot_date->toDateString(),
+                    'organizations' => $snapshot->organizations,
+                    'users' => $snapshot->users,
+                    'events' => $snapshot->events,
+                    'matches' => $snapshot->matches,
+                ])->values(), collect()) : collect();
 
             $facultyStats = $this->safeQuery(fn () => Participant::query()
                 ->where('is_active', true)
@@ -197,11 +217,28 @@ final class DashboardDataService
                 ->limit(5)
                 ->get(['id', 'name', 'start_date', 'end_date', 'is_active', 'session_id']), collect());
 
+            $filterSessions = $this->safeQuery(fn () => Session::query()
+                ->when(! $isSuper, fn ($query) => $query->where('organization_id', $user->organization_id))
+                ->orderByDesc('is_active')->orderByDesc('start_date')->get(['id', 'name']), collect());
+            $filterTournaments = $this->safeQuery(fn () => Tournament::query()
+                ->when(! $isSuper, fn ($query) => $query->where('organization_id', $user->organization_id))
+                ->when($sessionId, fn ($query) => $query->where('session_id', $sessionId))
+                ->orderBy('name')->get(['id', 'name', 'session_id']), collect());
+
+            $currentTrendMetrics = [
+                'organizations' => (int) ($systemOverview['activeOrganizations'] ?? 0),
+                'users' => (int) ($systemOverview['users'] ?? 0),
+                'events' => $this->safeCount(Event::class, $eventScope),
+                'matches' => $this->safeCount(Fixture::class, $fixtureScope),
+            ];
+            $selectedFilters = ['session_id' => $sessionId, 'tournament_id' => $tournamentId];
+
             return compact(
                 'stats', 'recentSessions', 'recentTournaments',
                 'totalEventRegistrations', 'participantsWithRegistrations',
                 'upcomingEvents', 'registrationsBySport',
-                'registrationPipeline', 'registrationStats', 'systemOverview', 'facultyStats', 'eventStats', 'sports', 'faculties', 'squadStats'
+                'registrationPipeline', 'registrationStats', 'systemOverview', 'facultyStats', 'eventStats', 'sports', 'faculties', 'squadStats',
+                'trendSnapshots', 'filterSessions', 'filterTournaments', 'currentTrendMetrics', 'selectedFilters'
             );
         });
 

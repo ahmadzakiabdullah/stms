@@ -81,6 +81,7 @@ const ParticipantAvatar = ({ participant, variant = 'roster' }: { participant?: 
 );
 
 const Matchup = ({ home, away, result }: { home?: Participant; away?: Participant; result?: Result | null }) => {
+    const { t } = useI18n();
     const hasScore = Boolean(result && (result.score_home !== null || result.score_away !== null));
     const isWinner = (id?: string) => hasScore && Boolean(id) && result?.winner_participant_id === id;
 
@@ -95,7 +96,7 @@ const Matchup = ({ home, away, result }: { home?: Participant; away?: Participan
                     {result.score_home ?? '-'} - {result.score_away ?? '-'}
                 </span>
             ) : (
-                <span className="rounded-full bg-muted px-2 py-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">VS</span>
+                <span className="rounded-full bg-muted px-2 py-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">{t('VS')}</span>
             )}
             <div className="flex min-w-0 items-center gap-2 text-left">
                 <ParticipantAvatar participant={away} variant="matchup" />

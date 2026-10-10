@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Imports\SquadMembersImport;
 use App\Models\EventParticipant;
 use App\Models\SquadMember;
+use App\Services\RegistrationWindowService;
 use App\Services\SquadQuotaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class FacultyDashboardController extends Controller
 {
-    public function storeSquad(Request $request, SquadQuotaService $quotaService): RedirectResponse
+    public function storeSquad(Request $request, SquadQuotaService $quotaService, RegistrationWindowService $registrationWindow): RedirectResponse
     {
         $this->authorizeFacultyRepresentative();
 
@@ -37,6 +38,11 @@ class FacultyDashboardController extends Controller
         if ($ep->status !== 'confirmed') {
             return redirect()->route('dashboard')
                 ->with('error', 'Only confirmed registrations can add squad members.');
+        }
+
+        if (! $registrationWindow->isSquadRegistrationOpen($ep)) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Officials and athlete registration is not currently open.');
         }
 
         $isOfficial = in_array($validated['role'], ['assistant_manager', 'manager', 'coach', 'physio'], true);
@@ -85,7 +91,7 @@ class FacultyDashboardController extends Controller
             ->with('success', 'Squad member removed.');
     }
 
-    public function importSquad(Request $request): RedirectResponse
+    public function importSquad(Request $request, RegistrationWindowService $registrationWindow): RedirectResponse
     {
         $this->authorizeFacultyRepresentative();
 
@@ -103,6 +109,11 @@ class FacultyDashboardController extends Controller
         if ($ep->status !== 'confirmed') {
             return redirect()->route('dashboard')
                 ->with('error', 'Only confirmed registrations can add squad members.');
+        }
+
+        if (! $registrationWindow->isSquadRegistrationOpen($ep)) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Officials and athlete registration is not currently open.');
         }
 
         try {

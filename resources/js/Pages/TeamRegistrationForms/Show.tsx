@@ -18,7 +18,7 @@ interface Props {
     organization: { name: string; logo_url: string | null };
     branding: { tournament_logo_url: string | null; secretariat_address: string; form_reference: string };
     registration: { id: string; status: string; registration_date: string | null };
-    participant: { name: string; team_name: string | null; logo_url: string | null };
+    participant: { name: string; name_ms?: string | null; team_name: string | null; logo_url: string | null };
     event: { name: string; sport: string; category: string; tournament: string; session: string; period: string };
     officials: Member[];
     athletes: Member[];
@@ -44,7 +44,8 @@ function rows(members: Member[], quota: number) {
 }
 
 export default function Show(props: Props) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
+    const participantName = locale === 'ms' ? (props.participant.name_ms || props.participant.name) : props.participant.name;
     const officialRows = rows(props.officials, props.quotaRows.officials);
     const athleteRows = rows(props.athletes, props.quotaRows.athletes);
 
@@ -55,7 +56,7 @@ export default function Show(props: Props) {
                 <PageHeader
                     className="print-hidden"
                     title={t('Team Registration Form')}
-                    description={`${props.participant.name} - ${props.event.sport} (${props.event.category})`}
+                    description={`${participantName} - ${props.event.sport} (${props.event.category})`}
                     actions={
                         <>
                             <Button asChild variant="outline"><Link href={route('event-participants.index')}><ArrowLeft className="mr-2 size-4" />{t('Back to Event Registrations')}</Link></Button>
@@ -85,7 +86,7 @@ export default function Show(props: Props) {
                     </div>
 
                     <div className="mt-3 grid grid-cols-[110px_1fr_95px_1fr] gap-y-1 border border-black p-2">
-                        <span className="font-bold">{t('Faculty / Team')}</span><span>: {props.participant.team_name || props.participant.name}</span>
+                        <span className="font-bold">{t('Faculty / Team')}</span><span>: {props.participant.team_name || participantName}</span>
                         <span className="font-bold">{t('Form Date')}</span><span>: {props.generatedDate}</span>
                         <span className="font-bold">{t('Sport')}</span><span>: {props.event.sport}</span>
                         <span className="font-bold">{t('Category')}</span><span>: {props.event.category}</span>

@@ -55,6 +55,7 @@ class StoreEventRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'name' => ['required', 'string', 'max:255'],
+            'name_ms' => ['nullable', 'string', 'max:255'],
             'slug' => [
                 'nullable',
                 'string',
@@ -67,10 +68,10 @@ class StoreEventRequest extends FormRequest
             'venues.*' => ['required', 'string', 'max:255', 'distinct'],
             'start_date' => ['required', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'registration_deadline' => ['nullable', 'date', 'after:now'],
             'is_active' => ['boolean'],
             'format' => ['nullable', 'string', 'in:league,group_knockout,knockout'],
             'pool_size' => ['nullable', 'integer', 'min:2', 'max:32'],
+            'qualifiers_per_pool' => ['nullable', 'integer', 'min:1', 'max:16', 'lte:pool_size'],
         ];
     }
 }

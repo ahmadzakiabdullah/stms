@@ -26,3 +26,14 @@ Public portal payloads use Laravel stale-while-revalidate caching: values remain
 - Do not cache partial fallback/error payloads.
 - Every mutation affecting cached output must invalidate only the affected tenant.
 - Add query/cache budgets for dashboard, registration, results, reports and public portal.
+
+## Invalidation Matrix
+
+| Cached output | Key scope | Invalidation trigger | Scope of invalidation |
+| --- | --- | --- | --- |
+| Dashboard payload | User, organization and filter combination | Dashboard-owned data mutation or explicit dashboard refresh | Affected user/organization dashboard keys |
+| Public homepage, directory and schedule payload | Public session and limit | Event, participant, match, result, sport document or public setting mutation | The affected organization’s active public session |
+| Public athlete directory | Public session | Confirmed registration, squad member or participant mutation | The affected public session |
+| Role and permission metadata | Spatie permission cache | Role/permission assignment or definition change | Permission cache for the affected application scope |
+
+Mutation services call `PublicPortalService::forgetForOrganization()` or the explicit session-scoped `forget()` path after a successful write. Tests must verify that the changed tenant is cleared while another tenant’s keys remain intact. Cache invalidation is application behavior; Redis activation and freshness alerting remain production release requirements.

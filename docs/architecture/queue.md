@@ -18,4 +18,8 @@ The runtime workspace uses the **database** queue. The audited 32 database-notif
 - job payloads carry explicit tenant context
 - idempotent handling where retries can duplicate side effects
 
-PDF/Excel generation remains synchronous/query-based in current MVP; queue long-running exports before supporting larger datasets.
+PDF generation remains synchronous. Excel exports and participant imports also
+have an asynchronous `DataTransfer` backend; UI migration and production worker
+activation remain open. Jobs use the tenant middleware, requester authorization
+and a dedicated connection whose retry interval exceeds the job timeout.
+See [data transfers](data-transfers.md) for worker setup and remaining limits.
