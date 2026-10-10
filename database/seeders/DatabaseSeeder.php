@@ -135,6 +135,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Super Admin SAF',
                 'email' => 'admin@saf.test',
                 'password' => bcrypt('password'),
+                'email_verified_at' => now(),
                 'organization_id' => $defaultOrg->id,
             ]
         );
