@@ -20,8 +20,11 @@ class BatchRegisterParticipantToEvents
         $failures = [];
         $created = collect();
 
-        foreach (array_unique($eventIds) as $eventId) {
-            $event = Event::find($eventId);
+        $uniqueEventIds = array_unique($eventIds);
+        $events = Event::whereIn('id', $uniqueEventIds)->get()->keyBy('id');
+
+        foreach ($uniqueEventIds as $eventId) {
+            $event = $events->get($eventId);
 
             try {
                 $created->push($this->register->handle($participant, $eventId));

@@ -13,3 +13,6 @@
 ## 2024-05-18 - Fix N+1 Query in Dashboard
 **Learning:** Found an N+1 query vulnerability when counting nested `eventParticipants` on the Dashboard. Calling `$e->eventParticipants()->count()` in a loop maps sequentially, hitting the DB for each item.
 **Action:** Use Laravel's `->withCount('eventParticipants')` eager load feature to retrieve the count in the initial SQL query, drastically reducing query overhead.
+## 2026-10-11 - [N+1 query in backend logic loops]
+**Learning:** Found N+1 query vulnerability when iterating and calling `Model::find($id)` inside the loop for batch update/register actions. Even worse when a relation on the queried model is also needed (e.g. `$participant->users`).
+**Action:** Always fetch the relevant collection outside of the loop first using `whereIn()` and map it via `keyBy('id')`. Inside the loop, perform collection lookups `$collection->get($id)` to dramatically decrease DB query counts. Eager load relations upfront if accessed inside.
