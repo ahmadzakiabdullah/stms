@@ -85,6 +85,7 @@ class SAF2026ParticipantsUsersSeeder extends Seeder
             [
                 'name' => $name,
                 'email' => $email,
+                'email_verified_at' => now(),
                 'password' => bcrypt('password'),
                 'organization_id' => $organization->id,
                 'participant_id' => $participant->id,
