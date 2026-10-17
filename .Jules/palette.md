@@ -1,3 +1,3 @@
-## 2025-02-28 - Missing ARIA Labels on Navigation Icons
-**Learning:** Icon-only navigation buttons in AuthenticatedLayout (Mobile Menu, Notifications, User Menu) lacked ARIA labels, creating accessibility gaps for screen readers.
-**Action:** Always ensure any icon-only button uses an `aria-label` describing its specific functionality.
+## 2024-10-24 - HTML nesting inside Inertia Link components
+**Learning:** Wrapping `Link` components from `@inertiajs/react` around custom UI components like `Button` (which render as native `<button>` tags by default) causes invalid HTML output (`<a><button></button></a>`). Additionally, since anchor tags do not natively support the `disabled` attribute, any visual disabling applied to the `Button` is not communicated structurally or contextually to the `Link`, preventing keyboard access blocking.
+**Action:** When wrapping Inertia `Link` components with shadcn/ui or Radix primitives like `Button`, always invert the order and apply the `asChild` prop on the primitive (e.g. `<Button asChild><Link></Link></Button>`). For disabled states on links, pass `aria-disabled={true}` and `tabIndex={-1}` to the inner `<Link>` component to ensure proper screen reader and keyboard accessibility constraints.
