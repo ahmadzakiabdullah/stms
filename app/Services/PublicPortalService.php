@@ -471,12 +471,16 @@ class PublicPortalService
                 'category' => $entry->event?->sportCategory?->name,
                 'event' => $entry->event?->name,
             ],
-            'stats' => [
-                'matches' => $matches->where('status', 'completed')->count(),
-                'wins' => $matches->where('outcome', 'win')->count(),
-                'draws' => $matches->where('outcome', 'draw')->count(),
-                'losses' => $matches->where('outcome', 'loss')->count(),
-            ],
+            'stats' => (function () use ($matches) {
+                $outcomesCount = $matches->countBy('outcome');
+
+                return [
+                    'matches' => $matches->where('status', 'completed')->count(),
+                    'wins' => $outcomesCount->get('win', 0),
+                    'draws' => $outcomesCount->get('draw', 0),
+                    'losses' => $outcomesCount->get('loss', 0),
+                ];
+            })(),
             'matches' => $matches->all(),
             'updated_at' => (($fixtures->max('updated_at') ?: $session->updated_at))->toIso8601String(),
         ];
