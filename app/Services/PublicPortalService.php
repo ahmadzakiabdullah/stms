@@ -471,8 +471,9 @@ class PublicPortalService
                 'category' => $entry->event?->sportCategory?->name,
                 'event' => $entry->event?->name,
             ],
-            'stats' => (function() use ($matches) {
+            'stats' => (function () use ($matches) {
                 $outcomesCount = $matches->countBy('outcome');
+
                 return [
                     'matches' => $matches->where('status', 'completed')->count(),
                     'wins' => $outcomesCount->get('win', 0),
