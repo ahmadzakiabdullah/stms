@@ -109,6 +109,7 @@ class MatchScheduleConflictTest extends TestCase
         Fixture::factory()->create([
             'organization_id' => $org->id,
             'event_id' => $event->id,
+            'match_number' => 98,
             'venue' => 'Main Court',
             'scheduled_at' => '2026-10-01 09:00:00',
         ]);
