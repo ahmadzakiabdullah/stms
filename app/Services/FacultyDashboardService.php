@@ -35,9 +35,9 @@ class FacultyDashboardService
                 'squadMembers' => fn ($q) => $q->ordered(),
             ])
                 ->withCount([
-                    'squadMembers as male_count' => fn($q) => $q->where('role', 'athlete_male'),
-                    'squadMembers as female_count' => fn($q) => $q->where('role', 'athlete_female'),
-                    'squadMembers as officials_count' => fn($q) => $q->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio']),
+                    'squadMembers as male_count' => fn ($q) => $q->where('role', 'athlete_male'),
+                    'squadMembers as female_count' => fn ($q) => $q->where('role', 'athlete_female'),
+                    'squadMembers as officials_count' => fn ($q) => $q->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio']),
                 ])
                 ->where('participant_id', $participant->id)
                 ->orderBy('created_at', 'desc')
