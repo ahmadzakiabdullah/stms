@@ -48,7 +48,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', $dashboardData->dataFor(
             $user,
-            $request->only(['sport_id', 'faculty_id', 'status']),
+            $request->only(['sport_id', 'faculty_id', 'status', 'page']),
             $isSuper,
         ));
     }

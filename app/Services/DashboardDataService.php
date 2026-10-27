@@ -25,7 +25,7 @@ final class DashboardDataService
     private ?User $user = null;
 
     /**
-     * @param  array{sport_id?: ?string, faculty_id?: ?string, status?: ?string}  $filters
+     * @param  array{sport_id?: ?string, faculty_id?: ?string, status?: ?string, page?: ?string}  $filters
      * @return array<string, mixed>
      */
     public function dataFor(User $user, array $filters, bool $isSuper): array
@@ -36,7 +36,8 @@ final class DashboardDataService
         $sportId = $filters['sport_id'] ?? null;
         $facultyId = $filters['faculty_id'] ?? null;
         $status = $filters['status'] ?? null;
-        $cacheKey = 'dashboard-v6-'.($user->organization_id ?? 'all').'-'.$user->getKey().'-'.md5(implode('|', [$sportId, $facultyId, $status]));
+        $page = $filters['page'] ?? 1;
+        $cacheKey = 'dashboard-v7-'.($user->organization_id ?? 'all').'-'.$user->getKey().'-'.md5(implode('|', [$sportId, $facultyId, $status, $page]));
 
         $data = Cache::remember($cacheKey, 60, function () use ($isSuper, $user, $sportId, $facultyId, $status) {
             $stats = [
