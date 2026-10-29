@@ -34,14 +34,19 @@ class FacultyDashboardService
                 'event.tournament.session',
                 'squadMembers' => fn ($q) => $q->ordered(),
             ])
+                ->withCount([
+                    'squadMembers as male_count' => fn($q) => $q->where('role', 'athlete_male'),
+                    'squadMembers as female_count' => fn($q) => $q->where('role', 'athlete_female'),
+                    'squadMembers as officials_count' => fn($q) => $q->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio']),
+                ])
                 ->where('participant_id', $participant->id)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
             foreach ($registrations as $reg) {
-                $totalMale += $reg->squadMembers->where('role', 'athlete_male')->count();
-                $totalFemale += $reg->squadMembers->where('role', 'athlete_female')->count();
-                $totalOfficials += $reg->squadMembers->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->count();
+                $totalMale += $reg->male_count ?? 0;
+                $totalFemale += $reg->female_count ?? 0;
+                $totalOfficials += $reg->officials_count ?? 0;
             }
         }
 
