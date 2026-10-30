@@ -400,7 +400,7 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                                     </div>
                                                     <div className="mb-4 rounded-lg border bg-background p-3">
                                                         <div className="mb-2 flex items-center justify-between"><h5 className="flex items-center gap-2 text-sm font-medium"><FileText className="size-4" /> {t('Documents')}</h5>{isSuperAdmin && <Button size="sm" variant="outline" onClick={() => setDocumentSport(sport)}><Upload className="mr-1 size-3" /> {t('Upload')}</Button>}</div>
-                                                        {(sport.documents?.length ?? 0) === 0 ? <p className="text-sm text-muted-foreground">{t('No documents yet.')}</p> : sport.documents?.map((doc) => <div key={doc.id} className="flex items-center justify-between border-t py-2 text-sm"><span><span className="font-medium">{doc.title}</span><span className="ml-2 text-xs text-muted-foreground">{doc.file_name}</span></span><span className="flex gap-1"><a href={doc.url} target="_blank" rel="noopener noreferrer"><Button type="button" size="sm" variant="ghost"><ExternalLink className="mr-1 size-3" />{t('View')}</Button></a>{isSuperAdmin && <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => deleteDocument(doc)}><Trash2 className="size-3" /></Button>}</span></div>)}
+                                                        {(sport.documents?.length ?? 0) === 0 ? <p className="text-sm text-muted-foreground">{t('No documents yet.')}</p> : sport.documents?.map((doc) => <div key={doc.id} className="flex items-center justify-between border-t py-2 text-sm"><span><span className="font-medium">{doc.title}</span><span className="ml-2 text-xs text-muted-foreground">{doc.file_name}</span></span><span className="flex gap-1"><a href={doc.url} target="_blank" rel="noopener noreferrer"><Button type="button" size="sm" variant="ghost" aria-label={t('View document')}><ExternalLink className="mr-1 size-3" />{t('View')}</Button></a>{isSuperAdmin && <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => deleteDocument(doc)} aria-label={t('Delete document')}><Trash2 className="size-3" /></Button>}</span></div>)}
                                                     </div>
                                                     {(sport.categories?.length ?? 0) === 0 ? (
                                                         <p className="text-sm text-muted-foreground">{t('No categories yet for this sport.')}</p>
@@ -417,10 +417,10 @@ export default function SportsIndex({ sports: sportsProp, sessions = [] }: Sport
                                                                     </div>
                                                                     {isSuperAdmin && (
                                                                     <div className="space-x-1">
-                                                                        <Button variant="ghost" size="sm" onClick={() => openCatEdit(cat)}>
+                                                                        <Button variant="ghost" size="sm" onClick={() => openCatEdit(cat)} aria-label={t('Edit category')}>
                                                                             <Pencil className="size-3" />
                                                                         </Button>
-                                                                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteCat(cat)}>
+                                                                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteCat(cat)} aria-label={t('Delete category')}>
                                                                             <Trash2 className="size-3" />
                                                                         </Button>
                                                                     </div>
