@@ -281,7 +281,7 @@ function AddEventDialog({
                     <div className="rounded-md bg-primary/5 px-3 py-2 text-sm">
                         <span className="font-semibold">{selectedEventIds.length}</span>{' '}
                         {t('event(s) selected')}.
-                        {selectedEventIds.length > 0 && <button type="button" className="ml-2 text-primary underline" onClick={() => setSelectedEventIds([])}>{t('Clear selection')}</button>}
+                        {selectedEventIds.length > 0 && <button type="button" className="ml-2 text-primary underline" onClick={() => setSelectedEventIds([])} aria-label={t('Clear selection')}>{t('Clear selection')}</button>}
                     </div>
                 </div>
                 <DialogFooter>
@@ -507,7 +507,7 @@ function SquadEditForm({ epId, member, onCancel }: { epId: string; member: Squad
         <form onSubmit={submit} className="rounded-md border bg-background p-2.5">
             <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-semibold text-muted-foreground">{t('Edit Squad Member')}</span>
-                <button type="button" onClick={onCancel} className="text-xs text-muted-foreground hover:text-foreground">{t('Cancel')}</button>
+                <button type="button" onClick={onCancel} className="text-xs text-muted-foreground hover:text-foreground" aria-label={t('Cancel')}>{t('Cancel')}</button>
             </div>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
                 <div className="sm:col-span-2"><Field label={t('Full Name')}><Input value={name} onChange={(e) => setName(e.target.value)} required className="h-8 text-sm" /></Field></div>
@@ -867,10 +867,10 @@ export default function EventParticipantsIndex({
                     <div className="inline-flex items-center gap-0.5 rounded-lg border bg-muted/20 p-0.5">
                         <button onClick={() => setViewMode('grid')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'grid' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                            title="Grid view"><LayoutGrid className="size-3.5" /></button>
+                            title={t('Grid view')} aria-label={t('Grid view')}><LayoutGrid className="size-3.5" /></button>
                         <button onClick={() => setViewMode('table')}
                             className={`rounded-md p-1.5 transition ${viewMode === 'table' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'}`}
-                            title="Table view"><List className="size-3.5" /></button>
+                            title={t('Table view')} aria-label={t('Table view')}><List className="size-3.5" /></button>
                     </div>
                 )}
             </div>
@@ -1087,23 +1087,23 @@ export default function EventParticipantsIndex({
                                                             {!isFacultyRepresentative && ep.status === 'pending' && (
                                                                 <>
                                                                     <button onClick={() => approveRegistration(ep.id)}
-                                                                        className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"                                                                          title={t('Approve')}>
+                                                                        className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"                                                                          title={t('Approve')} aria-label={t('Approve')}>
                                                                         <Check className="size-3.5" />
                                                                     </button>
                                                                     <button onClick={() => setRejectTarget({ epId: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                                        className="inline-flex size-8 items-center justify-center rounded-md border border-rose-200 text-rose-600 transition hover:bg-rose-600 hover:text-white"                                                                          title={t('Reject')}>
+                                                                        className="inline-flex size-8 items-center justify-center rounded-md border border-rose-200 text-rose-600 transition hover:bg-rose-600 hover:text-white"                                                                          title={t('Reject')} aria-label={t('Reject')}>
                                                                         <CircleX className="size-3.5" />
                                                                     </button>
                                                                 </>
                                                             )}
                                                              {(ep.status === 'pending' || ep.status === 'confirmed' || ep.status === 'rejected') && (
                                                                 <button onClick={() => withdrawRegistration(ep.id)}
-                                                                    className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-muted hover:text-foreground" title={t('Withdraw')}>
+                                                                    className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-muted hover:text-foreground" title={t('Withdraw')} aria-label={t('Withdraw')}>
                                                                     <LogOut className="size-3.5" />
                                                                 </button>
                                                             )}
                                                              <button onClick={() => setUnregTarget({ id: ep.id, participantName: participant.name, eventName: evt.name })}
-                                                                 className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')}>
+                                                                 className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')} aria-label={t('Unregister')}>
                                                                 <X className="size-3.5" />
                                                             </button>
                                                         </div>
@@ -1277,7 +1277,7 @@ export default function EventParticipantsIndex({
                                                             {cfg.label}
                                                         </Badge>
                                                         <button onClick={() => setUnregTarget({ id: ep.id, participantName: p.name, eventName: evt.name })}
-                                                            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
+                                                            className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title={t('Unregister')} aria-label={t('Unregister')}>
                                                             <X className="size-2.5" />
                                                         </button>
                                                     </div>
