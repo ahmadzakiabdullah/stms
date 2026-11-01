@@ -136,10 +136,10 @@ class EventParticipantController extends Controller
         $updated = 0;
         $failures = [];
 
-        foreach (array_unique($validated['ids']) as $id) {
-            $eventParticipant = EventParticipant::find($id);
+        $eventParticipants = EventParticipant::whereIn('id', array_unique($validated['ids']))->get();
 
-            if (! $eventParticipant || ! Gate::allows('update', $eventParticipant)) {
+        foreach ($eventParticipants as $eventParticipant) {
+            if (! Gate::allows('update', $eventParticipant)) {
                 continue;
             }
 
