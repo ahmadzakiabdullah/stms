@@ -1,0 +1,12 @@
+
+## 2026-11-09 - Avoid In-Memory Filtering in Eager-Loaded Collections
+**Learning:** Found a performance bottleneck in `FacultyDashboardService.php` where eagerly-loaded `squadMembers` were being filtered multiple times inside a `foreach` loop using the `->where()` method. Because `where()` on a Laravel Collection returns a new collection instance, doing this repeatedly inside a loop for thousands of registrations consumes excessive memory and CPU.
+**Action:** Replace in-memory collection filtering with `->withCount()` queries in the initial Eloquent call. By applying the role constraints directly in the `withCount()` array (e.g., `squadMembers as total_male => fn($q) => $q->where('role', 'athlete_male')`), the workload is shifted to the database, drastically reducing PHP memory usage and processing overhead without introducing N+1 issues.
+
+## 2026-11-09 - Avoid In-Memory Filtering in Eager-Loaded Collections
+**Learning:** Found a performance bottleneck in `FacultyDashboardService.php` where eagerly-loaded `squadMembers` were being filtered multiple times inside a `foreach` loop using the `->where()` method. Because `where()` on a Laravel Collection returns a new collection instance, doing this repeatedly inside a loop for thousands of registrations consumes excessive memory and CPU.
+**Action:** Replace in-memory collection filtering with `->withCount()` queries in the initial Eloquent call. By applying the role constraints directly in the `withCount()` array (e.g., `squadMembers as total_male => fn($q) => $q->where('role', 'athlete_male')`), the workload is shifted to the database, drastically reducing PHP memory usage and processing overhead without introducing N+1 issues.
+
+## 2026-11-09 - Avoid In-Memory Filtering in Eager-Loaded Collections
+**Learning:** Found a performance bottleneck in `FacultyDashboardService.php` where eagerly-loaded `squadMembers` were being filtered multiple times inside a `foreach` loop using the `->where()` method. Because `where()` on a Laravel Collection returns a new collection instance, doing this repeatedly inside a loop for thousands of registrations consumes excessive memory and CPU.
+**Action:** Replace in-memory collection filtering with `->withCount()` queries in the initial Eloquent call. By applying the role constraints directly in the `withCount()` array (e.g., `squadMembers as total_male => fn($q) => $q->where('role', 'athlete_male')`), the workload is shifted to the database, drastically reducing PHP memory usage and processing overhead without introducing N+1 issues.
