@@ -1,0 +1,3 @@
+## 2024-05-18 - Fix N+1 in EventParticipantController@batchUpdateStatus
+**Learning:** Found an N+1 query loop when fetching records via `EventParticipant::find($id)` inside a `foreach` loop that also checked policies implicitly accessing related tables like `event` and `participant.users`. This can cause significant overhead when processing batches.
+**Action:** Avoid `Model::find()` inside loops. Always extract unique IDs, use `Model::with(['relation'])->whereIn('id', $ids)->get()->keyBy('id')`, and then lookup the pre-loaded models from the collection. Remember to eager-load relations used in policies and actions invoked inside the loop.
