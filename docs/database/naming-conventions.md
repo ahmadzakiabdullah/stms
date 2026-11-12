@@ -15,9 +15,12 @@
 |---|---|
 | `Organization` | `organizations` |
 | `User` | `users` (PK `uuid`) |
-| `EventSession` | `event_sessions` |
+| `Session` (`App\Models\Session`) | `event_sessions` (bukan jadual framework `sessions`) |
+| `SessionSport` | `session_sports` |
+| `SessionSportCategory` | `session_sport_categories` |
 | `Sport` | `sports` |
 | `SportCategory` | `sport_categories` |
+| `SportDocument` | `sport_documents` |
 | `Tournament` | `tournaments` |
 | `Event` | `events` |
 | `Participant` | `participants` |
@@ -28,6 +31,9 @@
 | `SquadMember` | `squad_members` |
 | `Pool` | `pools` |
 | `DrawVersion` | `draw_versions` |
+| `MatchScoringEvent` | `match_scoring_events` |
+| `DataTransfer` | `data_transfers` |
+| `DashboardMetricSnapshot` | `dashboard_metric_snapshots` (integer PK) |
 | `Setting` | `settings` (integer PK legacy) |
 
 Jangan mencipta model `Match`. Jangan menamakan pivot baharu `sport_tournament` kerana skema kanonik menggunakan `tournament_sport`.

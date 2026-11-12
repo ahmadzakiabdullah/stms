@@ -1,6 +1,6 @@
 # ADR-007: API Versioning
 
-**Status:** Accepted  
+**Status:** Accepted (deferred — not implemented)  
 **Date:** 2026-06-03  
 **Deciders:** STMS Architecture Team
 
@@ -12,6 +12,10 @@ STMS will expose APIs for integration with external systems such as mobile appli
 
 We will implement **URL-based API versioning** using the following format:
 
+```
+/api/v1/{resource}
+/api/v1/{resource}/{id}
+```
 
 ### Guidelines:
 - All API routes will be prefixed with `/api/v{version}`.

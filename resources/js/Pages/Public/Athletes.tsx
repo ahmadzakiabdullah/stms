@@ -4,23 +4,24 @@ import PublicLayout from '@/Layouts/PublicLayout';
 import PublicErrorState from '@/components/PublicErrorState';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicLoadingState from '@/components/PublicLoadingState';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import SafeImage from '@/components/SafeImage';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import PublicPageHero from '@/components/PublicPageHero';
 import { useI18n } from '@/lib/i18n';
 import { SportIcon } from '@/lib/sportIcons';
 import { Link, router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Search, Users, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type EventEntry = { name: string | null; sport: string | null; category: string | null };
 type Member = { name: string; role: 'athlete_male' | 'athlete_female' | 'assistant_manager' | 'manager' | 'coach' | 'physio' };
-type Roster = { id: string | null; name: string | null; logo_url: string | null; inverse_logo_url: string | null; events: EventEntry[]; members: Member[] };
-type Athlete = { id: string; name: string; faculty: string | null; faculty_logo_url: string | null; faculty_inverse_logo_url: string | null; events: EventEntry[] };
+type Roster = { id: string | null; name: string | null; name_ms: string | null; logo_url: string | null; inverse_logo_url: string | null; events: EventEntry[]; members: Member[] };
+type Athlete = { id: string; name: string; faculty: string | null; faculty_ms: string | null; faculty_logo_url: string | null; faculty_inverse_logo_url: string | null; events: EventEntry[] };
 type PaginatorLink = { url: string | null; label: string; active: boolean };
 type Paginator<T> = { data: T[]; current_page: number; last_page: number; per_page: number; total: number; from: number | null; to: number | null; links: PaginatorLink[] };
 type View = 'teams' | 'athletes';
@@ -34,7 +35,7 @@ type Props = {
     athletes: Paginator<Athlete> | null;
     counts: { teams: number; athletes: number };
     letters: string[];
-    faculties: string[];
+    faculties: Array<{ name: string; name_ms: string | null }>;
     sports: string[];
     categories: string[];
     stats: { teams: number; athletes: number; officials: number };
@@ -75,6 +76,7 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
 
     const clearFilters = () => { setQuery(''); applyFilters({ q: '', sport: '', category: '', faculty: '', letter: '', sort: 'name' }); };
     const hasFilters = Boolean(query.trim() || filters.sport || filters.category || filters.faculty || filters.letter || (filters.sort && filters.sort !== 'name'));
+    const searchLabel = view === 'teams' ? t('Search team, athlete or faculty') : t('Search athlete or faculty');
 
     const active = view === 'athletes' ? athletes : rosters;
     const items = active?.data ?? [];
@@ -92,14 +94,17 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
     return (
         <PublicLayout title={`${t('Athletes & Teams')} | ${competition?.name || app_name}`} appName={app_name} current="athletes" description={t('Browse confirmed athletes, teams and official competition participation.')} canonical={route('public.athletes')}>
             <main>
-                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Directory unavailable')} description={error} onRetry={() => router.reload()} /></div>}
+                {error && <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6"><PublicErrorState title={t('Athlete directory unavailable')} description={t(error)} onRetry={() => router.reload()} /></div>}
                 <PublicPageHero eyebrow={competition?.organization || t('Official competition')} title={t('Athletes & Teams')} intro={t('Meet the confirmed athletes and teams taking part in the competition.')} icon={<Users className="size-4" />} />
                 <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
-                    <section className="rounded-3xl border border-[var(--public-dark-border)] bg-white p-5 shadow-[0_24px_70px_-48px_rgba(7,27,51,.9)] sm:p-7">
-                        <div className="flex flex-wrap items-end gap-6">
-                            <Stat value={stats?.teams ?? 0} label={t('teams')} />
-                            <Stat value={stats?.athletes ?? 0} label={t('athletes')} />
-                            <Stat value={stats?.officials ?? 0} label={t('officials')} />
+                    <section className="public-card p-5 sm:p-7">
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex flex-wrap items-end gap-6">
+                                <Stat value={stats?.teams ?? 0} label={t('teams')} />
+                                <Stat value={stats?.athletes ?? 0} label={t('athletes')} />
+                                <Stat value={stats?.officials ?? 0} label={t('officials')} />
+                            </div>
+                            <SafeImage src="/images/mascots/pose-semangat.webp" alt={locale === 'ms' ? 'Maskot SAF 20 memberi semangat kepada atlet' : 'SAF 20 mascot cheering on athletes'} loading="lazy" decoding="async" className="h-32 w-auto max-w-[30%] object-contain drop-shadow-xl sm:h-40" />
                         </div>
 
                         <Tabs value={view} onValueChange={value => applyFilters({ view: value as View, letter: '' })} className="mt-7">
@@ -111,8 +116,8 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                                 </TabsTrigger>
                             ))}
                             </TabsList>
-                            <TabsContent value="teams" className="hidden" aria-hidden="true" />
-                            <TabsContent value="athletes" className="hidden" aria-hidden="true" />
+                            <TabsContent value="teams" className="sr-only" />
+                            <TabsContent value="athletes" className="sr-only" />
                         </Tabs>
 
                         <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label={t('Filter by sport')}>
@@ -127,10 +132,10 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                         <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_11rem_11rem_11rem_auto]">
                             <div className="relative">
                                 <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--public-dark-faint)]" />
-                                <Input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Search athlete or faculty')} aria-label={t('Search athlete or faculty')} className="h-11 w-full rounded-xl py-2.5 pl-10 pr-9 text-sm font-semibold" />
+                                <Input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder={searchLabel} aria-label={searchLabel} className="h-11 w-full rounded-xl py-2.5 pl-10 pr-9 text-sm font-semibold" />
                                 {query && <Button type="button" variant="ghost" size="icon" onClick={() => setQuery('')} aria-label={t('Clear search')} className="absolute right-2.5 top-1/2 size-8 -translate-y-1/2 text-[var(--public-dark-faint)]"><X className="size-3.5" /></Button>}
                             </div>
-                            <Select value={filters.faculty || 'all'} onValueChange={value => applyFilters({ faculty: value === 'all' ? '' : value })} disabled={loading}><SelectTrigger aria-label={t('Filter by faculty')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue placeholder={t('All Faculties')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Faculties')}</SelectItem>{faculties.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
+                            <Select value={filters.faculty || 'all'} onValueChange={value => applyFilters({ faculty: value === 'all' ? '' : value })} disabled={loading}><SelectTrigger aria-label={t('Filter by faculty')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue placeholder={t('All Faculties')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Faculties')}</SelectItem>{faculties.map(value => <SelectItem key={value.name} value={value.name}>{locale === 'ms' ? (value.name_ms || value.name) : value.name}</SelectItem>)}</SelectContent></Select>
                             <Select value={filters.category || 'all'} onValueChange={value => applyFilters({ category: value === 'all' ? '' : value })} disabled={loading}><SelectTrigger aria-label={t('Filter by category')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue placeholder={t('All Categories')} /></SelectTrigger><SelectContent><SelectItem value="all">{t('All Categories')}</SelectItem>{categories.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
                             <Select value={filters.sort || 'name'} onValueChange={value => applyFilters({ sort: value })} disabled={loading}><SelectTrigger aria-label={t('Sort')} className="h-11 rounded-xl bg-white text-sm font-semibold"><SelectValue /></SelectTrigger><SelectContent>{sortOptions.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
                             {hasFilters && <Button type="button" variant="outline" onClick={clearFilters} disabled={loading} className="gap-2 rounded-xl text-sm font-black text-[var(--public-dark-faint)] hover:border-red-200 hover:text-red-600"><X className="size-4" />{t('Clear')}</Button>}
@@ -161,7 +166,7 @@ export default function PublicAthletes({ app_name, competition, view, filters, r
                         </div>
                     ) : (
                         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {(items as Athlete[]).map((athlete, index) => <AthleteCard key={`${athlete.name}-${athlete.faculty}-${index}`} athlete={athlete} t={t} />)}
+                            {(items as Athlete[]).map((athlete, index) => <AthleteCard key={`${athlete.name}-${athlete.faculty}-${index}`} athlete={athlete} t={t} locale={locale} />)}
                         </div>
                     )}
 
@@ -196,11 +201,12 @@ function Chip({ active, onClick, disabled, children }: { active: boolean; onClic
     return <Button type="button" variant={active ? 'default' : 'outline'} size="sm" onClick={onClick} disabled={disabled} aria-pressed={active} className="min-h-10 rounded-full px-3.5 text-xs font-black">{children}</Button>;
 }
 
-function AthleteCard({ athlete, t }: { athlete: Athlete; t: (key: string) => string }) {
-    return <article className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:shadow-md">
+function AthleteCard({ athlete, t, locale }: { athlete: Athlete; t: (key: string) => string; locale: string }) {
+    const facultyName = locale === 'ms' ? (athlete.faculty_ms || athlete.faculty) : athlete.faculty;
+    return <article className="public-card p-4">
         <div className="flex items-center gap-3">
-            <ParticipantLogo participant={{ name: athlete.faculty, logo_url: athlete.faculty_logo_url, inverse_logo_url: athlete.faculty_inverse_logo_url }} size="md" />
-            <div className="min-w-0"><h2 className="truncate text-sm font-black">{athlete.name}</h2><p className="mt-1 truncate text-xs font-semibold text-[var(--public-dark-faint)]">{athlete.faculty || t('Faculty')}</p></div>
+            <ParticipantLogo participant={{ name: facultyName, logo_url: athlete.faculty_logo_url, inverse_logo_url: athlete.faculty_inverse_logo_url }} size="md" />
+            <div className="min-w-0"><h2 className="truncate text-sm font-black">{athlete.name}</h2><p className="mt-1 truncate text-xs font-semibold text-[var(--public-dark-faint)]">{facultyName || t('Faculty')}</p></div>
         </div>
         <div className="mt-4 flex flex-wrap gap-1.5">{athlete.events.map(event => <span key={`${event.name}-${event.category}`} className="rounded-md bg-[var(--public-primary-soft)] px-2 py-1 text-xs font-bold text-[var(--public-primary)]">{event.sport}{event.category ? ` · ${event.category}` : ''}</span>)}</div>
         <Link href={route('public.athletes.show', athlete.id)} className="mt-4 inline-flex min-h-10 items-center text-xs font-black text-[var(--public-primary)] hover:underline">{t('View athlete profile')} →</Link>
@@ -212,20 +218,53 @@ function formatUpdatedAt(value: string, locale: string) {
 }
 
 function RosterCard({ roster, t }: { roster: Roster; t: (key: string) => string }) {
+    const { locale } = useI18n();
+    const [open, setOpen] = useState(false);
+    const [memberQuery, setMemberQuery] = useState('');
+    const [memberType, setMemberType] = useState<'all' | 'athletes' | 'officials'>('all');
+    const rosterName = locale === 'ms' ? (roster.name_ms || roster.name) : roster.name;
     const athletes = roster.members.filter(member => member.role === 'athlete_male' || member.role === 'athlete_female');
-    const officials = roster.members.filter(member => !athletes.includes(member));
+    const officials = roster.members.filter(member => member.role !== 'athlete_male' && member.role !== 'athlete_female');
+    const visibleMembers = useMemo(() => roster.members.filter(member => {
+        const isAthlete = member.role === 'athlete_male' || member.role === 'athlete_female';
+        const matchesType = memberType === 'all' || (memberType === 'athletes' ? isAthlete : !isAthlete);
+        return matchesType && member.name.toLocaleLowerCase().includes(memberQuery.trim().toLocaleLowerCase());
+    }), [roster.members, memberQuery, memberType]);
 
     return (
-        <article className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--public-primary-border)] hover:shadow-md">
+        <article className="public-card p-5">
             <div className="flex items-start gap-4">
                 <ParticipantLogo participant={roster} size="lg" />
                 <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-lg font-black">{roster.name}</h2>
+                    <h2 className="truncate text-lg font-black">{rosterName}</h2>
                     <div className="mt-2 flex flex-wrap gap-1.5">{roster.events.map(event => <span key={`${event.name}-${event.category}`} className="rounded-md bg-[var(--public-primary-soft)] px-2 py-1 text-xs font-bold text-[var(--public-primary)]">{event.sport}{event.category ? ` · ${event.category}` : ''}</span>)}</div>
                 </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 border-y border-[var(--public-dark-border)] py-3 text-xs font-bold text-[var(--public-dark-faint)]"><span><strong className="text-base text-[var(--public-text)]">{athletes.length}</strong> {t('athletes')}</span><span><strong className="text-base text-[var(--public-text)]">{officials.length}</strong> {t('officials')}</span></div>
-            <Accordion type="single" collapsible className="mt-4"><AccordionItem value="roster"><AccordionTrigger>{t('View roster')}</AccordionTrigger><AccordionContent><div className="space-y-2">{roster.members.map(member => <div key={`${member.name}-${member.role}`} className="flex items-center justify-between gap-3 rounded-lg bg-[var(--public-dark-soft)] px-3 py-2 text-sm"><span className="font-bold">{member.name}</span><span className="text-xs font-semibold text-[var(--public-dark-faint)]">{roleLabel(member.role, t)}</span></div>)}</div></AccordionContent></AccordionItem></Accordion>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild><Button type="button" variant="outline" className="mt-4 min-h-11 w-full justify-between rounded-xl font-black">{t('View roster')}<span className="rounded-full bg-[var(--public-primary-soft)] px-2.5 py-1 text-xs text-[var(--public-primary)]">{roster.members.length}</span></Button></DialogTrigger>
+                <DialogContent className="flex max-h-[min(85dvh,44rem)] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-2xl">
+                    <div className="border-b border-[var(--public-dark-border)] p-5 pr-14 sm:p-6 sm:pr-14">
+                        <DialogTitle className="text-lg font-black">{rosterName}</DialogTitle>
+                        <DialogDescription className="mt-1">{roster.members.length} {t('roster members')} · {athletes.length} {t('athletes')} · {officials.length} {t('officials')}</DialogDescription>
+                        <div className="relative mt-4">
+                            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--public-dark-faint)]" />
+                            <Input autoFocus value={memberQuery} onChange={event => setMemberQuery(event.target.value)} placeholder={t('Search roster members')} aria-label={t('Search roster members')} className="h-11 rounded-xl pl-10" />
+                            {memberQuery && <Button type="button" variant="ghost" size="icon" onClick={() => setMemberQuery('')} aria-label={t('Clear search')} className="absolute right-1.5 top-1/2 size-8 -translate-y-1/2"><X className="size-4" /></Button>}
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('Filter roster')}>
+                            {([
+                                ['all', t('All'), roster.members.length],
+                                ['athletes', t('Athletes'), athletes.length],
+                                ['officials', t('Officials'), officials.length],
+                            ] as const).map(([value, label, count]) => <Button key={value} type="button" variant={memberType === value ? 'default' : 'outline'} size="sm" aria-pressed={memberType === value} onClick={() => setMemberType(value)} className="min-h-10 rounded-full">{label}<span className="ml-1 tabular-nums">{count}</span></Button>)}
+                        </div>
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6" aria-live="polite">
+                        {visibleMembers.length ? <div className="space-y-2">{visibleMembers.map((member, index) => <div key={`${member.name}-${member.role}-${index}`} className="flex min-h-12 items-center justify-between gap-3 rounded-xl bg-[var(--public-dark-soft)] px-3.5 py-2.5 sm:px-4"><span className="min-w-0 text-sm font-bold">{member.name}</span><span className="shrink-0 text-xs font-semibold text-[var(--public-dark-faint)]">{roleLabel(member.role, t)}</span></div>)}</div> : <p className="py-10 text-center text-sm font-semibold text-[var(--public-dark-faint)]">{t('No results match your search.')}</p>}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </article>
     );
 }

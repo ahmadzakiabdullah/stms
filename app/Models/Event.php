@@ -21,6 +21,7 @@ class Event extends Model
         'sport_id',
         'sport_category_id',
         'name',
+        'name_ms',
         'slug',
         'description',
         'venues',

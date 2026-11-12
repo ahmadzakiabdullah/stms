@@ -32,6 +32,7 @@ class EventParticipantRejected extends Notification implements ShouldQueue
             'event_participant_id' => $this->eventParticipant->id,
             'event_name' => $this->eventParticipant->event?->name ?? 'Unknown Event',
             'faculty_name' => $this->eventParticipant->participant?->name ?? 'Unknown Faculty',
+            'faculty_name_ms' => $this->eventParticipant->participant?->name_ms,
             'message' => "Registration for '{$this->eventParticipant->event?->name}' has been rejected.",
             'type' => 'rejected',
             'severity' => 'warning',

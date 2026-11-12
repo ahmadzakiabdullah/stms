@@ -115,9 +115,9 @@ class RankingController extends Controller
             'ranking_rules.points.draw_points' => ['required_with:ranking_rules.points', 'integer', 'between:-100,100'],
             'ranking_rules.points.loss_points' => ['required_with:ranking_rules.points', 'integer', 'between:-100,100'],
             'ranking_rules.points.tiebreakers' => ['required_with:ranking_rules.points', 'array', 'min:1', 'max:4'],
-            'ranking_rules.points.tiebreakers.*' => ['string', Rule::in(['points', 'goal_difference', 'score_for', 'wins'])],
+            'ranking_rules.points.tiebreakers.*' => ['string', 'distinct', Rule::in(['points', 'goal_difference', 'score_for', 'wins'])],
             'ranking_rules.win_rate.tiebreakers' => ['sometimes', 'array', 'min:1', 'max:4'],
-            'ranking_rules.win_rate.tiebreakers.*' => ['string', Rule::in(['win_rate', 'wins', 'goal_difference', 'score_for'])],
+            'ranking_rules.win_rate.tiebreakers.*' => ['string', 'distinct', Rule::in(['win_rate', 'wins', 'goal_difference', 'score_for'])],
             'ranking_rules.medal_tally.tiebreakers' => ['sometimes', 'array', 'size:3'],
             'ranking_rules.medal_tally.tiebreakers.*' => ['string', 'distinct', Rule::in(['gold', 'silver', 'bronze'])],
         ]);

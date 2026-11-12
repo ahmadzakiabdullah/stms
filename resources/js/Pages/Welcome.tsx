@@ -163,7 +163,7 @@ export default function Welcome() {
                             type="button"
                             onClick={() => setMobileOpen(!mobileOpen)}
                             className="inline-flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:text-foreground md:hidden"
-                            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                            aria-label={mobileOpen ? t('Close menu') : t('Open menu')}
                         >
                             {mobileOpen ? <X className="size-4" /> : <Menu className="size-4" />}
                         </button>
@@ -193,10 +193,10 @@ export default function Welcome() {
                                     ) : (
                                         <>
                                             <Button variant="outline" asChild>
-                                                <Link href={route('register')}>Register</Link>
+                                                <Link href={route('register')}>{t('Register')}</Link>
                                             </Button>
                                             <Button asChild>
-                                                <Link href={route('login')}>Log in</Link>
+                                                <Link href={route('login')}>{t('Log in')}</Link>
                                             </Button>
                                         </>
                                     )}
@@ -247,7 +247,7 @@ export default function Welcome() {
                                         </Link>
                                     </Button>
                                     <Button size="lg" variant="outline" asChild>
-                                        <Link href="#features">Explore features</Link>
+                                        <Link href="#features">{t('Explore features')}</Link>
                                     </Button>
                                 </>
                             )}
@@ -278,7 +278,7 @@ export default function Welcome() {
                 <section id="features" className="border-t border-border/60 bg-muted/30 py-20">
                     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
                         <div className="mx-auto max-w-2xl text-center">
-                            <Badge variant="outline" className="mb-4">Features</Badge>
+                            <Badge variant="outline" className="mb-4">{t('Features')}</Badge>
                             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                                 Everything you need to run a tournament
                             </h2>
@@ -318,7 +318,7 @@ export default function Welcome() {
                 <section id="how-it-works" className="py-20">
                     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
                         <div className="mx-auto max-w-2xl text-center">
-                            <Badge variant="outline" className="mb-4">How it works</Badge>
+                            <Badge variant="outline" className="mb-4">{t('How it works')}</Badge>
                             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                                 From registration to podium in three steps
                             </h2>
@@ -380,8 +380,8 @@ export default function Welcome() {
                             <span className="text-sm font-semibold">{app?.name || 'SAF'}</span>
                         </div>
                         <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                            <a href="#features" className="transition hover:text-foreground">Features</a>
-                            <a href="#how-it-works" className="transition hover:text-foreground">How it works</a>
+                                        <a href="#features" className="transition hover:text-foreground">{t('Features')}</a>
+                                        <a href="#how-it-works" className="transition hover:text-foreground">{t('How it works')}</a>
                             <span>&copy; {new Date().getFullYear()} Universiti Teknikal Malaysia Melaka (UTeM). All rights reserved.</span>
                         </div>
                     </div>

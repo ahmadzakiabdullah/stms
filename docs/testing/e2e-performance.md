@@ -14,14 +14,24 @@ The CI job uses `database/e2e.sqlite`, enables demo seeding only in the testing 
 
 ## Covered Journeys
 
+`tests/e2e/critical-journeys.spec.ts` has 12 tests, each run on the desktop and mobile projects (24 cases), as of 12 November 2026:
+
 - Super-admin login and access to dashboard, participants, events, matches, results, rankings, roles, and reports.
-- Faculty representative login and faculty dashboard.
-- Dean login and verification dashboard.
+- Faculty representative and dean dashboards enforce their role journeys.
 - Automated axe checks on login and the authenticated dashboard.
+- Public home/contact keyboard navigation and axe smoke checks.
+- All public routes pass serious axe checks and expose a keyboard focus target.
+- Public SEO metadata and crawler policy.
+- Public mobile navigation Escape handling and focus wrapping.
+- Public horizontal-overflow and locale switching.
+- Desktop/mobile public navigation stay in sync.
+- No CSP violations in the browser console on public pages.
+- Public image alt text and external-link contracts.
+- Public shell usability on mobile/tablet with reduced motion.
 
-Satu connected CI run sejarah mengesahkan enam journey pada commit `ae42a50`. Bukti itu tidak meliputi HEAD/working tree 17 Ogos; draw, import, result-entry, export dan route public semasa masih memerlukan rerun dengan test data terasing.
+Draw, import, result-entry and export flows are not yet covered by browser E2E.
 
-Suite kini mempunyai empat scenario merentas desktop/mobile (8 journeys): core super-admin, faculty/dean, login/dashboard axe, dan public Home/Contact keyboard+axe. Run terasing pada 18 Ogos 2026 lulus **8/8** dalam 2.3 minit menggunakan SQLite; connected CI #112 turut lulus pada `4b04c46`. Authenticated post-deploy run terhadap deployment sebenar masih diperlukan.
+Bukti sejarah: connected CI mengesahkan enam journey pada commit `ae42a50`; suite empat scenario (8 journeys) lulus **8/8** pada 18 Ogos 2026 dan pada connected CI #112 (`4b04c46`). Keputusan run semasa direkodkan dalam `CURRENT_STATE.md`. Authenticated post-deploy run terhadap deployment sebenar masih diperlukan.
 
 Pada workstation yang `.env` menetapkan production `ASSET_URL`, Playwright memaksa test asset URL mengikuti test `APP_URL`; ini mengelakkan HTML local mengambil JavaScript production.
 
@@ -46,6 +56,10 @@ Measured against `https://saf.utem.edu.my/` with Lighthouse 13.4.1 and the Playw
 | `/schedule` | 71 | 3.7 s | 5.4 s | 10 ms | 0.068 |
 
 The main follow-up is LCP optimization on both pages. Repeat the measurement from a consistent CI/monitoring region before changing the target or declaring the public performance work complete.
+
+## Mobile Core Web Vitals Targets
+
+The public portal adopts the standard “good” p75 targets for mobile as its release baseline: LCP ≤ 2.5 seconds, INP ≤ 200 milliseconds and CLS ≤ 0.1. These are targets, not current evidence; production or staging measurement from a stable mobile Chromium/Lighthouse run is required before the P1 item can be marked complete.
 
 ## LCP follow-up — 21 August 2026
 

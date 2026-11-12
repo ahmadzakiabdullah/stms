@@ -105,6 +105,25 @@ class RankingTest extends TestCase
         ]);
     }
 
+    public function test_duplicate_ranking_tiebreaker_is_rejected(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+
+        $this->actingAs($admin)->put(route('rankings.updateStrategy', $tournament), [
+            'ranking_strategy' => 'points',
+            'ranking_rules' => [
+                'points' => [
+                    'win_points' => 3,
+                    'draw_points' => 1,
+                    'loss_points' => 0,
+                    'tiebreakers' => ['points', 'points'],
+                ],
+            ],
+        ])->assertSessionHasErrors('ranking_rules.points.tiebreakers.1');
+    }
+
     public function test_ranking_calculation_with_completed_matches(): void
     {
         $org = Organization::factory()->create();

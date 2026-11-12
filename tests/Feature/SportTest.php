@@ -148,6 +148,32 @@ class SportTest extends TestCase
         ]);
     }
 
+    public function test_sport_can_be_created_with_scoring_profile(): void
+    {
+        $org = Organization::factory()->create();
+        $admin = $this->createOrgAdmin($org);
+
+        $this->actingAs($admin)->post(route('sports.store'), [
+            'name' => 'Futsal',
+            'slug' => 'futsal',
+            'scoring_mode' => 'individual',
+            'scoring_profile' => [
+                'score_unit' => 'goals',
+                'max_score' => 20,
+                'allow_draw' => false,
+                'scoring_event_types' => ['goal', 'penalty'],
+            ],
+        ])->assertRedirect(route('sports.index'));
+
+        $sport = Sport::where('slug', 'futsal')->firstOrFail();
+
+        $this->assertSame('individual', $sport->scoring_mode);
+        $this->assertSame('goals', $sport->scoring_profile['score_unit']);
+        $this->assertSame(20, $sport->scoring_profile['max_score']);
+        $this->assertFalse($sport->scoring_profile['allow_draw']);
+        $this->assertSame(['goal', 'penalty'], $sport->scoring_profile['scoring_event_types']);
+    }
+
     public function test_sport_can_be_created_with_uploaded_icon_file(): void
     {
         Storage::fake('public');

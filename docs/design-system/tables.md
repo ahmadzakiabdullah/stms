@@ -22,12 +22,14 @@ Data tables currently use **simple list views** with Laravel's built-in paginati
     ))}
   </TableBody>
 </Table>
-<Pagination meta={items.meta} />
+<Pagination paginator={items} />
 ```
+
+`Pagination` here is the shared `resources/js/components/Pagination.tsx` (default export), which takes the Laravel paginator (`paginator`, or legacy `links`). The shadcn primitives in `resources/js/components/ui/pagination.tsx` are lower-level building blocks (used directly by the public Athletes page).
 
 ## TanStack Table (Available)
 
-**TanStack Table** (`@tanstack/react-table` v8) is available as a dependency and the designated upgrade path for complex data tables. It provides:
+**TanStack Table** (`@tanstack/react-table` v8) is installed as a dependency but not imported by any page yet (12 November 2026); it is the designated upgrade path for complex data tables. It provides:
 
 - Headless UI — full control over rendering
 - Sorting, filtering, and pagination

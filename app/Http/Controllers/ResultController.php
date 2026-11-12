@@ -240,12 +240,15 @@ class ResultController extends Controller
         return redirect()->route('results.index')->with('success', 'Result locked successfully.');
     }
 
-    public function unlock(Result $result, TransitionResult $action): RedirectResponse
+    public function unlock(Request $request, Result $result, TransitionResult $action): RedirectResponse
     {
         Gate::authorize('unlock', $result);
+        $validated = $request->validate([
+            'correction_reason' => ['required', 'string', 'max:500'],
+        ]);
         $organization = $result->organization;
         abort_unless($organization, 404);
-        $action->handle($organization, $result, auth()->user(), 'unlock');
+        $action->handle($organization, $result, auth()->user(), 'unlock', $validated['correction_reason']);
 
         return redirect()->route('results.index')->with('success', 'Result unlocked successfully.');
     }

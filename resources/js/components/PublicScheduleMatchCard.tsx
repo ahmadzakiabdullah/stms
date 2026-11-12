@@ -1,6 +1,6 @@
 import PublicFixtureCard from '@/components/PublicFixtureCard';
 
-export type ScheduleMatchTeam = { name: string; logo_url: string | null; inverse_logo_url: string | null } | null;
+export type ScheduleMatchTeam = { name: string; name_ms?: string | null; logo_url: string | null; inverse_logo_url: string | null } | null;
 
 export type ScheduleMatch = {
     id: string;

@@ -156,21 +156,22 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone?:
 }
 
 function LeagueTable({ standings }: { standings: StandingRow[] }) {
+    const { t } = useI18n();
     return (
         <div className="overflow-hidden rounded-lg border">
             <Table>
                 <TableHeader>
                     <TableRow className="bg-muted/50">
                         <TableHead className="w-10">#</TableHead>
-                        <TableHead>Team</TableHead>
-                        <TableHead className="text-center">P</TableHead>
-                        <TableHead className="text-center">W</TableHead>
-                        <TableHead className="text-center">D</TableHead>
-                        <TableHead className="text-center">L</TableHead>
-                        <TableHead className="text-center">GF</TableHead>
-                        <TableHead className="text-center">GA</TableHead>
-                        <TableHead className="text-center">GD</TableHead>
-                        <TableHead className="w-14 text-center font-semibold">Pts</TableHead>
+                        <TableHead>{t('Team')}</TableHead>
+                        <TableHead className="text-center">{t('Played')}</TableHead>
+                        <TableHead className="text-center">{t('W')}</TableHead>
+                        <TableHead className="text-center">{t('D')}</TableHead>
+                        <TableHead className="text-center">{t('L')}</TableHead>
+                        <TableHead className="text-center">{t('GF')}</TableHead>
+                        <TableHead className="text-center">{t('GA')}</TableHead>
+                        <TableHead className="text-center">{t('GD')}</TableHead>
+                        <TableHead className="w-14 text-center font-semibold">{t('Pts')}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -185,7 +186,7 @@ function LeagueTable({ standings }: { standings: StandingRow[] }) {
                                     <div className="flex items-center gap-2">
                                         <ParticipantLogo participant={row.participant ?? { name }} size="xs" alt="" />
                                         <span className="truncate font-medium">{name}</span>
-                                        {isLeader && <Badge variant="secondary">Leader</Badge>}
+                                        {isLeader && <Badge variant="secondary">{t('Leader')}</Badge>}
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-center">{row.played}</TableCell>
@@ -228,6 +229,7 @@ const stageTitle = (stage: string, round?: number | null) => {
 };
 
 function KnockoutStageSection({ knockout, canManage = true }: { knockout: KnockoutData; canManage?: boolean }) {
+    const { t } = useI18n();
     const [generating, setGenerating] = useState(false);
     const generate = () => {
         setGenerating(true);
@@ -241,15 +243,15 @@ function KnockoutStageSection({ knockout, canManage = true }: { knockout: Knocko
         return (
             <Card>
                 <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> Knockout Stage</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> {t('Knockout Stage')}</CardTitle>
                     <CardDescription>
                         {knockout.league_complete
-                            ? 'League complete — generate the knockout stage to continue.'
-                            : 'Not available yet. The knockout stage unlocks once every league fixture has a result.'}
+                            ? t('League complete — generate the knockout stage to continue.')
+                            : t('Not available yet. The knockout stage unlocks once every league fixture has a result.')}
                     </CardDescription>
                     {knockout.league_complete && canManage && (
                         <Button onClick={generate} disabled={generating} className="mt-2 w-fit">
-                            <Trophy className="mr-2 size-4" /> {generating ? 'Generating…' : 'Generate Knockout Stage'}
+                            <Trophy className="mr-2 size-4" /> {generating ? t('Generating…') : t('Generate Knockout Stage')}
                         </Button>
                     )}
                 </CardHeader>
@@ -260,8 +262,8 @@ function KnockoutStageSection({ knockout, canManage = true }: { knockout: Knocko
     return (
         <Card>
             <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> Knockout Stage</CardTitle>
-                <CardDescription>Semi-finals, bronze and final</CardDescription>
+                <CardTitle className="flex items-center gap-2 text-lg"><Trophy className="size-4 text-primary" /> {t('Knockout Stage')}</CardTitle>
+                <CardDescription>{t('Semi-finals, bronze and final')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -287,7 +289,7 @@ function KnockoutStageSection({ knockout, canManage = true }: { knockout: Knocko
                                         <span className="truncate text-sm font-medium" title={participantFullName(fixture.home_participant)}>{participantName(fixture.home_participant)}</span>
                                     </div>
                                     <span className={`shrink-0 text-sm font-bold ${isFinal ? 'text-primary' : 'text-muted-foreground'}`}>
-                                        {scored ? `${fixture.result!.score_home} : ${fixture.result!.score_away}` : 'VS'}
+                                        {scored ? `${fixture.result!.score_home} : ${fixture.result!.score_away}` : t('VS')}
                                     </span>
                                     <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
                                         <TeamMark participant={fixture.away_participant} fallback="TBD" />
@@ -321,6 +323,7 @@ interface MatchRowViewProps {
 }
 
 function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage = true }: MatchRowViewProps) {
+    const { t } = useI18n();
     const scored = match.result?.score_home !== null && match.result?.score_home !== undefined;
     const detail = match.pool?.name ?? (match.stage ? stageTitle(match.stage, match.round) : `Round ${match.round || 1}`);
     const label = code
@@ -335,7 +338,7 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
                     <span className="max-w-[110px] truncate font-medium text-right" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
                     <TeamMark participant={match.home_participant} size="lg" />
                     <span className={`mx-1 shrink-0 rounded-md px-2 py-0.5 text-sm font-bold tabular-nums ${scored ? 'bg-muted' : 'text-muted-foreground'}`}>
-                        {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : 'VS'}
+                        {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : t('VS')}
                     </span>
                     <TeamMark participant={match.away_participant} size="lg" />
                     <span className="max-w-[110px] truncate font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
@@ -345,15 +348,15 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
             <TableCell className="text-sm">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                     <CalendarDays className="size-3" />
-                    {match.venue || 'Venue TBD'}
+                    {match.venue || t('Venue TBD')}
                 </div>
                 <div className="text-xs text-muted-foreground">{formatDateTime(match.scheduled_at)}</div>
             </TableCell>
             <TableCell>{statusBadge(match.status)}</TableCell>
             {canManage && (
             <TableCell className="space-x-1 text-right">
-                <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit match"><Pencil className="size-3" /></Button>
-                <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete match"><Trash2 className="size-3" /></Button>
+                <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label={t('Edit match')}><Pencil className="size-3" /></Button>
+                <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label={t('Delete match')}><Trash2 className="size-3" /></Button>
             </TableCell>
             )}
         </TableRow>
@@ -361,6 +364,7 @@ function MatchRowView({ match, onEdit, onDelete, eventCode: code = '', canManage
 }
 
 function MatchMobileCard({ match, onEdit, onDelete, eventCode: code = '', canManage = true }: MatchRowViewProps) {
+    const { t } = useI18n();
     const scored = match.result?.score_home !== null && match.result?.score_home !== undefined;
     const detail = match.pool?.name ?? (match.stage ? stageTitle(match.stage, match.round) : `Round ${match.round || 1}`);
     const label = code ? `${code}${match.match_number}` : matchNumberLabel(match.match_number, match.event?.name);
@@ -380,7 +384,7 @@ function MatchMobileCard({ match, onEdit, onDelete, eventCode: code = '', canMan
                     <p className="mt-1 truncate text-sm font-semibold" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</p>
                 </div>
                 <span className={`rounded-lg px-3 py-2 text-sm font-bold tabular-nums ${scored ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                    {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : 'VS'}
+                    {scored ? `${match.result!.score_home} : ${match.result!.score_away}` : t('VS')}
                 </span>
                 <div className="min-w-0 text-center">
                     <TeamMark participant={match.away_participant} size="lg" className="mx-auto" />
@@ -389,12 +393,12 @@ function MatchMobileCard({ match, onEdit, onDelete, eventCode: code = '', canMan
             </div>
             <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3">
                 <span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">
-                    <CalendarDays className="size-3.5 shrink-0" /> {match.venue || 'Venue TBD'}
+                    <CalendarDays className="size-3.5 shrink-0" /> {match.venue || t('Venue TBD')}
                 </span>
                 {canManage && (
                     <div className="flex shrink-0 gap-1">
-                        <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit match"><Pencil className="size-3" /></Button>
-                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive" onClick={onDelete} aria-label="Delete match"><Trash2 className="size-3" /></Button>
+                        <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label={t('Edit match')}><Pencil className="size-3" /></Button>
+                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:text-destructive" onClick={onDelete} aria-label={t('Delete match')}><Trash2 className="size-3" /></Button>
                     </div>
                 )}
             </div>
@@ -688,7 +692,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                             <div>
                                                 <CardTitle className="flex items-center gap-2 text-lg">
                                                     {eventDisplayName(event)}
-                                                    {eventHasDraw && <Badge variant="outline">Drawn</Badge>}
+                                                        {eventHasDraw && <Badge variant="outline">{t('Drawn')}</Badge>}
                                                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${progress.badge}`}>{progress.label}</span>
                                                 </CardTitle>
                                                 <CardDescription>
@@ -707,11 +711,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                             <div className="flex items-center gap-2">
                                                 {eventHasDraw && (
                                                     <Link href={route('events.draw-result', event.slug)}>
-                                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> {t('View Draw')}</Button>
                                                     </Link>
                                                 )}
                                                 <Button variant="outline" size="sm" onClick={() => handleFilterChange(event.id)}>
-                                                    <Swords className="mr-1 size-3" /> Open Event
+                                                    <Swords className="mr-1 size-3" /> {t('Open Event')}
                                                 </Button>
                                             </div>
                                         </div>
@@ -733,11 +737,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableHead className="w-14">#</TableHead>
-                                                        <TableHead>Matchup</TableHead>
-                                                        <TableHead className="w-32">Pool / Stage</TableHead>
-                                                        <TableHead>Venue / Time</TableHead>
-                                                <TableHead className="w-28">Status</TableHead>
-                                                {canManage && <TableHead className="text-right">Actions</TableHead>}
+                                                        <TableHead>{t('Matchup')}</TableHead>
+                                                        <TableHead className="w-32">{t('Pool / Stage')}</TableHead>
+                                                        <TableHead>{t('Venue / Time')}</TableHead>
+                                                <TableHead className="w-28">{t('Status')}</TableHead>
+                                                {canManage && <TableHead className="text-right">{t('Actions')}</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -755,7 +759,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                         </div>
                                         {shown.length < eventFixtures.length && (
                                             <p className="mt-3 text-xs text-muted-foreground">
-                                                Showing {shown.length} of {eventFixtures.length} matches.
+                                                {t('Showing')} {shown.length} {t('of')} {eventFixtures.length} {t('matches')}.
                                             </p>
                                         )}
                                     </CardContent>
@@ -773,7 +777,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 <div>
                                     <CardTitle className="flex items-center gap-2 text-lg">
                                         {eventDisplayName(selectedEvent)}
-                                        {drawnEventIds.includes(selectedEvent.id) && <Badge variant="outline">Drawn</Badge>}
+                                        {drawnEventIds.includes(selectedEvent.id) && <Badge variant="outline">{t('Drawn')}</Badge>}
                                     </CardTitle>
                                     <CardDescription>
                                         {selectedEvent.tournament?.name} · {selectedEvent.sport?.name}
@@ -784,11 +788,11 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 <div className="flex items-center gap-2">
                                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                         <RefreshCw className="size-3 animate-spin [animation-duration:3s]" />
-                                        {lastUpdated ? `Auto-updated ${lastUpdated.toLocaleTimeString()}` : 'Auto-updates every 15s'}
+                                        {lastUpdated ? `${t('Auto-updated')} ${lastUpdated.toLocaleTimeString()}` : t('Auto-updates every 15s')}
                                     </span>
                                     {drawnEventIds.includes(selectedEvent.id) && (
                                         <Link href={route('events.draw-result', selectedEvent.slug)}>
-                                            <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                            <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> {t('View Draw')}</Button>
                                         </Link>
                                     )}
                                 </div>
@@ -797,15 +801,15 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                         <CardContent>
                             <div className="grid grid-cols-3 gap-3 rounded-lg bg-muted/50 p-3">
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Fixtures</p>
+                                    <p className="text-xs text-muted-foreground">{t('Fixtures')}</p>
                                     <p className="mt-0.5 text-xl font-bold tabular-nums">{selectedFixtures.length}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Completed</p>
+                                    <p className="text-xs text-muted-foreground">{t('Completed')}</p>
                                     <p className="mt-0.5 text-xl font-bold tabular-nums">{selectedCompleted}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Progress</p>
+                                    <p className="text-xs text-muted-foreground">{t('Progress')}</p>
                                     <p className="mt-0.5 text-xl font-bold tabular-nums">{selectedProgress.pct}%</p>
                                 </div>
                             </div>
@@ -819,20 +823,20 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                     {pools.length === 0 && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>No Pools</CardTitle>
+                                <CardTitle>{t('No Pools')}</CardTitle>
                                 <CardDescription>
-                                    This event has no pools yet. You can still add matches directly, or run a draw to create pools.
+                                    {t('This event has no pools yet. You can still add matches directly, or run a draw to create pools.')}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-wrap gap-2">
                                     {canManage && (
                                     <Button variant="outline" size="sm" onClick={() => openCreate()}>
-                                        <Plus className="mr-1 size-3" /> Add Match
+                                        <Plus className="mr-1 size-3" /> {t('Add Match')}
                                     </Button>
                                     )}
                                     <Link href={route('events.draw-result', selectedEvent.slug)}>
-                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> View Draw</Button>
+                                        <Button variant="outline" size="sm"><Eye className="mr-1 size-3" /> {t('View Draw')}</Button>
                                     </Link>
                                 </div>
                             </CardContent>
@@ -867,7 +871,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2 text-sm font-semibold">
                                             <BarChart3 className="size-4 text-primary" />
-                                            League Table
+                                            {t('League Table')}
                                         </div>
                                         <LeagueTable standings={pool.standings} />
                                     </div>
@@ -884,23 +888,23 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                             canManage={canManage}
                                         />
                                     ))}
-                                    {pool.fixtures.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">No fixtures in this pool.</p>}
+                                    {pool.fixtures.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">{t('No fixtures in this pool.')}</p>}
                                 </div>
                                 <div className="hidden overflow-x-auto md:block">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="w-14">#</TableHead>
-                                                <TableHead>Matchup</TableHead>
-                                                <TableHead className="w-32">Pool / Stage</TableHead>
-                                                <TableHead>Venue / Time</TableHead>
-                                                <TableHead className="w-28">Status</TableHead>
-                                                {canManage && <TableHead className="text-right">Actions</TableHead>}
+                                                <TableHead>{t('Matchup')}</TableHead>
+                                                <TableHead className="w-32">{t('Pool / Stage')}</TableHead>
+                                                <TableHead>{t('Venue / Time')}</TableHead>
+                                                <TableHead className="w-28">{t('Status')}</TableHead>
+                                                {canManage && <TableHead className="text-right">{t('Actions')}</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {pool.fixtures.length === 0 && (
-                                                <TableRow><TableCell colSpan={canManage ? 6 : 5} className="text-center text-muted-foreground">No fixtures in this pool.</TableCell></TableRow>
+                                                <TableRow><TableCell colSpan={canManage ? 6 : 5} className="text-center text-muted-foreground">{t('No fixtures in this pool.')}</TableCell></TableRow>
                                             )}
                                             {pool.fixtures.map((fixture) => (
                                                 <MatchRowView
@@ -938,10 +942,10 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                     if (next?.venues?.length) setData('venue', next.venues[0]);
                                 }}>
                                     <SelectTrigger id="event_id" className="h-9 min-w-0 text-sm">
-                                        <SelectValue placeholder="-- Select Event --" />
+                                        <SelectValue placeholder={t('-- Select Event --')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="none">-- Select Event --</SelectItem>
+                                        <SelectItem value="none">{t('-- Select Event --')}</SelectItem>
                                         {events.map((event) => <SelectItem key={event.id} value={event.id}>{eventDisplayName(event)}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
@@ -951,10 +955,10 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 <Label htmlFor="pool_id">{t('Pool')}</Label>
                                 <Select value={data.pool_id || 'none'} onValueChange={(v) => setData('pool_id', v === 'none' ? '' : v)}>
                                     <SelectTrigger id="pool_id" className="h-9 min-w-0 text-sm">
-                                        <SelectValue placeholder="-- No Pool --" />
+                                        <SelectValue placeholder={t('-- No Pool --')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="none">-- No Pool --</SelectItem>
+                                        <SelectItem value="none">{t('-- No Pool --')}</SelectItem>
                                         {eventPools.map((pool) => <SelectItem key={pool.id} value={pool.id}>{pool.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
@@ -962,18 +966,18 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                             </div>
                             <div className="grid min-w-0 grid-cols-2 gap-3">
                                 <div className="grid gap-2"><Label htmlFor="round">{t('Round')}</Label><Input id="round" type="number" min="1" value={data.round} onChange={(event) => setData('round', Number(event.target.value))} /></div>
-                                <div className="grid gap-2"><Label htmlFor="match_number">Match #</Label><Input id="match_number" type="number" min="1" value={data.match_number} onChange={(event) => setData('match_number', Number(event.target.value))} required /></div>
+                                <div className="grid gap-2"><Label htmlFor="match_number">{t('Match #')}</Label><Input id="match_number" type="number" min="1" value={data.match_number} onChange={(event) => setData('match_number', Number(event.target.value))} required /></div>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="home_participant_id">{t('Home')}</Label>
-                                <Select value={data.home_participant_id || 'none'} onValueChange={(v) => setData('home_participant_id', v === 'none' ? '' : v)}><SelectTrigger id="home_participant_id" className="h-9 min-w-0 text-sm"><SelectValue placeholder="-- TBD --" /></SelectTrigger><SelectContent><SelectItem value="none">-- TBD --</SelectItem>{participants.map((participant) => <SelectItem key={participant.id} value={participant.id}>{participantName(participant)}</SelectItem>)}</SelectContent></Select>
+                                <Select value={data.home_participant_id || 'none'} onValueChange={(v) => setData('home_participant_id', v === 'none' ? '' : v)}><SelectTrigger id="home_participant_id" className="h-9 min-w-0 text-sm"><SelectValue placeholder={t('-- TBD --')} /></SelectTrigger><SelectContent><SelectItem value="none">{t('-- TBD --')}</SelectItem>{participants.map((participant) => <SelectItem key={participant.id} value={participant.id}>{participantName(participant)}</SelectItem>)}</SelectContent></Select>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="away_participant_id">{t('Away')}</Label>
-                                <Select value={data.away_participant_id || 'none'} onValueChange={(v) => setData('away_participant_id', v === 'none' ? '' : v)}><SelectTrigger id="away_participant_id" className="h-9 min-w-0 text-sm"><SelectValue placeholder="-- TBD --" /></SelectTrigger><SelectContent><SelectItem value="none">-- TBD --</SelectItem>{participants.map((participant) => <SelectItem key={participant.id} value={participant.id}>{participantName(participant)}</SelectItem>)}</SelectContent></Select>
+                                <Select value={data.away_participant_id || 'none'} onValueChange={(v) => setData('away_participant_id', v === 'none' ? '' : v)}><SelectTrigger id="away_participant_id" className="h-9 min-w-0 text-sm"><SelectValue placeholder={t('-- TBD --')} /></SelectTrigger><SelectContent><SelectItem value="none">{t('-- TBD --')}</SelectItem>{participants.map((participant) => <SelectItem key={participant.id} value={participant.id}>{participantName(participant)}</SelectItem>)}</SelectContent></Select>
                                 {errors.away_participant_id && <p className="text-sm text-destructive">{errors.away_participant_id}</p>}
                             </div>
-                            <div className="grid gap-2"><Label htmlFor="venue">Venue</Label>{(() => {
+                            <div className="grid gap-2"><Label htmlFor="venue">{t('Venue')}</Label>{(() => {
                                 const formEvent = events.find((item) => item.id === data.event_id);
                                 const venues = formEvent?.venues ?? [];
                                 if (venues.length === 0) {
@@ -982,16 +986,16 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 return (
                                     <Select value={data.venue || 'none'} onValueChange={(v) => setData('venue', v === 'none' ? '' : v)}>
                                         <SelectTrigger id="venue" className="h-9 min-w-0 text-sm">
-                                            <SelectValue placeholder="-- Venue TBD --" />
+                                            <SelectValue placeholder={t('-- Venue TBD --')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="none">-- Venue TBD --</SelectItem>
+                                            <SelectItem value="none">{t('-- Venue TBD --')}</SelectItem>
                                             {venues.map((venue) => <SelectItem key={venue} value={venue}>{venue}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 );
                             })()}</div>
-                            <div className="grid gap-2"><Label htmlFor="scheduled_at">Scheduled At</Label>{(() => {
+                            <div className="grid gap-2"><Label htmlFor="scheduled_at">{t('Scheduled At')}</Label>{(() => {
                                 const formEvent = events.find((item) => item.id === data.event_id);
                                 const start = formEvent?.start_date ? `${toDateInput(formEvent.start_date)}T00:00` : undefined;
                                 const end = formEvent?.end_date ? `${toDateInput(formEvent.end_date)}T23:59` : undefined;
@@ -999,7 +1003,7 @@ export default function MatchesIndex({ events, drawnEventIds, selectedEventId, p
                                 return <Input id="scheduled_at" type="datetime-local" value={data.scheduled_at} min={start} max={end} onChange={(event) => setData('scheduled_at', event.target.value)} />;
                             })()}</div>
                             <div className="grid gap-2"><Label htmlFor="status">{t('Status')}</Label><Select value={data.status} onValueChange={(v) => setData('status', v as Fixture['status'])}><SelectTrigger id="status" className="h-9 min-w-0 text-sm"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="scheduled">{t('Scheduled')}</SelectItem><SelectItem value="in_progress">{t('In Progress')}</SelectItem><SelectItem value="completed">{t('Completed')}</SelectItem><SelectItem value="cancelled">{t('Cancelled')}</SelectItem></SelectContent></Select></div>
-                            <div className="grid gap-2"><Label htmlFor="notes">Notes</Label><Input id="notes" value={data.notes} onChange={(event) => setData('notes', event.target.value)} /></div>
+                            <div className="grid gap-2"><Label htmlFor="notes">{t('Notes')}</Label><Input id="notes" value={data.notes} onChange={(event) => setData('notes', event.target.value)} /></div>
                         </div>
                         <DialogFooter><Button type="button" variant="outline" onClick={closeDialog}>{t('Cancel')}</Button><Button type="submit" disabled={processing}><Save className="mr-2 size-4" />{editingMatch ? t('Update Match') : t('Save')}</Button></DialogFooter>
                     </form>

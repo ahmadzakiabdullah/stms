@@ -146,6 +146,7 @@ class RankingService
                     $stats->put($participantId, [
                         'participant_id' => $participantId,
                         'participant_name' => $participant?->name ?? 'Unknown',
+                        'participant_name_ms' => $participant?->name_ms,
                         'participant_type' => $participant?->participant_type ?? 'individual',
                         'team_name' => $participant?->team_name,
                         'logo_url' => $participant?->logo_url,

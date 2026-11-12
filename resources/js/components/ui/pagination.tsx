@@ -2,9 +2,11 @@ import * as React from 'react';
 import { Slot } from 'radix-ui';
 
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 function Pagination({ className, ...props }: any) {
-    return <nav role="navigation" aria-label="pagination" data-slot="pagination" className={cn('mx-auto flex w-full justify-center', className)} {...props} />;
+    const { t } = useI18n();
+    return <nav role="navigation" aria-label={t('Pagination')} data-slot="pagination" className={cn('mx-auto flex w-full justify-center', className)} {...props} />;
 }
 
 function PaginationContent({ className, ...props }: any) {
@@ -22,11 +24,13 @@ const PaginationLink = React.forwardRef(function PaginationLink({ className, isA
 }) as any;
 
 function PaginationPrevious({ className, ...props }: any) {
-    return <PaginationLink aria-label="Previous" className={cn('gap-1 px-3', className)} {...props} />;
+    const { t } = useI18n();
+    return <PaginationLink aria-label={t('Previous')} className={cn('gap-1 px-3', className)} {...props} />;
 }
 
 function PaginationNext({ className, ...props }: any) {
-    return <PaginationLink aria-label="Next" className={cn('gap-1 px-3', className)} {...props} />;
+    const { t } = useI18n();
+    return <PaginationLink aria-label={t('Next')} className={cn('gap-1 px-3', className)} {...props} />;
 }
 
 function PaginationEllipsis({ className, ...props }: any) {

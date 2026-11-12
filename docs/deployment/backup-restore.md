@@ -1,6 +1,6 @@
 # Backup and Restore Runbook
 
-> Mekanik restore pernah diuji pada dataset sanitized pada 5 Ogos 2026. Audit 17 Ogos tidak membuktikan jadual backup production, off-site custody atau restore drill production aktif; sahkan perkara tersebut sebelum release.
+> Mekanik restore pernah diuji pada dataset sanitized pada 5 Ogos 2026. Off-host backup dan isolated restore 18 Ogos 2026 direkodkan dalam [release drill](../testing/2026-08-18-release-drill.md). Repository tidak membuktikan jadual backup production, off-site custody atau restore drill production aktif; sahkan perkara tersebut sebelum release.
 
 ## Objectives
 

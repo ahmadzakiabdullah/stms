@@ -20,6 +20,10 @@ Jangan menguji destructive exploit, mengeksfiltrasi data tenant atau menjalankan
 
 ## Current Security Status
 
-Dependency audits semasa bersih pada tahap yang diuji, tetapi release masih `NO-GO`. Audit 17 Ogos menemui jurang read authorization (`viewAny`), CSP production masih report-only, pemilihan favicon tetamu tidak explicit tenant, DB least privilege belum dibuktikan, dan email verification dimatikan dalam runtime yang diaudit.
+Dikemas kini 12 November 2026. Dependency audits semasa bersih pada tahap yang diuji, tetapi release masih `NO-GO`.
+
+Telah dibaiki sejak audit 17 Ogos: jurang read authorization (`viewAny`) ditutup pada semua index sensitif, CSP production kini enforcing (bukan lagi report-only), dan favicon tetamu memilih tenant public secara eksplisit.
+
+Masih terbuka: DB least privilege belum dibuktikan, email verification masih dimatikan (ditahan atas arahan pemilik sistem), dan Redis untuk session/cache/queue belum diaktifkan dalam runtime production.
 
 Lihat [security overview](docs/security/overview.md) dan [audit penuh](docs/audits/2026-08-17-full-project-and-production-audit.md). Jangan menyalin vulnerability detail ke changelog awam sebelum mitigasi tersedia.

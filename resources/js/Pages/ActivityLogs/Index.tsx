@@ -74,7 +74,7 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                             <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                                 {t('Organization')}
                                 <Select value={filters.organization_id || 'all'} onValueChange={(value) => visit({ organization_id: value === 'all' ? '' : value })}>
-                                    <SelectTrigger aria-label="Filter activity by organization" className="h-9 w-full">
+                                    <SelectTrigger aria-label={t('Filter activity by organization')} className="h-9 w-full">
                                         <SelectValue placeholder={t('All organizations')} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -87,7 +87,7 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                             {t('Event')}
                             <Select value={filters.event || 'all'} onValueChange={(value) => visit({ event: value === 'all' ? '' : value })}>
-                                <SelectTrigger aria-label="Filter activity by event" className="h-9 w-full">
+                                <SelectTrigger aria-label={t('Filter activity by event')} className="h-9 w-full">
                                     <SelectValue placeholder={t('All events')} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -100,11 +100,11 @@ export default function ActivityLogsIndex({ activities, filters, isSuperAdmin, o
                         </label>
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                             {t('From')}
-                            <input aria-label="Activity start date" type="date" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.from} onChange={(event) => visit({ from: event.target.value })} />
+                            <input aria-label={t('Activity start date')} type="date" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.from} onChange={(event) => visit({ from: event.target.value })} />
                         </label>
                         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                             {t('To')}
-                            <input aria-label="Activity end date" type="date" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.to} onChange={(event) => visit({ to: event.target.value })} />
+                            <input aria-label={t('Activity end date')} type="date" className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground" value={filters.to} onChange={(event) => visit({ to: event.target.value })} />
                         </label>
                     </div>
                 </CardContent>

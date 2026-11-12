@@ -3,7 +3,7 @@ import PrimaryButton from '@/components/PrimaryButton';
 import TextInput from '@/components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { useI18n } from '@/lib/i18n';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 
 interface Props {
     status?: string;
@@ -55,6 +55,15 @@ export default function ForgotPassword({ status }: Props) {
                     </PrimaryButton>
                 </div>
             </form>
+
+            <div className="mt-6 border-t pt-4 text-center">
+                <Link
+                    href={route('login')}
+                    className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                    {t('Back to login')}
+                </Link>
+            </div>
         </GuestLayout>
     );
 }

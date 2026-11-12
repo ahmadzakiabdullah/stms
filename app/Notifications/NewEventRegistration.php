@@ -32,6 +32,7 @@ class NewEventRegistration extends Notification implements ShouldQueue
             'event_participant_id' => $this->eventParticipant->id,
             'event_name' => $this->eventParticipant->event?->name ?? 'Unknown Event',
             'faculty_name' => $this->eventParticipant->participant?->name ?? 'Unknown Faculty',
+            'faculty_name_ms' => $this->eventParticipant->participant?->name_ms,
             'message' => "{$this->eventParticipant->participant?->name} registered for '{$this->eventParticipant->event?->name}'.",
             'type' => 'new_registration',
             'severity' => 'warning',

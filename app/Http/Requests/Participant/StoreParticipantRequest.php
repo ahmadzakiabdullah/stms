@@ -44,6 +44,7 @@ class StoreParticipantRequest extends FormRequest
             ],
             'session_id' => ['nullable', 'uuid', Rule::exists('event_sessions', 'id')->where('organization_id', $organizationId)],
             'name' => ['required', 'string', 'max:255'],
+            'name_ms' => ['nullable', 'string', 'max:255'],
             'slug' => [
                 'nullable',
                 'string',

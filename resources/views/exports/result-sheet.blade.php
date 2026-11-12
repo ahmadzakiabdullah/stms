@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Result Sheet - Match {{ $fixture->match_number ?? 'N/A' }}</title>
+    <title>{{ app()->getLocale() === 'ms' ? 'Helaian Keputusan' : 'Result Sheet' }} - {{ $fixture->match_number ?? 'N/A' }}</title>
     <style nonce="{{ request()->attributes->get('csp_nonce') }}">
         body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
         h1 { font-size: 16px; margin-bottom: 5px; }
@@ -27,75 +27,76 @@
     </style>
 </head>
 <body>
-    <h1>OFFICIAL RESULT SHEET</h1>
+    @php($isMalay = app()->getLocale() === 'ms')
+    <h1>{{ $isMalay ? 'HELAIAN KEPUTUSAN RASMI' : 'OFFICIAL RESULT SHEET' }}</h1>
 
     <div class="info-row">
-        <span><span class="label">Tournament:</span> {{ $fixture->event?->tournament?->name ?? '-' }}</span>
-        <span><span class="label">Event:</span> {{ $fixture->event?->name ?? '-' }}</span>
+        <span><span class="label">{{ $isMalay ? 'Kejohanan:' : 'Tournament:' }}</span> {{ $fixture->event?->tournament?->name ?? '-' }}</span>
+        <span><span class="label">{{ $isMalay ? 'Acara:' : 'Event:' }}</span> {{ $fixture->event?->name ?? '-' }}</span>
     </div>
     <div class="info-row">
-        <span><span class="label">Match #:</span> {{ $fixture->match_number ?? '-' }}</span>
-        <span><span class="label">Date:</span> {{ $fixture->scheduled_at?->format('d M Y') ?? '-' }}</span>
-        <span><span class="label">Time:</span> {{ $fixture->scheduled_at?->format('H:i') ?? '-' }}</span>
+        <span><span class="label">{{ $isMalay ? 'Perlawanan #:' : 'Match #:' }}</span> {{ $fixture->match_number ?? '-' }}</span>
+        <span><span class="label">{{ $isMalay ? 'Tarikh:' : 'Date:' }}</span> {{ $fixture->scheduled_at?->format('d M Y') ?? '-' }}</span>
+        <span><span class="label">{{ $isMalay ? 'Masa:' : 'Time:' }}</span> {{ $fixture->scheduled_at?->format('H:i') ?? '-' }}</span>
     </div>
     <div class="info-row">
-        <span><span class="label">Venue:</span> {{ $fixture->venue ?? '-' }}</span>
-        <span><span class="label">Status:</span> {{ $result ? ucfirst($result->status) : 'No result recorded' }}</span>
+        <span><span class="label">{{ $isMalay ? 'Tempat:' : 'Venue:' }}</span> {{ $fixture->venue ?? '-' }}</span>
+        <span><span class="label">Status:</span> {{ $result ? ucfirst($result->status) : ($isMalay ? 'Tiada keputusan direkodkan' : 'No result recorded') }}</span>
     </div>
 
     <div class="result-box">
         <div class="teams">
             <div class="team">
                 <div class="team-name">{{ $fixture->homeParticipant?->name ?? 'TBD' }}</div>
-                <div>(Home)</div>
+                <div>({{ $isMalay ? 'Tuan Rumah' : 'Home' }})</div>
             </div>
-            <div class="vs">VS</div>
+            <div class="vs">{{ $isMalay ? 'Lwn.' : 'VS' }}</div>
             <div class="team">
                 <div class="team-name">{{ $fixture->awayParticipant?->name ?? 'TBD' }}</div>
-                <div>(Away)</div>
+                <div>({{ $isMalay ? 'Pelawat' : 'Away' }})</div>
             </div>
         </div>
         <div class="score-area">
-            <span class="label">Final Score:</span>
+            <span class="label">{{ $isMalay ? 'Skor Akhir:' : 'Final Score:' }}</span>
             <span class="score-box">{{ $result?->score_home ?? '-' }}</span>
             <span>-</span>
             <span class="score-box">{{ $result?->score_away ?? '-' }}</span>
         </div>
         @if ($result && $result->winner)
-            <div><span class="label">Winner:</span> {{ $result->winner->name }}</div>
+            <div><span class="label">{{ $isMalay ? 'Pemenang:' : 'Winner:' }}</span> {{ $result->winner->name }}</div>
         @endif
         @if (in_array($result?->status, ['approved', 'locked'], true))
-            <div class="status-badge">Approved</div>
+            <div class="status-badge">{{ $isMalay ? 'Diluluskan' : 'Approved' }}</div>
         @endif
     </div>
 
     @if ($result)
         <div class="meta">
-            <span class="label">Submitted by:</span> {{ $result->submittedBy?->name ?? '-' }} on {{ optional($result->submitted_at)->format('d M Y H:i') ?? '-' }}<br>
+            <span class="label">{{ $isMalay ? 'Dihantar oleh:' : 'Submitted by:' }}</span> {{ $result->submittedBy?->name ?? '-' }} {{ $isMalay ? 'pada' : 'on' }} {{ optional($result->submitted_at)->format('d M Y H:i') ?? '-' }}<br>
             @if ($result->approved_at)
-                <span class="label">Approved by:</span> {{ $result->approvedBy?->name ?? '-' }} on {{ $result->approved_at->format('d M Y H:i') }}
+                <span class="label">{{ $isMalay ? 'Diluluskan oleh:' : 'Approved by:' }}</span> {{ $result->approvedBy?->name ?? '-' }} {{ $isMalay ? 'pada' : 'on' }} {{ $result->approved_at->format('d M Y H:i') }}
             @else
-                <span>Not yet approved.</span>
+                <span>{{ $isMalay ? 'Belum diluluskan.' : 'Not yet approved.' }}</span>
             @endif
         </div>
     @endif
 
     <div class="section">
-        <div class="section-title">Result Notes</div>
+        <div class="section-title">{{ $isMalay ? 'Catatan Keputusan' : 'Result Notes' }}</div>
         <div class="notes-area">{{ $result?->notes ?? '' }}</div>
     </div>
 
     <div class="signatures">
         <div class="signature-box">
-            <div class="signature-line">Match Official</div>
+            <div class="signature-line">{{ $isMalay ? 'Pegawai Perlawanan' : 'Match Official' }}</div>
         </div>
         <div class="signature-box">
-            <div class="signature-line">Tournament Organizer</div>
+            <div class="signature-line">{{ $isMalay ? 'Penganjur Kejohanan' : 'Tournament Organizer' }}</div>
         </div>
     </div>
 
     <div class="footer">
-        Generated on {{ now()->format('d M Y H:i:s') }} • {{ config('app.name') }}
+        {{ $isMalay ? 'Dijana pada' : 'Generated on' }} {{ now()->format('d M Y H:i:s') }} • {{ config('app.name') }}
     </div>
 </body>
 </html>

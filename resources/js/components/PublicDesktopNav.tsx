@@ -1,13 +1,13 @@
-import { type PublicMenuGroup, type PublicMenuLink } from '@/components/PublicMobileMenu';
+import { type PublicMenuItem } from '@/components/PublicMobileMenu';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { Link } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-type Props = { links: PublicMenuLink[]; groups?: PublicMenuGroup[] };
+type Props = { items: PublicMenuItem[] };
 
-export default function PublicDesktopNav({ links, groups = [] }: Props) {
+export default function PublicDesktopNav({ items }: Props) {
     const { t } = useI18n();
     const [openGroup, setOpenGroup] = useState<string | null>(null);
 
@@ -34,21 +34,25 @@ export default function PublicDesktopNav({ links, groups = [] }: Props) {
             aria-label={t('Public navigation')}
             className="hidden items-center gap-0.5 rounded-xl border border-white/10 bg-white/5 p-1 xl:flex"
         >
-            {links.map(link => (
-                <Button
-                    asChild
-                    variant="ghost"
-                    size="sm"
-                    key={`${link.href}-${link.label}`}
-                >
-                    <Link href={link.href} aria-current={link.current ? 'page' : undefined} className={`relative min-h-11 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-black transition sm:min-h-0 ${link.current ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}>
-                        {link.label}
-                        {link.current && <span aria-hidden="true" className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-[var(--public-highlight)]" />}
-                    </Link>
-                </Button>
-            ))}
-            {groups.map(group => {
-                const active = group.links.some(link => link.current);
+            {items.map(item => {
+                if (item.type === 'link') {
+                    return (
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            key={`${item.link.href}-${item.link.label}`}
+                        >
+                            <Link href={item.link.href} aria-current={item.link.current ? 'page' : undefined} className={`relative min-h-11 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-black transition sm:min-h-0 ${item.link.current ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}>
+                                {item.link.label}
+                                {item.link.current && <span aria-hidden="true" className="absolute inset-x-3 -bottom-1 h-0.5 rounded-full bg-[var(--public-highlight)]" />}
+                            </Link>
+                        </Button>
+                    );
+                }
+
+                const { group } = item;
+                const active = group.current || group.links.some(link => link.current);
 
                 return (
                     <div key={group.label} data-public-menu-group className="group relative">

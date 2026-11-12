@@ -4,13 +4,14 @@ import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicLayout from '@/Layouts/PublicLayout';
 import PublicPageHero from '@/components/PublicPageHero';
 import PublicScheduleMatchCard, { type ScheduleMatch } from '@/components/PublicScheduleMatchCard';
+import SafeImage from '@/components/SafeImage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useI18n } from '@/lib/i18n';
-import { router } from '@inertiajs/react';
-import { CalendarDays, Clock3, Radio, SlidersHorizontal, Trophy, Search, X } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { CalendarDays, Clock3, List, Printer, Radio, Rows3, Search, SlidersHorizontal, Trophy, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 type Props = {
@@ -25,6 +26,7 @@ type Props = {
 };
 
 type TabType = 'all' | 'live' | 'upcoming' | 'completed';
+type ViewMode = 'list' | 'calendar';
 
 const initialQueryParam = (key: string): string => {
     if (typeof window === 'undefined') return '';
@@ -39,6 +41,7 @@ const formatDateTime = (value: string | null, locale: string) => {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur',
     }).format(new Date(value));
 };
 
@@ -57,6 +60,7 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
     const [venueFilter, setVenueFilter] = useState(() => initialQueryParam('venue'));
     const [searchQuery, setSearchQuery] = useState('');
     const [filtersOpen, setFiltersOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<ViewMode>('list');
 
     const allMatches = useMemo(() => {
         const live = upcoming.filter(m => m.status === 'in_progress');
@@ -126,11 +130,12 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
 
         filteredMatches.forEach(match => {
             const key = match.scheduled_at
-                ? new Date(match.scheduled_at).toLocaleDateString(locale === 'ms' ? 'ms-MY' : 'en-MY', {
+                    ? new Date(match.scheduled_at).toLocaleDateString(locale === 'ms' ? 'ms-MY' : 'en-MY', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
+                    timeZone: 'Asia/Kuala_Lumpur',
                 })
                 : t('Date to be confirmed');
 
@@ -140,6 +145,8 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
 
         return groups;
     }, [filteredMatches, locale, t]);
+
+    const calendarEntries = useMemo(() => Object.entries(groupedMatches), [groupedMatches]);
 
     const hasActiveFilters = sportFilter || categoryFilter || venueFilter || searchQuery.trim();
 
@@ -164,17 +171,49 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                     intro={t('Find upcoming fixtures by sport, event, venue and time.')}
                     icon={<CalendarDays className="size-4" />}
                 >
-                    {competition?.start_date && (
-                        <p className="mt-8 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
-                            <CalendarDays className="size-4 text-[var(--public-highlight)]" />
-                            {formatDateRange(competition.start_date, competition.end_date, locale)}
-                        </p>
-                    )}
+                    <div className="mt-6 flex min-h-48 items-end justify-between gap-4 sm:min-h-56 lg:min-h-64">
+                        {competition?.start_date ? (
+                            <p className="mb-2 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
+                                <CalendarDays className="size-4 text-[var(--public-highlight)]" />
+                                {formatDateRange(competition.start_date, competition.end_date, locale)}
+                            </p>
+                        ) : <span />}
+                        <SafeImage src="/images/mascots/pose-run.webp" alt={locale === 'ms' ? 'Maskot SAF 20 sedang berlari' : 'SAF 20 mascot running'} loading="lazy" decoding="async" className="h-48 w-auto max-w-[48%] object-contain drop-shadow-xl sm:h-56 sm:max-w-[40%] lg:h-64" />
+                    </div>
                 </PublicPageHero>
 
-                <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+                {!error && upcoming.length === 0 && completed.length === 0 && (
+                    <div role="status" className="mx-auto mt-8 flex max-w-7xl flex-col gap-4 rounded-2xl border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] px-5 py-4 text-sm text-[var(--public-text)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div className="flex items-start gap-3">
+                            <CalendarDays className="mt-0.5 size-5 shrink-0 text-[var(--public-primary)]" aria-hidden="true" />
+                            <p className="font-semibold">
+                                {t('Fixtures have not been published yet.')}
+                                {competition?.start_date ? ` ${t('Competition dates')}: ${formatDateRange(competition.start_date, competition.end_date, locale)}.` : ''}
+                                {' '}{t('Check the official dates and sports programme while you wait.')}
+                            </p>
+                        </div>
+                        <div className="flex shrink-0 flex-wrap gap-2 pl-8 sm:pl-0">
+                            <Button asChild variant="outline" className="min-h-11 bg-white">
+                                <Link href={`${route('public.general-information')}#student-documents-title`}>{t('Download general schedule')}</Link>
+                            </Button>
+                            <Button asChild variant="outline" className="min-h-11 bg-white">
+                                <Link href={route('public.important-dates')}>{t('Important Dates')}</Link>
+                            </Button>
+                            <Button asChild variant="outline" className="min-h-11 bg-white">
+                                <Link href={route('public.sports')}>{t('Sports Programme')}</Link>
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                <div className="mx-auto max-w-7xl px-4 py-8 print:max-w-none print:px-0 print:py-0 sm:px-6 sm:py-12">
+                    <div className="mb-6 hidden border-b pb-4 print:block">
+                        <p className="text-sm font-semibold text-muted-foreground">{competition?.organization || app_name}</p>
+                        <h1 className="mt-1 text-2xl font-black">{t('Competition Schedule')}</h1>
+                        {competition?.start_date && <p className="mt-1 text-sm">{formatDateRange(competition.start_date, competition.end_date, locale)}</p>}
+                    </div>
                     <div className="lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8">
-                        <aside className="mb-8 hidden lg:sticky lg:top-24 lg:block">
+                        <aside className="mb-8 hidden print:hidden lg:sticky lg:top-24 lg:block">
                             <FilterPanel
                                 t={t}
                                 searchQuery={searchQuery}
@@ -195,8 +234,8 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                             />
                         </aside>
                         <div className="min-w-0">
-                    <div className="mb-8 space-y-6">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mb-8 space-y-6 print:hidden">
+                        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                             <div className="flex flex-wrap items-center gap-2">
                                 {tabs.map(tab => {
                                     const Icon = tab.icon;
@@ -226,6 +265,22 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                                         </Button>
                                     );
                                 })}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <div className="inline-flex rounded-xl border bg-white p-1">
+                                    <Button type="button" variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')}>
+                                        <Rows3 className="size-4" />
+                                        {t('List')}
+                                    </Button>
+                                    <Button type="button" variant={viewMode === 'calendar' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('calendar')}>
+                                        <CalendarDays className="size-4" />
+                                        {t('Calendar')}
+                                    </Button>
+                                </div>
+                                <Button type="button" variant="outline" size="lg" onClick={() => window.print()}>
+                                    <Printer className="size-4" />
+                                    {t('Print')}
+                                </Button>
                             </div>
                         </div>
 
@@ -293,18 +348,35 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                         </Sheet>
 
                         {hasActiveFilters && (
-                            <p className="text-xs font-semibold text-[var(--public-dark-faint)]">
+                            <p role="status" aria-live="polite" className="text-xs font-semibold text-[var(--public-dark-faint)]">
                                 {t('Showing')} <span className="font-black text-[var(--public-text)]">{filteredMatches.length}</span> {t('of')} <span className="font-black text-[var(--public-text)]">{allMatches.all.length}</span> {t('matches')}
                             </p>
                         )}
                     </div>
 
-                    {Object.keys(groupedMatches).length === 0 ? (
+                    {calendarEntries.length === 0 ? (
                         <PublicEmptyState text={t('No matches match your current filters.')} />
+                    ) : viewMode === 'calendar' ? (
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            {calendarEntries.map(([dateLabel, matches]) => (
+                                <section key={dateLabel} className="public-card p-4 print:break-inside-avoid print:rounded-none print:border print:shadow-none">
+                                    <div className="mb-4 flex items-start justify-between gap-3">
+                                        <div>
+                                            <h2 className="text-base font-black tracking-[-.01em] text-[var(--public-text)]">{dateLabel}</h2>
+                                            <p className="mt-1 text-xs font-semibold text-[var(--public-dark-faint)]">{matches.length} {matches.length === 1 ? t('match') : t('matches')}</p>
+                                        </div>
+                                        <CalendarDays className="size-5 shrink-0 text-[var(--public-primary)]" />
+                                    </div>
+                                    <div className="space-y-3">
+                                        {matches.map(match => <CalendarMatchRow key={match.id} match={match} locale={locale} t={t} />)}
+                                    </div>
+                                </section>
+                            ))}
+                        </div>
                     ) : (
                         <div className="space-y-8">
-                            {Object.entries(groupedMatches).map(([dateLabel, matches]) => (
-                                <section key={dateLabel}>
+                            {calendarEntries.map(([dateLabel, matches]) => (
+                                <section key={dateLabel} className="print:break-inside-avoid">
                                     <div className="mb-4 flex items-center gap-3">
                                         <div className="flex size-10 items-center justify-center rounded-xl bg-[var(--public-primary-soft)] text-[var(--public-primary)]">
                                             <CalendarDays className="size-5" />
@@ -328,12 +400,37 @@ export default function SchedulePage({ app_name, competition, upcoming = [], com
                         </div>
                     )}
 
-                    <div className="mt-10 flex justify-end"><PublicStaleDataNotice updatedAt={updated_at} /></div>
+                    <div className="mt-10 flex justify-end print:justify-start"><PublicStaleDataNotice updatedAt={updated_at} /></div>
                         </div>
                 </div>
                 </div>
             </main>
         </PublicLayout>
+    );
+}
+
+function CalendarMatchRow({ match, locale, t }: { match: ScheduleMatch; locale: string; t: (key: string) => string }) {
+    const time = match.scheduled_at
+        ? new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kuala_Lumpur' }).format(new Date(match.scheduled_at))
+        : t('TBC');
+    const teams = `${match.home?.name || t('TBC')} vs ${match.away?.name || t('TBC')}`;
+
+    return (
+        <div className="rounded-xl border border-[var(--public-dark-border)] bg-white p-3 print:rounded-none">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-[var(--public-text)]">{teams}</p>
+                    <p className="mt-1 truncate text-xs font-semibold text-[var(--public-dark-faint)]">{match.sport} · {match.event}</p>
+                    <p className="mt-1 truncate text-xs text-[var(--public-dark-faint)]">{match.venue || t('Venue TBC')}</p>
+                </div>
+                <span className="shrink-0 rounded-lg bg-[var(--public-primary-soft)] px-2 py-1 text-xs font-black text-[var(--public-primary)]">{time}</span>
+            </div>
+            {match.status === 'completed' && (
+                <p className="mt-2 text-xs font-black text-[var(--public-text)]">
+                    {match.score_home ?? 0} - {match.score_away ?? 0}
+                </p>
+            )}
+        </div>
     );
 }
 
@@ -364,7 +461,7 @@ function FilterPanel({
     const selectClass = 'h-11 rounded-xl bg-white text-sm font-semibold';
 
     return (
-        <div className="rounded-2xl border border-[var(--public-dark-border)] bg-white p-4 shadow-sm">
+        <div className="public-card p-4">
             <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                     <h2 className="text-sm font-black text-[var(--public-text)]">{t('Filters')}</h2>
@@ -392,6 +489,7 @@ function formatDateRange(start: string, end: string | null, locale: string) {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
+        timeZone: 'Asia/Kuala_Lumpur',
     }).format(new Date(d));
 
     return end ? `${fmt(start)} — ${fmt(end)}` : fmt(start);

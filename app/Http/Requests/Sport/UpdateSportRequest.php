@@ -36,6 +36,7 @@ class UpdateSportRequest extends FormRequest
                     ->ignore($sport)
                     ->whereNull('deleted_at'),
             ],
+            'name_ms' => ['nullable', 'string', 'max:255'],
             'slug' => [
                 'required', 'string', 'max:255', 'alpha_dash',
                 Rule::unique('sports', 'slug')
@@ -45,6 +46,13 @@ class UpdateSportRequest extends FormRequest
             ],
             'icon' => ['nullable', 'string', 'max:255'],
             'icon_file' => ['nullable', 'file', 'mimes:png,jpg,jpeg,svg,webp', 'max:2048'],
+            'scoring_mode' => ['nullable', 'string', Rule::in(['none', 'individual'])],
+            'scoring_profile' => ['nullable', 'array'],
+            'scoring_profile.score_unit' => ['nullable', 'string', 'max:50'],
+            'scoring_profile.max_score' => ['nullable', 'integer', 'min:0', 'max:999'],
+            'scoring_profile.allow_draw' => ['nullable', 'boolean'],
+            'scoring_profile.scoring_event_types' => ['nullable', 'array', 'max:10'],
+            'scoring_profile.scoring_event_types.*' => ['required', 'string', 'alpha_dash', 'max:50', 'distinct'],
             'is_active' => ['boolean'],
         ];
     }

@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { EmptyState } from '@/components/EmptyState';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
+import Checkbox from '@/components/Checkbox';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -34,6 +35,22 @@ interface RegEventParticipant extends Omit<EventParticipant, 'event' | 'particip
     participant?: { id: string; name: string };
 }
 
+function QuotaCell({ reg }: { reg: RegEventParticipant }) {
+    const category = reg.event?.sport_category;
+    const total = category?.max_athletes_total ?? null;
+    const male = category?.max_male_athletes ?? null;
+    const female = category?.max_female_athletes ?? null;
+    const maxAthletes = category?.quota_mode !== 'gender_based' && total !== null ? total : (male ?? 0) + (female ?? 0);
+    const athletes = (reg.male_athletes_count ?? 0) + (reg.female_athletes_count ?? 0);
+    const officials = reg.officials_count ?? 0;
+    const maxOfficials = category?.max_officials ?? null;
+    return <div className="min-w-28 text-xs leading-5">
+        <div className={maxAthletes > 0 && athletes >= maxAthletes ? 'font-semibold text-red-600' : 'font-medium'}>{athletes} / {maxAthletes || '—'} atlet</div>
+        <div className="text-muted-foreground">Pegawai: {officials} / {maxOfficials ?? '—'}</div>
+        {total === null && <div className="text-muted-foreground">M/F: {male ?? '—'} / {female ?? '—'}</div>}
+    </div>;
+}
+
 interface DeanDashboardProps {
     registrations: Paginated<RegEventParticipant> | RegEventParticipant[];
     counts: Record<string, number>;
@@ -50,11 +67,27 @@ const statusBadge: Record<string, { class: string; label: string }> = {
 export default function DeanDashboard({ registrations: regsProp, counts = {} }: DeanDashboardProps) {
     const { t } = useI18n();
     const [processing, setProcessing] = useState<string | null>(null);
+    const [selected, setSelected] = useState<string[]>([]);
 
     const registrations = Array.isArray(regsProp) ? regsProp : (regsProp?.data ?? []);
     const pendingCount = counts.pending ?? 0;
     const approvedCount = counts.confirmed ?? 0;
     const rejectedCount = counts.rejected ?? 0;
+    const pendingRegistrations = registrations.filter(r => r.status === 'pending');
+    const allPendingSelected = pendingRegistrations.length > 0 && pendingRegistrations.every(r => selected.includes(r.id));
+
+    const toggleAll = (checked: boolean) => {
+        setSelected(checked ? pendingRegistrations.map(r => r.id) : []);
+    };
+
+    const approveSelected = () => {
+        if (selected.length === 0 || processing) return;
+        setProcessing('bulk');
+        router.post(route('dean.approve-bulk'), { event_participant_ids: selected }, {
+            preserveScroll: true,
+            onFinish: () => { setProcessing(null); setSelected([]); },
+        });
+    };
 
     const handleAction = (id: string, action: 'approve' | 'reject') => {
         if (processing) return;
@@ -135,31 +168,41 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                                 <span className="text-sm font-normal text-muted-foreground">({pendingCount})</span>
                             </CardTitle>
                             <CardDescription>{t('Faculty representatives waiting for your approval')}</CardDescription>
+                            <div className="flex flex-wrap items-center gap-3 pt-2">
+                                <label className="flex items-center gap-2 text-sm">
+                                    <Checkbox checked={allPendingSelected} onChange={(event) => toggleAll(event.target.checked)} />
+                                    {t('Select all')}
+                                </label>
+                                <Button size="sm" disabled={selected.length === 0 || processing !== null} onClick={approveSelected}>
+                                    <Check className="mr-1 size-3" /> {t('Approve selected')} ({selected.length})
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead className="w-10"><span className="sr-only">{t('Select')}</span></TableHead>
                                         <TableHead>{t('Event')}</TableHead>
                                         <TableHead>{t('Sport')}</TableHead>
                                         <TableHead>{t('Category')}</TableHead>
-                                        <TableHead>{t('Tournament')}</TableHead>
-                                        <TableHead>{t('Date')}</TableHead>
+                                        <TableHead>{t('Quota')}</TableHead>
                                         <TableHead className="text-right">{t('Actions')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {registrations.filter(r => r.status === 'pending').map((reg) => (
                                         <TableRow key={reg.id}>
+                                            <TableCell>
+                                                <Checkbox
+                                                    checked={selected.includes(reg.id)}
+                                                    onChange={(event) => setSelected(current => event.target.checked ? [...new Set([...current, reg.id])] : current.filter(id => id !== reg.id))}
+                                                />
+                                            </TableCell>
                                             <TableCell className="font-medium">{reg.event?.name || '—'}</TableCell>
                                             <TableCell>{reg.event?.sport?.name || '—'}</TableCell>
                                             <TableCell>{reg.event?.sport_category?.name || '—'}</TableCell>
-                                            <TableCell>{reg.event?.tournament?.name || '—'}</TableCell>
-                                            <TableCell className="text-sm text-muted-foreground">
-                                                {reg.created_at
-                                                    ? new Date(reg.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' })
-                                                    : '—'}
-                                            </TableCell>
+                                            <TableCell><QuotaCell reg={reg} /></TableCell>
                                             <TableCell className="text-right space-x-2">
                                                 <Button
                                                     variant="outline"
@@ -207,15 +250,14 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                                         <TableHead>{t('Event')}</TableHead>
                                         <TableHead>{t('Sport')}</TableHead>
                                         <TableHead>{t('Category')}</TableHead>
-                                        <TableHead>{t('Tournament')}</TableHead>
-                                        <TableHead>{t('Date')}</TableHead>
+                                        <TableHead>{t('Quota')}</TableHead>
                                         <TableHead>{t('Status')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {registrations.filter(r => r.status !== 'pending').length === 0 ? (
                                         <TableRow>
-                                             <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                             <TableCell colSpan={5} className="text-center text-muted-foreground">
                                                 {t('No history yet.')}
                                             </TableCell>
                                         </TableRow>
@@ -225,12 +267,7 @@ export default function DeanDashboard({ registrations: regsProp, counts = {} }: 
                                                 <TableCell className="font-medium">{reg.event?.name || '—'}</TableCell>
                                                 <TableCell>{reg.event?.sport?.name || '—'}</TableCell>
                                                 <TableCell>{reg.event?.sport_category?.name || '—'}</TableCell>
-                                                <TableCell>{reg.event?.tournament?.name || '—'}</TableCell>
-                                                <TableCell className="text-sm text-muted-foreground">
-                                                    {reg.created_at
-                                                        ? new Date(reg.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' })
-                                                        : '—'}
-                                                </TableCell>
+                                                <TableCell><QuotaCell reg={reg} /></TableCell>
                                                  <TableCell>
                                                     <span className={`rounded-full px-2 py-0.5 text-xs capitalize ${statusBadge[reg.status]?.class || 'bg-gray-100 text-gray-600'}`}>
                                                         {t(statusBadge[reg.status]?.label) || reg.status}

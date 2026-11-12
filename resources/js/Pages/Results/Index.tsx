@@ -49,6 +49,7 @@ const resultSchema = z.object({
     score_away: z.number().nullable().optional().default(null),
     winner_participant_id: z.string().nullable().optional().default(''),
     notes: z.string().optional().default(''),
+    correction_reason: z.string().optional().default(''),
     scoring_events: z.array(z.object({
         participant_id: z.string().min(1),
         squad_member_id: z.string().min(1),
@@ -170,7 +171,7 @@ function MatchupPreview({ match, t }: { match?: MatchOption; t: (key: string) =>
                     )}
                     <span className="text-xs uppercase tracking-wide text-muted-foreground">{t('Home')}</span>
                 </div>
-                <span className="shrink-0 text-sm font-bold text-muted-foreground">VS</span>
+                <span className="shrink-0 text-sm font-bold text-muted-foreground">{t('VS')}</span>
                 <div className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center">
                     <TeamMark participant={match.away_participant} />
                     <span className="truncate text-sm font-semibold" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
@@ -231,6 +232,7 @@ interface ResultRowViewProps {
 }
 
 function ResultRowView({ result, onEdit, onDelete, canManage = true, onApprove, onLock, onUnlock, canApprove = false, canUnlock = false }: ResultRowViewProps) {
+    const { t } = useI18n();
     const scored = result.score_home !== null && result.score_home !== undefined;
     const isDraw = scored && result.score_home === result.score_away;
 
@@ -242,7 +244,7 @@ function ResultRowView({ result, onEdit, onDelete, canManage = true, onApprove, 
                     <span className="max-w-[110px] truncate font-medium text-right" title={participantFullName(result.match?.home_participant)}>{participantName(result.match?.home_participant)}</span>
                     <TeamMark participant={result.match?.home_participant} size="lg" />
                     <span className={`mx-1 shrink-0 rounded-md px-2 py-0.5 text-sm font-bold tabular-nums ${scored ? 'bg-muted' : 'text-muted-foreground'}`}>
-                        {scored ? `${result.score_home} : ${result.score_away}` : 'VS'}
+                        {scored ? `${result.score_home} : ${result.score_away}` : t('VS')}
                     </span>
                     <TeamMark participant={result.match?.away_participant} size="lg" />
                     <span className="max-w-[110px] truncate font-medium" title={participantFullName(result.match?.away_participant)}>{participantName(result.match?.away_participant)}</span>
@@ -261,7 +263,7 @@ function ResultRowView({ result, onEdit, onDelete, canManage = true, onApprove, 
             <TableCell>
                 {isDraw ? (
                     <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-                        Draw
+                        {t('Draw')}
                     </span>
                 ) : result.winner ? (
                     <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
@@ -279,12 +281,12 @@ function ResultRowView({ result, onEdit, onDelete, canManage = true, onApprove, 
             </TableCell>
             {canManage && (
             <TableCell className="space-x-1 text-right">
-                {result.match?.id && <Button variant="outline" size="icon-sm" asChild aria-label="Print result sheet" title="Print result sheet"><a href={route('exports.resultSheet', result.match.id)}><Printer className="size-3" /></a></Button>}
-                {result.status === 'submitted' && canApprove && <Button variant="outline" size="icon-sm" onClick={onApprove} aria-label="Approve result"><CheckCheck className="size-3" /></Button>}
-                {result.status === 'approved' && canApprove && <Button variant="outline" size="icon-sm" onClick={onLock} aria-label="Lock result"><LockKeyhole className="size-3" /></Button>}
-                {result.status === 'locked' && canUnlock && <Button variant="outline" size="icon-sm" onClick={onUnlock} aria-label="Unlock result"><UnlockKeyhole className="size-3" /></Button>}
-                {result.status !== 'locked' && <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label="Edit result"><Pencil className="size-3" /></Button>}
-                {result.status !== 'locked' && <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete result"><Trash2 className="size-3" /></Button>}
+                {result.match?.id && <Button variant="outline" size="icon-sm" asChild aria-label={t('Print result sheet')} title={t('Print result sheet')}><a href={route('exports.resultSheet', result.match.id)}><Printer className="size-3" /></a></Button>}
+                {result.status === 'submitted' && canApprove && <Button variant="outline" size="icon-sm" onClick={onApprove} aria-label={t('Approve result')}><CheckCheck className="size-3" /></Button>}
+                {result.status === 'approved' && canApprove && <Button variant="outline" size="icon-sm" onClick={onLock} aria-label={t('Lock result')}><LockKeyhole className="size-3" /></Button>}
+                {result.status === 'locked' && canUnlock && <Button variant="outline" size="icon-sm" onClick={onUnlock} aria-label={t('Unlock result')}><UnlockKeyhole className="size-3" /></Button>}
+                {result.status !== 'locked' && <Button variant="outline" size="icon-sm" onClick={onEdit} aria-label={t('Edit result')}><Pencil className="size-3" /></Button>}
+                {result.status !== 'locked' && <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label={t('Delete result')}><Trash2 className="size-3" /></Button>}
             </TableCell>
             )}
         </TableRow>
@@ -312,6 +314,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             score_away: null,
             winner_participant_id: '',
             notes: '',
+            correction_reason: '',
             scoring_events: [],
         },
     });
@@ -425,6 +428,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             score_away: null,
             winner_participant_id: '',
             notes: '',
+            correction_reason: '',
             scoring_events: [],
         });
         setOpen(true);
@@ -438,6 +442,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             score_away: result.score_away ?? null,
             winner_participant_id: result.winner_participant_id || '',
             notes: result.notes || '',
+            correction_reason: '',
             scoring_events: (result.scoring_events || []).map((event) => ({
                 participant_id: event.participant_id,
                 squad_member_id: event.squad_member_id,
@@ -473,6 +478,13 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                 onSuccess: () => closeDialog(),
             });
         }
+    };
+
+    const unlockResult = (result: ResultRow) => {
+        const reason = window.prompt(t('Reason for unlocking this result?'))?.trim();
+        if (!reason) return;
+
+        router.post(route('results.unlock', result.id), { correction_reason: reason }, { preserveScroll: true });
     };
 
     const handleDelete = () => {
@@ -534,7 +546,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
 
                                 <div className="grid gap-4 py-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="match_id">Match *</Label>
+                                        <Label htmlFor="match_id">{t('Match')} *</Label>
                                         <Controller
                                             control={control}
                                             name="match_id"
@@ -560,7 +572,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                         />
                                         {errors.match_id && <p className="text-sm text-destructive">{errors.match_id.message}</p>}
                                         {dialogMatches.length === 0 && (
-                                            <p className="text-sm text-muted-foreground">No matches awaiting a result in this event.</p>
+                                            <p className="text-sm text-muted-foreground">{t('No matches awaiting a result in this event.')}</p>
                                         )}
                                     </div>
 
@@ -660,7 +672,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                     )}
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="winner_participant_id">Winner</Label>
+                                        <Label htmlFor="winner_participant_id">{t('Winner')}</Label>
                                         <Controller
                                             control={control}
                                             name="winner_participant_id"
@@ -676,12 +688,12 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                         <SelectItem value="none">{t('-- Draw / None --')}</SelectItem>
                                                         {selectedMatch?.home_participant && (
                                                             <SelectItem value={selectedMatch.home_participant.id}>
-                                                                {participantName(selectedMatch.home_participant)} (Home)
+                                                                {participantName(selectedMatch.home_participant)} ({t('Home')})
                                                             </SelectItem>
                                                         )}
                                                         {selectedMatch?.away_participant && (
                                                             <SelectItem value={selectedMatch.away_participant.id}>
-                                                                {participantName(selectedMatch.away_participant)} (Away)
+                                                                {participantName(selectedMatch.away_participant)} ({t('Away')})
                                                             </SelectItem>
                                                         )}
                                                         {!selectedMatch && participants.map((p) => (
@@ -691,17 +703,30 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                 </Select>
                                             )}
                                         />
-                                        <p className="text-xs text-muted-foreground">Auto-set from scores — change only for special cases (e.g. forfeit).</p>
+                                        <p className="text-xs text-muted-foreground">{t('Auto-set from scores — change only for special cases (e.g. forfeit).')}</p>
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="notes">Notes</Label>
+                                        <Label htmlFor="notes">{t('Notes')}</Label>
                                         <textarea
                                             id="notes"
                                             className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                             {...register('notes')}
                                         />
                                     </div>
+
+                                    {editingResult?.status === 'approved' && (
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="correction_reason">{t('Correction reason')}</Label>
+                                            <textarea
+                                                id="correction_reason"
+                                                className="flex min-h-[70px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                placeholder={t('Explain why this approved result is being corrected.')}
+                                                {...register('correction_reason')}
+                                            />
+                                            {errors.correction_reason && <p className="text-sm text-destructive">{errors.correction_reason.message}</p>}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <DialogFooter>
@@ -854,12 +879,12 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableHead className="w-14">#</TableHead>
-                                                        <TableHead>Matchup</TableHead>
-                                                        <TableHead className="w-32">Pool / Stage</TableHead>
-                                                        <TableHead>Venue / Time</TableHead>
-                                                        <TableHead className="w-32">Winner</TableHead>
-                                                        <TableHead className="w-24">Status</TableHead>
-                                                        {canManage && <TableHead className="text-right">Actions</TableHead>}
+                                                        <TableHead>{t('Matchup')}</TableHead>
+                                                        <TableHead className="w-32">{t('Pool / Stage')}</TableHead>
+                                                        <TableHead>{t('Venue / Time')}</TableHead>
+                                                        <TableHead className="w-32">{t('Winner')}</TableHead>
+                                                        <TableHead className="w-24">{t('Status')}</TableHead>
+                                                        {canManage && <TableHead className="text-right">{t('Actions')}</TableHead>}
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -871,7 +896,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                             onDelete={() => setDeleteResult(result)}
                                                             onApprove={() => router.post(route('results.approve', result.id), {}, { preserveScroll: true })}
                                                             onLock={() => router.post(route('results.lock', result.id), {}, { preserveScroll: true })}
-                                                            onUnlock={() => router.post(route('results.unlock', result.id), {}, { preserveScroll: true })}
+                                                            onUnlock={() => unlockResult(result)}
                                                             canManage={canManage}
                                                             canApprove={canApproveResults}
                                                             canUnlock={canUnlockResults}
@@ -901,8 +926,8 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                     {pendingMatches.length > 0 && (
                         <Card>
                             <CardHeader className="pb-3">
-                                <CardTitle className="flex items-center gap-2 text-lg"><CheckCircle2 className="size-4 text-amber-500" /> Pending Matches</CardTitle>
-                                <CardDescription>Matches awaiting a recorded result.</CardDescription>
+                            <CardTitle className="flex items-center gap-2 text-lg"><CheckCircle2 className="size-4 text-amber-500" /> {t('Pending Matches')}</CardTitle>
+                            <CardDescription>{t('Matches awaiting a recorded result.')}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-2">
@@ -912,14 +937,14 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                 <span className="w-14 shrink-0 text-sm font-semibold text-muted-foreground">#{matchNumberLabel(match.match_number, match.event?.name)}</span>
                                                 <span className="max-w-[110px] truncate text-sm font-medium" title={participantFullName(match.home_participant)}>{participantName(match.home_participant)}</span>
                                                 <TeamMark participant={match.home_participant} size="lg" />
-                                                <span className="text-xs font-bold text-muted-foreground">VS</span>
+                                                <span className="text-xs font-bold text-muted-foreground">{t('VS')}</span>
                                                 <TeamMark participant={match.away_participant} size="lg" />
                                                 <span className="max-w-[110px] truncate text-sm font-medium" title={participantFullName(match.away_participant)}>{participantName(match.away_participant)}</span>
                                                 <span className="hidden text-xs text-muted-foreground sm:inline">· {matchDetail(match)}</span>
                                             </div>
                                             {canManage && (
                                             <Button size="sm" variant="outline" onClick={() => openCreate(match)}>
-                                                <Plus className="mr-1 size-3" /> Record Result
+                                                <Plus className="mr-1 size-3" /> {t('Record Result')}
                                             </Button>
                                             )}
                                         </div>
@@ -931,24 +956,24 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
 
                     <Card>
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-lg">Recorded Results</CardTitle>
-                            <CardDescription>{filteredResults.length} result{filteredResults.length === 1 ? '' : 's'} for {selectedEvent.name}.</CardDescription>
+                            <CardTitle className="text-lg">{t('Recorded Results')}</CardTitle>
+                                        <CardDescription>{filteredResults.length} {t(filteredResults.length === 1 ? 'result' : 'results')} {t('for')} {selectedEvent.name}.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {filteredResults.length === 0 ? (
-                                <EmptyState title="No results recorded yet." />
+                                <EmptyState title={t('No results recorded yet.')} />
                             ) : (
                                 <div className="overflow-x-auto">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="w-14">#</TableHead>
-                                                <TableHead>Matchup</TableHead>
-                                                <TableHead className="w-32">Pool / Stage</TableHead>
-                                                <TableHead>Venue / Time</TableHead>
-                                                <TableHead className="w-32">Winner</TableHead>
-                                                <TableHead className="w-24">Status</TableHead>
-                                                {canManage && <TableHead className="text-right">Actions</TableHead>}
+                                                <TableHead>{t('Matchup')}</TableHead>
+                                                <TableHead className="w-32">{t('Pool / Stage')}</TableHead>
+                                                <TableHead>{t('Venue / Time')}</TableHead>
+                                                <TableHead className="w-32">{t('Winner')}</TableHead>
+                                                <TableHead className="w-24">{t('Status')}</TableHead>
+                                                {canManage && <TableHead className="text-right">{t('Actions')}</TableHead>}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -960,7 +985,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
                                                     onDelete={() => setDeleteResult(result)}
                                                     onApprove={() => router.post(route('results.approve', result.id), {}, { preserveScroll: true })}
                                                     onLock={() => router.post(route('results.lock', result.id), {}, { preserveScroll: true })}
-                                                    onUnlock={() => router.post(route('results.unlock', result.id), {}, { preserveScroll: true })}
+                                                    onUnlock={() => unlockResult(result)}
                                                     canManage={canManage}
                                                     canApprove={canApproveResults}
                                                     canUnlock={canUnlockResults}
@@ -978,7 +1003,7 @@ export default function ResultsIndex({ results: resultsProp, matches: matchesPro
             <ConfirmDialog
                 open={!!deleteResult}
                 onOpenChange={(isOpen) => !isOpen && setDeleteResult(null)}
-                title="Delete Result?"
+                title={t('Delete Result?')}
                 description={<>Result for Match #{matchNumberLabel(deleteResult?.match?.match_number, deleteResult?.match?.event?.name)} will be removed. This action cannot be undone.</>}
                 confirmLabel="Yes, Delete"
                 cancelLabel="Cancel"

@@ -6,7 +6,9 @@ use App\Models\Organization;
 use App\Models\Session;
 use App\Services\ReleasePreflightService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
@@ -149,5 +151,50 @@ class HealthCheckTest extends TestCase
         $result = app(ReleasePreflightService::class)->check();
 
         $this->assertSame('error', $result['checks']['mail']['status']);
+    }
+
+    public function test_production_smoke_command_passes_public_and_tokened_health_checks(): void
+    {
+        Http::fake([
+            'https://saf.example.test/' => Http::response('<html>ok</html>', 200),
+            'https://saf.example.test/up' => Http::response('ok', 200),
+            'https://saf.example.test/health' => Http::response(['status' => 'ok'], 200),
+        ]);
+
+        // The command prints the whole report as one JSON write, so decode it
+        // instead of chaining several expectsOutputToContain() calls (each
+        // output write can satisfy only one expectation).
+        $exitCode = Artisan::call('stms:production-smoke', [
+            '--url' => 'https://saf.example.test',
+            '--health-token' => 'health-token',
+            '--json' => true,
+        ]);
+        $report = json_decode(Artisan::output(), true);
+
+        $this->assertSame(0, $exitCode);
+        $this->assertSame('ok', $report['status'] ?? null);
+        $this->assertSame('ok', $report['checks']['homepage']['status'] ?? null);
+        $this->assertSame('ok', $report['checks']['health']['status'] ?? null);
+
+        Http::assertSentCount(3);
+    }
+
+    public function test_production_smoke_command_fails_when_required_check_is_not_ok(): void
+    {
+        Http::fake([
+            'https://saf.example.test/' => Http::response('maintenance', 503),
+            'https://saf.example.test/up' => Http::response('ok', 200),
+        ]);
+
+        $exitCode = Artisan::call('stms:production-smoke', [
+            '--url' => 'https://saf.example.test/',
+            '--json' => true,
+        ]);
+        $report = json_decode(Artisan::output(), true);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertSame('error', $report['status'] ?? null);
+        $this->assertSame('error', $report['checks']['homepage']['status'] ?? null);
+        $this->assertSame('skipped', $report['checks']['health']['status'] ?? null);
     }
 }

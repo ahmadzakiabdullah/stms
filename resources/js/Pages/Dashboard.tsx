@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/EmptyState';
+import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,8 +7,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { usePageLoading } from '@/hooks/usePageLoading';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useI18n } from '@/lib/i18n';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { PageProps, Session, Tournament } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
     Activity,
@@ -19,6 +22,7 @@ import {
     CircleAlert,
     ClipboardCheck,
     ClipboardList,
+    ChevronDown,
     Database,
     LayoutGrid,
     ListChecks,
@@ -54,6 +58,15 @@ interface UpcomingEvent {
 }
 
 interface SportCount { name: string; total: number }
+interface RosterProgressRow {
+    faculty_id: string;
+    faculty_name: string;
+    sport_id: string;
+    sport_name: string;
+    registrations: number;
+    manager_entries: number;
+    player_entries: number;
+}
 
 interface RegistrationStats {
     totalRegistrations?: number;
@@ -85,7 +98,13 @@ interface DashboardProps {
     registrationPipeline?: Record<string, number>;
     registrationStats?: RegistrationStats;
     squadStats?: Record<string, number>;
+    rosterProgress?: RosterProgressRow[];
     systemOverview?: SystemOverview;
+    trendSnapshots?: Array<{ date: string; organizations: number; users: number; events: number; matches: number }>;
+    filterSessions?: Array<{ id: string; name: string }>;
+    filterTournaments?: Array<{ id: string; name: string; session_id: string }>;
+    currentTrendMetrics?: Record<string, number>;
+    filters?: { session_id?: string | null; tournament_id?: string | null };
 }
 
 interface ActionItem {
@@ -125,17 +144,38 @@ export default function Dashboard({
     registrationPipeline = {},
     registrationStats = {},
     squadStats = {},
+    rosterProgress = [],
     systemOverview = {},
+    trendSnapshots = [],
+    filterSessions = [],
+    filterTournaments = [],
+    currentTrendMetrics = {},
+    filters = {},
 }: DashboardProps) {
     const { auth } = usePage<PageProps>().props;
     const { locale, t } = useI18n();
     const loading = usePageLoading();
+    const [overviewPeriod, setOverviewPeriod] = useState<'7d' | '30d' | '90d'>('30d');
+    const [selectedMetric, setSelectedMetric] = useState<'organizations' | 'users' | 'events' | 'matches'>('organizations');
+    const [showAllRosterProgress, setShowAllRosterProgress] = useState(false);
     const user = auth?.user;
     const safeStats = stats && typeof stats === 'object' && !Array.isArray(stats) ? stats : {};
     const safeSessions = Array.isArray(recentSessions) ? recentSessions : [];
     const safeTournaments = Array.isArray(recentTournaments) ? recentTournaments : [];
     const safeEvents = Array.isArray(upcomingEvents) ? upcomingEvents : [];
     const safeSports = Array.isArray(registrationsBySport) ? registrationsBySport : [];
+    const safeRosterProgress = Array.isArray(rosterProgress) ? rosterProgress : [];
+    const sortedRosterProgress = [...safeRosterProgress].sort((a, b) => {
+        const aCoverage = Math.min(percentage(a.manager_entries, a.registrations), percentage(a.player_entries, a.registrations));
+        const bCoverage = Math.min(percentage(b.manager_entries, b.registrations), percentage(b.player_entries, b.registrations));
+        return aCoverage - bCoverage || b.registrations - a.registrations || a.faculty_name.localeCompare(b.faculty_name) || a.sport_name.localeCompare(b.sport_name);
+    });
+    const visibleRosterProgress = showAllRosterProgress ? sortedRosterProgress : sortedRosterProgress.slice(0, 6);
+    const incompleteRosterCount = safeRosterProgress.filter((row) => row.manager_entries < row.registrations || row.player_entries < row.registrations).length;
+    // Normalize collection props before they reach render-time array operations.
+    const safeTrendSnapshots = Array.isArray(trendSnapshots) ? trendSnapshots : [];
+    const safeFilterSessions = Array.isArray(filterSessions) ? filterSessions : [];
+    const safeFilterTournaments = Array.isArray(filterTournaments) ? filterTournaments : [];
     const pipeline = registrationPipeline && typeof registrationPipeline === 'object' ? registrationPipeline : {};
     const squads = squadStats && typeof squadStats === 'object' ? squadStats : {};
     const roles = new Set((Array.isArray(user?.roles) ? user.roles : []).map((role) => role.name));
@@ -233,11 +273,17 @@ export default function Dashboard({
     if (!user) return null;
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <PageHeader
+                    title={t('Dashboard')}
+                    description={t('Monitor registrations, competition readiness and operational tasks.')}
+                />
+            }
+        >
             <Head title={t('Dashboard')} />
 
-            <main className="-m-4 min-h-[calc(100vh-4rem)] bg-muted/40 p-4 sm:-m-6 sm:p-6">
-                <div className="mx-auto max-w-[1600px] space-y-6">
+            <div className="w-full space-y-6">
                     <section className="relative overflow-hidden rounded-xl bg-primary px-6 py-7 text-primary-foreground shadow-xl shadow-black/10 sm:px-8 sm:py-9">
                         <div className="pointer-events-none absolute -right-20 -top-28 size-80 rounded-full bg-primary-foreground/10 blur-3xl" />
                         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -265,14 +311,18 @@ export default function Dashboard({
                     )}
 
                     {isSuperAdmin && (
-                        <section className="space-y-4" aria-labelledby="control-centre-title">
-                            <div className="flex flex-col gap-2 px-1 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-700">{t('Super Admin Control Centre')}</p><h2 id="control-centre-title" className="mt-1 text-xl font-bold tracking-tight text-foreground">{t('Platform health and competition flow')}</h2></div><div className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${operationalIssues > 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}><span className={`size-2 rounded-full ${operationalIssues > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`}/>{operationalIssues > 0 ? `${operationalIssues} ${t('items need attention')}` : t('Operations on track')}</div></div>
+                        <details className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:p-5">
+                                <div><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">{t('Platform operations')}</p><p className="mt-1 font-semibold text-foreground">{t('Platform health and competition flow')}</p></div>
+                                <div className="flex items-center gap-3"><span className={`hidden rounded-full px-3 py-1.5 text-xs font-bold sm:inline-flex ${operationalIssues > 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>{operationalIssues > 0 ? `${operationalIssues} ${t('items need attention')}` : t('Operations on track')}</span><ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" /></div>
+                            </summary>
+                            <section className="space-y-4 border-t border-border p-4 sm:p-5" aria-label={t('Super Admin Control Centre')}>
 
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                                <ControlMetric icon={Building2} label={t('Organizations')} value={Number(system.activeOrganizations ?? 0)} detail={`${system.inactiveOrganizations ?? 0} ${t('inactive')}`} href="organizations.index" tone="bg-blue-50 text-blue-700"/>
-                                <ControlMetric icon={Users} label={t('System users')} value={Number(system.users ?? 0)} detail={t('Accounts across all organizations')} href="users.index" tone="bg-cyan-50 text-cyan-700"/>
-                                <ControlMetric icon={Radio} label={t('Live matches')} value={liveFixtures} detail={`${scheduledFixtures} ${t('scheduled')}`} href="matches.index" tone="bg-rose-50 text-rose-700"/>
-                                <ControlMetric icon={Database} label={t('Recorded results')} value={completedFixtures} detail={`${cancelledFixtures} ${t('cancelled matches')}`} href="results.index" tone="bg-violet-50 text-violet-700"/>
+                                <MetricTile icon={Building2} label={t('Organizations')} value={Number(system.activeOrganizations ?? 0)} detail={`${system.inactiveOrganizations ?? 0} ${t('inactive')}`} active={selectedMetric === 'organizations'} onClick={() => { setSelectedMetric('organizations'); window.location.href = route('organizations.index'); }} tone="bg-blue-50 text-blue-700" />
+                                <MetricTile icon={Users} label={t('System users')} value={Number(system.users ?? 0)} detail={t('Accounts across all organizations')} active={selectedMetric === 'users'} onClick={() => { setSelectedMetric('users'); window.location.href = route('users.index'); }} tone="bg-cyan-50 text-cyan-700" />
+                                <MetricTile icon={Target} label={t('Active events')} value={Number(system.activeEvents ?? 0)} detail={`${system.inactiveEvents ?? 0} ${t('inactive')}`} active={selectedMetric === 'events'} onClick={() => { setSelectedMetric('events'); window.location.href = route('events.index'); }} tone="bg-violet-50 text-violet-700" />
+                                <MetricTile icon={Swords} label={t('Matches')} value={matchTotal} detail={`${completedFixtures} ${t('completed')}`} active={selectedMetric === 'matches'} onClick={() => { setSelectedMetric('matches'); window.location.href = route('matches.index'); }} tone="bg-rose-50 text-rose-700" />
                             </div>
 
                             <div className="grid gap-4 xl:grid-cols-[1.5fr_.75fr]">
@@ -291,7 +341,34 @@ export default function Dashboard({
                                     </CardContent>
                                 </Card>
                             </div>
-                        </section>
+
+                            <div className="grid gap-4 xl:grid-cols-[1.5fr_.75fr]">
+                                <Card className="rounded-xl border-border bg-card shadow-sm">
+                                    <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+                                        <div><CardTitle>{t('Platform analytics')}</CardTitle><CardDescription>{t('Select a metric above to explore the current platform snapshot.')}</CardDescription></div>
+                                        <div className="flex flex-wrap gap-2">
+                                            <Select value={filters.session_id || 'all'} onValueChange={(value) => router.get(route('dashboard'), { session_id: value === 'all' ? undefined : value, tournament_id: undefined }, { preserveState: true, preserveScroll: true, replace: true })}>
+                                                <SelectTrigger className="w-44" aria-label={t('Filter by session')}><SelectValue placeholder={t('All sessions')} /></SelectTrigger>
+                                                <SelectContent><SelectItem value="all">{t('All sessions')}</SelectItem>{safeFilterSessions.map((session) => <SelectItem key={session.id} value={session.id}>{session.name}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                            <Select value={filters.tournament_id || 'all'} onValueChange={(value) => router.get(route('dashboard'), { session_id: filters.session_id, tournament_id: value === 'all' ? undefined : value }, { preserveState: true, preserveScroll: true, replace: true })}>
+                                                <SelectTrigger className="w-44" aria-label={t('Filter by tournament')}><SelectValue placeholder={t('All tournaments')} /></SelectTrigger>
+                                                <SelectContent><SelectItem value="all">{t('All tournaments')}</SelectItem>{safeFilterTournaments.map((tournament) => <SelectItem key={tournament.id} value={tournament.id}>{tournament.name}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                            <div className="inline-flex rounded-lg border border-border bg-muted/50 p-1" role="group" aria-label={t('Display period')}>
+                                                {(['7d', '30d', '90d'] as const).map((period) => <button key={period} type="button" aria-pressed={overviewPeriod === period} onClick={() => setOverviewPeriod(period)} className={`min-h-9 rounded-md px-3 text-xs font-semibold transition ${overviewPeriod === period ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{t(period === '7d' ? '7 days' : period === '30d' ? '30 days' : '90 days')}</button>)}
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent><MetricChart metric={selectedMetric} period={overviewPeriod} values={currentTrendMetrics} snapshots={safeTrendSnapshots} labels={{ organizations: t('Organizations'), users: t('System users'), events: t('Active events'), matches: t('Matches') }} /></CardContent>
+                                </Card>
+                                <Card className="rounded-xl border-border bg-card shadow-sm">
+                                    <CardHeader><CardTitle>{t('Match status')}</CardTitle><CardDescription>{t('Fixture distribution by current status')}</CardDescription></CardHeader>
+                                    <CardContent><MatchDonut scheduled={scheduledFixtures} live={liveFixtures} completed={completedFixtures} cancelled={cancelledFixtures} t={t} /></CardContent>
+                                </Card>
+                            </div>
+                            </section>
+                        </details>
                     )}
 
                     <section aria-labelledby="system-kpis">
@@ -358,7 +435,12 @@ export default function Dashboard({
                         )}
                     </section>
 
-                    <section className="grid gap-6 xl:grid-cols-[1fr_1fr_.8fr]">
+                    <details className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:p-5">
+                            <div><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">{t('More dashboard details')}</p><p className="mt-1 font-semibold text-foreground">{t('Competition overview')}</p><p className="mt-1 text-xs text-muted-foreground">{t('Upcoming events, sport participation and quick actions.')}</p></div>
+                            <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                        </summary>
+                        <section className="grid gap-6 border-t border-border p-4 sm:p-5 xl:grid-cols-[1fr_1fr_.8fr]">
                         <Card className="rounded-xl border-border bg-card shadow-sm">
                             <CardHeader><CardTitle>{t('Upcoming Events')}</CardTitle><CardDescription>{t('Next active competition dates')}</CardDescription></CardHeader>
                             <CardContent className="space-y-3">
@@ -379,16 +461,65 @@ export default function Dashboard({
                                 {actions.map((action) => { const Icon = action.icon; return <Link key={action.label} href={route(action.route)} className="group flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary/30 hover:bg-muted/50"><div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4" /></div><div className="min-w-0 flex-1"><p className="text-sm font-medium">{t(action.label)}</p><p className="truncate text-xs text-muted-foreground">{t(action.description)}</p></div><ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" /></Link>; })}
                             </CardContent>
                         </Card>
-                    </section>
+                        </section>
+                    </details>
 
-                    {(safeSessions.length > 0 || safeTournaments.length > 0) && (
-                        <section className="grid gap-6 xl:grid-cols-2">
-                            <Card className="rounded-xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Sessions')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeSessions.slice(0, 4).map((session) => <div key={session.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{session.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDate(session.start_date, locale, t)} — {formatDate(session.end_date, locale, t)}</p></div><Badge variant={session.is_active ? 'default' : 'secondary'}>{session.is_active ? t('Active') : t('Inactive')}</Badge></div>)}</CardContent></Card>
-                            <Card className="rounded-xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Tournaments')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeTournaments.slice(0, 4).map((tournament) => <div key={tournament.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{tournament.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{tournament.session?.name ?? t('Session')}</p></div><CheckCircle2 className="size-4 shrink-0 text-emerald-600" /></div>)}</CardContent></Card>
+                    {isAdministrator && (
+                        <section aria-labelledby="roster-registration-progress">
+                            <Card className="rounded-xl border-border bg-card shadow-sm">
+                                <CardHeader className="flex flex-row items-start justify-between gap-4">
+                                    <div>
+                                        <CardTitle id="roster-registration-progress">{t('Roster registration progress')}</CardTitle>
+                                        <CardDescription>{t('Coverage shows which event entries already have an active manager or player.')}</CardDescription>
+                                    </div>
+                                    <Badge variant={incompleteRosterCount > 0 ? 'secondary' : 'default'} className="shrink-0">{incompleteRosterCount} {t('need attention')}</Badge>
+                                </CardHeader>
+                                <CardContent>
+                                    {safeRosterProgress.length === 0 ? (
+                                        <EmptyState icon={Users} description={t('No active roster registrations.')} className="min-h-32" />
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {visibleRosterProgress.map((row) => {
+                                                const managerProgress = percentage(row.manager_entries, row.registrations);
+                                                const playerProgress = percentage(row.player_entries, row.registrations);
+
+                                                return (
+                                                    <div key={`${row.faculty_id}-${row.sport_id}`} className="grid gap-4 rounded-xl border border-border p-4 lg:grid-cols-[minmax(12rem,.8fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_8rem] lg:items-center">
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-semibold text-foreground">{row.faculty_name}</p>
+                                                            <p className="mt-1 truncate text-xs text-muted-foreground">{row.sport_name}</p>
+                                                        </div>
+                                                        <CoverageBar label={t('Manager submitted')} complete={row.manager_entries} total={row.registrations} progress={managerProgress} tone="bg-amber-500" />
+                                                        <CoverageBar label={t('Players submitted')} complete={row.player_entries} total={row.registrations} progress={playerProgress} tone="bg-primary" />
+                                                        <div className="text-sm font-semibold tabular-nums text-muted-foreground lg:text-right">{row.registrations} {t('registered events')}</div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                    {safeRosterProgress.length > 6 && (
+                                        <Button type="button" variant="outline" className="mt-4 w-full" onClick={() => setShowAllRosterProgress((current) => !current)}>
+                                            {t(showAllRosterProgress ? 'Show fewer' : 'Show all')} {showAllRosterProgress ? '' : `(${safeRosterProgress.length})`}
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </section>
                     )}
-                </div>
-            </main>
+
+                    {(safeSessions.length > 0 || safeTournaments.length > 0) && (
+                        <details className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:p-5">
+                                <div><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">{t('Administration')}</p><p className="mt-1 font-semibold text-foreground">{t('Recent Sessions and Tournaments')}</p></div>
+                                <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                            </summary>
+                            <section className="grid gap-6 border-t border-border p-4 sm:p-5 xl:grid-cols-2">
+                            <Card className="rounded-xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Sessions')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeSessions.slice(0, 4).map((session) => <div key={session.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{session.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDate(session.start_date, locale, t)} — {formatDate(session.end_date, locale, t)}</p></div><Badge variant={session.is_active ? 'default' : 'secondary'}>{session.is_active ? t('Active') : t('Inactive')}</Badge></div>)}</CardContent></Card>
+                            <Card className="rounded-xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Tournaments')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeTournaments.slice(0, 4).map((tournament) => <div key={tournament.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{tournament.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{tournament.session?.name ?? t('Session')}</p></div><CheckCircle2 className="size-4 shrink-0 text-emerald-600" /></div>)}</CardContent></Card>
+                            </section>
+                        </details>
+                    )}
+            </div>
         </AuthenticatedLayout>
     );
 }
@@ -401,10 +532,46 @@ function StatusStat({ label, value, tone }: { label: string; value: number; tone
     return <div className={`rounded-xl border p-3 ${tone}`}><p className="text-xs font-medium">{label}</p><p className="mt-1 text-2xl font-bold tabular-nums">{value}</p></div>;
 }
 
-function ControlMetric({ icon: Icon, label, value, detail, href, tone }: { icon: LucideIcon; label: string; value: number; detail: string; href: string; tone: string }) {
-    return <Link href={route(href)} className="group rounded-xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"><div className="flex items-start justify-between"><div className={`flex size-11 items-center justify-center rounded-xl ${tone}`}><Icon className="size-5"/></div><ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground"/></div><p className="mt-5 text-3xl font-black tabular-nums text-foreground">{value}</p><p className="mt-1 text-sm font-bold text-foreground">{label}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></Link>;
+function CoverageBar({ label, complete, total, progress, tone }: { label: string; complete: number; total: number; progress: number; tone: string }) {
+    return <div>
+        <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
+            <span className="font-medium text-foreground">{label}</span>
+            <span className="tabular-nums text-muted-foreground">{complete}/{total} · {progress}%</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${label}: ${complete} / ${total}, ${progress}%`}>
+            <div className={`h-full rounded-full transition-all ${tone}`} style={{ width: `${progress}%` }} />
+        </div>
+    </div>;
 }
 
+function MetricTile({ icon: Icon, label, value, detail, active, onClick, tone }: { icon: LucideIcon; label: string; value: number; detail: string; active: boolean; onClick: () => void; tone: string }) {
+    return <button type="button" aria-pressed={active} onClick={onClick} className={`group rounded-xl border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${active ? 'border-primary ring-2 ring-primary/15' : 'border-border hover:border-primary/30'}`}><div className="flex items-start justify-between"><div className={`flex size-11 items-center justify-center rounded-xl ${tone}`}><Icon className="size-5"/></div><ArrowRight className={`size-4 transition group-hover:translate-x-0.5 ${active ? 'text-primary' : 'text-muted-foreground'}`}/></div><p className="mt-5 text-3xl font-black tabular-nums text-foreground">{value}</p><p className="mt-1 text-sm font-bold text-foreground">{label}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></button>;
+}
+
+function MetricChart({ metric, period, values, snapshots, labels }: { metric: 'organizations' | 'users' | 'events' | 'matches'; period: '7d' | '30d' | '90d'; values: Record<string, number>; snapshots: Array<{ date: string; organizations: number; users: number; events: number; matches: number }>; labels: Record<string, string> }) {
+    const value = Number(values[metric] ?? 0);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - (period === '7d' ? 6 : period === '30d' ? 29 : 89));
+    const visible = snapshots.filter((snapshot) => new Date(`${snapshot.date}T00:00:00`) >= startDate);
+    const max = Math.max(1, value, ...visible.map((snapshot) => Number(snapshot[metric])));
+    const hasHistory = visible.length > 0;
+    return <div>
+        <div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-xs font-medium text-muted-foreground">{labels[metric]} · {period === '7d' ? '7 days' : period === '30d' ? '30 days' : '90 days'}</p><p className="mt-1 text-3xl font-black tabular-nums text-foreground">{value.toLocaleString()}</p></div><span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${hasHistory ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}`}>{hasHistory ? `${visible.length} ${visible.length === 1 ? 'snapshot' : 'snapshots'}` : 'Collecting history'}</span></div>
+        {hasHistory ? <div className="flex h-36 items-end gap-2 overflow-x-auto border-b border-border pb-2 sm:gap-3" role="img" aria-label={`${labels[metric]} historical snapshots`}>
+            {visible.map((snapshot) => { const point = Number(snapshot[metric]); const day = new Date(`${snapshot.date}T00:00:00`).toLocaleDateString(undefined, { day: '2-digit', month: 'short' }); return <div key={snapshot.date} className="group/bar flex h-full min-w-8 flex-1 flex-col justify-end sm:min-w-10"><div className="relative flex min-h-0 flex-1 items-end justify-center"><div title={`${day}: ${point}`} className="w-full max-w-14 rounded-t-md bg-gradient-to-t from-primary to-primary/55 transition-colors group-hover/bar:from-cyan-600 group-hover/bar:to-cyan-400" style={{ height: `${Math.max(4, Math.round((point / max) * 100))}%` }} /></div><span className="mt-2 text-center text-[10px] font-medium text-muted-foreground">{day}</span></div>; })}
+        </div> : <div className="flex h-36 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center text-sm text-muted-foreground">Run <code className="mx-1 rounded bg-muted px-1.5 py-0.5 text-xs">php artisan stms:dashboard-snapshot</code> to start collecting this trend.</div>}
+        <p className="mt-3 text-xs text-muted-foreground">Snapshots are captured daily. Trend history begins when the scheduled collection starts.</p>
+    </div>;
+}
+
+function MatchDonut({ scheduled, live, completed, cancelled, t }: { scheduled: number; live: number; completed: number; cancelled: number; t: (key: string) => string }) {
+    const total = scheduled + live + completed + cancelled;
+    const parts = [{ label: t('Scheduled'), value: scheduled, color: 'bg-blue-500' }, { label: t('Live'), value: live, color: 'bg-rose-500' }, { label: t('Completed'), value: completed, color: 'bg-emerald-500' }, { label: t('Cancelled'), value: cancelled, color: 'bg-slate-400' }];
+    const colors = ['#3b82f6', '#f43f5e', '#10b981', '#94a3b8'];
+    let angle = 0;
+    const gradient = parts.map((part, index) => { const start = angle; angle += total > 0 ? (part.value / total) * 360 : 0; return `${colors[index]} ${start}deg ${angle}deg`; }).join(', ');
+    return <div className="flex flex-col items-center gap-5 sm:flex-row"><div className="relative size-36 shrink-0 rounded-full" style={{ background: total ? `conic-gradient(${gradient})` : 'conic-gradient(#e2e8f0 0deg 360deg)' }} role="img" aria-label={`${t('Matches')}: ${total}`}><div className="absolute inset-4 flex flex-col items-center justify-center rounded-full bg-card"><span className="text-2xl font-black tabular-nums">{total}</span><span className="text-[10px] text-muted-foreground">{t('Matches')}</span></div></div><div className="grid w-full grid-cols-2 gap-3">{parts.map((part) => <div key={part.label} className="rounded-lg border border-border p-3"><div className="flex items-center gap-2 text-xs text-muted-foreground"><span className={`size-2 rounded-full ${part.color}`} />{part.label}</div><p className="mt-1 text-lg font-bold tabular-nums">{part.value}</p></div>)}</div></div>;
+}
 function AttentionItem({ label, value, href }: { label: string; value: number; href: string }) {
     if (value <= 0) return null;
     return <Link href={href} className="group flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 transition hover:bg-amber-100"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-card text-sm font-black tabular-nums text-amber-800 shadow-sm">{value}</span><span className="min-w-0 flex-1 text-sm font-semibold text-amber-950">{label}</span><ArrowRight className="size-4 text-amber-500 transition group-hover:translate-x-0.5"/></Link>;

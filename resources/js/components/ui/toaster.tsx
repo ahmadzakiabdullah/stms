@@ -3,6 +3,7 @@ import { useSyncExternalStore } from 'react';
 
 import { cn } from '@/lib/utils';
 import { dismiss, getSnapshot, subscribe, type ToastVariant } from '@/lib/toast';
+import { translate } from '@/lib/i18n';
 
 const variants: Record<ToastVariant, { icon: typeof Info; className: string }> = {
     success: { icon: CheckCircle2, className: 'text-emerald-600 dark:text-emerald-400' },
@@ -10,7 +11,8 @@ const variants: Record<ToastVariant, { icon: typeof Info; className: string }> =
     info: { icon: Info, className: 'text-sky-600 dark:text-sky-400' },
 };
 
-export function Toaster() {
+export function Toaster({ locale = 'en' }: { locale?: string }) {
+    const t = (key: string) => translate(locale, key);
     const items = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
     if (items.length === 0) {
@@ -20,7 +22,7 @@ export function Toaster() {
     return (
         <div
             role="region"
-            aria-label="Notifications"
+            aria-label={t('Notifications')}
             className="pointer-events-none fixed inset-x-0 top-0 z-[100] flex flex-col items-center gap-2 p-4 sm:items-end"
         >
             {items.map((item) => {
@@ -44,7 +46,7 @@ export function Toaster() {
                         <button
                             type="button"
                             onClick={() => dismiss(item.id)}
-                            aria-label="Dismiss notification"
+                            aria-label={t('Dismiss notification')}
                             className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             <X className="size-4" />

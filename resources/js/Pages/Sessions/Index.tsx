@@ -47,6 +47,10 @@ const sessionSchema = z.object({
     description: z.string().optional().default(''),
     start_date: z.string().min(1, 'Start date is required'),
     end_date: z.string().min(1, 'End date is required'),
+    event_registration_start_date: z.string().optional().default(''),
+    event_registration_deadline: z.string().optional().default(''),
+    squad_registration_start_date: z.string().optional().default(''),
+    squad_registration_deadline: z.string().optional().default(''),
     is_active: z.boolean(),
 });
 
@@ -73,6 +77,12 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
     const [documentFile, setDocumentFile] = useState<string>('');
     const [availableFiles, setAvailableFiles] = useState<{name: string; path: string}[]>([]);
     const [deleteDocumentTarget, setDeleteDocumentTarget] = useState<SportDocument | null>(null);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [inverseLogoFile, setInverseLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [inverseLogoPreview, setInverseLogoPreview] = useState<string | null>(null);
+    const [removeLogo, setRemoveLogo] = useState(false);
+    const [removeInverseLogo, setRemoveInverseLogo] = useState(false);
 
     const sessions = Array.isArray(sessionsProp) ? sessionsProp : (sessionsProp?.data ?? []);
     const applySearch = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); router.get(route('sessions.index'), search.trim() ? { search: search.trim() } : {}, { preserveState: true, preserveScroll: true, replace: true }); };
@@ -91,12 +101,22 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
             description: '',
             start_date: '',
             end_date: '',
+            event_registration_start_date: '',
+            event_registration_deadline: '',
+            squad_registration_start_date: '',
+            squad_registration_deadline: '',
             is_active: true,
         },
     });
 
     const openCreate = () => {
         setEditingSession(null);
+        setLogoFile(null);
+        setInverseLogoFile(null);
+        setLogoPreview(null);
+        setInverseLogoPreview(null);
+        setRemoveLogo(false);
+        setRemoveInverseLogo(false);
         reset({
             organization_id: organizations && organizations.length > 0 ? organizations[0].id : '',
             name: '',
@@ -104,6 +124,10 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
             description: '',
             start_date: '',
             end_date: '',
+            event_registration_start_date: '',
+            event_registration_deadline: '',
+            squad_registration_start_date: '',
+            squad_registration_deadline: '',
             is_active: true,
         });
         setOpen(true);
@@ -111,6 +135,12 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
 
     const openEdit = (session: SessionRow) => {
         setEditingSession(session);
+        setLogoFile(null);
+        setInverseLogoFile(null);
+        setLogoPreview(session.logo_url ?? null);
+        setInverseLogoPreview(session.inverse_logo_url ?? null);
+        setRemoveLogo(false);
+        setRemoveInverseLogo(false);
 
         const formatForDateInput = (dateStr: string) => {
             if (!dateStr) return '';
@@ -124,6 +154,10 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
             description: session.description || '',
             start_date: formatForDateInput(session.start_date),
             end_date: formatForDateInput(session.end_date),
+            event_registration_start_date: formatForDateInput(session.event_registration_start_date),
+            event_registration_deadline: formatForDateInput(session.event_registration_deadline),
+            squad_registration_start_date: formatForDateInput(session.squad_registration_start_date),
+            squad_registration_deadline: formatForDateInput(session.squad_registration_deadline),
             is_active: session.is_active,
         });
         setOpen(true);
@@ -132,16 +166,30 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
     const closeDialog = () => {
         setOpen(false);
         setEditingSession(null);
+        setLogoFile(null);
+        setInverseLogoFile(null);
+        setLogoPreview(null);
+        setInverseLogoPreview(null);
+        setRemoveLogo(false);
+        setRemoveInverseLogo(false);
         reset();
     };
 
     const onSubmit = (formData: SessionForm) => {
+        const payload = new FormData();
+        Object.entries(formData).forEach(([key, value]) => payload.append(key, typeof value === 'boolean' ? (value ? '1' : '0') : String(value ?? '')));
+        if (logoFile) payload.append('logo', logoFile);
+        if (inverseLogoFile) payload.append('inverse_logo', inverseLogoFile);
+
         if (editingSession) {
-            router.put(route('sessions.update', { session: editingSession.slug }), formData, {
+            payload.append('_method', 'put');
+            payload.append('remove_logo', removeLogo ? '1' : '0');
+            payload.append('remove_inverse_logo', removeInverseLogo ? '1' : '0');
+            router.post(route('sessions.update', { session: editingSession.slug }), payload, {
                 onSuccess: () => closeDialog(),
             });
         } else {
-            router.post(route('sessions.store'), formData, {
+            router.post(route('sessions.store'), payload, {
                 onSuccess: () => closeDialog(),
             });
         }
@@ -239,6 +287,43 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                         />
                                     </div>
 
+                                    <div className="grid gap-3 rounded-xl border bg-muted/20 p-4">
+                                        <div>
+                                            <Label>{t('Session Branding')}</Label>
+                                            <p className="mt-1 text-xs text-muted-foreground">{t('Upload separate official variants for light and dark backgrounds.')}</p>
+                                        </div>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <div className="rounded-lg border bg-background p-3">
+                                                <p className="text-sm font-semibold">{t('Standard logo')}</p>
+                                                <p className="text-xs text-muted-foreground">{t('For light backgrounds')}</p>
+                                                <div className="mt-3 flex min-h-20 items-center justify-center rounded-md bg-white p-3">
+                                                    {logoPreview ? <img src={logoPreview} alt={t('Standard logo preview')} className="max-h-16 max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">{t('No logo uploaded')}</span>}
+                                                </div>
+                                                <div className="mt-3 flex flex-wrap gap-2">
+                                                    <Button type="button" variant="outline" size="sm" onClick={(event) => {
+                                                        document.getElementById('session-logo-input')?.click();
+                                                    }}><Upload className="mr-1 size-3" />{logoPreview ? t('Change') : t('Upload')}</Button>
+                                                    {logoPreview && <Button type="button" variant="ghost" size="sm" onClick={() => { setLogoFile(null); setLogoPreview(null); setRemoveLogo(Boolean(editingSession?.logo_url)); }}>{t('Remove')}</Button>}
+                                                </div>
+                                                <input id="session-logo-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={(event) => { const file = event.target.files?.[0] ?? null; setLogoFile(file); setLogoPreview(file ? URL.createObjectURL(file) : null); setRemoveLogo(false); }} />
+                                            </div>
+                                            <div className="rounded-lg border bg-[var(--public-dark)] p-3 text-white">
+                                                <p className="text-sm font-semibold">{t('Inverse logo')}</p>
+                                                <p className="text-xs text-white/60">{t('For dark backgrounds')}</p>
+                                                <div className="mt-3 flex min-h-20 items-center justify-center rounded-md bg-black/30 p-3">
+                                                    {inverseLogoPreview ? <img src={inverseLogoPreview} alt={t('Inverse logo preview')} className="max-h-16 max-w-full object-contain" /> : <span className="text-xs text-white/60">{t('No logo uploaded')}</span>}
+                                                </div>
+                                                <div className="mt-3 flex flex-wrap gap-2">
+                                                    <Button type="button" variant="outline" size="sm" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" onClick={(event) => {
+                                                        document.getElementById('session-inverse-logo-input')?.click();
+                                                    }}><Upload className="mr-1 size-3" />{inverseLogoPreview ? t('Change') : t('Upload')}</Button>
+                                                    {inverseLogoPreview && <Button type="button" variant="ghost" size="sm" className="text-rose-300 hover:bg-white/10 hover:text-rose-200" onClick={() => { setInverseLogoFile(null); setInverseLogoPreview(null); setRemoveInverseLogo(Boolean(editingSession?.inverse_logo_url)); }}>{t('Remove')}</Button>}
+                                                </div>
+                                                <input id="session-inverse-logo-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,.svg" className="hidden" onChange={(event) => { const file = event.target.files?.[0] ?? null; setInverseLogoFile(file); setInverseLogoPreview(file ? URL.createObjectURL(file) : null); setRemoveInverseLogo(false); }} />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="start_date">{t('Start Date')}</Label>
@@ -261,6 +346,48 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                             />
                                             {errors.end_date && <p className="text-sm text-destructive">{errors.end_date.message}</p>}
                                         </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="event_registration_start_date">{t('Event Registration Opens')}</Label>
+                                        <Input
+                                            id="event_registration_start_date"
+                                            type="date"
+                                            {...register('event_registration_start_date')}
+                                        />
+                                        {errors.event_registration_start_date && <p className="text-sm text-destructive">{errors.event_registration_start_date.message}</p>}
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="event_registration_deadline">{t('Event Registration Closes')}</Label>
+                                        <Input
+                                            id="event_registration_deadline"
+                                            type="date"
+                                            {...register('event_registration_deadline')}
+                                        />
+                                        {errors.event_registration_deadline && <p className="text-sm text-destructive">{errors.event_registration_deadline.message}</p>}
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="squad_registration_start_date">{t('Officials & Athletes Open')}</Label>
+                                        <Input
+                                            id="squad_registration_start_date"
+                                            type="date"
+                                            {...register('squad_registration_start_date')}
+                                        />
+                                        {errors.squad_registration_start_date && <p className="text-sm text-destructive">{errors.squad_registration_start_date.message}</p>}
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="squad_registration_deadline">{t('Officials & Athletes Closes')}</Label>
+                                        <Input
+                                            id="squad_registration_deadline"
+                                            type="date"
+                                            {...register('squad_registration_deadline')}
+                                        />
+                                        <p className="text-xs text-muted-foreground">{t('Dean approval is still required before squad registration opens.')}</p>
+                                        {errors.squad_registration_deadline && <p className="text-sm text-destructive">{errors.squad_registration_deadline.message}</p>}
+                                      </div>
                                     </div>
 
                                     <div className="grid gap-2">
@@ -308,15 +435,17 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                 <TableHead>{t('Name')}</TableHead>
                                 <TableHead>{t('Organization')}</TableHead>
                                 <TableHead>{t('Slug')}</TableHead>
-                                <TableHead>{t('Period')}</TableHead>
-                                <TableHead>{t('Status')}</TableHead>
-                                <TableHead className="text-right">{t('Actions')}</TableHead>
+                                 <TableHead>{t('Branding')}</TableHead>
+                                 <TableHead>{t('Period')}</TableHead>
+                                 <TableHead>{t('Registration Deadlines')}</TableHead>
+                                 <TableHead>{t('Status')}</TableHead>
+                                 <TableHead className="text-right">{t('Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {sessions.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                                         <EmptyState title={search ? t('No sessions match your search.') : t('No sessions yet. Create the first one.')} />
                                     </TableCell>
                                 </TableRow>
@@ -330,8 +459,19 @@ export default function SessionsIndex({ sessions: sessionsProp, organizations = 
                                     <TableCell>
                                         <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{session.slug}</code>
                                     </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-1.5">
+                                            {session.logo_url && <img src={session.logo_url} alt="" className="size-8 rounded border bg-white object-contain p-1" />}
+                                            {session.inverse_logo_url && <span className="flex size-8 items-center justify-center rounded bg-[var(--public-dark)] p-1"><img src={session.inverse_logo_url} alt="" className="max-h-full max-w-full object-contain" /></span>}
+                                            {!session.logo_url && !session.inverse_logo_url && <span className="text-xs text-muted-foreground">—</span>}
+                                        </div>
+                                    </TableCell>
                                     <TableCell className="text-sm text-muted-foreground">
                                         {formatDate(session.start_date, locale)} — {formatDate(session.end_date, locale)}
+                                    </TableCell>
+                                    <TableCell className="text-sm text-muted-foreground">
+                                        <div>{session.event_registration_start_date ? formatDate(session.event_registration_start_date, locale) : '—'} → {session.event_registration_deadline ? formatDate(session.event_registration_deadline, locale) : '—'}</div>
+                                        <div className="text-xs text-muted-foreground">{session.squad_registration_start_date ? formatDate(session.squad_registration_start_date, locale) : '—'} → {session.squad_registration_deadline ? formatDate(session.squad_registration_deadline, locale) : '—'}</div>
                                     </TableCell>
                                     <TableCell>
                                         <span

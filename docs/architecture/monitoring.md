@@ -47,3 +47,7 @@ For every alert, record:
 5. recovery timestamp and a short follow-up if the threshold was breached repeatedly.
 
 See [operations runbook](../deployment/operations-runbook.md) for triage, escalation, rollback and worker/scheduler recovery.
+
+## Repository P1 Contract
+
+The monitoring matrix above is the repository contract for metric names, starting thresholds, severity, first-response owner and escalation evidence. Runtime activation, named operator assignment and alert delivery remain production operations work and are intentionally held with the P0 release blockers until the required providers and credentials are available.

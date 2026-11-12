@@ -69,8 +69,9 @@ Negative:
 Implemented 2026-08-07 and extended with a tenant-aware job contract/middleware.
 Lifecycle and queue behavior have tests, and the static tenant-bypass allowlist
 passes. The draw-contract and read-authorization gaps identified by the original
-audit were remediated; the 18 August 2026 working tree passes 434/434 PHPUnit
-tests plus the six-role direct-URL and cross-tenant payload coverage.
+audit were remediated. Snapshot as at 18 August 2026 (pada 18 Ogos 2026), not a
+current count: that working tree passed 434/434 PHPUnit tests plus the six-role
+direct-URL and cross-tenant payload coverage; the suite has grown since.
 
 ## References
 

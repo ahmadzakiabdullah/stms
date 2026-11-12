@@ -17,7 +17,7 @@ Tournament <-> Sport through tournament_sport
 Event -> Tournament + Sport + SportCategory
 ```
 
-Every tenant-aware domain row carries `organization_id`, even where the organization can also be inferred through relations.
+Every tenant-aware domain row carries `organization_id`, even where the organization can also be inferred through relations. `DashboardMetricSnapshot` is the exception: it is a global aggregate keyed by `scope_key`, not a tenant row.
 
 ## Core Models
 
@@ -39,12 +39,18 @@ Every tenant-aware domain row carries `organization_id`, even where the organiza
 | SquadMember | `squad_members.id` UUID | Deliberate no-soft-delete exception |
 | DrawVersion | `draw_versions.id` UUID | Immutable draw snapshot; deliberate no-soft-delete exception |
 | Setting | `settings.id` integer | Organization key/value; deliberate UUID/soft-delete exception |
+| SessionSport | `session_sports.id` UUID | Per-session activation of an organization sport (`session_id`, `sport_id`, `is_active`) |
+| SessionSportCategory | `session_sport_categories.id` UUID | Per-session category configuration: quota mode/limits, competition system, venue, dates |
+| MatchScoringEvent | `match_scoring_events.id` UUID | Individual scoring event linking result, match, participant and `SquadMember` |
+| SportDocument | `sport_documents.id` UUID | Sport (optionally session) document metadata; files on the `public` disk |
+| DataTransfer | `data_transfers.id` UUID | Async import/export status, progress and failure report; see [data transfers](data-transfers.md) |
+| DashboardMetricSnapshot | `dashboard_metric_snapshots.id` integer | Global daily metrics snapshot keyed by unique (`snapshot_date`, `scope_key`); **no `organization_id`**, written by `stms:dashboard-snapshot` |
 
 ## Important Relationships
 
 - `results.match_id` references `matches.id`; `matches` does not contain `result_id`.
 - Participant belongs directly to Organization + Session.
-- Sport is organization-scoped and reusable across sessions and tournaments.
+- Sport is organization-scoped and reusable across sessions and tournaments; per-session activation and category configuration live in `session_sports` / `session_sport_categories`.
 - Event joins tournament, sport and category.
 - User sport assignment uses tenant-aware `sport_user`.
 - Draw versions snapshot pool allocations and fixtures for rollback.
@@ -67,4 +73,14 @@ Accreditation and dedicated Schedule domain models are not implemented in the cu
 
 ## Schedule Conflict Validation
 
-Before a match is created or updated, `MatchScheduleConflictValidator` (in `app/Services`) rejects any fixture whose time window overlaps an existing scheduled fixture on the same day within a 120-minute window when they share a venue, or when the same participant appears in more than one match in that window. The gate is applied in `MatchController::store` and `update`; the submitted fixture is not persisted until the conflicts are resolved.
+Before a match is created or updated, `MatchScheduleConflictValidator` (in `app/Services`) rejects any fixture whose time window overlaps an existing scheduled fixture on the same day within a 120-minute window when they share a venue, or when the same participant appears in more than one match in that window. The controller provides immediate feedback, and `MatchService` repeats the check inside the write transaction while holding the organization lock; the submitted fixture is not persisted until the conflicts are resolved.
+
+## Write-side Concurrency
+
+The service layer is the authoritative boundary for duplicate-request safety.
+Draw operations lock the event row, result entry locks the match row, result
+correction/status transitions lock the result row, and participant registration
+locks the event-participant key before relying on its unique index. Fixture
+generation is idempotent after the first successful generation. See
+[`ADR-010`](../adr/ADR-010-write-side-concurrency-safety.md) and
+[`docs/testing/concurrency.md`](../testing/concurrency.md).

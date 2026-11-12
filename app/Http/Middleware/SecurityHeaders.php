@@ -33,7 +33,12 @@ class SecurityHeaders
             $nonce = (string) $request->attributes->get('csp_nonce', '');
             $scriptSrc = "script-src 'self'".($nonce !== '' ? " 'nonce-{$nonce}'" : '').'; ';
 
-            $styleSrc = "style-src 'self'".($nonce !== '' ? " 'nonce-{$nonce}'" : '').'; ';
+            // React uses DOM inline styles for dynamic widths/theme previews.
+            // Keep scripts nonce-protected, while allowing those style attributes
+            // and CSSOM updates to render correctly under the enforced CSP.
+            // Do not combine unsafe-inline with a nonce: browsers ignore
+            // unsafe-inline whenever a nonce/hash is present in style-src.
+            $styleSrc = "style-src 'self' 'unsafe-inline'; ";
 
             $fontSrc = $isReportOnly
                 ? "font-src 'self' data:; "

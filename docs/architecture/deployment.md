@@ -1,6 +1,6 @@
 # Deployment Architecture
 
-> **Repository update — 21 August 2026:** Current pushed commit is `4c4ebf0c`, including athlete/scorer workflows. The documented production NO-GO conditions and operator cutover requirements remain authoritative until new release evidence is recorded.
+> **Repository note — 12 November 2026:** Commit hashes in this document are historical evidence only; take the current release candidate SHA from `CURRENT_STATE.md` and the release evidence record. The documented production NO-GO conditions and operator cutover requirements remain authoritative until new release evidence is recorded.
 
 ## Production Shape
 
@@ -42,7 +42,7 @@ Restart queue workers selepas deploy. Pastikan scheduler Laravel berjalan. Gunak
 
 ## Current Release Status
 
-Tiada Git tag pada 18 Ogos 2026. Release hardening terkini dikomit sebagai `4b04c46` dan CI #112 lulus pada SHA itu. Entry JS/CSS production sepadan dengan manifest build semasa, tetapi runtime cutover/preflight dan authenticated post-deploy evidence belum lengkap.
+Rekod sejarah (18 Ogos 2026): tiada Git tag; release hardening ketika itu dikomit sebagai `4b04c46` dan CI #112 lulus pada SHA itu. Rekod ini bukan bukti bagi kod semasa—CI dan preflight mesti dijalankan semula pada SHA release candidate. Menurut bukti terakhir yang direkodkan, runtime cutover/preflight dan authenticated post-deploy evidence belum lengkap.
 
 Prosedur kelulusan penuh berada dalam [release runbook](../deployment/release-runbook.md).
 

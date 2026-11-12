@@ -13,14 +13,15 @@ class BatchRegisterParticipantToEvents
 {
     public function __construct(private readonly RegisterParticipantToEvent $register) {}
 
-    /** @return array{registered:int, failures:array<int,string>, created:Collection<int,EventParticipant>} */
+    /** @return array{registered:int, failures:array<int,string>, created:Collection<int,EventParticipant>, selected_count:int, skipped_count:int, event_ids:array<int,string>} */
     public function handle(Participant $participant, array $eventIds): array
     {
+        $eventIds = array_values(array_unique($eventIds));
         $registered = 0;
         $failures = [];
         $created = collect();
 
-        foreach (array_unique($eventIds) as $eventId) {
+        foreach ($eventIds as $eventId) {
             $event = Event::find($eventId);
 
             try {
@@ -33,6 +34,13 @@ class BatchRegisterParticipantToEvents
             }
         }
 
-        return compact('registered', 'failures', 'created');
+        return [
+            'registered' => $registered,
+            'failures' => $failures,
+            'created' => $created,
+            'selected_count' => count($eventIds),
+            'skipped_count' => max(0, count($eventIds) - $registered),
+            'event_ids' => $eventIds,
+        ];
     }
 }

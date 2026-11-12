@@ -14,6 +14,9 @@ The system requires a clear, first-class concept that groups related tournaments
 
 We will introduce **Session** as a first-class entity in the system hierarchy:
 
+```
+Organization → Session → Tournament → Sport → Event → Match → Result
+```
 
 - A `Session` represents a major sporting event cycle (e.g., "SUKMA 2026", "Olympics 2028").
 - All tournaments, sports, participants, and results must belong to a Session.
@@ -55,4 +58,4 @@ We will introduce **Session** as a first-class entity in the system hierarchy:
 
 ## Implementation Status (audited 2026-08-17)
 
-Partially aligned. `EventSession` is first-class and tournaments/participants reference a session. Sports remain an organization-scoped catalogue connected to tournaments through `tournament_sport`; events bind tournament, sport and category. Matches/results inherit session context indirectly through event/tournament rather than holding `session_id`. See `CURRENT_STATE.md` for the authoritative implemented graph.
+Partially aligned. The domain session is the first-class model `App\Models\Session` (table `event_sessions`, distinct from Laravel's login `sessions` table), and tournaments/participants reference a session. Sports remain an organization-scoped catalogue connected to tournaments through `tournament_sport`, and are additionally configured per session through `session_sports` / `session_sport_categories` (`SessionSport`, `SessionSportCategory`); events bind tournament, sport and category. Matches/results inherit session context indirectly through event/tournament rather than holding `session_id`. See `CURRENT_STATE.md` for the authoritative implemented graph.

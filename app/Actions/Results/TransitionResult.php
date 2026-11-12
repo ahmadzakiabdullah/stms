@@ -13,13 +13,13 @@ class TransitionResult
         protected ResultService $resultService,
     ) {}
 
-    public function handle(Organization $organization, Result $result, User $actor, string $transition): Result
+    public function handle(Organization $organization, Result $result, User $actor, string $transition, ?string $reason = null): Result
     {
         return match ($transition) {
             'submit' => $this->resultService->submit($organization, $result->id, $actor),
             'approve' => $this->resultService->approve($organization, $result->id, $actor),
             'lock' => $this->resultService->lock($organization, $result->id, $actor),
-            'unlock' => $this->resultService->unlock($organization, $result->id, $actor),
+            'unlock' => $this->resultService->unlock($organization, $result->id, $actor, $reason),
             default => throw new \InvalidArgumentException('Unsupported result transition.'),
         };
     }

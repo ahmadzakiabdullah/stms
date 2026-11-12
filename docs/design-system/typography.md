@@ -1,6 +1,6 @@
 # Typography
 
-`resources/css/app.css` membundel variable fonts melalui Fontsource. Stack authenticated menggunakan Geist sebagai sans utama; public portal turut menggunakan Plus Jakarta Sans dan font paparan yang diimport oleh source semasa.
+`resources/css/app.css` membundel font melalui Fontsource. Stack authenticated dan public body/UI, termasuk heading utama, menggunakan Geist supaya teks kekal jelas; Barlow Condensed 700/800 hanya digunakan untuk nombor paparan dan aksen display yang memerlukan penekanan sukan.
 
 Semua font portal kini self-hosted; `app.blade.php` tidak lagi memuat Bunny Fonts. CSP production boleh mengehadkan `style-src`/`font-src` kepada sumber sendiri selepas cutover dan smoke test.
 

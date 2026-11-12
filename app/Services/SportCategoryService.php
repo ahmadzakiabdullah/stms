@@ -37,6 +37,7 @@ class SportCategoryService
         try {
             $category = SportCategory::create($data);
             Log::info('Sport category created', ['id' => $category->id, 'name' => $category->name, 'sport_id' => $category->sport_id]);
+            app(PublicPortalService::class)->forgetForOrganization($category->organization_id);
 
             return $category;
         } catch (QueryException $e) {
@@ -67,6 +68,7 @@ class SportCategoryService
         try {
             $sportCategory->update($data);
             Log::info('Sport category updated', ['id' => $sportCategory->id, 'name' => $sportCategory->name]);
+            app(PublicPortalService::class)->forgetForOrganization($sportCategory->organization_id);
 
             return $sportCategory;
         } catch (QueryException $e) {
@@ -109,5 +111,6 @@ class SportCategoryService
     {
         $sportCategory->delete();
         Log::info('Sport category deleted', ['id' => $sportCategory->id, 'name' => $sportCategory->name]);
+        app(PublicPortalService::class)->forgetForOrganization($sportCategory->organization_id);
     }
 }

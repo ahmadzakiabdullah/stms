@@ -26,7 +26,7 @@ class ParticipationConfirmationService
             ->where('organization_id', $organizationId)
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'session_id']);
+            ->get(['id', 'name', 'name_ms', 'slug', 'session_id']);
 
         $selectedParticipantId = $canSelectParticipant
             ? (string) ($filters['participant_id'] ?? $participants->first()?->id)
@@ -117,10 +117,11 @@ class ParticipationConfirmationService
             'participant' => $participant ? [
                 'id' => $participant->id,
                 'name' => $participant->name,
+                'name_ms' => $participant->name_ms,
                 'slug' => $participant->slug,
             ] : null,
             'dean' => $dean ? ['name' => $dean->name] : null,
-            'participants' => $participants->map(fn ($item) => ['id' => $item->id, 'name' => $item->name])->values(),
+            'participants' => $participants->map(fn ($item) => ['id' => $item->id, 'name' => $item->name, 'name_ms' => $item->name_ms])->values(),
             'sessions' => $sessions->map(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->name,

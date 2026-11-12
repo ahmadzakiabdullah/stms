@@ -7,7 +7,7 @@ import { Head, router } from '@inertiajs/react';
 import { Check, Printer } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
-type Option = { id: string; name: string; period?: string };
+type Option = { id: string; name: string; name_ms?: string | null; period?: string };
 type ConfirmationRow = {
     id: string;
     sport: string;
@@ -22,7 +22,7 @@ interface Props {
     canSelectParticipant: boolean;
     organization: { name: string; logo_url: string | null };
     branding: { tournament_logo_url: string | null; secretariat_address: string };
-    participant: { id: string; name: string; slug: string } | null;
+    participant: { id: string; name: string; name_ms?: string | null; slug: string } | null;
     dean: { name: string } | null;
     participants: Option[];
     sessions: Option[];
@@ -40,7 +40,8 @@ function ConfirmationMark({ checked }: { checked: boolean }) {
 }
 
 export default function Index(props: Props) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
+    const displayParticipantName = (participant: { name: string; name_ms?: string | null } | null) => participant ? (locale === 'ms' ? (participant.name_ms || participant.name) : participant.name) : '-';
     const selectedSession = props.sessions.find((item) => item.id === props.filters.session_id);
 
     const filter = (key: keyof Props['filters'], value: string) => {
@@ -77,7 +78,7 @@ export default function Index(props: Props) {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {props.participants.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
+                                        {props.participants.map((item) => <SelectItem key={item.id} value={item.id}>{displayParticipantName(item)}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </label>
@@ -117,7 +118,7 @@ export default function Index(props: Props) {
                             <div className="form-header-logo flex h-20 items-start justify-center">
                                 {props.branding.tournament_logo_url ? (
                                     <img src={props.branding.tournament_logo_url} alt="SAF logo" className="max-h-16 max-w-[100px] object-contain" />
-                                ) : <div className="mt-2 text-xs text-muted-foreground">SAF Logo</div>}
+                                ) : <div className="mt-2 text-xs text-muted-foreground">{t('SAF Logo')}</div>}
                             </div>
                             <div className="text-xs font-medium">https://saf.utem.edu.my</div>
                             <div className="mt-1.5 w-full border border-black px-1 py-1 text-xs font-bold uppercase">SAF 03/05</div>
@@ -130,11 +131,11 @@ export default function Index(props: Props) {
                     </div>
 
                     <div className="form-meta mt-4 grid grid-cols-[150px_1fr] gap-y-1 text-xs">
-                        <span className="font-bold">{t('Faculty / Participant')}</span><span>: {props.participant?.name ?? '-'}</span>
+                        <span className="font-bold">{t('Faculty / Participant')}</span><span>: {displayParticipantName(props.participant)}</span>
                         <span className="font-bold">{t('Session Period')}</span><span>: {selectedSession?.period ?? '-'}</span>
                     </div>
 
-                    <p className="form-instruction mt-4 text-justify">Please confirm the faculty participation for each sport and category listed below by referring to the Yes or No column.</p>
+                    <p className="form-instruction mt-4 text-justify">{t('Please confirm the faculty participation for each sport and category listed below by referring to the Yes or No column.')}</p>
 
                     <div className="phase-list mt-4 space-y-6">
                         {props.phases.map((phase, phaseIndex) => (
@@ -172,14 +173,14 @@ export default function Index(props: Props) {
                     </div>
 
                     <div className="confirmation-footer print-avoid-break mt-8">
-                        <p>I hereby confirm that the participation information stated above is correct.</p>
+                        <p>{t('I hereby confirm that the participation information stated above is correct.')}</p>
                         <div className="confirmation-footer-grid mt-6 grid grid-cols-[1fr_180px] gap-12">
                             <div className="space-y-3">
-                                <div className="grid grid-cols-[125px_1fr] items-end"><span>Name of Dean</span><span className="border-b border-black px-2 pb-1 font-bold">: {props.dean?.name ?? '-'}</span></div>
-                                <div className="grid grid-cols-[125px_1fr] items-end"><span>Signature</span><span className="signature-space h-10 border-b border-black">:</span></div>
-                                <div className="grid grid-cols-[125px_1fr] items-end"><span>Date</span><span className="border-b border-black px-2 pb-1">: {props.generatedDate}</span></div>
+                                <div className="grid grid-cols-[125px_1fr] items-end"><span>{t('Name of Dean')}</span><span className="border-b border-black px-2 pb-1 font-bold">: {props.dean?.name ?? '-'}</span></div>
+                                <div className="grid grid-cols-[125px_1fr] items-end"><span>{t('Signature')}</span><span className="signature-space h-10 border-b border-black">:</span></div>
+                                <div className="grid grid-cols-[125px_1fr] items-end"><span>{t('Date')}</span><span className="border-b border-black px-2 pb-1">: {props.generatedDate}</span></div>
                             </div>
-                            <div className="stamp-box flex h-28 items-center justify-center border border-black text-center text-xs uppercase text-muted-foreground">Official Stamp</div>
+                            <div className="stamp-box flex h-28 items-center justify-center border border-black text-center text-xs uppercase text-muted-foreground">{t('Official Stamp')}</div>
                         </div>
                     </div>
                 </section>

@@ -31,6 +31,18 @@ return [
 
     'connections' => [
 
+        // Long-running transfers must not be redelivered before their 900s timeout.
+        // Workers consume this connection explicitly; the normal queue is unchanged.
+        'data-transfers' => [
+            'driver' => env('DATA_TRANSFER_QUEUE_DRIVER', env('QUEUE_CONNECTION', 'database')),
+            'connection' => env('DATA_TRANSFER_QUEUE_CONNECTION'),
+            'table' => 'jobs',
+            'queue' => 'data-transfers',
+            'retry_after' => 1020,
+            'block_for' => null,
+            'after_commit' => true,
+        ],
+
         'sync' => [
             'driver' => 'sync',
         ],

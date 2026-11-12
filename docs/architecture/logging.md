@@ -28,7 +28,7 @@ This metadata complements the native `causer_*`, `subject_*` and `event` columns
 
 ## Retention and Access
 
-- Activity records use the configured `activitylog.clean_after_days` value (currently 365 days) and should be pruned with `php artisan activitylog:clean` from a supervised scheduler or approved maintenance runbook.
+- Activity records use the configured `activitylog.clean_after_days` value (currently 365 days) and should be pruned with `php artisan activitylog:clean` from a supervised scheduler or approved maintenance runbook. It is not currently scheduled in `routes/console.php`, so pruning is a manual runbook step until a schedule entry is added.
 - Application log retention is controlled by the selected Laravel channel (`LOG_CHANNEL`, `LOG_DAILY_DAYS` and the deployment log collector); the repository does not claim a production retention period until the operator records it.
 - Activity log UI access is protected by the `view-activity-logs` gate. Super-admins may filter across organizations; other users are restricted to activity caused by users in their own organization.
 - Production operators must document log storage location, retention period, export/deletion procedure, access owner and review cadence before release approval.

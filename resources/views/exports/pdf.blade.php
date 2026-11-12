@@ -16,6 +16,7 @@
     </style>
 </head>
 <body>
+    @php($isMalay = app()->getLocale() === 'ms')
     <h1>{{ $title }}</h1>
     <div class="subtitle">{{ $subtitle }}</div>
 
@@ -36,14 +37,14 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="{{ count($headings) }}" class="empty-cell">No data available</td>
+                    <td colspan="{{ count($headings) }}" class="empty-cell">{{ $isMalay ? 'Tiada data tersedia' : 'No data available' }}</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 
     <div class="footer">
-        Generated on {{ now()->format('d M Y H:i:s') }} • {{ config('app.name') }}
+        {{ $isMalay ? 'Dijana pada' : 'Generated on' }} {{ now()->format('d M Y H:i:s') }} • {{ config('app.name') }}
     </div>
 </body>
 </html>

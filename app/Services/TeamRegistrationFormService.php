@@ -57,6 +57,7 @@ class TeamRegistrationFormService
             ],
             'participant' => [
                 'name' => $registration->participant?->name ?? '-',
+                'name_ms' => $registration->participant?->name_ms,
                 'team_name' => $registration->participant?->team_name,
                 'logo_url' => $registration->participant?->logo_url,
             ],

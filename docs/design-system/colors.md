@@ -78,23 +78,28 @@ CSS variables use the OKLCH color space and are consumed via Tailwind's `var()` 
 | `primary` / `primary-foreground` | Primary actions and accents |
 | `secondary` / `secondary-foreground` | Secondary actions |
 | `accent` / `accent-foreground` | Highlighted interactive states |
-| `destructive` / `destructive-foreground` | Destructive actions |
+| `destructive` | Destructive actions (Tailwind maps `destructive-foreground`, but `app.css` does not define `--destructive-foreground`) |
 | `border` | Dividers and borders |
 | `input` | Form input borders |
 | `ring` | Focus ring indicators |
+| `chart-1` … `chart-5` | Chart series colours |
+| `sidebar`, `sidebar-foreground`, `sidebar-primary`, `sidebar-accent`, `sidebar-border`, `sidebar-ring` (+ foregrounds) | Authenticated sidebar surfaces |
 
 ## Public Portal Theme (tenant-configurable)
 
-The public portal (`/`, `/sports`, `/schedule`, `/contact-us`, etc.) uses a separate six-colour token set injected from tenant settings. Audit 19 September 2026 verified every combination used in `resources/js/Pages/Public/**` against WCAG AA (4.5:1 for text, 3:1 for large text/UI):
+The public portal (`/`, `/sports`, `/schedule`, `/contact-us`, etc.) uses a separate token set built in `resources/js/lib/publicTheme.ts` from six tenant colour inputs: dark, primary, accent, highlight, background and text. Audit 19 September 2026 verified every combination used in `resources/js/Pages/Public/**` against WCAG AA (4.5:1 for text, 3:1 for large text/UI):
 
-| Token | Role | Example usage |
+| Token | Source | Role / example usage |
 |---|---|---|
-| `--public-dark` | Hero/sidebar background | `PublicPageHero`, contact aside |
-| `--public-primary` | Primary actions & accents | Sport card CTA, filter focus rings |
-| `--public-highlight` | CTA on dark surfaces | "View schedule" button in hero |
-| `--public-accent` | Eyebrow labels on dark | Section eyebrows |
-| `--public-dark-border` | Borders on light surfaces | Card borders |
-| `--public-dark-faint` | Secondary text on light | Captions, meta text (AA ≥ 4.5:1 on white) |
+| `--public-dark` | tenant input | Hero/sidebar background (`PublicPageHero`, contact aside) |
+| `--public-primary` | tenant input | Primary actions & accents (sport card CTA, filter focus rings) |
+| `--public-accent` | tenant input | Eyebrow labels on dark |
+| `--public-highlight` | tenant input | CTA on dark surfaces ("View schedule" in hero) |
+| `--public-background` | tenant input | Page background |
+| `--public-text` | tenant input | Default text |
+| `--public-primary-soft` / `--public-primary-border` | derived from primary (10% / 30% alpha) | Badge backgrounds, card hover border |
+| `--public-dark-soft` / `--public-dark-border` / `--public-dark-faint` | derived from dark (5% / 12% / 70% alpha) | Soft sections, card borders, secondary text (AA ≥ 4.5:1 on white) |
+| `--public-highlight-soft` | derived from highlight (20% alpha) | Highlight backgrounds |
 
 Contrast rules enforced in code:
 
