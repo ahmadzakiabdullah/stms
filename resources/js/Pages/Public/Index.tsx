@@ -13,15 +13,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SportIcon } from '@/lib/sportIcons';
 import { useI18n } from '@/lib/i18n';
 import { Head, Link, router } from '@inertiajs/react';
-import { Activity, ArrowRight, CalendarDays, CheckCircle2, Clock3, MapPin, Medal, RefreshCw, Trophy, Users } from 'lucide-react';
+import { Activity, ArrowRight, BellRing, CalendarDays, CheckCircle2, Clock3, MapPin, Medal, RefreshCw, Trophy, Users } from 'lucide-react';
 import { type ComponentType, useEffect, useState } from 'react';
 
 type Faculty = { name: string; name_ms?: string | null; logo_url?: string | null; inverse_logo_url?: string | null } | null;
 type SportCatalogEntry = { name: string; icon: string | null };
 type MedalRow = { rank: number; participant_name: string; participant_name_ms?: string | null; logo_url?: string | null; inverse_logo_url?: string | null; gold: number; silver: number; bronze: number; total_medals: number };
+const competitionPhases = [
+    { id: 'phase-1', label: 'Phase 1', start_date: '2026-12-03', end_date: '2026-12-04' },
+    { id: 'phase-2', label: 'Phase 2', start_date: '2026-12-12', end_date: '2026-12-13' },
+] as const;
 type Props = {
     app_name: string;
-    competition: { name: string; description: string | null; start_date: string | null; end_date: string | null; organization: string | null } | null;
+    competition: { name: string; description: string | null; start_date: string | null; end_date: string | null; organization: string | null; event_registration_start_date?: string | null; event_registration_deadline?: string | null; squad_registration_start_date?: string | null; squad_registration_deadline?: string | null } | null;
     stats: { sports: number; events: number; faculties: number; completed_matches: number; total_matches: number };
     sports: string[];
     sports_catalog: SportCatalogEntry[];
@@ -43,6 +47,14 @@ const formatDate = (value: string | null, locale: string, includeTime = false) =
     }).format(new Date(value));
 };
 
+const formatDateRange = (start: string | null, end: string | null, locale: string, t: Translate) => {
+    if (!start && !end) return t('Dates to be announced');
+    if (!start) return formatDate(end, locale) ?? t('Dates to be announced');
+    const startLabel = formatDate(start, locale) ?? t('Dates to be announced');
+    if (!end || start === end) return startLabel;
+    return `${startLabel} – ${formatDate(end, locale)}`;
+};
+
 const countdownParts = (target: number, now: number) => {
     const diff = target - now;
     if (!Number.isFinite(diff) || diff <= 0) return null;
@@ -51,6 +63,25 @@ const countdownParts = (target: number, now: number) => {
         hours: Math.floor((diff % 86400000) / 3600000),
         minutes: Math.floor((diff % 3600000) / 60000),
     };
+};
+
+const localDateKey = (value: string | null | undefined) => {
+    if (!value) return null;
+    const parts = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Kuala_Lumpur' }).formatToParts(new Date(value));
+    const part = (type: string) => parts.find((item) => item.type === type)?.value;
+
+    return `${part('year')}-${part('month')}-${part('day')}`;
+};
+
+const registrationStatus = (start: string | null | undefined, end: string | null | undefined, now: number, t: Translate) => {
+    const today = localDateKey(new Date(now).toISOString());
+    const startDate = localDateKey(start);
+    const endDate = localDateKey(end);
+
+    if (!startDate && !endDate) return t('Dates to be announced');
+    if (startDate && today && today < startDate) return t('Opens soon');
+    if (endDate && today && today > endDate) return t('Registration closed');
+    return t('Registration open');
 };
 
 export default function PublicIndex({ app_name, competition, stats, sports_catalog, faculties, upcoming, results, medals, updated_at, error = null }: Props) {
@@ -62,7 +93,8 @@ export default function PublicIndex({ app_name, competition, stats, sports_catal
     const hasPublishedFixtures = stats.total_matches > 0;
     const hasMedals = medals.some(row => row.total_medals > 0);
     const liveMatches = upcoming.filter(match => match.status === 'in_progress');
-    const startTime = competition?.start_date ? new Date(`${competition.start_date}T00:00:00`).getTime() : NaN;
+    const countdownPhase = competitionPhases.find(phase => new Date(`${phase.start_date}T00:00:00+08:00`).getTime() > now);
+    const startTime = countdownPhase?.start_date ? new Date(`${countdownPhase.start_date}T00:00:00+08:00`).getTime() : NaN;
     const countdown = countdownParts(startTime, now);
     const nextMatch = upcoming[0];
     const nextMeta = nextMatch ? [nextMatch.group, nextMatch.round ? `${t('Round')} ${nextMatch.round}` : ''].filter(Boolean).join(' · ') : '';
@@ -125,10 +157,26 @@ export default function PublicIndex({ app_name, competition, stats, sports_catal
                                     <Link href={route('public.athletes')}>{t('Athletes & Teams')}</Link>
                                 </Button>
                             </div>
-                            <div className="mt-5 flex flex-wrap items-center gap-3">
-                                {competition?.start_date && <div className="inline-flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-white/10 text-[var(--public-highlight)]"><CalendarDays className="size-4" /></span><span><small className="block text-xs font-black uppercase tracking-[.16em] text-white/75">{t('Competition dates')}</small>{formatDate(competition.start_date, locale)}{competition.end_date && ` — ${formatDate(competition.end_date, locale)}`}</span></div>}
-                                {countdown && <div className="inline-flex items-center gap-3 rounded-xl border border-[var(--public-highlight)]/25 bg-[var(--public-highlight)]/10 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-[var(--public-highlight)]/15 text-[var(--public-highlight)]"><Clock3 className="size-4" /></span><span><small className="block text-xs font-black uppercase tracking-[.16em] text-[var(--public-highlight)]">{t('Starts in')}</small><b className="font-black tabular-nums text-white">{countdown.days}d {countdown.hours}h {countdown.minutes}m</b></span></div>}
+                            <div className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                                <section aria-label={t('Competition dates')} className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-4 text-left">
+                                    <div className="flex items-center gap-2.5"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[var(--public-highlight)]"><CalendarDays className="size-4" aria-hidden="true" /></span><h2 className="text-xs font-black uppercase tracking-[.16em] text-white/80">{t('Competition dates')}</h2></div>
+                                    <div className="mt-3 grid gap-2 sm:grid-cols-2">{competitionPhases.map((phase) => <div key={phase.id} className="min-w-0 rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5"><p className="truncate text-[11px] font-black uppercase tracking-[.12em] text-[var(--public-highlight)]">{t(phase.label)}</p><p className="mt-1 text-sm font-bold tabular-nums text-white">{formatDateRange(phase.start_date, phase.end_date, locale, t)}</p></div>)}</div>
+                                </section>
+                                {countdown && <div className="inline-flex items-center gap-3 rounded-xl border border-[var(--public-highlight)]/25 bg-[var(--public-highlight)]/10 px-4 py-3 text-sm text-white/75"><span className="flex size-8 items-center justify-center rounded-lg bg-[var(--public-highlight)]/15 text-[var(--public-highlight)]"><Clock3 className="size-4" /></span><span><small className="block text-xs font-black uppercase tracking-[.12em] text-[var(--public-highlight)]">{t('Starts in')} · {t(countdownPhase.label)}</small><b className="font-black tabular-nums text-white">{countdown.days}d {countdown.hours}h {countdown.minutes}m</b></span></div>}
                             </div>
+                            {competition && <section aria-label={t('Registration dates & alerts')} className="mt-4 w-full rounded-2xl border border-white/15 bg-slate-950/45 p-4 text-left shadow-lg backdrop-blur-sm sm:p-5">
+                                <div className="flex items-start gap-3">
+                                    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-[var(--public-highlight)]/15 text-[var(--public-highlight)]"><BellRing className="size-4" aria-hidden="true" /></span>
+                                    <div className="min-w-0 flex-1">
+                                        <h2 className="text-sm font-black text-white sm:text-base">{t('Registration dates & alerts')}</h2>
+                                        <p className="mt-1 text-xs leading-5 text-white/65">{t('Check the registration windows for managers and player rosters.')}</p>
+                                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                            <RegistrationWindow label={t('Managers')} detail={t('Event registration')} start={competition.event_registration_start_date} end={competition.event_registration_deadline} status={registrationStatus(competition.event_registration_start_date, competition.event_registration_deadline, now, t)} locale={locale} t={t} />
+                                            <RegistrationWindow label={t('Players & officials')} detail={t('Roster registration')} start={competition.squad_registration_start_date} end={competition.squad_registration_deadline} status={registrationStatus(competition.squad_registration_start_date, competition.squad_registration_deadline, now, t)} locale={locale} t={t} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>}
                     </div>
                 </PublicPageHero>
                 <section className="bg-[var(--public-dark)] px-4 pb-10 sm:pb-14">
@@ -257,6 +305,30 @@ export default function PublicIndex({ app_name, competition, stats, sports_catal
             </main>
         </PublicLayout>
     );
+}
+
+function RegistrationWindow({ label, detail, start, end, status, locale, t }: {
+    label: string;
+    detail: string;
+    start?: string | null;
+    end?: string | null;
+    status: string;
+    locale: string;
+    t: Translate;
+}) {
+    const statusIsOpen = status === t('Registration open');
+    const dateRange = [formatDate(start ?? null, locale), formatDate(end ?? null, locale)].filter(Boolean).join(' — ') || t('Dates to be announced');
+
+    return <div className="rounded-xl border border-white/10 bg-white/[.06] p-3 sm:p-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+            <div><p className="text-xs font-black uppercase tracking-[.12em] text-white">{label}</p><p className="mt-0.5 text-[11px] text-white/55">{detail}</p></div>
+            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${statusIsOpen ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-white/70'}`}>{status}</span>
+        </div>
+        <p className="mt-3 flex items-center gap-2 text-sm font-bold tabular-nums text-white/90">
+            <CalendarDays className="size-3.5 shrink-0 text-[var(--public-highlight)]" aria-hidden="true" />
+            {dateRange}
+        </p>
+    </div>;
 }
 
 function PodiumCard({ row, t, locale }: { row: MedalRow; t: Translate; locale: string }) {

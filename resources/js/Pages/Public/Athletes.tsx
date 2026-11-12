@@ -5,18 +5,18 @@ import PublicErrorState from '@/components/PublicErrorState';
 import PublicStaleDataNotice from '@/components/PublicStaleDataNotice';
 import PublicLoadingState from '@/components/PublicLoadingState';
 import SafeImage from '@/components/SafeImage';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import PublicPageHero from '@/components/PublicPageHero';
 import { useI18n } from '@/lib/i18n';
 import { SportIcon } from '@/lib/sportIcons';
 import { Link, router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Search, Users, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type EventEntry = { name: string | null; sport: string | null; category: string | null };
 type Member = { name: string; role: 'athlete_male' | 'athlete_female' | 'assistant_manager' | 'manager' | 'coach' | 'physio' };
@@ -219,9 +219,17 @@ function formatUpdatedAt(value: string, locale: string) {
 
 function RosterCard({ roster, t }: { roster: Roster; t: (key: string) => string }) {
     const { locale } = useI18n();
+    const [open, setOpen] = useState(false);
+    const [memberQuery, setMemberQuery] = useState('');
+    const [memberType, setMemberType] = useState<'all' | 'athletes' | 'officials'>('all');
     const rosterName = locale === 'ms' ? (roster.name_ms || roster.name) : roster.name;
     const athletes = roster.members.filter(member => member.role === 'athlete_male' || member.role === 'athlete_female');
-    const officials = roster.members.filter(member => !athletes.includes(member));
+    const officials = roster.members.filter(member => member.role !== 'athlete_male' && member.role !== 'athlete_female');
+    const visibleMembers = useMemo(() => roster.members.filter(member => {
+        const isAthlete = member.role === 'athlete_male' || member.role === 'athlete_female';
+        const matchesType = memberType === 'all' || (memberType === 'athletes' ? isAthlete : !isAthlete);
+        return matchesType && member.name.toLocaleLowerCase().includes(memberQuery.trim().toLocaleLowerCase());
+    }), [roster.members, memberQuery, memberType]);
 
     return (
         <article className="public-card p-5">
@@ -233,7 +241,30 @@ function RosterCard({ roster, t }: { roster: Roster; t: (key: string) => string 
                 </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 border-y border-[var(--public-dark-border)] py-3 text-xs font-bold text-[var(--public-dark-faint)]"><span><strong className="text-base text-[var(--public-text)]">{athletes.length}</strong> {t('athletes')}</span><span><strong className="text-base text-[var(--public-text)]">{officials.length}</strong> {t('officials')}</span></div>
-            <Accordion type="single" collapsible className="mt-4"><AccordionItem value="roster"><AccordionTrigger>{t('View roster')}</AccordionTrigger><AccordionContent><div className="space-y-2">{roster.members.map(member => <div key={`${member.name}-${member.role}`} className="flex items-center justify-between gap-3 rounded-lg bg-[var(--public-dark-soft)] px-3 py-2 text-sm"><span className="font-bold">{member.name}</span><span className="text-xs font-semibold text-[var(--public-dark-faint)]">{roleLabel(member.role, t)}</span></div>)}</div></AccordionContent></AccordionItem></Accordion>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild><Button type="button" variant="outline" className="mt-4 min-h-11 w-full justify-between rounded-xl font-black">{t('View roster')}<span className="rounded-full bg-[var(--public-primary-soft)] px-2.5 py-1 text-xs text-[var(--public-primary)]">{roster.members.length}</span></Button></DialogTrigger>
+                <DialogContent className="flex max-h-[min(85dvh,44rem)] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-2xl">
+                    <div className="border-b border-[var(--public-dark-border)] p-5 pr-14 sm:p-6 sm:pr-14">
+                        <DialogTitle className="text-lg font-black">{rosterName}</DialogTitle>
+                        <DialogDescription className="mt-1">{roster.members.length} {t('roster members')} · {athletes.length} {t('athletes')} · {officials.length} {t('officials')}</DialogDescription>
+                        <div className="relative mt-4">
+                            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--public-dark-faint)]" />
+                            <Input autoFocus value={memberQuery} onChange={event => setMemberQuery(event.target.value)} placeholder={t('Search roster members')} aria-label={t('Search roster members')} className="h-11 rounded-xl pl-10" />
+                            {memberQuery && <Button type="button" variant="ghost" size="icon" onClick={() => setMemberQuery('')} aria-label={t('Clear search')} className="absolute right-1.5 top-1/2 size-8 -translate-y-1/2"><X className="size-4" /></Button>}
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('Filter roster')}>
+                            {([
+                                ['all', t('All'), roster.members.length],
+                                ['athletes', t('Athletes'), athletes.length],
+                                ['officials', t('Officials'), officials.length],
+                            ] as const).map(([value, label, count]) => <Button key={value} type="button" variant={memberType === value ? 'default' : 'outline'} size="sm" aria-pressed={memberType === value} onClick={() => setMemberType(value)} className="min-h-10 rounded-full">{label}<span className="ml-1 tabular-nums">{count}</span></Button>)}
+                        </div>
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6" aria-live="polite">
+                        {visibleMembers.length ? <div className="space-y-2">{visibleMembers.map((member, index) => <div key={`${member.name}-${member.role}-${index}`} className="flex min-h-12 items-center justify-between gap-3 rounded-xl bg-[var(--public-dark-soft)] px-3.5 py-2.5 sm:px-4"><span className="min-w-0 text-sm font-bold">{member.name}</span><span className="shrink-0 text-xs font-semibold text-[var(--public-dark-faint)]">{roleLabel(member.role, t)}</span></div>)}</div> : <p className="py-10 text-center text-sm font-semibold text-[var(--public-dark-faint)]">{t('No results match your search.')}</p>}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </article>
     );
 }

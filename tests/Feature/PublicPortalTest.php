@@ -22,9 +22,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
+use Tests\Traits\CreatesTenantUsers;
 
 class PublicPortalTest extends TestCase
 {
+    use CreatesTenantUsers;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -54,6 +56,17 @@ class PublicPortalTest extends TestCase
             ->where('upcoming.0.home.inverse_logo_url', $home->inverse_logo_url)
             ->where('weather.location', 'Durian Tunggal')
             ->where('weather.temperature', 30));
+    }
+
+    public function test_authenticated_user_is_shared_with_public_pages_for_dashboard_navigation(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug]);
+        $admin = $this->createOrgAdmin($organization);
+
+        $this->actingAs($admin)->get(route('public.sports'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('auth.user.uuid', $admin->uuid));
     }
 
     public function test_index_php_redirects_to_the_canonical_public_url(): void
@@ -268,7 +281,8 @@ class PublicPortalTest extends TestCase
         $sport = Sport::factory()->create(['organization_id' => $organization->id, 'name' => 'Badminton']);
         $category = SportCategory::factory()->forSport($sport)->create([
             'name' => 'Campuran',
-            'quota_mode' => 'mixed_gender',
+            'quota_mode' => 'gender_based',
+            'max_athletes_total' => 0,
             'max_male_athletes' => 6,
             'max_female_athletes' => 6,
             'max_officials' => 1,
@@ -276,15 +290,54 @@ class PublicPortalTest extends TestCase
         Event::factory()->forTournament($tournament)->create([
             'sport_id' => $sport->id,
             'sport_category_id' => $category->id,
+            'start_date' => '2026-10-22',
+            'end_date' => '2026-10-24',
             'venues' => ['Dewan Sukan'],
         ]);
 
         $this->get(route('public.sports'))->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Public/Directory')
             ->where('sports_catalog.0.events.0.venues.0', 'Dewan Sukan')
+            ->where('sports_catalog.0.events.0.start_date', '2026-10-22')
+            ->where('sports_catalog.0.events.0.end_date', '2026-10-24')
             ->where('sports_catalog.0.events.0.quota.male', 6)
             ->where('sports_catalog.0.events.0.quota.female', 6)
+            ->where('sports_catalog.0.events.0.quota.mode', 'gender_based')
+            ->where('sports_catalog.0.events.0.quota.total', 0)
             ->where('sports_catalog.0.events.0.quota.officials', 1));
+    }
+
+    public function test_sport_category_quota_changes_refresh_the_public_sports_directory(): void
+    {
+        $organization = Organization::factory()->create(['is_active' => true]);
+        $session = Session::factory()->create(['organization_id' => $organization->id, 'is_active' => true]);
+        config(['app.public_org_slug' => $organization->slug]);
+        $tournament = Tournament::factory()->forSession($session)->create();
+        $sport = Sport::factory()->create(['organization_id' => $organization->id, 'name' => 'Badminton']);
+        $category = SportCategory::factory()->forSport($sport)->create([
+            'name' => 'Campuran',
+            'quota_mode' => 'open_total',
+            'max_athletes_total' => 6,
+        ]);
+        Event::factory()->forTournament($tournament)->create([
+            'sport_id' => $sport->id,
+            'sport_category_id' => $category->id,
+        ]);
+        $admin = $this->createOrgAdmin($organization);
+
+        $this->get(route('public.sports'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('sports_catalog.0.events.0.quota.total', 6));
+
+        $this->actingAs($admin)->put(route('sport-categories.update', $category), [
+            'sport_id' => $sport->id,
+            'name' => $category->name,
+            'slug' => $category->slug,
+            'quota_mode' => 'open_total',
+            'max_athletes_total' => 8,
+        ])->assertRedirect(route('sport-categories.index'));
+
+        $this->get(route('public.sports'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('sports_catalog.0.events.0.quota.total', 8));
     }
 
     public function test_public_schedule_includes_sport_categories_for_filtering(): void

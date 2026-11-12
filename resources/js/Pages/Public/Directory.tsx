@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useI18n } from '@/lib/i18n';
 import { router } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, FileText, MapPin, Search, Trophy, Users, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, ChevronLeft, ChevronRight, FileText, MapPin, Search, Trophy, Users, X } from 'lucide-react';
 import { SportIcon } from '@/lib/sportIcons';
 import SafeImage from '@/components/SafeImage';
 import { type ComponentType, useMemo, useRef, useState } from 'react';
@@ -19,7 +19,7 @@ import { type ComponentType, useMemo, useRef, useState } from 'react';
 type Team = { name: string; name_ms: string | null; logo_url: string | null; inverse_logo_url: string | null } | null;
 type SportDocument = { title: string; url: string; file_name: string; mime_type: string; file_size: number };
 type SportQuota = { mode: string | null; total: number | null; male: number | null; female: number | null; officials: number | null; min_male: number | null; min_female: number | null };
-type SportEvent = { name: string; category: string | null; venues: string[]; quota: SportQuota };
+type SportEvent = { name: string; category: string | null; start_date: string | null; end_date: string | null; venues: string[]; quota: SportQuota };
 type SportCatalogEntry = { name: string; icon: string | null; categories: string[]; events: SportEvent[]; documents?: SportDocument[] };
 type Props = { section: 'sports' | 'faculties' | 'venues'; app_name: string; competition: { name: string; description: string | null; organization: string | null } | null; sports_catalog: SportCatalogEntry[]; faculties: Team[]; venues: string[]; updated_at?: string; error?: string | null };
 
@@ -60,7 +60,7 @@ export default function PublicDirectory({ section, app_name, competition, sports
 }
 
 function DirectoryContent({ section, sports_catalog, faculties, venues, t, locale }: { section: Props['section']; sports_catalog: Props['sports_catalog']; faculties: Team[]; venues: string[]; t: (key: string) => string; locale: string }) {
-    if (section === 'sports') return <SportsDirectory sports_catalog={sports_catalog} t={t} />;
+    if (section === 'sports') return <SportsDirectory sports_catalog={sports_catalog} t={t} locale={locale} />;
     if (section === 'faculties') return <FacultiesDirectory faculties={faculties} t={t} locale={locale} />;
     return <VenuesDirectory venues={venues} t={t} />;
 }
@@ -215,7 +215,7 @@ function VenuesDirectory({ venues, t }: { venues: string[]; t: (key: string) => 
     );
 }
 
-function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEntry[]; t: (key: string) => string }) {
+function SportsDirectory({ sports_catalog, t, locale }: { sports_catalog: SportCatalogEntry[]; t: (key: string) => string; locale: string }) {
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState('');
     const totalEvents = sports_catalog.reduce((sum, sport) => sum + sport.events.length, 0);
@@ -296,14 +296,14 @@ function SportsDirectory({ sports_catalog, t }: { sports_catalog: SportCatalogEn
             <p aria-live="polite" className="mt-6 text-xs font-bold text-[var(--public-dark-faint)]">{`${t('Showing')} ${filtered.length} ${t('of')} ${sports_catalog.length} ${t('sports')}`}</p>
 
             <div className="mt-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {filtered.map(sport => <SportCard key={sport.name} sport={sport} t={t} />)}
+                {filtered.map(sport => <SportCard key={sport.name} sport={sport} t={t} locale={locale} />)}
             </div>
             {filtered.length === 0 ? <div className="mt-3"><PublicEmptyState text={t('No sports match your search.')} /></div> : null}
         </section>
     );
 }
 
-function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) => string }) {
+function SportCard({ sport, t, locale }: { sport: SportCatalogEntry; t: (key: string) => string; locale: string }) {
     const labels = sport.categories.length > 0
         ? sport.categories
         : Array.from(new Set(sport.events.map(event => event.category).filter((category): category is string => Boolean(category))));
@@ -333,12 +333,16 @@ function SportCard({ sport, t }: { sport: SportCatalogEntry; t: (key: string) =>
                             <p className="text-sm font-black leading-tight">{event.name}</p>
                             {event.category ? <span className="shrink-0 text-[10px] font-black uppercase tracking-wider text-[var(--public-dark-faint)]">{event.category}</span> : null}
                         </div>
+                        <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-[var(--public-primary-border)] bg-[var(--public-primary-soft)] px-2.5 py-1.5 text-xs font-bold text-[var(--public-primary)]">
+                            <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />
+                            <span>{formatEventDateRange(event.start_date, event.end_date, locale, t)}</span>
+                        </p>
                         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                             <QuotaValue label={t('Male')} value={event.quota.male} />
                             <QuotaValue label={t('Female')} value={event.quota.female} />
                             <QuotaValue label={t('Officials')} value={event.quota.officials} />
                         </div>
-                        {event.quota.total !== null ? <p className="mt-2 text-xs font-bold text-[var(--public-dark-faint)]">{t('Max Total Athletes')}: <span className="font-black tabular-nums text-[var(--public-text)]">{event.quota.total}</span></p> : null}
+                        {(event.quota.mode === 'open_total' || event.quota.mode === 'mixed_total') && event.quota.total !== null ? <p className="mt-2 text-xs font-bold text-[var(--public-dark-faint)]">{t('Max Total Athletes')}: <span className="font-black tabular-nums text-[var(--public-text)]">{event.quota.total}</span></p> : null}
                         <p className="mt-3 flex items-start gap-1.5 text-xs font-semibold leading-5 text-[var(--public-dark-faint)]">
                             <MapPin className="mt-0.5 size-3.5 shrink-0 text-[var(--public-primary)]" aria-hidden="true" />
                             <span>{event.venues.length > 0 ? event.venues.join(', ') : <><span>{t('Venue TBD')} · </span><Link href={route('public.venues')} className="font-black text-[var(--public-primary)] underline underline-offset-2">{t('View venue information')}</Link></>}</span>
@@ -383,6 +387,21 @@ function publicDocumentTitle(document: SportDocument): string {
     }
 
     return document.title;
+}
+
+function formatEventDateRange(start: string | null, end: string | null, locale: string, t: (key: string) => string) {
+    if (!start && !end) return t('Date to be announced');
+
+    const format = (value: string) => new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'en-MY', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Kuala_Lumpur',
+    }).format(new Date(value));
+
+    if (!start) return format(end!);
+    if (!end || start === end) return format(start);
+    return `${format(start)} – ${format(end)}`;
 }
 
 function QuotaValue({ label, value }: { label: string; value: number | null }) {

@@ -30,7 +30,7 @@ class PublicPortalService
             return $this->emptyData();
         }
 
-        $cacheKey = 'public-portal:v12:'.$session->id.':'.($limit ?? 'all');
+        $cacheKey = 'public-portal:v14:'.$session->id.':'.($limit ?? 'all');
 
         return Cache::flexible($cacheKey, [120, 600], function () use ($session, $limit): array {
             return $this->buildData($session, $limit);
@@ -64,6 +64,10 @@ class PublicPortalService
                 'organization' => $session->organization?->name,
                 'start_date' => $session->start_date?->toDateString(),
                 'end_date' => $session->end_date?->toDateString(),
+                'event_registration_start_date' => $session->event_registration_start_date?->toDateString(),
+                'event_registration_deadline' => $session->event_registration_deadline?->toDateString(),
+                'squad_registration_start_date' => $session->squad_registration_start_date?->toDateString(),
+                'squad_registration_deadline' => $session->squad_registration_deadline?->toDateString(),
             ],
         ];
     }
@@ -83,9 +87,12 @@ class PublicPortalService
                 Cache::forget('public-portal:v10:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v11:'.$sessionId.':'.$limit);
                 Cache::forget('public-portal:v12:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v13:'.$sessionId.':'.$limit);
+                Cache::forget('public-portal:v14:'.$sessionId.':'.$limit);
             }
             Cache::forget('public-athletes:v1:'.$sessionId);
             Cache::forget('public-athletes:v2:'.$sessionId);
+            Cache::forget('public-athletes:v3:'.$sessionId);
 
             return;
         }
@@ -122,7 +129,7 @@ class PublicPortalService
         }
 
         try {
-            $base = Cache::flexible('public-athletes:v2:'.$session->id, [120, 600], fn (): array => $this->buildAthleteDirectory($session));
+            $base = Cache::flexible('public-athletes:v3:'.$session->id, [120, 600], fn (): array => $this->buildAthleteDirectory($session));
         } catch (\Throwable $e) {
             report($e);
 
@@ -174,7 +181,9 @@ class PublicPortalService
 
     private function buildAthleteDirectory(Session $session): array
     {
-        $tournamentIds = $session->tournaments()->pluck('id');
+        $tournamentIds = $session->tournaments()
+            ->where('organization_id', $session->organization_id)
+            ->pluck('id');
         $registrations = EventParticipant::query()
             ->where('organization_id', $session->organization_id)
             ->where('status', 'confirmed')
@@ -259,14 +268,10 @@ class PublicPortalService
                 'name_ms' => $roster['name_ms'],
             ])->filter(fn (array $faculty) => filled($faculty['name']))
                 ->unique('name')->sortBy('name')->values()->all(),
-            'sports' => $registrations->map(fn (EventParticipant $entry) => [
-                'name' => $entry->event?->sport?->name,
-                'name_ms' => $entry->event?->sport?->name_ms,
-            ])->filter(fn (array $sport) => filled($sport['name']))->unique('name')->sortBy('name')->values()->all(),
-            'categories' => $registrations->map(fn (EventParticipant $entry) => [
-                'name' => $entry->event?->sportCategory?->name,
-                'name_ms' => $entry->event?->sportCategory?->name_ms,
-            ])->filter(fn (array $category) => filled($category['name']))->unique('name')->sortBy('name')->values()->all(),
+            'sports' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sport?->name)
+                ->filter()->unique()->sort()->values()->all(),
+            'categories' => $registrations->map(fn (EventParticipant $entry) => $entry->event?->sportCategory?->name)
+                ->filter()->unique()->sort()->values()->all(),
             'stats' => [
                 'teams' => $rosters->count(),
                 'athletes' => $athletes->count(),
@@ -551,7 +556,7 @@ class PublicPortalService
             ])
             ->pluck('value', 'key')
             ->all();
-        $tournamentIds = $session->tournaments()->pluck('id');
+        $tournamentIds = $session->tournaments()->where('organization_id', $organizationId)->pluck('id');
         $eventQuery = $session->events()->where('events.organization_id', $organizationId);
 
         $fixtureQuery = fn () => Fixture::query()->where('organization_id', $organizationId)
@@ -599,6 +604,10 @@ class PublicPortalService
             ],
             'competition' => ['name' => $session->name, 'description' => $session->description,
                 'start_date' => $session->start_date?->toDateString(), 'end_date' => $session->end_date?->toDateString(),
+                'event_registration_start_date' => $session->event_registration_start_date?->toDateString(),
+                'event_registration_deadline' => $session->event_registration_deadline?->toDateString(),
+                'squad_registration_start_date' => $session->squad_registration_start_date?->toDateString(),
+                'squad_registration_deadline' => $session->squad_registration_deadline?->toDateString(),
                 'organization' => $session->organization?->name],
             'stats' => ['sports' => $catalogEvents->pluck('sport_id')->filter()->unique()->count(), 'events' => $catalogEvents->count(),
                 'faculties' => Participant::query()->where('organization_id', $organizationId)->where('session_id', $session->id)->active()->count(),
@@ -611,6 +620,8 @@ class PublicPortalService
                     'events' => $events->map(fn ($event) => [
                         'name' => $event->name,
                         'category' => $event->sportCategory?->name,
+                        'start_date' => $event->start_date?->toDateString(),
+                        'end_date' => $event->end_date?->toDateString(),
                         'venues' => collect($event->venues ?? [])->filter()->values()->all(),
                         'quota' => [
                             'mode' => $event->sportCategory?->quota_mode,
