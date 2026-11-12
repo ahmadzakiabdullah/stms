@@ -279,6 +279,45 @@ class EventTest extends TestCase
         $this->assertDatabaseHas('matches', ['id' => $alreadySet->id, 'venue' => 'Existing Stadium']);
     }
 
+    public function test_authorized_user_can_update_event_dates_independently_for_each_sport(): void
+    {
+        $org = Organization::factory()->create();
+        $manager = $this->createOrgAdmin($org);
+        $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
+
+        $events = collect(['Badminton', 'Sepak Takraw'])->map(function (string $sportName) use ($org, $tournament) {
+            $sport = Sport::factory()->create(['organization_id' => $org->id, 'name' => $sportName]);
+            $category = SportCategory::factory()->forSport($sport)->create();
+
+            return Event::factory()->forTournament($tournament)->create([
+                'sport_id' => $sport->id,
+                'sport_category_id' => $category->id,
+                'start_date' => '2026-10-22',
+                'end_date' => '2026-10-24',
+            ]);
+        });
+
+        foreach ($events as $index => $event) {
+            $startDate = $index === 0 ? '2026-10-22' : '2026-10-23';
+            $endDate = $index === 0 ? '2026-10-24' : '2026-10-25';
+
+            $this->actingAs($manager)->put(route('events.update', $event->slug), [
+                'tournament_id' => $tournament->id,
+                'sport_id' => $event->sport_id,
+                'sport_category_id' => $event->sport_category_id,
+                'name' => $event->name,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ])->assertRedirect(route('events.index'));
+
+            // Compare through the model's date cast so the assertion holds on
+            // both MySQL (DATE) and SQLite (stored as "Y-m-d 00:00:00").
+            $fresh = $event->fresh();
+            $this->assertSame($startDate, $fresh->start_date?->toDateString());
+            $this->assertSame($endDate, $fresh->end_date?->toDateString());
+        }
+    }
+
     public function test_batch_delete_requires_a_reason(): void
     {
         $org = Organization::factory()->create();

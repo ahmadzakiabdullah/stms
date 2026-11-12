@@ -36,6 +36,7 @@ import { ArrowRight, CalendarClock, CheckCircle2, CircleAlert, Clock3, Download,
 import { useEffect, useMemo, useState } from 'react';
 import type { Event, EventParticipant, Participant, SportCategory, SquadMember } from '@/types';
 import { useI18n } from '@/lib/i18n';
+import { displayName } from '@/lib/displayName';
 
 interface FacultyDashboardProps {
     participant: Participant | null;
@@ -105,7 +106,7 @@ export default function FacultyDashboard({
     sportCategories,
 }: FacultyDashboardProps) {
     const { t, locale } = useI18n();
-    const participantName = participant ? (locale === 'ms' ? (participant.name_ms || participant.name) : participant.name) : '';
+    const participantName = participant ? (locale === 'ms' ? displayName(participant.name_ms, locale) || displayName(participant.name, locale) : displayName(participant.name, locale)) : '';
     const [activeRegId, setActiveRegId] = useState<string | null>(null);
     const [addSquadOpen, setAddSquadOpen] = useState(false);
     const [newRegOpen, setNewRegOpen] = useState(false);
@@ -224,7 +225,7 @@ export default function FacultyDashboard({
     const unregisteredEventsGrouped = useMemo(() => {
         const g: Record<string, typeof unregisteredEvents> = {};
         for (const e of unregisteredEvents) {
-            const key = e.tournament?.name || 'Other';
+            const key = displayName(e.tournament?.name, locale) || 'Other';
             if (!g[key]) g[key] = [];
             g[key].push(e);
         }
@@ -235,17 +236,17 @@ export default function FacultyDashboard({
         const q = regSearch.toLowerCase();
         return unregisteredEvents.filter(
             (e) =>
-                e.name.toLowerCase().includes(q) ||
-                e.sport?.name?.toLowerCase().includes(q) ||
-                e.sport_category?.name?.toLowerCase().includes(q) ||
-                e.tournament?.name?.toLowerCase().includes(q)
+                displayName(e.name, locale).toLowerCase().includes(q) ||
+                displayName(e.sport?.name, locale).toLowerCase().includes(q) ||
+                displayName(e.sport_category?.name, locale).toLowerCase().includes(q) ||
+                displayName(e.tournament?.name, locale).toLowerCase().includes(q)
         );
     }, [regSearch, unregisteredEvents]);
 
     const filteredUnregGrouped = useMemo(() => {
         const g: Record<string, typeof filteredUnregEvents> = {};
         for (const e of filteredUnregEvents) {
-            const key = e.tournament?.name || 'Other';
+            const key = displayName(e.tournament?.name, locale) || 'Other';
             if (!g[key]) g[key] = [];
             g[key].push(e);
         }
@@ -467,7 +468,7 @@ export default function FacultyDashboard({
                                 {upcomingDeadlines.map((event) => (
                                     <div key={event.id} className="flex items-center gap-3 rounded-lg border p-3">
                                         <CalendarClock className="size-4 shrink-0 text-muted-foreground" />
-                                        <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{event.name}</p><p className="text-xs text-muted-foreground">{t('Event registration closes')}: {formatDeadline(effectiveEventDeadline)}</p></div>
+                                        <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{displayName(event.name, locale)}</p><p className="text-xs text-muted-foreground">{t('Event registration closes')}: {formatDeadline(effectiveEventDeadline)}</p></div>
                                     </div>
                                 ))}
                             </CardContent>
@@ -505,7 +506,7 @@ export default function FacultyDashboard({
                                                     >
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="font-medium truncate">{reg.event?.name}</span>
+                                                                <span className="font-medium truncate">{displayName(reg.event?.name, locale)}</span>
                                                                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium leading-none ${scfg.class}`}>
                                                                     {scfg.label}
                                                                 </span>
@@ -521,8 +522,8 @@ export default function FacultyDashboard({
                                                                  )}
                                                             </div>
                                                             <div className="text-xs text-muted-foreground">
-                                                                {reg.event?.sport?.name} · {reg.event?.sport_category?.name}
-                                                                {' · '}{reg.event?.tournament?.name}
+                                                                {displayName(reg.event?.sport?.name, locale)} · {displayName(reg.event?.sport_category?.name, locale)}
+                                                                {' · '}{displayName(reg.event?.tournament?.name, locale)}
                                                             </div>
                                                             <div className="mt-2 flex max-w-sm items-center gap-2">
                                                                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${squadComplete ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${quotaPercent}%` }} /></div>
@@ -702,8 +703,8 @@ export default function FacultyDashboard({
                                                         <Trophy className="size-4" />
                                                     </span>
                                                     <div className="min-w-0 flex-1">
-                                                        <div className="truncate">{evt.sport?.name} — {evt.sport_category?.name}</div>
-                                                        <div className="text-xs text-muted-foreground truncate">{evt.name}</div>
+                                                        <div className="truncate">{displayName(evt.sport?.name, locale)} — {displayName(evt.sport_category?.name, locale)}</div>
+                                                        <div className="text-xs text-muted-foreground truncate">{displayName(evt.name, locale)}</div>
                                                         {(deadlinePassed || registrationNotOpen) && (
                                                             <span className={`text-xs ${registrationNotOpen ? 'text-amber-700' : 'text-destructive'}`}>
                                                                 ({registrationNotOpen ? `${t('Opens')} ${formatDeadline(eventRegistrationStartDate)}` : t('Deadline passed')})
@@ -742,7 +743,7 @@ export default function FacultyDashboard({
                     <DialogHeader>
                         <DialogTitle>{t('Add Squad Member')}</DialogTitle>
                         <DialogDescription>
-                            {activeReg ? `For ${activeReg.event?.name}` : ''}
+                            {activeReg ? `For ${displayName(activeReg.event?.name, locale)}` : ''}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">

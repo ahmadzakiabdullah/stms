@@ -117,7 +117,7 @@ Route::middleware(config('app.email_verification_required') ? ['auth', 'verified
 
     // Faculty squad management (faculty-representative role)
     Route::middleware('role:faculty-representative')->group(function () {
-        Route::redirect('/faculty/registrations', '/dashboard#my-registrations')->name('faculty.registrations');
+        Route::get('/faculty/registrations', [FacultyDashboardController::class, 'registrations'])->name('faculty.registrations');
         Route::post('/faculty/squad', [FacultyDashboardController::class, 'storeSquad'])->name('faculty.squad.store');
         Route::post('/faculty/squad/import', [FacultyDashboardController::class, 'importSquad'])->name('faculty.squad.import');
         Route::get('/faculty/squad/template', [FacultyDashboardController::class, 'downloadTemplate'])->name('faculty.squad.template');

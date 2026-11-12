@@ -144,7 +144,11 @@ class FacultyDashboardControllerTest extends TestCase
         $org = Organization::factory()->create();
         $user = $this->createFacultyUser($org);
 
-        $session = Session::factory()->create(['organization_id' => $org->id]);
+        $session = Session::factory()->create([
+            'organization_id' => $org->id,
+            'event_registration_deadline' => now()->subDay()->toDateString(),
+            'squad_registration_deadline' => now()->addWeek()->toDateString(),
+        ]);
         $tournament = Tournament::factory()->create(['organization_id' => $org->id, 'session_id' => $session->id]);
         $sport = Sport::factory()->create(['organization_id' => $org->id]);
         $sportCategory = SportCategory::factory()->create([
@@ -199,7 +203,11 @@ class FacultyDashboardControllerTest extends TestCase
         $org = Organization::factory()->create();
         $user = $this->createFacultyUser($org);
 
-        $session = Session::factory()->create(['organization_id' => $org->id]);
+        $session = Session::factory()->create([
+            'organization_id' => $org->id,
+            'event_registration_deadline' => now()->subDay()->toDateString(),
+            'squad_registration_deadline' => now()->addWeek()->toDateString(),
+        ]);
         $tournament = Tournament::factory()->create(['organization_id' => $org->id, 'session_id' => $session->id]);
         $sport = Sport::factory()->create(['organization_id' => $org->id]);
         $sportCategory = SportCategory::factory()->create([
@@ -239,7 +247,7 @@ class FacultyDashboardControllerTest extends TestCase
             'file' => $file,
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('faculty.registrations'));
         $response->assertSessionHas('error', 'Failed to import file: Mocked Excel error');
     }
 

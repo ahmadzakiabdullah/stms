@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Imports\SquadMembersImport;
 use App\Models\EventParticipant;
 use App\Models\SquadMember;
+use App\Services\FacultyDashboardService;
 use App\Services\RegistrationWindowService;
 use App\Services\SquadQuotaService;
 use Illuminate\Http\RedirectResponse;
@@ -12,10 +13,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
 
 class FacultyDashboardController extends Controller
 {
+    public function registrations(FacultyDashboardService $facultyDashboard): Response
+    {
+        $this->authorizeFacultyRepresentative();
+
+        return Inertia::render('Faculty/Registrations', $facultyDashboard->dataFor(Auth::user()));
+    }
+
     public function storeSquad(Request $request, SquadQuotaService $quotaService, RegistrationWindowService $registrationWindow): RedirectResponse
     {
         $this->authorizeFacultyRepresentative();
@@ -36,29 +46,29 @@ class FacultyDashboardController extends Controller
         }
 
         if ($ep->status !== 'confirmed') {
-            return redirect()->route('dashboard')
+            return redirect()->route('faculty.registrations')
                 ->with('error', 'Only confirmed registrations can add squad members.');
         }
 
         if (! $registrationWindow->isSquadRegistrationOpen($ep)) {
-            return redirect()->route('dashboard')
+            return redirect()->route('faculty.registrations')
                 ->with('error', 'Officials and athlete registration is not currently open.');
         }
 
         $isOfficial = in_array($validated['role'], ['assistant_manager', 'manager', 'coach', 'physio'], true);
         if ($isOfficial && blank($validated['phone'])) {
-            return redirect()->route('dashboard')
+            return redirect()->route('faculty.registrations')
                 ->with('error', 'Officials must provide a phone number.');
         }
 
         if (! $isOfficial && ! $ep->squadMembers()->whereIn('role', ['assistant_manager', 'manager', 'coach', 'physio'])->exists()) {
-            return redirect()->route('dashboard')
+            return redirect()->route('faculty.registrations')
                 ->with('error', 'Add officials before athletes.');
         }
 
         $quotaError = $quotaService->validateAddition($ep, $validated['role']);
         if ($quotaError) {
-            return redirect()->route('dashboard')
+            return redirect()->route('faculty.registrations')
                 ->with('error', $quotaError);
         }
 
@@ -72,7 +82,7 @@ class FacultyDashboardController extends Controller
             'phone' => $validated['phone'],
         ]);
 
-        return redirect()->route('dashboard')
+        return redirect()->route('faculty.registrations')
             ->with('success', 'Squad member added.');
     }
 
@@ -87,7 +97,7 @@ class FacultyDashboardController extends Controller
 
         $squadMember->delete();
 
-        return redirect()->route('dashboard')
+        return redirect()->route('faculty.registrations')
             ->with('success', 'Squad member removed.');
     }
 
@@ -107,12 +117,12 @@ class FacultyDashboardController extends Controller
         }
 
         if ($ep->status !== 'confirmed') {
-            return redirect()->route('dashboard')
+            return redirect()->route('faculty.registrations')
                 ->with('error', 'Only confirmed registrations can add squad members.');
         }
 
         if (! $registrationWindow->isSquadRegistrationOpen($ep)) {
-            return redirect()->route('dashboard')
+            return redirect()->route('faculty.registrations')
                 ->with('error', 'Officials and athlete registration is not currently open.');
         }
 
@@ -122,7 +132,7 @@ class FacultyDashboardController extends Controller
                 $request->file('file')
             );
 
-            return redirect()->route('dashboard')
+            return redirect()->route('faculty.registrations')
                 ->with('success', 'Squad members imported successfully.');
         } catch (ValidationException $e) {
             return redirect()->back()
@@ -130,7 +140,7 @@ class FacultyDashboardController extends Controller
         } catch (\Throwable $e) {
             Log::error('Squad import failed', ['error' => $e->getMessage()]);
 
-            return redirect()->route('dashboard')
+            return redirect()->route('faculty.registrations')
                 ->with('error', 'Failed to import file: '.$e->getMessage());
         }
     }

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\DashboardMetricSnapshot;
 use App\Models\Event;
 use App\Models\EventParticipant;
-use App\Models\DashboardMetricSnapshot;
 use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Session;
@@ -13,7 +13,6 @@ use App\Models\SportCategory;
 use App\Models\SquadMember;
 use App\Models\Tournament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 use Tests\Traits\CreatesTenantUsers;
@@ -326,7 +325,7 @@ class DashboardTest extends TestCase
             ->assertRedirect(route('dean.dashboard'));
     }
 
-    public function test_legacy_faculty_registrations_url_redirects_to_dashboard_workspace(): void
+    public function test_faculty_registrations_route_renders_dedicated_roster_page(): void
     {
         $organization = Organization::factory()->create();
         $participant = Participant::factory()->create(['organization_id' => $organization->id]);
@@ -335,6 +334,6 @@ class DashboardTest extends TestCase
 
         $response = $this->actingAs($facultyRepresentative)->get(route('faculty.registrations'));
 
-        $this->assertStringEndsWith('/dashboard#my-registrations', $response->headers->get('Location'));
+        $response->assertOk()->assertInertia(fn ($page) => $page->component('Faculty/Registrations'));
     }
 }

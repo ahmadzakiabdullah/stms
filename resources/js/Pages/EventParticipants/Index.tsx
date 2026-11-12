@@ -39,6 +39,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { useI18n } from '@/lib/i18n';
+import { displayName } from '@/lib/displayName';
 import axios from 'axios';
 import type {
     Event as EventType,
@@ -128,7 +129,9 @@ function initialsOf(name = ''): string {
 }
 
 function facultyName(participant: Pick<Participant, 'name' | 'name_ms'>, locale: string): string {
-    return locale === 'ms' ? (participant.name_ms || participant.name) : participant.name;
+    return locale === 'ms'
+        ? displayName(participant.name_ms, locale) || displayName(participant.name, locale)
+        : displayName(participant.name, locale);
 }
 
 function FacultyMark({ participant, locale }: { participant: Participant; locale: string }) {
@@ -216,8 +219,8 @@ function AddEventDialog({
 
             return {
                 id: event.id,
-                name: event.name,
-                meta: [event.sport?.name, event.sport_category?.name, event.tournament?.name].filter(Boolean).join(' · '),
+                name: displayName(event.name, locale),
+                meta: [event.sport?.name, event.sport_category?.name, event.tournament?.name].map((name) => displayName(name, locale)).filter(Boolean).join(' · '),
                 status: alreadyRegistered ? 'registered' : deadlinePassed ? 'deadline' : 'eligible',
             };
         }), [selectedEventIds, events, registeredIds]);
@@ -228,15 +231,15 @@ function AddEventDialog({
         const q = search.toLowerCase();
         return events.filter(
             (e) => (showRegistered || !registeredIds.includes(e.id)) &&
-                (e.name.toLowerCase().includes(q) || e.sport?.name?.toLowerCase().includes(q) ||
-                 e.sport_category?.name?.toLowerCase().includes(q) || e.tournament?.name?.toLowerCase().includes(q))
+                (displayName(e.name, locale).toLowerCase().includes(q) || displayName(e.sport?.name, locale).toLowerCase().includes(q) ||
+                 displayName(e.sport_category?.name, locale).toLowerCase().includes(q) || displayName(e.tournament?.name, locale).toLowerCase().includes(q))
         );
     }, [search, events, registeredIds, showRegistered]);
 
     const grouped = useMemo(() => {
         const g: Record<string, typeof filtered> = {};
         for (const e of filtered) {
-            const key = groupBy === 'tournament' ? (e.tournament?.name || 'Other') : (e.sport?.name || 'Other');
+            const key = (groupBy === 'tournament' ? displayName(e.tournament?.name, locale) : displayName(e.sport?.name, locale)) || 'Other';
             if (!g[key]) g[key] = [];
             g[key].push(e);
         }
@@ -321,8 +324,8 @@ function AddEventDialog({
                                                 onChange={() => toggleEvent(evt.id)} className="size-4 rounded" />
                                             <SportMark sport={evt.sport} size="sm" />
                                             <div className="min-w-0 flex-1">
-                                                <div className="truncate">{evt.name}</div>
-                                                <div className="text-xs text-muted-foreground">{evt.sport?.name}{evt.sport_category?.name ? ` · ${evt.sport_category.name}` : ''}{evt.tournament?.name ? ` · ${evt.tournament.name}` : ''}</div>
+                                                <div className="truncate">{displayName(evt.name, locale)}</div>
+                                                <div className="text-xs text-muted-foreground">{displayName(evt.sport?.name, locale)}{evt.sport_category?.name ? ` · ${displayName(evt.sport_category.name, locale)}` : ''}{evt.tournament?.name ? ` · ${displayName(evt.tournament.name, locale)}` : ''}</div>
                                             </div>
                                         </label>
                                     ))}
@@ -342,7 +345,7 @@ function AddEventDialog({
                                 {selectedEventsPreview.slice(0, 6).map((event) => (
                                     <li key={event.id} className="flex items-start justify-between gap-3">
                                         <span className="min-w-0">
-                                            <span className="block truncate">{event.name}</span>
+                                            <span className="block truncate">{displayName(event.name, locale)}</span>
                                             {event.meta && <span className="block truncate text-xs">{event.meta}</span>}
                                         </span>
                                         <span className={`shrink-0 text-xs font-medium ${event.status === 'eligible' ? 'text-emerald-700' : event.status === 'deadline' ? 'text-destructive' : 'text-amber-700'}`}>
@@ -789,7 +792,7 @@ export default function EventParticipantsIndex({
 
     const sports = useMemo(() => {
         const map = new Map<string, { id: string; name: string }>();
-        for (const e of events) if (e.sport?.id) map.set(e.sport.id, { id: e.sport.id, name: e.sport.name });
+        for (const e of events) if (e.sport?.id) map.set(e.sport.id, { id: e.sport.id, name: displayName(e.sport.name, locale) });
         return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
     }, [events]);
 
@@ -798,7 +801,7 @@ export default function EventParticipantsIndex({
         for (const e of events) {
             if (!e.sport_category) continue;
             if (filterSportId && e.sport_id !== filterSportId) continue;
-            map.set(e.sport_category.id, { id: e.sport_category.id, name: e.sport_category.name, sport_id: e.sport_id });
+            map.set(e.sport_category.id, { id: e.sport_category.id, name: displayName(e.sport_category.name, locale), sport_id: e.sport_id });
         }
         return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
     }, [events, filterSportId]);
@@ -908,7 +911,7 @@ export default function EventParticipantsIndex({
                 entry.registrations.push({ participant: p, ep });
             }
         }
-        return [...map.values()].sort((a, b) => a.event.name.localeCompare(b.event.name));
+        return [...map.values()].sort((a, b) => displayName(a.event.name, locale).localeCompare(displayName(b.event.name, locale)));
     }, [participantsList, events]);
 
     const registrationRows = useMemo(() => {
@@ -920,7 +923,7 @@ export default function EventParticipantsIndex({
                 rows.push({ ep, participant: p, event: evt });
             }
         }
-        return rows.sort((a, b) => a.event.name.localeCompare(b.event.name));
+        return rows.sort((a, b) => displayName(a.event.name, locale).localeCompare(displayName(b.event.name, locale)));
     }, [participantsList, events]);
 
     const batchSelectableIds = useMemo(
@@ -933,7 +936,7 @@ export default function EventParticipantsIndex({
             .map((row) => ({
                 id: row.ep.id,
                 participantName: facultyName(row.participant, locale),
-                eventName: row.event.name,
+                eventName: displayName(row.event.name, locale),
                 status: row.ep.status,
             })),
         [registrationRows, selectedRegIds],
@@ -1235,7 +1238,7 @@ export default function EventParticipantsIndex({
                                                 <TableRow className={isExpanded ? 'bg-muted/40' : undefined}>
                                                     <TableCell>
                                                         <input type="checkbox" className="size-4 rounded border-input"
-                                                    aria-label={`Select ${facultyName(participant, locale)} - ${evt.name}`}
+                                                    aria-label={`Select ${facultyName(participant, locale)} - ${displayName(evt.name, locale)}`}
                                                             checked={selectedRegIds.includes(ep.id)}
                                                             disabled={ep.status !== 'pending' && ep.status !== 'rejected'}
                                                             onChange={() => toggleSelect(ep.id)} />
@@ -1244,9 +1247,9 @@ export default function EventParticipantsIndex({
                                                         <div className="flex items-center gap-2.5">
                                                             <SportMark sport={evt.sport} size="sm" />
                                                             <div className="min-w-0">
-                                                                <div className="truncate text-sm font-medium">{evt.name}</div>
+                                                                <div className="truncate text-sm font-medium">{displayName(evt.name, locale)}</div>
                                                                 <div className="truncate text-xs text-muted-foreground">
-                                                                    {evt.sport?.name}{evt.sport_category?.name ? ` · ${evt.sport_category.name}` : ''}{evt.tournament?.name ? ` · ${evt.tournament.name}` : ''}
+                                                                    {displayName(evt.sport?.name, locale)}{evt.sport_category?.name ? ` · ${displayName(evt.sport_category.name, locale)}` : ''}{evt.tournament?.name ? ` · ${displayName(evt.tournament.name, locale)}` : ''}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1297,7 +1300,7 @@ export default function EventParticipantsIndex({
                                                                 href={route('event-participants.team-form', ep.id)}
                                                                 className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-primary hover:text-primary-foreground"
                                                                  title={t('Team registration form')}
-                                                                aria-label={`View team form for ${facultyName(participant, locale)} - ${evt.name}`}
+                                                                aria-label={`View team form for ${facultyName(participant, locale)} - ${displayName(evt.name, locale)}`}
                                                             >
                                                                 <FileText className="size-3.5" />
                                                             </Link>
@@ -1307,7 +1310,7 @@ export default function EventParticipantsIndex({
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-emerald-200 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"                                                                          title={t('Approve')}>
                                                                         <Check className="size-3.5" />
                                                                     </button>
-                                                                    <button onClick={() => setRejectTarget({ epId: ep.id, participantName: facultyName(participant, locale), eventName: evt.name })}
+                                                                    <button onClick={() => setRejectTarget({ epId: ep.id, participantName: facultyName(participant, locale), eventName: displayName(evt.name, locale) })}
                                                                         className="inline-flex size-8 items-center justify-center rounded-md border border-rose-200 text-rose-600 transition hover:bg-rose-600 hover:text-white"                                                                          title={t('Reject')}>
                                                                         <CircleX className="size-3.5" />
                                                                     </button>
@@ -1319,7 +1322,7 @@ export default function EventParticipantsIndex({
                                                                     <LogOut className="size-3.5" />
                                                                 </button>
                                                             )}
-                                                             <button onClick={() => setUnregTarget({ id: ep.id, participantName: facultyName(participant, locale), eventName: evt.name })}
+                                                             <button onClick={() => setUnregTarget({ id: ep.id, participantName: facultyName(participant, locale), eventName: displayName(evt.name, locale) })}
                                                                  className="inline-flex size-8 items-center justify-center rounded-md border border-input text-muted-foreground transition hover:bg-destructive hover:text-destructive-foreground" title={t('Unregister')}>
                                                                 <X className="size-3.5" />
                                                             </button>
@@ -1434,9 +1437,9 @@ export default function EventParticipantsIndex({
                                         const registrationNotOpen = effectiveStart() && new Date(effectiveStart() as string) > new Date();
                                         return (
                                             <TableRow key={evt.id}>
-                                                <TableCell className="text-sm font-medium">{evt.name}</TableCell>
-                                                <TableCell className="text-xs text-muted-foreground">{evt.sport?.name}{evt.sport_category?.name ? ` / ${evt.sport_category.name}` : ''}</TableCell>
-                                                <TableCell className="text-xs text-muted-foreground">{evt.tournament?.name || '-'}</TableCell>
+                                                <TableCell className="text-sm font-medium">{displayName(evt.name, locale)}</TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">{displayName(evt.sport?.name, locale)}{evt.sport_category?.name ? ` / ${displayName(evt.sport_category.name, locale)}` : ''}</TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">{displayName(evt.tournament?.name, locale) || '-'}</TableCell>
                                                 <TableCell className="text-xs">{isRegistered ? `${registrations.length} faculty` : '-'}</TableCell>
                                                 <TableCell>
                                                     {isFacultyRepresentative ? (
@@ -1445,7 +1448,7 @@ export default function EventParticipantsIndex({
                                                              ? <span className="text-xs text-destructive">{t('Deadline passed')}</span>
                                                              : <Button variant="outline" size="sm" onClick={() => quickRegister(evt.id)} className="h-7 text-xs">{t('Register')}</Button>
                                                     ) : (
-                                                         <Button variant="outline" size="sm" onClick={() => setAddTarget({ id: '', name: evt.name })} className="h-7 text-xs">
+                                                         <Button variant="outline" size="sm" onClick={() => setAddTarget({ id: '', name: displayName(evt.name, locale) })} className="h-7 text-xs">
                                                              <Plus className="size-3 mr-1" /> {t('Add')}
                                                          </Button>
                                                     )}
@@ -1473,10 +1476,10 @@ export default function EventParticipantsIndex({
                                     <SportMark sport={evt.sport} />
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <h3 className="truncate text-sm font-semibold">{evt.name}</h3>
+                                            <h3 className="truncate text-sm font-semibold">{displayName(evt.name, locale)}</h3>
                                             {cfg && <Badge variant={cfg.variant} className="gap-1.5 text-xs"><span className={`size-1.5 rounded-full ${statusDot[registration?.status ?? ''] ?? 'bg-muted-foreground'}`} />{cfg.label}</Badge>}
                                         </div>
-                                        <p className="mt-1 truncate text-xs text-muted-foreground">{evt.sport?.name}{evt.sport_category?.name ? ` · ${evt.sport_category.name}` : ''} · {evt.tournament?.name || t('Tournament')}</p>
+                                        <p className="mt-1 truncate text-xs text-muted-foreground">{displayName(evt.sport?.name, locale)}{evt.sport_category?.name ? ` · ${displayName(evt.sport_category.name, locale)}` : ''} · {displayName(evt.tournament?.name, locale) || t('Tournament')}</p>
                                         <p className={`mt-1 flex items-center gap-1 text-xs ${deadlinePassed ? 'font-medium text-rose-600' : registrationNotOpen ? 'font-medium text-amber-700' : 'text-muted-foreground'}`}>
                                             <Clock className="size-3.5" />
                                             {registrationNotOpen ? `${t('Registration opens')} ${formatEventDate(effectiveStart())}` : deadline ? `${t('Registration closes')} ${formatEventDate(deadline)}` : t('No registration deadline set')}
@@ -1508,14 +1511,14 @@ export default function EventParticipantsIndex({
                             const registrationNotOpen = Boolean(effectiveStart() && new Date(effectiveStart() as string) > new Date());
 
                             return (
-                                <div key={evt.id} className={`rounded-lg border bg-card text-card-foreground shadow-xs overflow-hidden ${getSportBorder(evt.sport?.name)} border-l-4`}>
+                                <div key={evt.id} className={`rounded-lg border bg-card text-card-foreground shadow-xs overflow-hidden ${getSportBorder(displayName(evt.sport?.name, locale))} border-l-4`}>
                                     <div className="px-3 py-2.5 flex items-center gap-2">
                                         <SportMark sport={evt.sport} />
                                         <div className="min-w-0 flex-1 leading-tight">
-                                            <div className="text-sm font-semibold truncate">{evt.name}</div>
-                                            <div className="text-xs text-muted-foreground truncate">{evt.sport?.name}{evt.sport_category?.name ? ` · ${evt.sport_category.name}` : ''}</div>
+                                            <div className="text-sm font-semibold truncate">{displayName(evt.name, locale)}</div>
+                                            <div className="text-xs text-muted-foreground truncate">{displayName(evt.sport?.name, locale)}{evt.sport_category?.name ? ` · ${displayName(evt.sport_category.name, locale)}` : ''}</div>
                                             <div className="mt-1 truncate text-[11px] text-muted-foreground/80">
-                                                {evt.tournament?.name || t('Tournament')}
+                                                {displayName(evt.tournament?.name, locale) || t('Tournament')}
                                                 {deadline && ` · ${t('Closes')} ${formatEventDate(deadline)}`}
                                             </div>
                                         </div>
@@ -1526,7 +1529,7 @@ export default function EventParticipantsIndex({
                                                 </Button>
                                             )
                                         ) : (
-                                            <Button variant="outline" size="sm" onClick={() => setAddTarget({ id: '', name: evt.name })} className="h-7 text-xs px-2.5 shrink-0">
+                                            <Button variant="outline" size="sm" onClick={() => setAddTarget({ id: '', name: displayName(evt.name, locale) })} className="h-7 text-xs px-2.5 shrink-0">
                                                 <Plus className="size-3 mr-0.5" />{t('Add')}
                                             </Button>
                                         )}
@@ -1542,7 +1545,7 @@ export default function EventParticipantsIndex({
                                                             <span className={`size-1 rounded-full ${statusDot[ep.status] ?? 'bg-muted-foreground'}`} />
                                                             {cfg.label}
                                                         </Badge>
-                                                        <button onClick={() => setUnregTarget({ id: ep.id, participantName: facultyName(p, locale), eventName: evt.name })}
+                                                        <button onClick={() => setUnregTarget({ id: ep.id, participantName: facultyName(p, locale), eventName: displayName(evt.name, locale) })}
                                                             className="inline-flex size-4 items-center justify-center rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground shrink-0" title="Unregister">
                                                             <X className="size-2.5" />
                                                         </button>

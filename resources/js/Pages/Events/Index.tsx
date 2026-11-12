@@ -167,18 +167,6 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
         return dateStr.split('T')[0];
     };
 
-    const formatForDateDisplay = (dateStr: string | null | undefined) => {
-        const iso = formatForDateInput(dateStr);
-        if (!iso) return '';
-        const [year, month, day] = iso.split('-');
-        return `${day}/${month}/${year}`;
-    };
-
-    const parseDateDisplay = (value: string) => {
-        const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-        return match ? `${match[3]}-${match[2]}-${match[1]}` : '';
-    };
-
     const selectedTournament = tournaments.find(t => t.id === selectedTournamentId);
 
     const filteredSports = selectedTournament?.sports?.length
@@ -474,10 +462,9 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             <Label htmlFor="start_date">{t('Start Date')}</Label>
                                             <Input
                                                 id="start_date"
-                                                type="text"
-                                                placeholder="dd/mm/yyyy"
-                                                value={formatForDateDisplay(watch('start_date'))}
-                                                onChange={(event) => setValue('start_date', parseDateDisplay(event.target.value), { shouldValidate: true })}
+                                                type="date"
+                                                value={watch('start_date')}
+                                                onChange={(event) => setValue('start_date', event.target.value, { shouldValidate: true })}
                                                 required
                                             />
                                             {errors.start_date && <p className="text-sm text-destructive">{errors.start_date.message}</p>}
@@ -486,10 +473,9 @@ const formatForDateInput = (dateStr: string | null | undefined) => {
                                             <Label htmlFor="end_date">{t('End Date')}</Label>
                                             <Input
                                                 id="end_date"
-                                                type="text"
-                                                placeholder="dd/mm/yyyy"
-                                                value={formatForDateDisplay(watch('end_date'))}
-                                                onChange={(event) => setValue('end_date', parseDateDisplay(event.target.value), { shouldValidate: true })}
+                                                type="date"
+                                                value={watch('end_date')}
+                                                onChange={(event) => setValue('end_date', event.target.value, { shouldValidate: true })}
                                             />
                                             {errors.end_date && <p className="text-sm text-destructive">{errors.end_date.message}</p>}
                                         </div>
