@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Fixture;
 use App\Models\DataTransfer;
+use App\Models\Fixture;
 use App\Models\Result;
 use App\Services\DataQualityService;
 use App\Services\SystemHealthService;

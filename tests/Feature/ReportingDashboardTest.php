@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Event;
 use App\Models\DataTransfer;
+use App\Models\Event;
 use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;

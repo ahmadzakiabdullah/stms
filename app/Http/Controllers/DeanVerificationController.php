@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EventParticipant;
 use App\Http\Requests\DeanBulkApprovalRequest;
+use App\Models\EventParticipant;
 use App\Notifications\EventParticipantConfirmed;
 use App\Notifications\EventParticipantRejected;
 use Illuminate\Http\RedirectResponse;

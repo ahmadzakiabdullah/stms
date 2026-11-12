@@ -248,7 +248,7 @@ class ParticipantController extends Controller
 
         Cache::forget($key);
 
-        $organization = Organization::withoutGlobalScopes()->find($payload['organization_id']);
+        $organization = Organization::withTrashed()->find($payload['organization_id']);
         if ($organization) {
             activity()
                 ->performedOn($organization)

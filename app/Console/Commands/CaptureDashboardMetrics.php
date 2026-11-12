@@ -16,10 +16,10 @@ class CaptureDashboardMetrics extends Command
 
     public function handle(): int
     {
-        $row = (array) DB::query()->selectRaw("(SELECT COUNT(*) FROM organizations WHERE is_active = 1) AS organizations,
+        $row = (array) DB::query()->selectRaw('(SELECT COUNT(*) FROM organizations WHERE is_active = 1) AS organizations,
             (SELECT COUNT(*) FROM users) AS users,
             (SELECT COUNT(*) FROM events WHERE is_active = 1 AND deleted_at IS NULL) AS events,
-            (SELECT COUNT(*) FROM matches WHERE deleted_at IS NULL) AS matches")->first();
+            (SELECT COUNT(*) FROM matches WHERE deleted_at IS NULL) AS matches')->first();
 
         $this->storeSnapshot('global', $row);
 

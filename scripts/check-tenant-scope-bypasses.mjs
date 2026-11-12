@@ -3,6 +3,8 @@ import { join, relative } from 'node:path';
 
 const root = process.cwd();
 const allowedFiles = new Set([
+    // System-wide daily metrics snapshot; intentionally iterates every tenant's sessions/tournaments.
+    'app/Console/Commands/CaptureDashboardMetrics.php',
     'app/Console/Commands/CreateSuperAdmin.php',
     'app/Models/Concerns/BelongsToOrganization.php',
     'app/Services/DuplicateSportCategoryCleanupService.php',

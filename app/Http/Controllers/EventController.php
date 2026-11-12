@@ -129,7 +129,7 @@ class EventController extends Controller
                         ->log('Event deleted by bulk action');
                 }
 
-                $organization = Organization::withoutGlobalScopes()->find($organizationId);
+                $organization = Organization::withTrashed()->find($organizationId);
                 if ($organization) {
                     activity()
                         ->performedOn($organization)

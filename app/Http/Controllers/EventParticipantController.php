@@ -196,7 +196,7 @@ class EventParticipantController extends Controller
         }
 
         $organizationId = $visibleRegistrations->first()?->organization_id ?? $request->user()?->organization_id;
-        $organization = $organizationId ? Organization::withoutGlobalScopes()->find($organizationId) : null;
+        $organization = $organizationId ? Organization::withTrashed()->find($organizationId) : null;
         if ($organization) {
             activity()
                 ->performedOn($organization)
