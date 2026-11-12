@@ -32,18 +32,18 @@ Public components are composition layers over local shadcn/ui primitives and Tai
 
 - `Button` for actions and links.
 - `Input` and `Select` for search and filters.
-- `Tabs` for schedule/result views.
-
-Public content cards should use the shared `public-card` class so Venue, Sports, Faculty, Athlete, Committee, Contact and Fixture cards retain the same rounded 3xl surface, soft shadow, hover lift, border highlight and decorative accent.
-
-Standard pages share `PublicPageHero`, with 144px top padding on mobile and 176px from the `sm` breakpoint to keep clear space below the absolute public navigation. The homepage and committee pages use matching top padding for their custom hero/content layouts.
-
-All public UI labels and supplied information pages should support the shared `en` and `ms` locales. Official personal names, sport names and venue names remain unchanged unless an approved localized label is available.
-- `Sheet` for mobile schedule filters and navigation.
+- `Tabs` for in-page view switching (currently the Athletes directory). The `/schedule` All/Live/Upcoming/Completed tabs are page-local buttons, not the `Tabs` primitive.
+- `Sheet` for mobile schedule filters. Public mobile navigation is the custom `PublicMobileMenu` component, not `Sheet`.
 - `Badge` for match status and compact metadata.
 - `Card`, `Skeleton`, `Alert` and shared public empty/error/loading states for content states.
 
-Public filter/search interactions use the shared `Input`, `Select` and `Button` primitives. Public tabs and pagination use the shared `Tabs` and `Pagination` wrappers, while FAQ and roster disclosures use `Accordion`; page-specific styling is limited to class composition and tenant theme tokens.
+Public content cards should use the shared `public-card` class (`resources/css/app.css`) so Venue, Sports, Faculty, Athlete, Committee, Contact and Fixture cards share the same surface: white background, 1rem radius, light `--public-dark-border` border and a soft shadow. On hover the border changes to `--public-primary-border` and the shadow deepens slightly; there is no lift transform. `public-card--primary`/`--secondary` provide the dark and alternate variants.
+
+Standard pages share `PublicPageHero`. The public header sits in normal document flow, so the hero uses modest top padding (`pt-8`, `sm:pt-10`) instead of offsetting an absolute navigation bar. The homepage and committee pages render custom heroes with matching spacing.
+
+All public UI labels and supplied information pages should support the shared `en` and `ms` locales. Official personal names, sport names and venue names remain unchanged unless an approved localized label is available.
+
+Public filter/search interactions use the shared `Input`, `Select` and `Button` primitives. Athletes pagination uses the shared `ui/pagination` primitives and FAQ disclosures use `Accordion`; page-specific styling is limited to class composition and tenant theme tokens.
 
 Do not add a UI framework, CSS module, styled-components or new custom stylesheet. Existing tenant theme values must remain controlled and contrast-checked.
 

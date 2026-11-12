@@ -4,8 +4,8 @@
 
 ```text
 Organization
-├─ EventSession ─ Tournament ─ Event ─ Match/Fixture ─ Result
-├─ Sport ─ SportCategory ───────────────┘
+├─ Session (event_sessions) ─ Tournament ─ Event ─ Match/Fixture ─ Result
+├─ Sport ─ SportCategory ───────────────────────────┘
 ├─ Participant ─ EventParticipant ─ SquadMember
 │              └─ Pool / draw allocation
 ├─ User ─ roles/permissions and sport_user
@@ -16,6 +16,7 @@ Rantaian ini ialah gambaran operasi, bukan satu siri FK tunggal. Hubungan pentin
 
 - `event_sessions.organization_id` → `organizations.id`;
 - `tournaments.session_id` dan `tournaments.organization_id`;
+- `session_sports` (session + sport) dan `session_sport_categories` (session-sport + category) untuk konfigurasi per session; `sport_documents.sport_id`/`session_id`;
 - `tournament_sport` menghubungkan tournament dan sport;
 - `events.tournament_id`, `events.sport_id`, `events.sport_category_id` serta `events.organization_id`;
 - `participants.session_id` dan `participants.organization_id`;

@@ -34,9 +34,11 @@ Detailed registration, fixture, result, ranking, and analytics tables remain on 
 
 ## Data contract
 
-`DashboardController` supplies tenant-scoped stats, upcoming events, registration pipeline counts, registrations by sport, recent sessions/tournaments, and detailed registration data retained for controller tests and future drill-downs. Dashboard queries are cached for 60 seconds per user and filter combination.
+`DashboardController` renders data built by `App\Services\DashboardDataService`: tenant-scoped stats, upcoming events, registration pipeline counts, registrations by sport, `rosterProgress`, recent sessions/tournaments, session/tournament filter options, and detailed registration data retained for controller tests and future drill-downs. Dashboard queries are cached for 60 seconds per user and filter combination.
 
-The frontend uses shadcn/ui cards, badges, and buttons; Lucide icons; responsive Tailwind layouts; semantic headings; and English interface text.
+`trendSnapshots` (last 90 days of organizations, users, events and matches) come from the `dashboard_metric_snapshots` table, which the scheduled `stms:dashboard-snapshot` command fills (`routes/console.php`). `currentTrendMetrics` holds the same four values computed live for the current day.
+
+The frontend uses shadcn/ui cards, badges, and buttons; Lucide icons; responsive Tailwind layouts; semantic headings; and interface text translated through the shared `t()` helper (`resources/js/lib/i18n.ts`, `en`/`ms`).
 
 ## Quality gates
 

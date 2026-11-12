@@ -11,4 +11,4 @@ Kedua-dua pola mesti:
 - tidak menganggap validasi client sebagai kawalan keselamatan;
 - menguji keyboard, focus selepas error dan screen-reader announcement.
 
-Jangan mendakwa semua control atau `DatePicker` tersedia tanpa memeriksa `resources/js/Components/ui/`; gunakan komponen yang benar-benar wujud atau tambah secara terkawal.
+Jangan mendakwa semua control atau `DatePicker` tersedia tanpa memeriksa `resources/js/components/ui/`; gunakan komponen yang benar-benar wujud atau tambah secara terkawal.

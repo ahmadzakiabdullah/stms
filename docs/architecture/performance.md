@@ -9,7 +9,9 @@
 - k6 target: <1% failures and p95 <750 ms for approved scenarios.
 - Bundle budget: each JS chunk ≤400 KB, CSS asset ≤120 KB uncompressed.
 
-On 15 September 2026, Vite build and bundle budget passed. The CSS budget was raised from 100 KB to 120 KB after the compiled `app-*.css` reached ~102 KB following the addition of intentional self-hosted fonts (`Geist`, `Manrope`, `Noto Sans`, `Barlow Condensed`) and continued admin/public feature growth. Largest JS chunk remained about 357 KB.
+On 15 September 2026, Vite build and bundle budget passed. The CSS budget was raised from 100 KB to 120 KB after the compiled `app-*.css` reached ~102 KB following the addition of intentional self-hosted fonts (`Geist`, `Manrope`, `Noto Sans`, `Barlow Condensed`) and continued admin/public feature growth. Largest JS chunk then remained about 357 KB.
+
+Vite 8 (Rolldown) now splits the shared runtime via `build.rolldownOptions.output.codeSplitting.groups` in `vite.config.js` into `react-vendor` (~140 KB), `inertia-vendor` (~239 KB) and `i18n` (~157 KB) chunks, keeping every JS chunk under the 400 KB budget (CSS ≤120 KB). Re-measure with `npm run build && npm run build:budget` on the release candidate.
 
 ## Production Smoke Observation
 

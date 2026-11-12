@@ -15,21 +15,21 @@
 
 ## Risiko Semasa
 
-1. Production masih menghantar CSP report-only walaupun repository kini self-hosted dan CSP-ready.
+1. CSP: default kod (`config/app.php`) ialah report-only (`CSP_REPORT_ONLY=true`); `.env.production.example` menetapkan enforcing (`CSP_REPORT_ONLY=false`). Menurut bukti terakhir yang direkodkan (`TODOS.md`, 20 September 2026), production telah ditukar kepada enforcing; sahkan semula header selepas setiap deploy kerana deployment tanpa nilai env ini akan kembali kepada report-only.
 2. Akaun pangkalan data runtime kelihatan boleh melihat metadata skema lain pada server; least privilege perlu disahkan dan dikecilkan.
 3. Email verification masih dimatikan sehingga real mail/reset-password flow tersedia.
 4. Activity log ialah jejak operasi terpilih, bukan ledger audit immutable atau bukti compliance.
 
 ## Production Baseline
 
-Runtime yang diperiksa menggunakan `APP_DEBUG=false`, tetapi cache dan queue adalah `database`, session ialah `file`, email verification dimatikan dan CSP report-only dihidupkan. Ini tidak sepadan dengan sasaran `.env.production.example` yang mengutamakan Redis, secure session, verification dan CSP enforcing.
+Runtime yang diperiksa menggunakan `APP_DEBUG=false`, tetapi cache dan queue adalah `database`, session ialah `file`, email verification dimatikan dan CSP report-only dihidupkan (snapshot 17–18 Ogos; CSP kemudian direkodkan enforcing, lihat Risiko Semasa #1). Ini tidak sepadan dengan sasaran `.env.production.example` yang mengutamakan Redis, secure session, verification dan CSP enforcing.
 
 `GET /health` dilindungi token dan mengembalikan 404 tanpa token. Gunakan `GET /up` hanya sebagai liveness asas; jangan dedahkan token health dalam URL, log atau dokumentasi awam.
 
 ## Release Security Gate
 
 - Kekalkan direct-URL role matrix dan cross-tenant payload tests sebagai regression gate.
-- Jadikan CSP enforcing melalui deployment runbook dan browser smoke test.
+- Kekalkan CSP enforcing (`CSP_REPORT_ONLY=false`) dan sahkan melalui deployment runbook serta browser smoke test.
 - Sahkan DB least privilege, secure session, mail provider, backup/restore dan secret rotation.
 - Pastikan Pint, PHPUnit, build, dependency audit dan CI lulus pada SHA release yang sama.
 

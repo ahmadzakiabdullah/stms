@@ -21,14 +21,14 @@ Before performing any task, **always** read the following files in order:
 9. `docs/architecture/*`
 10. `docs/database/*`
 
-Documentation takes precedence over assumptions. Docs marked as historical/superseded (`docs/PLAN.md`, `docs/FINDING.md`, `docs/AUDIT_REPORT_AND_RECOMMENDATIONS.md`, `TODOSUIUX.md`, `STMS_HARDENING_PLAN.md`, dated `docs/audits/*`) must not be used as evidence of current status.
+Documentation takes precedence over assumptions. Docs marked as historical/superseded (everything under `docs/archive/`, `TODOSUIUX.md`, `STMS_HARDENING_PLAN.md`, dated `docs/audits/*`) must not be used as evidence of current status.
 
 ## Core Rules for AI Agents
 
 ### 1. Focus on Current Milestone Only
-- Always follow the **Current Focus** section in `TODOS.md`.
+- Always follow the **P0 — Release blockers production** section in `TODOS.md` (current priority), then the P1 sections.
 - Do **not** work on future phases (Accreditation, Live Scoring, Mobile App, AI, etc.) unless explicitly instructed.
-- Milestone 1 must be completed before moving to Milestone 2.
+- MVP milestones M0–M6 are complete (see `ROADMAP.md`); current work is release hardening.
 
 ### 2. Architecture Compliance
 - Follow the core hierarchy: `Organization → Session → Tournament → Sport → Event → Match → Result`.
@@ -36,6 +36,8 @@ Documentation takes precedence over assumptions. Docs marked as historical/super
 - Use **Service Layer + Action Classes** pattern. Avoid fat controllers.
 - Use **UUID** as primary keys.
 - Apply soft deletes where appropriate.
+
+> **Status pelaksanaan semasa (12 November 2026):** UUID digunakan pada model domain, tetapi `Setting` dan `DashboardMetricSnapshot` masih menggunakan auto-increment `id()`. Repository Pattern belum dilaksanakan (tiada `app/Repositories`); kod menggunakan Services + Actions. Tarikh Fasa 1/2 SAF kini di-hardcode dalam `resources/js/Pages/Public/Index.tsx` — penyimpangan diketahui, akan dipindahkan ke data Session selepas SAF.
 
 ### 3. Technology Constraints
 - **Frontend**: React + Inertia.js + TypeScript + shadcn/ui only.
@@ -82,7 +84,7 @@ When making significant architectural decisions or encountering blockers, docume
 
 ## Current Focus
 
-Refer to `TODOS.md` → **Current Focus (MVP)** section for the latest development priority.
+Refer to `TODOS.md` → **P0 — Release blockers production** section for the latest development priority.
 
 ---
 

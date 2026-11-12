@@ -13,6 +13,17 @@
 
 ## P0 — Release blockers production
 
+### Ujian PHPUnit yang gagal pada `master` (ditemui 12 November 2026)
+
+Run SQLite in-memory pada `master` (`de576d9e2`) dan branch `fix/mvp-transfer-hardening-20260922` sama-sama gagal pada ujian berikut. Kegagalan ini bukan berpunca daripada perubahan branch; CI akan kekal merah sehingga ia dibaiki.
+
+- [ ] `DashboardTest::test_dashboard_snapshot_command_is_repeatable_for_global_and_competition_scopes` — kiraan snapshot 4, dijangka 3.
+- [ ] `HealthCheckTest::test_production_smoke_command_*` (2 ujian) — output `stms:production-smoke` tidak mengandungi kunci `homepage`/`health`.
+- [ ] `PerformanceBaselineTest` — dashboard 56 query (bajet 42) dan Reports index 45 query (bajet 35); sahkan sama ada regresi sebenar atau bajet perlu dikemas kini.
+- [ ] `PublicPortalTest::test_public_athletes_directory_filters_by_search_letter_and_sport` — `faculties.0.name_ms` bernilai null.
+- [ ] `SecurityHeadersTest::test_csp_header_present_in_production` — CSP masih mengandungi `style-src 'self' 'unsafe-inline'`.
+- [ ] `EventTest::test_batch_delete_records_reason_and_summary_activity` — pelanggaran unique `events(tournament_id, sport_id, sport_category_id)` daripada data factory.
+
 ### Runtime, configuration dan deployment
 
 - [ ] Tetapkan `PRODUCTION_CONFIG_ENFORCE=true` dan luluskan `php artisan stms:release-preflight --json` dalam environment sebenar.
@@ -30,9 +41,9 @@
 
 - [ ] Sediakan database principal/schema-only yang mempunyai grant minimum untuk aplikasi.
 - [ ] Jadualkan backup terenkripsi dengan retention policy, salinan off-host dan semakan freshness.
-- [ ] Lakukan restore drill pada environment terasing dan rekodkan sasaran RPO/RTO.
+- [x] Lakukan restore drill pada environment terasing dan rekodkan sasaran RPO/RTO. (bukti: CURRENT_STATE — restore MySQL 8 terasing, RTO 7.699 s)
 - [ ] Aktifkan health monitoring dengan token bukan kosong, external alert dan owner yang dinamakan.
-- [ ] Dokumentasikan runbook incident, rollback, worker queue, scheduler dan restore.
+- [x] Dokumentasikan runbook incident, rollback, worker queue, scheduler dan restore. (bukti: CURRENT_STATE; named owner/alert destination sebenar kekal P0)
 
 ### Cutover release
 
@@ -75,7 +86,7 @@
 
 ## P1 — Quality gates dan dokumentasi
 
-- [x] Reconcile inventory sebenar: 163 routes, 70 migrations, 41 controllers, 43 Inertia pages dan 100 test files; `npm run check:inventory` lulus.
+- [x] Reconcile inventory sebenar (12 November 2026): 176 routes, 80 migrations, 42 controllers, 48 Inertia pages dan 104 PHP test files; `npm run check:inventory` hanya menyemak routes/migrations/controllers/test files.
 - [x] Kemas kini `CURRENT_STATE.md`, `README.md`, `docs/architecture/system-overview.md` dan inventory checks supaya tidak lagi menunjukkan angka lama; `docs/database/schema.md` tiada matriks inventori untuk dikemas kini.
 - [x] Selaraskan arahan Composer production mengikut subcommand (`install --optimize-autoloader`, `dump-autoload --optimize`) dan tambah recovery langkah untuk stale package metadata/provider.
 - [x] Review working tree: 15 perubahan yang belum commit semuanya berkaitan dengan release slice UI/UX, dokumentasi, E2E dan production schema verification; tiada perubahan package atau fail tidak berkaitan untuk diasingkan. Commit kekal sebagai langkah release berasingan.
@@ -86,15 +97,21 @@
 
 ## P1 — Reliability, performance dan operability
 
-- [ ] Tetapkan metrics, threshold, owner dan escalation untuk error rate, latency, queue lag, failed jobs, DB saturation, Redis dan disk.
-- [ ] Tetapkan query budget untuk public pages dan admin tables; selesaikan N+1 serta index yang hilang berdasarkan profiling sebenar.
+- [x] Tetapkan metrics, threshold, owner dan escalation untuk error rate, latency, queue lag, failed jobs, DB saturation, Redis dan disk. Kontrak didokumenkan dalam `docs/architecture/monitoring.md`; alert delivery runtime kekal P0.
+- [x] Tetapkan query budget untuk public pages dan admin tables; selesaikan N+1 serta index yang hilang berdasarkan profiling sebenar. `PerformanceBaselineTest` dan `stms:query-profile` (23 September 2026).
 - [ ] Ukur dan tetapkan sasaran LCP, INP dan CLS untuk public portal pada mobile.
-- [ ] Dokumentasikan cache invalidation untuk session, schedule, results, ranking, documents dan localization.
-- [ ] Pindahkan export/import besar kepada queue dengan progress, retry, idempotency dan failure report.
-- [ ] Uji concurrency untuk draw, result entry, bulk import, correction dan conflict resolution.
+- [x] Dokumentasikan cache invalidation untuk session, schedule, results, ranking, documents dan localization (`docs/architecture/caching.md`).
+- [x] Pindahkan export/import besar kepada queue dengan progress, retry, idempotency dan failure report. `DataTransfer` + `ProcessDataTransfer` dengan worker `data-transfer-worker`; bukti Redis/worker production masih belum ditutup.
+- [x] Uji concurrency untuk draw, result entry, bulk import, correction dan conflict resolution (`ConcurrencyRegressionTest`); ujian multi-worker MySQL/Redis staging masih diperlukan.
 
 ## P1 — Public UI/UX dan accessibility
 
+- [x] Paparkan tarikh Fasa 1 dan Fasa 2 SAF 20 pada hero homepage mengikut tarikh yang ditetapkan; susun kad responsif dan kira detik ke fasa seterusnya.
+- [x] Paparkan tarikh mula/tamat sebenar setiap event pada kad `/sports`, dengan julat tarikh responsif, pemformatan `Asia/Kuala_Lumpur` dan fallback jelas jika tarikh belum direkod.
+- [x] Tukar butang Log in pada header awam kepada Dashboard apabila `auth.user` tersedia; gunakan pautan yang sama pada desktop dan menu mobile.
+- [x] Paparkan maksimum jumlah atlet pada direktori sukan hanya untuk kategori `open_total`/`mixed_total`; kekalkan quota lain daripada rekod kategori tanpa mereka atau mengira nilai gantian.
+- [x] Kosongkan cache direktori awam apabila kategori/kuota sukan ditambah, diubah atau dipadam supaya paparan mengikuti rekod sistem terkini.
+- [x] Paparkan kad notifikasi tarikh pendaftaran pengurus dan pemain/pegawai di homepage, dipacu medan sesi aktif dan status semasa.
 - [x] Besarkan maskot utama `pose-welcome.webp` pada hero homepage secara responsif.
 - [x] Tambah maskot SAF 20 kecil pada semua 23 kad `/pengerusi-permainan`.
 
@@ -119,6 +136,8 @@
 - [x] Paparkan maskot pose sambutan di hero homepage dan kekalkan kemajuan pertandingan pada panel di bawah hero.
 - [x] Paparkan semua sukan pada homepage “Explore the sports” sebagai grid responsif dengan maskot besar daripada katalog.
 - [x] Gunakan ikon yang dimuat naik/dikonfigurasi pada pengurusan sukan di direktori awam `/sports`; kekalkan ikon nama sebagai fallback dan invalidate cache portal selepas perubahan katalog.
+- [x] Pastikan pilihan sukan dan kategori pada `/athletes` dihantar sebagai string supaya React tidak cuba memaparkan objek `{name, name_ms}`; naikkan cache ke v3 supaya payload lama dibuang. Label nama kekal asal tanpa terjemahan.
+- [x] Paparkan roster panjang pada `/athletes` dalam dialog dengan carian, penapis atlet/pegawai, kiraan kategori dan kawasan skrol berasingan supaya kad serta halaman tidak memanjang.
 
 - [x] Lengkapkan navigasi mobile/tablet supaya Competition dan Information tidak hilang berbanding desktop.
 - [x] Redesign public Venues directory dengan kad venue yang boleh membuka jadual mengikut venue.
@@ -150,21 +169,25 @@
 
 ## P1 — Authenticated UI/UX
 
+- [x] Betulkan input tarikh mula/tamat event yang sebelum ini mengosongkan input semasa pengguna menaip; gunakan input tarikh native dan kekalkan tarikh secara berasingan bagi setiap event/sukan.
 - [x] Sidebar dashboard menggunakan menu rata tanpa dropdown supaya semua menu yang dibenarkan kelihatan terus.
 - [x] Samakan gap, padding dan tinggi item sidebar antara Dashboard dan semua authenticated pages.
 - [x] Compactkan sidebar secara konsisten selepas spacing standard didapati terlalu besar.
 - [x] Kurangkan lagi whitespace sidebar tanpa menurunkan target klik menu di bawah 44px.
 - [x] Redesign dashboard mengikut workspace role: administration, competition operations dan reporting.
+- [x] Tambah page Registration khusus wakil fakulti untuk mengurus pengurus dan pemain bagi setiap penyertaan yang disahkan, menggunakan service dan tindakan roster sedia ada.
 - [x] Tambah trend platform berdasarkan snapshot harian sebenar dan filter analitik mengikut sesi/kejohanan; konfigurasi scheduler serta command snapshot tersedia.
+- [x] Tambah kad dashboard admin untuk memantau pendaftaran pengurus dan pemain mengikut fakulti/sukan, berserta liputan roster aktif per penyertaan acara.
+- [x] Ringkaskan dashboard melalui progressive disclosure untuk analitik/aktiviti sekunder dan dahulukan gabungan fakulti/sukan yang paling belum lengkap.
 
 ## P2 — Cadangan tambah baik produk
 
-- [ ] Tambah calendar view, print-friendly schedule dan export schedule/results yang mesra operasi.
-- [ ] Tambah bulk actions dengan preview, permission, audit trail dan undo/rollback apabila sesuai.
-- [ ] Wujudkan correction workflow untuk keputusan: draft → review → publish, termasuk reason dan audit log.
-- [ ] Sediakan operations dashboard untuk queue, failed jobs, data freshness, active sessions dan incident signal.
-- [ ] Jadikan format pertandingan, scoring, ranking dan tie-break configurable; jangan hardcode peraturan sukan.
-- [ ] Tambah data quality checks untuk duplicate peserta, missing parent relation, orphan result dan invalid timeline.
+- [x] Tambah calendar view, print-friendly schedule dan export schedule/results yang mesra operasi. Calendar view dan print action pada `/schedule`.
+- [x] Tambah bulk actions dengan preview, permission, audit trail dan undo/rollback apabila sesuai. Events batch delete, Event Participants batch approve/reject, batch register serta import dengan preview/report.
+- [x] Wujudkan correction workflow untuk keputusan: draft → review → publish, termasuk reason dan audit log. Status `draft → submitted → approved → locked`; correction reason wajib untuk update/unlock approved result.
+- [x] Sediakan operations dashboard untuk queue, failed jobs, data freshness, active sessions dan incident signal. Monitor operasi dalam Reports.
+- [x] Jadikan format pertandingan, scoring, ranking dan tie-break configurable; jangan hardcode peraturan sukan. Ranking tie-breaker UI, draw format/pool size/qualifiers dan sport scoring profile; formula/rules engine penuh kekal future enhancement. Nota: tarikh Fasa 1/2 SAF masih di-hardcode dalam `resources/js/Pages/Public/Index.tsx`.
+- [x] Tambah data quality checks untuk duplicate peserta, missing parent relation, orphan result dan invalid timeline (`DataQualityService`).
 - [x] Tambah report comparison, export governance, retention/archive policy dan data ownership yang jelas.
 - [x] Lengkapkan halaman reports dengan pecahan perlawanan mengikut kejohanan, refresh manual, amaran data separa, terjemahan status dan accessibility progress bar.
 - [ ] Tambah penapis laporan mengikut sesi, kejohanan, sukan, tarikh dan status apabila keperluan operasi dimuktamadkan.

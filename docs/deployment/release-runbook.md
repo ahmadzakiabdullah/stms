@@ -1,6 +1,6 @@
 # Release Runbook
 
-> Pada 18 Ogos 2026 belum ada Git tag. Commit calon `4b04c46` melepasi quality gate tempatan dan connected CI #112, tetapi runtime preflight, mail, DB grants dan final deployment evidence masih belum lengkap (`NO-GO`).
+> Status release semasa (commit calon, tag, keputusan CI dan GO/NO-GO) direkodkan dalam [`CURRENT_STATE.md`](../../CURRENT_STATE.md), bukan dalam runbook ini. Sejarah: pada 18 Ogos 2026 commit calon `4b04c46` melepasi connected CI #112 tetapi kekal `NO-GO` kerana runtime preflight, mail, DB grants dan deployment evidence belum lengkap.
 
 ## 1. Syarat Sebelum Release
 
@@ -91,6 +91,6 @@ yang akan dibaca oleh IIS.
 
 Rollback aplikasi kepada artefak/tag terdahulu yang diketahui baik. Pulihkan pangkalan data daripada backup yang disahkan jika migration tidak backward-compatible; jangan jalankan `migrate:rollback` secara membuta tuli. Rekod insiden dan hasil rollback dalam changelog/operational record.
 
-Rujuk [deployment architecture](../architecture/deployment.md), [backup/restore](backup-restore.md) dan [audit 17 Ogos](../audits/2026-08-17-full-project-and-production-audit.md).
+Rujuk [deployment architecture](../architecture/deployment.md), [backup/restore](backup-restore.md) dan [audit 17 Ogos](../audits/2026-08-17-full-project-and-production-audit.md) (rekod sejarah).
 
 Gunakan [operations runbook](operations-runbook.md) untuk incident triage, rollback, pemulihan worker/scheduler dan penutupan alert. Gunakan [monitoring matrix](../architecture/monitoring.md) untuk threshold dan bukti yang perlu dikumpulkan.

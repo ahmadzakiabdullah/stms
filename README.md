@@ -6,7 +6,7 @@ STMS ialah platform pengurusan kejohanan sukan multi-tenant. Repository ini meng
 
 MVP produk beroperasi; verifikasi lokal working tree dipisahkan daripada connected CI baseline `dd559c56e`. Deployment production masih menunggu tindakan operator/owner:
 
-- 176 application routes, 80 migration files, 42 controller files, 47 Inertia pages dan 104 PHP test files.
+- 176 application routes, 80 migration files, 42 controller files, 48 Inertia pages dan 104 PHP test files.
 - Full native PHPUnit terasing lulus 563/563 (2,791 assertions) dan production build/budget lulus pada runner local disk; network share masih tidak sesuai untuk native Rolldown.
 - Composer/npm audit 0 advisory/vulnerability selepas remediasi dependensi (league/commonmark 2.10.1, maatwebsite/excel 3.1.70, regenerasi lockfile npm).
 - Playwright/axe mempunyai 12 journeys pada desktop/mobile (24 cases); bukti browser semasa direkod dalam `CURRENT_STATE.md`.
@@ -46,8 +46,8 @@ Route lama `/sports-programme`, `/medal-tally` dan `/schedules` kini 404; `/matc
 
 ## Technology
 
-- PHP `^8.4`, Laravel `13.23.0`
-- React `18.3.1`, Inertia React `2.3.25`, TypeScript `5.9.3`
+- PHP `^8.4`, Laravel `13.31.0`
+- React `18.3.1`, Inertia React `2.3.27`, TypeScript `5.9.3`
 - Tailwind CSS `3.4.19`, local shadcn/Radix components, Lucide
 - Vite `8.0.16`
 - MySQL, Spatie Permission dan Spatie Activity Log

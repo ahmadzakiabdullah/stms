@@ -10,18 +10,22 @@
 | `win_rate` | Ordered tiebreakers across win rate, wins, points, goal difference, goals for and name |
 | `medal_tally` | Ordered gold/silver/bronze/total-medal/name tiebreakers |
 
-Defaults live in `config/ranking.php`. Validated JSON overrides can be saved on sessions and tournaments; tournament rules take precedence over session rules. No sport name or formula is hardcoded in controllers.
+Default rules live in `config/ranking.php` (the table lists accepted tiebreakers; shipped defaults are narrower, e.g. `win_rate` = win_rate/wins/goal_difference, `medal_tally` = gold/silver/bronze). Validated JSON overrides can be saved on sessions and tournaments; tournament rules take precedence over session rules. No sport name or formula is hardcoded in controllers.
 
 Session rankings aggregate tournaments in a session. Tournament and event rankings query completed results and eager-load participants and winners. Rankings are calculated rather than stored in a materialized table.
 
 ## Strategy Contract
 
-Each strategy receives a result collection and a normalized rule array, and returns deterministic ranked rows. The registry:
+`App\Contracts\RankingStrategy` defines `key()`, `label(array $rules)` and `rank(Collection $stats, array $rules, ?Collection $tournaments = null)`. Each strategy receives aggregated per-participant stats (built by `RankingService::aggregateStats()` from completed results), the merged rule array and, where needed (e.g. `medal_tally` reading Final/Bronze fixtures), the tournaments; it returns deterministic ranked rows.
 
-1. validates that a configured strategy exists;
-2. merges stored rules with safe defaults;
-3. dispatches calculation to the matching strategy class;
-4. preserves shared-rank behavior where configured values are identical.
+`RankingStrategyRegistry`:
+
+1. is constructed with the three strategy classes injected and keys them by `key()`;
+2. `get($key)` throws `InvalidArgumentException` for an unknown strategy;
+3. `rules($key, $overrides)` merges stored overrides over the `config("ranking.strategies.{key}")` defaults;
+4. `labels()` exposes strategy labels.
+
+`RankingService` resolves the strategy via the registry and calls its `rank()`.
 
 ## Remaining Limits
 

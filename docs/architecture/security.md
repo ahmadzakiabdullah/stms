@@ -24,13 +24,13 @@
 
 ## Current Release Risks
 
-- Runtime workspace has email verification off, database cache/queue and file session; CSP enforcement is enabled, while configuration enforcement remains off.
+- Per last recorded runtime evidence, the workspace has email verification off, database cache/queue and file session, and configuration enforcement remains off. CSP status is described once below.
 - DB principal least privilege is not evidenced.
 - Security-reporting contact and real external alert delivery are not configured/evidenced.
 
 ## CSP
 
-Production currently sends enforcing `Content-Security-Policy`. The inline Ziggy route bootstrap and HTML style elements receive a per-response nonce, and the policy no longer allows Bunny Fonts because assets are self-hosted. Inertia NProgress CSS is bundled in `app.css` with runtime CSS injection disabled. Dynamic React `style` attributes are isolated under `style-src-attr 'unsafe-inline'`. Any future policy changes must go through the release runbook with post-deploy CSP console/network verification.
+The code default (`config/app.php`) is report-only (`CSP_REPORT_ONLY=true`, header `Content-Security-Policy-Report-Only`); `.env.production.example` sets `CSP_REPORT_ONLY=false` (enforcing `Content-Security-Policy`). Per the last recorded evidence (`TODOS.md`, 20 September 2026), production was switched to enforcing; re-verify the header after each deploy. The inline Ziggy route bootstrap and HTML style elements receive a per-response nonce, and the policy no longer allows Bunny Fonts because assets are self-hosted. Inertia NProgress CSS is bundled in `app.css` with runtime CSS injection disabled. Dynamic React `style` attributes are isolated under `style-src-attr 'unsafe-inline'`. Any future policy changes must go through the release runbook with post-deploy CSP console/network verification.
 
 ## Release Rule
 

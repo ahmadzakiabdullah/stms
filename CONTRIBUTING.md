@@ -2,7 +2,7 @@
 
 ## Sebelum Mengubah Kod
 
-Baca dalam urutan: `CLAUDE.md`, `AGENTS.md`, `CURRENT_STATE.md`, `ROADMAP.md`, `TODOS.md`, ADR, architecture dan database docs. Ikut Current Focus dalam `TODOS.md`; jangan memulakan fasa masa hadapan tanpa kelulusan.
+Baca dalam urutan: `CLAUDE.md`, `AGENTS.md`, `CURRENT_STATE.md`, `ROADMAP.md`, `TODOS.md`, ADR, architecture dan database docs. Ikut keutamaan seksyen **P0 — Release blockers production** dalam `TODOS.md`; jangan memulakan fasa masa hadapan tanpa kelulusan.
 
 ## Workflow
 
@@ -39,4 +39,4 @@ composer audit --locked --no-interaction
 npm audit --audit-level=high
 ```
 
-Semua gate mesti lulus pada commit PR yang sama. Pada 17 Ogos 2026 baseline semasa masih mempunyai satu PHPUnit failure, satu PHPUnit error dan enam fail Pint, jadi jangan menggunakan keputusan lama sebagai bukti hijau.
+Semua gate mesti lulus pada commit PR yang sama. Verifikasi terakhir (12 November 2026, SQLite in-memory): PHPUnit 592 ujian dengan 8 kegagalan sedia ada yang juga berlaku pada `master` — lihat `CURRENT_STATE.md` dan `TODOS.md`; Pint, TypeScript, build/budget dan tenant-bypass lulus. Jangan menggunakan keputusan lama sebagai bukti hijau; jalankan semula gate pada commit PR anda.

@@ -1,5 +1,20 @@
 # CURRENT STATE
 
+## Kemas Kini — 12 November 2026
+
+- Tarikh pertandingan SAF 2026 yang disahkan product owner: **Fasa 1: 3–4 Disember 2026** dan **Fasa 2: 12–13 Disember 2026**. Tarikh fasa ini kini di-hardcode dalam `resources/js/Pages/Public/Index.tsx` (penyimpangan diketahui; akan dipindahkan ke data Session selepas SAF).
+- Wakil fakulti kini mempunyai page sebenar `/faculty/registrations` (`Faculty/Registrations.tsx`, menu “Managers & Athletes”) untuk mengurus pengurus dan pemain bagi setiap penyertaan yang disahkan; sebelum ini route ini hanya redirect.
+- `docker/supervisord.conf` mempunyai program `data-transfer-worker` khusus (`queue:work data-transfers --queue=data-transfers --timeout=900`) untuk job `ProcessDataTransfer`, berasingan daripada `queue-worker` biasa.
+
+## Perubahan Homepage — 3 November 2026
+
+- Kad notifikasi di bawah tarikh pertandingan dan kiraan detik memaparkan tetingkap pendaftaran pengurus serta pemain/pegawai daripada sesi aktif. Tarikh dan status buka/tutup dijana daripada medan sesi, mengikut waktu `Asia/Kuala_Lumpur`, dan diterjemahkan dalam BM/English.
+
+## Perubahan Dashboard — 3 November 2026
+
+- Dashboard admin mempunyai kad kemajuan roster mengikut fakulti dan sukan. Kad menunjukkan bilangan penyertaan acara yang sudah mempunyai pengurus dan pemain aktif; data mengikut skop organisasi serta filter sesi/kejohanan dan cache dashboard dinaikkan ke v8.
+- Paparan dashboard kini mendahulukan ringkasan, status dan roster yang memerlukan perhatian. Analitik super-admin serta maklumat sekunder boleh dibuka apabila diperlukan; senarai roster menunjukkan enam item paling perlu tindakan dahulu.
+
 ## Perubahan Dashboard — 5 Oktober 2026
 
 - Dashboard super-admin kini mempunyai carta trend berasaskan snapshot sebenar yang dikumpulkan setiap hari, serta penapis sesi dan kejohanan untuk metrik event/perlawanan. Pengumpulan bermula selepas migration dan scheduler `stms:dashboard-snapshot` aktif; sejarah sebelum itu tidak direka.
@@ -33,7 +48,7 @@
 - Pemeriksaan perubahan kod dibuat, tetapi browser visual/keyboard dan production deployment evidence masih perlu dijalankan sebelum release.
 - Poster hero, semua maskot public dan peta venue kini mempunyai aset WebP yang lebih ringan; rujukan public menggunakan WebP dan fail asal dikekalkan sebagai sumber.
 - Dialog peta venue menggunakan primitive Radix/shadcn untuk focus trap, fokus awal/pulangan dan Escape; butang dialog memenuhi target 44px.
-- Status jadual kosong kini memaut terus ke jadual umum rasmi, tarikh penting dan program sukan. Jadual PDF rasmi menyatakan acara utama berlangsung 22–25 Oktober; tarikh penerbitan fixture tidak dinyatakan.
+- Status jadual kosong kini memaut terus ke jadual umum rasmi, tarikh penting dan program sukan. Jadual PDF rasmi pada masa itu menyatakan acara utama berlangsung 22–25 Oktober; tarikh penerbitan fixture tidak dinyatakan. Tarikh tersebut telah digantikan — lihat tarikh pertandingan semasa di bahagian atas.
 - Semakan read-only portal mendapati 7 daripada 30 event mempunyai venue tersimpan. Event tanpa lokasi kekal dilabel Venue TBD dan memaut ke peta; lokasi tidak direka atau diisi secara pukal.
 - Semua 23 pautan peraturan sukan awam memberi HTTP 200. Tajuk PDF sepadan dengan sukan; dokumen Sofbol tidak mencetak tahun edisi pada halaman tajuk walaupun nama fail mengandungi 2025.
 - Poster utama dikurangkan daripada kira-kira 4.8 MB kepada 283 KB; maskot hero daripada 1.6 MB kepada 103 KB; peta venue daripada 1.6 MB kepada 226 KB.
@@ -56,6 +71,8 @@
 
 **Production awam:** <https://saf.utem.edu.my/> tersedia, tetapi belum dianggap telah menerima release candidate yang telah dikomit ini.
 
+**Homepage hotfix — 3 November 2026:** IIS kini menyajikan `app-BNtaag30.js` daripada `public/build/manifest.json`; pemeriksaan tanpa cache mengesahkan `GET /` HTTP 200 serta props tetingkap pendaftaran pengurus dan pemain/pegawai. Ini ialah bukti hotfix portal yang aktif, bukan pelepasan release candidate penuh; `stms:release-preflight --json` masih berstatus `error`.
+
 **Production preflight — 23 September 2026:** `php artisan stms:release-preflight --json` berjalan pada `APP_ENV=production`; database MySQL dan public portal `utem` / `saf-20-2026` lulus, tetapi status keseluruhan masih `error` kerana production config enforcement, email verification, Redis session/cache/queue, non-log mailer, scheduled backup dan health monitoring token/alert belum aktif. `stms:health-check` pada masa yang sama lulus untuk database/cache/queue/disk dengan pending queue 0 dan failed queue 0; `schedule:list` mendaftarkan `stms:health-check` setiap lima minit. Ini ialah evidence asas host sihat, bukan bukti release `GO`.
 
 **Production HTTP smoke — 23 September 2026:** unauthenticated `Invoke-WebRequest` ke `https://saf.utem.edu.my/` dan `https://saf.utem.edu.my/up` return HTTP 200. Repository kini mempunyai `stms:production-smoke` untuk mengulang HTTP smoke dan tokened `/health` sebagai JSON evidence. Authenticated smoke, cross-tenant negative test, Playwright dan axe pada deployment sebenar masih diperlukan sebelum cutover release boleh ditutup.
@@ -71,12 +88,12 @@ Aliran utama tersedia: Organization/User/RBAC → Session/Tournament/Sport/Categ
 | Laravel routes | 176 application routes |
 | Migrations | 80 migration files |
 | Controllers | 42 controller files |
-| Form Requests | 35 |
+| Form Requests | 37 |
 | Policies | 22 fail |
-| Actions | 37 |
-| Services/concerns | 44 fail |
-| Models | 22 (tidak termasuk trait) |
-| Inertia `.tsx` pages | 47 |
+| Actions | 38 |
+| Services/concerns | 46 fail |
+| Models | 23 (tidak termasuk trait) |
+| Inertia `.tsx` pages | 48 |
 | PHP tests | 104 PHP test files |
 | Playwright journeys | 12 dalam 1 spec, desktop + mobile (24 cases) |
 
@@ -201,7 +218,8 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 ## Capability Tambahan 17 September 2026 — Public Athlete Directory Pagination
 
 - `/athletes` kini menapis (carian, sport, kategori) dan menyediakan A–Z serta pagination (24 atlet/12 pasukan) di server, dengan state kekal dalam URL; hanya satu halaman kad berada dalam DOM supaya senarai tidak memanjang apabila peserta bertambah.
-- `PublicPortalService::athleteDirectory()` memulangkan paginator `rosters`/`athletes` berserta `counts`; cache dinaikkan ke `public-athletes:v2`.
+- `PublicPortalService::athleteDirectory()` memulangkan paginator `rosters`/`athletes` berserta `counts`; cache direktori kini `public-athletes:v3` dengan pilihan sukan/kategori sebagai nama string.
+- Pilihan `sports` dan `categories` dalam props direktori `/athletes` ialah nama string (bukan objek translasi), sejajar dengan filter React dan elak React error #31.
 - Kemasan UX P0: segmented Teams/Athletes dengan kiraan, chip sukan berikon, penapis fakulti + susunan, skeleton/loading dengan `aria-busy`, dan empty state boleh tindak.
 - Suite penuh **508/508** (2,478 assertions); ujian pagination/filter/fakulti/susunan dalam `PublicPortalTest`.
 
@@ -252,7 +270,7 @@ Redis tempatan dikesan tersedia, tetapi menukar session/mail/verification pada s
 
 ## Production Awam Yang Disahkan Semasa Audit Asal
 
-Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about`, `/general-information`, `/jawatankuasa-induk`, `/jawatankuasa-pelaksana`, `/pengerusi-permainan`, `/tarikh-penting` dan `/contact-us`. Product owner mengesahkan SAF 2026 berlangsung 13–25 Oktober 2026 dengan satu tournament, 30 acara dan 8 kontinjen. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
+Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam `/matches`, `/sports`, `/schedule`, `/results`, `/faculties`, `/venues`, `/live`, `/news`, `/downloads`, `/faq`, `/about`, `/general-information`, `/jawatankuasa-induk`, `/jawatankuasa-pelaksana`, `/pengerusi-permainan`, `/tarikh-penting` dan `/contact-us`. Product owner mengesahkan SAF 2026 mempunyai satu tournament, 30 acara dan 8 kontinjen. Tarikh 13–25 Oktober 2026 yang direkod pada audit asal telah digantikan; tarikh semasa ialah Fasa 1: 3–4 Disember 2026 dan Fasa 2: 12–13 Disember 2026. Kini `/matches`, `/results` dan `/live` ialah redirect 301 ke `/schedule`. Rekod pertandingan boleh dikemas kini melalui pentadbiran jika maklumat rasmi berubah; pengesahan ini tidak membuktikan deployment release candidate semasa.
 
 ## Baki Sebelum Release Production
 
@@ -262,4 +280,4 @@ Portal production terdiri daripada homepage berseksyen di `/` plus halaman awam 
 4. Deployment disahkan melalui worker/scheduler restart, authenticated smoke/Playwright dan release tag.
 5. Reset-password mail delivery direkod sebelum email verification diaktifkan.
 
-**Last updated:** 28 September 2026.
+**Last updated:** 12 November 2026.

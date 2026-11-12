@@ -28,14 +28,14 @@ STMS uses the default Tailwind CSS spacing scale, where `1` unit = `0.25rem` (4p
 
 ## shadcn/ui Defaults
 
-shadcn/ui components follow consistent spacing:
+Local components in `resources/js/components/ui/` use these defaults:
 
-| Component | Padding |
+| Component | Sizing / padding |
 |-----------|---------|
-| Button | `px-4 py-2` (default), `px-3 py-1` (sm), `px-8 py-3` (lg) |
-| Card | `p-6` with `gap-2` between header/content/footer |
-| Dialog | `p-6` |
-| Input | `px-3 py-2` |
+| Button | `h-8 px-2.5` (default), `h-6 px-2` (xs), `h-7 px-2.5` (sm), `h-9 px-2.5` (lg); `min-h-11 min-w-11` below `sm` for touch targets |
+| Card | `py-4` with `gap-4` between header/content/footer, `rounded-xl` |
+| Dialog | `p-4` with `gap-4`, `rounded-xl` |
+| Input | `h-8 px-2.5 py-1` |
 
 ## Grids
 

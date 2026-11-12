@@ -1,6 +1,6 @@
 # Database Schema
 
-> **Inventori repository (5 Oktober 2026):** Repositori mengandungi **80 migration files**. Migrasi dashboard menambah `dashboard_metric_snapshots` untuk sejarah metrik platform; migrations runtime production mesti dijalankan melalui release runbook.
+> **Inventori repository (12 November 2026):** Repositori mengandungi **80 migration files**. Migrasi dashboard menambah `dashboard_metric_snapshots` untuk sejarah metrik platform; migrations runtime production mesti dijalankan melalui release runbook.
 
 ## Domain dan Tenancy
 
@@ -9,9 +9,12 @@
 | `data_transfers` | Transfer import/export tenant-scoped, requester, progress, idempotency dan failure report. |
 | `organizations` | Root tenant dan hierarki `parent_id`. |
 | `users` | Akaun UUID (`uuid` sebagai PK), organisasi, participant, username/e-mel dan status `is_active`. Akaun inactive tidak boleh log masuk. |
-| `event_sessions` | Tempoh pertandingan organisasi, default ranking strategy dan JSON rules. |
+| `event_sessions` | Tempoh pertandingan organisasi, default ranking strategy dan JSON rules (model `App\Models\Session`). |
+| `session_sports` | Sport yang diaktifkan bagi satu session (`session_id` + `sport_id` unik, `is_active`). |
+| `session_sport_categories` | Konfigurasi kategori per session-sport: nama, mod/had quota atlet dan pegawai, sistem pertandingan, venue dan tarikh. |
 | `sports` | Katalog sport organisasi. |
 | `sport_categories` | Kategori dan quota roster. |
+| `sport_documents` | Dokumen sport per session (fail, MIME, saiz, `is_published`, susunan, pencipta). |
 | `tournaments` | Tournament di bawah session; ranking strategy dan JSON rules override. |
 | `tournament_sport` | Pivot many-to-many tournament–sport. |
 | `events` | Tournament + sport + category, format dan pendaftaran. |
@@ -28,6 +31,7 @@
 | `settings` | Tetapan key/value setiap organisasi. |
 | `notifications` | Database notifications Laravel. |
 | `activity_log` | Activity log Spatie. |
+| `dashboard_metric_snapshots` | Snapshot harian (`snapshot_date` + `scope_key` unik) bagi bilangan organizations, users, events dan matches untuk trend dashboard; diisi oleh `stms:dashboard-snapshot`. Bukan tenant-scoped. |
 
 ## Framework/RBAC (12 jadual)
 
@@ -42,6 +46,7 @@ Jadual framework turut merangkumi `migrations`; jumlah migration files bukan jum
 - Kebanyakan entity domain menggunakan UUID dan soft deletes.
 - `users` menggunakan kolum PK bernama `uuid`, bukan `id`.
 - `settings` ialah pengecualian legacy: integer auto-increment `id` dan tiada soft delete.
+- `dashboard_metric_snapshots` juga menggunakan integer auto-increment `id` (`$table->id()`) dan tiada `organization_id`/soft delete.
 - `squad_members` serta `draw_versions` tidak mempunyai soft delete; draw version ialah snapshot sejarah.
 - `tournament_sport`, `sport_user` dan pivot RBAC tidak memerlukan model/soft delete biasa.
 - `match_scoring_events` dipadam bersama result; score agregat kekal pada `results`.

@@ -1,6 +1,6 @@
 # Documentation Index
 
-> **Current implementation — 21 August 2026:** Public athlete/team profiles, configured individual scoring events, participant-grouped public scorers and the result score editor UX are implemented. Historical audit files retain their original snapshot dates by design.
+> **Current status:** see [`../CURRENT_STATE.md`](../CURRENT_STATE.md) (index reviewed 12 November 2026). Historical audit files retain their original snapshot dates by design.
 
 Dokumentasi STMS dibahagikan kepada sumber kanonik, keputusan seni bina, panduan operasi dan rekod sejarah.
 
@@ -9,7 +9,7 @@ Dokumentasi STMS dibahagikan kepada sumber kanonik, keputusan seni bina, panduan
 1. [`../CURRENT_STATE.md`](../CURRENT_STATE.md) — keadaan produk/repository/runtime/production semasa.
 2. [`../TODOS.md`](../TODOS.md) — backlog aktif dan Current Focus.
 3. [`../ROADMAP.md`](../ROADMAP.md) — milestone produk dan release.
-4. [Audit 17 Ogos 2026](audits/2026-08-17-full-project-and-production-audit.md) — bukti audit semasa.
+4. Fail dalam [`audits/`](audits/) — rekod audit point-in-time (terkini: [17 Ogos 2026](audits/2026-08-17-full-project-and-production-audit.md)); bukan status semasa.
 5. Fail dalam [`architecture/`](architecture/) dan [`database/`](database/) — rujukan implementasi.
 
 Jika nombor atau status bercanggah, sumber bertarikh paling baharu menang; dakwaan production mesti disokong oleh production/runtime evidence, bukan contoh konfigurasi sahaja.
@@ -32,7 +32,7 @@ Jika nombor atau status bercanggah, sumber bertarikh paling baharu menang; dakwa
 
 ## Dokumen Sejarah
 
-`FINDING.md`, `PLAN.md`, `AUDIT_REPORT_AND_RECOMMENDATIONS.md`, audit 31 Julai/12 Ogos dan operational drill ialah snapshots. Jangan menukar angka sejarah mereka kepada angka semasa; gunakan banner/status atau rujuk audit terkini.
+Fail dalam [`archive/`](archive/README.md) (termasuk `FINDING.md`, `PLAN.md`, `AUDIT_REPORT_AND_RECOMMENDATIONS.md`), audit 31 Julai/12 Ogos dan operational drill ialah snapshots. Jangan menukar angka sejarah mereka kepada angka semasa; gunakan banner/status atau rujuk audit terkini.
 
 ## Portal Awam Semasa
 

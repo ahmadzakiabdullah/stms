@@ -4,17 +4,17 @@
 
 The authenticated shell uses a fixed desktop sidebar and a mobile sheet. Navigation is defined in `resources/js/Layouts/AuthenticatedLayout.tsx`, rendered with Inertia `Link`, Lucide icons, active-route highlighting, and tenant branding.
 
-Visibility is controlled by an explicit role matrix intended to align with Laravel policies. Ia ialah presentation rule sahaja dan audit 17 Ogos menemui beberapa index controller tanpa `viewAny`; matrix ini tidak membuktikan authorization backend.
+Visibility is controlled by an explicit role matrix (`systemRoles` and `navSections` in that file, verified 12 November 2026) intended to align with Laravel policies. Ia ialah presentation rule sahaja dan audit 17 Ogos menemui beberapa index controller tanpa `viewAny`; matrix ini tidak membuktikan authorization backend.
 
 ## Role menu matrix
 
 | Section | Super Admin | Org Admin | Admin Sport | Staff | Faculty Representative | Dean |
 |---|---:|---:|---:|---:|---:|---:|
-| Dashboard | Yes | Yes | Yes | Yes | Faculty workspace | Dean verification workspace |
+| Dashboard | Yes | Yes | Yes | Yes | Yes (`Faculty/Dashboard`) | Dean Dashboard (`dean.dashboard`) |
 | Notifications | Yes | Yes | Yes | Yes | Yes | Yes |
-| Competition Setup | Full | Tenant-scoped | No | No | No | No |
-| Registration | Full | Tenant-scoped | No | No | Participation Confirmation | Participation Confirmation |
-| Competition Operations | Full | Tenant-scoped | Assigned sports | No | No | No |
+| Competition Setup | Full | Tenant-scoped | Events only | No | No | No |
+| Registration | Full | Tenant-scoped | No | No | Register Events, Managers & Athletes (`faculty.registrations`), Participation Confirmation | Participation Confirmation |
+| Competition Operations | Full | Tenant-scoped | Matches, Results, Rankings (assigned sports) | No | Public Schedule & Results (`public.schedule`) | No |
 | Analytics | Yes | Yes | No | Yes | No | No |
 | Organizations | Yes | No | No | No | No | No |
 | Users / Settings / Activity Logs | Yes | Yes | No | No | No | No |

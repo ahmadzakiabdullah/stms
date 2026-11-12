@@ -128,6 +128,8 @@ Avoid:
 * Business Logic in Controllers
 * Direct DB Queries in Controllers
 
+> **Status pelaksanaan semasa (12 November 2026):** REST API `/api/v1`, Repository Pattern dan API Resources **belum dilaksanakan**. Aplikasi ialah web/Inertia sahaja (tiada `routes/api.php`, `app/Repositories` atau `app/Http/Resources`); Services + Actions digunakan sebagai ganti. UUID digunakan pada model domain, kecuali `Setting` dan `DashboardMetricSnapshot` (auto-increment). Tarikh Fasa 1/2 SAF kini di-hardcode dalam `resources/js/Pages/Public/Index.tsx` — penyimpangan diketahui daripada peraturan "Never hardcode", akan dipindahkan ke data Session selepas SAF.
+
 ---
 
 # Database Standards

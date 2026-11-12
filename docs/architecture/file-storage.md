@@ -1,6 +1,6 @@
 # File Storage
 
-Laravel filesystem digunakan untuk logo peserta, favicon/branding dan fail aplikasi lain. Pelaksanaan semasa menggunakan disk `public` tempatan dengan symlink/route penyampaian yang sesuai kepada deployment IIS.
+Laravel filesystem digunakan untuk logo peserta, favicon/branding dan fail aplikasi lain. Pelaksanaan semasa menggunakan disk `public` tempatan (`storage/app/public`) yang disampaikan melalui route `/storage/{path}`, `/public-files/{path}` dan legasi `/portal/storage/{path}` (`PublicStorageController`) kerana IIS tidak mencipta junction `public/storage`. Fail data transfer disimpan pada disk persendirian `local` (`storage/app/private`) di bawah `transfers/{organization}/input/...` dan `transfers/{organization}/output/{transfer}/...`.
 
 ## Peraturan
 

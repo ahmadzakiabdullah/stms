@@ -8,8 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Hero homepage kini menunjukkan tarikh Fasa 1 dan Fasa 2 SAF 20 pada kad responsif, dengan kira detik ke fasa seterusnya.
+- Kad acara pada `/sports` kini memaparkan tarikh pertandingan daripada rekod event dalam gaya ringkas dengan ikon kalendar dan julat tarikh tempatan.
+- Header portal awam kini memaparkan Dashboard untuk pengguna yang sudah log masuk dan Log in untuk tetamu, termasuk dalam menu mobile.
+- Direktori `/sports` kini hanya memaparkan “Max Total Athletes” untuk kategori kuota jumlah (`open_total`/`mixed_total`); kuota yang dipaparkan kekal berdasarkan rekod sistem.
+- Cache direktori awam kini dibersihkan selepas kategori sukan ditambah, diubah atau dipadam supaya nama dan kuota terkini daripada sistem dipaparkan.
+- Borang Event kini menggunakan input tarikh native supaya tarikh mula/tamat boleh ditaip atau dipilih tanpa input dikosongkan, dan setiap acara boleh mempunyai tarikh sendiri.
+- Roster pada `/athletes` kini dibuka dalam dialog yang mempunyai carian nama, penapis semua/atlet/pegawai, kiraan kategori dan senarai skrol responsif.
+- Homepage kini memaparkan kad notifikasi tarikh pendaftaran pengurus dan pemain/pegawai di bawah tarikh pertandingan dan kiraan detik; tarikh serta status dibaca terus daripada sesi aktif dan dikemas kini dalam Bahasa Malaysia atau English.
+- Hotfix homepage disajikan oleh IIS pada 3 November 2026; HTML tanpa cache memuatkan `app-BNtaag30.js` dan menerima medan tarikh pendaftaran sesi.
+- Sidebar Registration kini mempunyai page khusus `Managers & Athletes` untuk wakil fakulti, dengan senarai penyertaan, roster, tambah/padam ahli dan import template.
 - Dashboard super-admin kini menyediakan trend harian daripada snapshot sebenar dengan filter sesi/kejohanan; scheduler menjalankan `stms:dashboard-snapshot` setiap hari pada 23:55.
+- Dashboard admin kini mempunyai kad kemajuan roster mengikut fakulti dan sukan, dengan liputan event registration yang mempunyai pengurus dan pemain aktif; menghormati skop tenant dan filter sesi/kejohanan.
+- Dashboard diringkaskan dengan paparan utama yang mendahulukan ringkasan dan kemajuan roster; analitik super-admin, aktiviti sukan/acara dan rekod sesi/kejohanan menggunakan bahagian buka-tutup. Senarai roster mengutamakan gabungan yang belum lengkap dan boleh dikembangkan.
 - Halaman `/athletes` kini memaparkan nama fakulti BM dalam dropdown, menyokong carian nama fakulti BM, menggunakan filter fakulti merentas tab pasukan/atlet, dan mempunyai fallback ralat direktori yang diterjemahkan.
+- Fix React #31 pada `/athletes`: pilihan sukan dan kategori kini dihantar sebagai senarai nama string yang sepadan dengan kontrak komponen; cache direktori dinaikkan ke `public-athletes:v3` supaya props lama dibuang. Nama sukan/kategori kekal seperti yang disimpan tanpa translate.
 - Halaman lupa kata laluan kini mempunyai pautan jelas `Kembali ke log masuk` selepas borang reset dihantar.
 - Halaman login kini memaparkan maskot `pose-welcome.webp` secara responsif di sisi kad login pada desktop dan di bawah logo pada telefon.
 - Halaman login kini memaparkan logo UTeM bersebelahan logo SAF tanpa mengubah background atau susun atur asal.
@@ -45,6 +58,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Homepage “Explore the sports” kini memaparkan semua sukan dalam grid responsif dengan maskot besar yang dipusatkan pada kad.
 
 ### Fixed
+- Direktori `/sports` kini menghantar locale ke kad sukan dengan betul supaya pemformatan tarikh tidak menghasilkan `ReferenceError: locale is not defined`.
+- Faculty and event registration pages now safely render bilingual names when `name` arrives as a `{name, name_ms}` object, preventing React error #31.
+- Sport document uploads now fall back to the uploaded file pathname when PHP cannot resolve its real path, preventing a 500 while streaming the file into public storage.
+- Quality gate repository dipulihkan: Pint diformat semula, carian organisasi untuk log aktiviti menggunakan `withTrashed()` dan bukan bypass global scope, `stms:dashboard-snapshot` didaftarkan sebagai bypass tenant yang dibenarkan, dan runtime React/Inertia/i18n dipecah kepada chunk berasingan supaya setiap chunk berada di bawah bundle budget 400 KB.
+- `docker/supervisord.conf` kini menjalankan `data-transfer-worker` (`queue:work data-transfers --queue=data-transfers --timeout=900`); sebelum ini tiada worker memproses import/export bergilir dalam Docker. Runbook operasi juga menggunakan arahan worker yang betul.
+- Ujian import skuad fakulti kini menetapkan tetingkap pendaftaran skuad yang terbuka dan menjangka redirect ke `faculty.registrations`; ujian tarikh event membandingkan melalui cast model supaya lulus pada MySQL dan SQLite.
+- Dokumentasi diselaraskan dengan kod semasa (inventori, tarikh Fasa 1/2 Disember 2026, status CSP/keselamatan, model dan jadual baharu, matriks navigasi, worker queue); dokumen lapuk dipindahkan ke `docs/archive/`.
 - Direktori sukan awam menggunakan ikon daripada rekod sukan yang diuruskan, dengan fallback ikon sedia ada apabila imej tidak tersedia. Cache portal dibersihkan selepas sukan ditambah, dikemas kini atau dipadam.
 
 - **24 Sep 2026 — Public card variants:** Menambah tiga gaya kad semantik berasaskan tema SAF 20: `default`, `primary` dan `secondary`.

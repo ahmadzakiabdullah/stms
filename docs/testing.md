@@ -2,16 +2,19 @@
 
 > Current focused regression evidence (21 Ogos 2026): scorer/result `20/20` tests with `57` assertions and public portal `19/19` tests with `355` assertions. The full baseline and CI entries below are historical until a newer release-candidate run is recorded.
 
-> Commit calon semasa disahkan oleh connected CI pada 18 Ogos 2026. Lihat [audit penuh](audits/2026-08-17-full-project-and-production-audit.md).
+> Status release/CI semasa direkodkan dalam [`CURRENT_STATE.md`](../CURRENT_STATE.md). Audit 17 Ogos 2026 dan CI #112 ialah bukti sejarah.
 
-## Keadaan Semasa
+## Inventori Semasa (12 November 2026)
 
-- Repositori mengandungi **99 fail ujian PHP**.
-- PHPUnit menjalankan **508 ujian / 2,478 assertions** pada working tree 17 September 2026 dan semuanya lulus.
-- Pint, TypeScript, Vite build, bundle budget, inventory/tenant guards dan dependency audits lulus.
-- Playwright/axe menjalankan **8/8 journeys** pada desktop/mobile menggunakan SQLite terasing.
-- Connected [CI #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726) pada commit `4b04c46` mengesahkan dependency audit, lint, test, 75.03% PCOV statement coverage, build dan browser E2E semuanya lulus.
-- Evidence repository ini lengkap pada SHA calon; smoke test deployment sebenar masih wajib.
+- Repositori mengandungi **104 fail ujian PHP**.
+- `tests/e2e/critical-journeys.spec.ts` mengandungi **12 ujian Playwright/axe**, dijalankan pada projek desktop dan mobile (**24 kes**) menggunakan SQLite terasing.
+- Bilangan ujian/assertion PHPUnit dan keputusan gate terkini mesti diambil daripada run terbaru yang direkodkan dalam `CURRENT_STATE.md`, bukan daripada fail ini.
+
+## Bukti Sejarah
+
+- 17 September 2026: PHPUnit **508 ujian / 2,478 assertions** lulus pada working tree ketika itu; Pint, TypeScript, Vite build, bundle budget, inventory/tenant guards dan dependency audits lulus.
+- 18 Ogos 2026: Playwright/axe **8/8 journeys** (suite lama) lulus; connected [CI #112](https://github.com/ahmadzakiabdullah/stms/actions/runs/32097257726) pada commit `4b04c46` mengesahkan dependency audit, lint, test, 75.03% PCOV statement coverage, build dan browser E2E. CI kini menguatkuasakan ratchet coverage 74.5%.
+- Smoke test deployment sebenar kekal wajib untuk setiap release.
 
 ## Strategi
 

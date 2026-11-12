@@ -104,11 +104,18 @@ After rollback:
 
 Production workers and scheduler must be supervised by the host, not by an interactive terminal.
 
-Minimum worker command:
+Minimum worker commands (two separate supervised processes):
 
 ```bash
-php artisan queue:work --queue=transfers,default --tries=3 --backoff=30 --timeout=120
+# Default queue (notifications and other short jobs)
+php artisan queue:work --tries=3 --timeout=90
+
+# Import/export transfers: ProcessDataTransfer runs on the dedicated `data-transfers`
+# connection/queue (config/queue.php, retry_after 1020s), so it needs its own worker.
+php artisan queue:work data-transfers --queue=data-transfers --tries=3 --timeout=900
 ```
+
+The supervisor must allow the transfer worker to finish its current job before it is killed (graceful stop longer than 900 seconds). The Docker image does this in `docker/supervisord.conf` with `[program:data-transfer-worker]` and `stopwaitsecs=960`, running alongside `[program:queue-worker]`. Windows/IIS hosts need an equivalent second service or task.
 
 Minimum scheduler command:
 

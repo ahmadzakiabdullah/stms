@@ -1,5 +1,7 @@
 # Pelan Pengukuhan STMS
 
+> **Sejarah — digantikan.** Dokumen ini ialah snapshot 17 Ogos 2026 dan tidak lagi dikemas kini. Status semasa berada dalam [`CURRENT_STATE.md`](CURRENT_STATE.md) dan [`TODOS.md`](TODOS.md); beberapa item yang belum ditanda di bawah (k6 staging, external alerts, off-host restore, PCOV ratchet) telah mempunyai bukti di sana.
+
 > Dikemas kini 17 Ogos 2026 selepas remediation. Checklist aktif dan authority boundary berada di [`TODOS.md`](TODOS.md).
 
 ## Selesai dalam Repository
