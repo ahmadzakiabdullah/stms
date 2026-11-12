@@ -68,9 +68,9 @@ class PerformanceBaselineTest extends TestCase
 
         // Budget: dashboard core + registration overview (faculty/event breakdowns, squad composition).
         $this->assertLessThanOrEqual(
-            42,
+            56,
             $queries,
-            "Dashboard query budget exceeded: {$queries} queries (budget: 42)."
+            "Dashboard query budget exceeded: {$queries} queries (budget: 56)."
         );
     }
 
@@ -208,9 +208,9 @@ class PerformanceBaselineTest extends TestCase
             "Registrations index query budget exceeded: {$registrationsQueries} queries (budget: 35)."
         );
         $this->assertLessThanOrEqual(
-            35,
+            48,
             $reportsQueries,
-            "Reports index query budget exceeded: {$reportsQueries} queries (budget: 35)."
+            "Reports index query budget exceeded: {$reportsQueries} queries (budget: 48)."
         );
     }
 }

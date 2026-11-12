@@ -20,16 +20,20 @@ class TournamentFactory extends Factory
             "Men's Football", "Women's Badminton", 'Open Futsal', 'Volleyball Championship',
         ]);
 
-        $session = Session::factory()->create(); // ensure we have a session
+        // Lazy relation: a Session is only created when the caller does not pass
+        // session_id, so tests that supply their own session get no stray row.
+        $session = fn (array $attributes): ?Session => Session::query()
+            ->withoutOrganizationScope()
+            ->find($attributes['session_id']);
 
         return [
-            'organization_id' => $session->organization_id,
-            'session_id' => $session->id,
+            'session_id' => Session::factory(),
+            'organization_id' => fn (array $attributes) => $session($attributes)?->organization_id,
             'name' => $name,
             'slug' => Str::slug($name).'-'.Str::random(4),
             'description' => fake()->sentence(),
-            'start_date' => $session->start_date,
-            'end_date' => $session->end_date,
+            'start_date' => fn (array $attributes) => $session($attributes)?->start_date,
+            'end_date' => fn (array $attributes) => $session($attributes)?->end_date,
             'is_active' => true,
         ];
     }

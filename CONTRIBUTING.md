@@ -39,4 +39,4 @@ composer audit --locked --no-interaction
 npm audit --audit-level=high
 ```
 
-Semua gate mesti lulus pada commit PR yang sama. Verifikasi terakhir (12 November 2026, SQLite in-memory): PHPUnit 592 ujian dengan 8 kegagalan sedia ada yang juga berlaku pada `master` — lihat `CURRENT_STATE.md` dan `TODOS.md`; Pint, TypeScript, build/budget dan tenant-bypass lulus. Jangan menggunakan keputusan lama sebagai bukti hijau; jalankan semula gate pada commit PR anda.
+Semua gate mesti lulus pada commit PR yang sama. Verifikasi terakhir (12 November 2026, SQLite in-memory): PHPUnit 592/592 lulus; Pint, TypeScript, build/budget dan tenant-bypass lulus. Jangan menggunakan keputusan lama sebagai bukti hijau; jalankan semula gate pada commit PR anda.

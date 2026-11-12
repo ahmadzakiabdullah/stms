@@ -165,7 +165,7 @@ class PublicPortalTest extends TestCase
         $tournament = Tournament::factory()->forSession($session)->create();
         $sport = Sport::factory()->create(['organization_id' => $organization->id, 'name' => 'Badminton']);
         $event = Event::factory()->forTournament($tournament)->create(['sport_id' => $sport->id]);
-        $faculty = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Sukan', 'is_active' => true]);
+        $faculty = Participant::factory()->create(['organization_id' => $organization->id, 'session_id' => $session->id, 'name' => 'Fakulti Sukan', 'name_ms' => 'Fakulti Sukan Kejuruteraan', 'is_active' => true]);
         $registration = EventParticipant::factory()->create(['organization_id' => $organization->id, 'event_id' => $event->id, 'participant_id' => $faculty->id, 'status' => 'confirmed']);
 
         foreach (['Ahmad Zaki', 'Bakar Ali', 'Chong Wei'] as $name) {

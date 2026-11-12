@@ -89,12 +89,15 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString("object-src 'none'", $policy);
         $this->assertStringNotContainsString("'unsafe-eval'", $policy);
         $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
-        $this->assertStringNotContainsString("style-src 'self' 'unsafe-inline'", $policy);
+        // Since 24 Sep 2026 style-src intentionally allows 'unsafe-inline' for
+        // React DOM inline styles (see SecurityHeaders middleware). Scripts stay
+        // nonce-protected, and style-src must not mix a nonce with unsafe-inline
+        // because browsers would then ignore unsafe-inline.
+        $this->assertStringContainsString("style-src 'self' 'unsafe-inline'; ", $policy);
+        $this->assertDoesNotMatchRegularExpression("/style-src [^;]*'nonce-/", $policy);
         $this->assertStringContainsString("style-src-attr 'unsafe-inline';", $policy);
         $this->assertStringNotContainsString('fonts.bunny.net', $policy);
         $this->assertMatchesRegularExpression("/script-src 'self' 'nonce-[A-Za-z0-9+\\/=]+'; /", $policy);
-        $this->assertStringNotContainsString("style-src 'self' 'unsafe-inline'", $policy);
-        $this->assertStringContainsString("style-src-attr 'unsafe-inline';", $policy);
         preg_match("/'nonce-([^']+)'/", $policy, $matches);
         $this->assertNotEmpty($matches[1] ?? null);
         $this->assertStringContainsString('nonce="'.$matches[1].'"', $response->getContent());

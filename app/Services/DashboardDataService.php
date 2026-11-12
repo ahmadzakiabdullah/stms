@@ -276,8 +276,9 @@ final class DashboardDataService
             $currentTrendMetrics = [
                 'organizations' => (int) ($systemOverview['activeOrganizations'] ?? 0),
                 'users' => (int) ($systemOverview['users'] ?? 0),
-                'events' => $this->safeCount(Event::class, $eventScope),
-                'matches' => $this->safeCount(Fixture::class, $fixtureScope),
+                // Same scopes as $stats above; reuse instead of re-querying.
+                'events' => $stats['events'],
+                'matches' => $stats['matches'],
             ];
             $selectedFilters = ['session_id' => $sessionId, 'tournament_id' => $tournamentId];
 

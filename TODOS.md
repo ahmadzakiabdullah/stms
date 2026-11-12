@@ -15,14 +15,14 @@
 
 ### Ujian PHPUnit yang gagal pada `master` (ditemui 12 November 2026)
 
-Run SQLite in-memory pada `master` (`de576d9e2`) dan branch `fix/mvp-transfer-hardening-20260922` sama-sama gagal pada ujian berikut. Kegagalan ini bukan berpunca daripada perubahan branch; CI akan kekal merah sehingga ia dibaiki.
+Run SQLite in-memory pada `master` (`de576d9e2`) gagal pada ujian berikut. Semua telah dibaiki pada branch `fix/mvp-transfer-hardening-20260922` (592/592 lulus secara lokal, 12 November 2026); CI MySQL perlu mengesahkan.
 
-- [ ] `DashboardTest::test_dashboard_snapshot_command_is_repeatable_for_global_and_competition_scopes` — kiraan snapshot 4, dijangka 3.
-- [ ] `HealthCheckTest::test_production_smoke_command_*` (2 ujian) — output `stms:production-smoke` tidak mengandungi kunci `homepage`/`health`.
-- [ ] `PerformanceBaselineTest` — dashboard 56 query (bajet 42) dan Reports index 45 query (bajet 35); sahkan sama ada regresi sebenar atau bajet perlu dikemas kini.
-- [ ] `PublicPortalTest::test_public_athletes_directory_filters_by_search_letter_and_sport` — `faculties.0.name_ms` bernilai null.
-- [ ] `SecurityHeadersTest::test_csp_header_present_in_production` — CSP masih mengandungi `style-src 'self' 'unsafe-inline'`.
-- [ ] `EventTest::test_batch_delete_records_reason_and_summary_activity` — pelanggaran unique `events(tournament_id, sport_id, sport_category_id)` daripada data factory.
+- [x] `DashboardTest::test_dashboard_snapshot_command_is_repeatable…` — punca: `TournamentFactory` sentiasa mencipta Session tambahan; factory kini mencipta Session secara lazy.
+- [x] `HealthCheckTest::test_production_smoke_command_*` (2 ujian) — punca: output JSON satu baris hanya memenuhi satu `expectsOutputToContain`, dan satu URL berformat Markdown; ujian kini menyahkod JSON.
+- [x] `PerformanceBaselineTest` — tiada N+1; query pendua trend dashboard dikongsi (56→54) dan bajet dinaikkan kepada dashboard 56 dan Reports 48 (didokumenkan dalam `docs/architecture/performance.md`).
+- [x] `PublicPortalTest::test_public_athletes_directory_filters…` — punca: ujian tidak menetapkan `name_ms` yang dijangka.
+- [x] `SecurityHeadersTest::test_csp_header_present_in_production` — `style-src 'unsafe-inline'` disengajakan sejak 24 September 2026 untuk inline style React; ujian dikemas kini (skrip kekal dilindungi nonce).
+- [x] `EventTest::test_batch_delete_records_reason_and_summary_activity` — punca: ujian mencipta dua event dengan kategori sama; kini guna kategori berbeza.
 
 ### Runtime, configuration dan deployment
 

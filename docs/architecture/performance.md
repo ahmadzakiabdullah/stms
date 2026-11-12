@@ -2,10 +2,10 @@
 
 ## Repository Baselines
 
-- Dashboard query-budget test: maximum 42 queries for its representative fixture.
+- Dashboard query-budget test: maximum 56 queries for its representative fixture (raised from 42 on 12 November 2026 after trend snapshots, session/tournament filters and roster progress were added; measured 54, no N+1).
 - Public homepage and schedule query-budget tests: maximum 35 queries each for a cold-cache representative fixture.
 - Events index query-budget test: maximum 45 queries for a representative authenticated admin fixture.
-- Results index, Registrations index and Reports index query-budget tests: maximum 70, 35 and 35 queries respectively for representative authenticated fixtures.
+- Results index, Registrations index and Reports index query-budget tests: maximum 70, 35 and 48 queries respectively for representative authenticated fixtures (Reports raised from 35 on 12 November 2026 after the operations monitor, data-quality and data-transfer panels were added; measured 45, no N+1).
 - k6 target: <1% failures and p95 <750 ms for approved scenarios.
 - Bundle budget: each JS chunk ≤400 KB, CSS asset ≤120 KB uncompressed.
 

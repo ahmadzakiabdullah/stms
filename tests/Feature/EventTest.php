@@ -345,7 +345,10 @@ class EventTest extends TestCase
         $admin = $this->createOrgAdmin($org);
         $tournament = Tournament::factory()->create(['organization_id' => $org->id]);
         $sport = Sport::factory()->create(['organization_id' => $org->id]);
+        // Events are unique per (tournament, sport, category), so each event
+        // needs its own category.
         $category = SportCategory::factory()->forSport($sport)->create();
+        $otherCategory = SportCategory::factory()->forSport($sport)->create();
         $eventA = Event::factory()->create([
             'organization_id' => $org->id,
             'tournament_id' => $tournament->id,
@@ -356,7 +359,7 @@ class EventTest extends TestCase
             'organization_id' => $org->id,
             'tournament_id' => $tournament->id,
             'sport_id' => $sport->id,
-            'sport_category_id' => $category->id,
+            'sport_category_id' => $otherCategory->id,
         ]);
 
         $this->actingAs($admin)
