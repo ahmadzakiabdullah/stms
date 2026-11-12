@@ -22,6 +22,7 @@ import {
     CircleAlert,
     ClipboardCheck,
     ClipboardList,
+    ChevronDown,
     Database,
     LayoutGrid,
     ListChecks,
@@ -57,6 +58,15 @@ interface UpcomingEvent {
 }
 
 interface SportCount { name: string; total: number }
+interface RosterProgressRow {
+    faculty_id: string;
+    faculty_name: string;
+    sport_id: string;
+    sport_name: string;
+    registrations: number;
+    manager_entries: number;
+    player_entries: number;
+}
 
 interface RegistrationStats {
     totalRegistrations?: number;
@@ -88,6 +98,7 @@ interface DashboardProps {
     registrationPipeline?: Record<string, number>;
     registrationStats?: RegistrationStats;
     squadStats?: Record<string, number>;
+    rosterProgress?: RosterProgressRow[];
     systemOverview?: SystemOverview;
     trendSnapshots?: Array<{ date: string; organizations: number; users: number; events: number; matches: number }>;
     filterSessions?: Array<{ id: string; name: string }>;
@@ -133,6 +144,7 @@ export default function Dashboard({
     registrationPipeline = {},
     registrationStats = {},
     squadStats = {},
+    rosterProgress = [],
     systemOverview = {},
     trendSnapshots = [],
     filterSessions = [],
@@ -145,12 +157,21 @@ export default function Dashboard({
     const loading = usePageLoading();
     const [overviewPeriod, setOverviewPeriod] = useState<'7d' | '30d' | '90d'>('30d');
     const [selectedMetric, setSelectedMetric] = useState<'organizations' | 'users' | 'events' | 'matches'>('organizations');
+    const [showAllRosterProgress, setShowAllRosterProgress] = useState(false);
     const user = auth?.user;
     const safeStats = stats && typeof stats === 'object' && !Array.isArray(stats) ? stats : {};
     const safeSessions = Array.isArray(recentSessions) ? recentSessions : [];
     const safeTournaments = Array.isArray(recentTournaments) ? recentTournaments : [];
     const safeEvents = Array.isArray(upcomingEvents) ? upcomingEvents : [];
     const safeSports = Array.isArray(registrationsBySport) ? registrationsBySport : [];
+    const safeRosterProgress = Array.isArray(rosterProgress) ? rosterProgress : [];
+    const sortedRosterProgress = [...safeRosterProgress].sort((a, b) => {
+        const aCoverage = Math.min(percentage(a.manager_entries, a.registrations), percentage(a.player_entries, a.registrations));
+        const bCoverage = Math.min(percentage(b.manager_entries, b.registrations), percentage(b.player_entries, b.registrations));
+        return aCoverage - bCoverage || b.registrations - a.registrations || a.faculty_name.localeCompare(b.faculty_name) || a.sport_name.localeCompare(b.sport_name);
+    });
+    const visibleRosterProgress = showAllRosterProgress ? sortedRosterProgress : sortedRosterProgress.slice(0, 6);
+    const incompleteRosterCount = safeRosterProgress.filter((row) => row.manager_entries < row.registrations || row.player_entries < row.registrations).length;
     // Normalize collection props before they reach render-time array operations.
     const safeTrendSnapshots = Array.isArray(trendSnapshots) ? trendSnapshots : [];
     const safeFilterSessions = Array.isArray(filterSessions) ? filterSessions : [];
@@ -290,8 +311,12 @@ export default function Dashboard({
                     )}
 
                     {isSuperAdmin && (
-                        <section className="space-y-4" aria-labelledby="control-centre-title">
-                            <div className="flex flex-col gap-2 px-1 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-700">{t('Super Admin Control Centre')}</p><h2 id="control-centre-title" className="mt-1 text-xl font-bold tracking-tight text-foreground">{t('Platform health and competition flow')}</h2></div><div className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${operationalIssues > 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}><span className={`size-2 rounded-full ${operationalIssues > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`}/>{operationalIssues > 0 ? `${operationalIssues} ${t('items need attention')}` : t('Operations on track')}</div></div>
+                        <details className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:p-5">
+                                <div><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">{t('Platform operations')}</p><p className="mt-1 font-semibold text-foreground">{t('Platform health and competition flow')}</p></div>
+                                <div className="flex items-center gap-3"><span className={`hidden rounded-full px-3 py-1.5 text-xs font-bold sm:inline-flex ${operationalIssues > 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>{operationalIssues > 0 ? `${operationalIssues} ${t('items need attention')}` : t('Operations on track')}</span><ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" /></div>
+                            </summary>
+                            <section className="space-y-4 border-t border-border p-4 sm:p-5" aria-label={t('Super Admin Control Centre')}>
 
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <MetricTile icon={Building2} label={t('Organizations')} value={Number(system.activeOrganizations ?? 0)} detail={`${system.inactiveOrganizations ?? 0} ${t('inactive')}`} active={selectedMetric === 'organizations'} onClick={() => { setSelectedMetric('organizations'); window.location.href = route('organizations.index'); }} tone="bg-blue-50 text-blue-700" />
@@ -342,7 +367,8 @@ export default function Dashboard({
                                     <CardContent><MatchDonut scheduled={scheduledFixtures} live={liveFixtures} completed={completedFixtures} cancelled={cancelledFixtures} t={t} /></CardContent>
                                 </Card>
                             </div>
-                        </section>
+                            </section>
+                        </details>
                     )}
 
                     <section aria-labelledby="system-kpis">
@@ -409,7 +435,12 @@ export default function Dashboard({
                         )}
                     </section>
 
-                    <section className="grid gap-6 xl:grid-cols-[1fr_1fr_.8fr]">
+                    <details className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:p-5">
+                            <div><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">{t('More dashboard details')}</p><p className="mt-1 font-semibold text-foreground">{t('Competition overview')}</p><p className="mt-1 text-xs text-muted-foreground">{t('Upcoming events, sport participation and quick actions.')}</p></div>
+                            <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                        </summary>
+                        <section className="grid gap-6 border-t border-border p-4 sm:p-5 xl:grid-cols-[1fr_1fr_.8fr]">
                         <Card className="rounded-xl border-border bg-card shadow-sm">
                             <CardHeader><CardTitle>{t('Upcoming Events')}</CardTitle><CardDescription>{t('Next active competition dates')}</CardDescription></CardHeader>
                             <CardContent className="space-y-3">
@@ -430,13 +461,63 @@ export default function Dashboard({
                                 {actions.map((action) => { const Icon = action.icon; return <Link key={action.label} href={route(action.route)} className="group flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-primary/30 hover:bg-muted/50"><div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="size-4" /></div><div className="min-w-0 flex-1"><p className="text-sm font-medium">{t(action.label)}</p><p className="truncate text-xs text-muted-foreground">{t(action.description)}</p></div><ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" /></Link>; })}
                             </CardContent>
                         </Card>
-                    </section>
+                        </section>
+                    </details>
+
+                    {isAdministrator && (
+                        <section aria-labelledby="roster-registration-progress">
+                            <Card className="rounded-xl border-border bg-card shadow-sm">
+                                <CardHeader className="flex flex-row items-start justify-between gap-4">
+                                    <div>
+                                        <CardTitle id="roster-registration-progress">{t('Roster registration progress')}</CardTitle>
+                                        <CardDescription>{t('Coverage shows which event entries already have an active manager or player.')}</CardDescription>
+                                    </div>
+                                    <Badge variant={incompleteRosterCount > 0 ? 'secondary' : 'default'} className="shrink-0">{incompleteRosterCount} {t('need attention')}</Badge>
+                                </CardHeader>
+                                <CardContent>
+                                    {safeRosterProgress.length === 0 ? (
+                                        <EmptyState icon={Users} description={t('No active roster registrations.')} className="min-h-32" />
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {visibleRosterProgress.map((row) => {
+                                                const managerProgress = percentage(row.manager_entries, row.registrations);
+                                                const playerProgress = percentage(row.player_entries, row.registrations);
+
+                                                return (
+                                                    <div key={`${row.faculty_id}-${row.sport_id}`} className="grid gap-4 rounded-xl border border-border p-4 lg:grid-cols-[minmax(12rem,.8fr)_minmax(12rem,1fr)_minmax(12rem,1fr)_8rem] lg:items-center">
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-semibold text-foreground">{row.faculty_name}</p>
+                                                            <p className="mt-1 truncate text-xs text-muted-foreground">{row.sport_name}</p>
+                                                        </div>
+                                                        <CoverageBar label={t('Manager submitted')} complete={row.manager_entries} total={row.registrations} progress={managerProgress} tone="bg-amber-500" />
+                                                        <CoverageBar label={t('Players submitted')} complete={row.player_entries} total={row.registrations} progress={playerProgress} tone="bg-primary" />
+                                                        <div className="text-sm font-semibold tabular-nums text-muted-foreground lg:text-right">{row.registrations} {t('registered events')}</div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                    {safeRosterProgress.length > 6 && (
+                                        <Button type="button" variant="outline" className="mt-4 w-full" onClick={() => setShowAllRosterProgress((current) => !current)}>
+                                            {t(showAllRosterProgress ? 'Show fewer' : 'Show all')} {showAllRosterProgress ? '' : `(${safeRosterProgress.length})`}
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </section>
+                    )}
 
                     {(safeSessions.length > 0 || safeTournaments.length > 0) && (
-                        <section className="grid gap-6 xl:grid-cols-2">
+                        <details className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+                            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:p-5">
+                                <div><p className="text-xs font-bold uppercase tracking-[.16em] text-primary">{t('Administration')}</p><p className="mt-1 font-semibold text-foreground">{t('Recent Sessions and Tournaments')}</p></div>
+                                <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                            </summary>
+                            <section className="grid gap-6 border-t border-border p-4 sm:p-5 xl:grid-cols-2">
                             <Card className="rounded-xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Sessions')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeSessions.slice(0, 4).map((session) => <div key={session.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{session.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDate(session.start_date, locale, t)} — {formatDate(session.end_date, locale, t)}</p></div><Badge variant={session.is_active ? 'default' : 'secondary'}>{session.is_active ? t('Active') : t('Inactive')}</Badge></div>)}</CardContent></Card>
                             <Card className="rounded-xl border-border bg-card shadow-sm"><CardHeader><CardTitle className="text-base">{t('Recent Tournaments')}</CardTitle></CardHeader><CardContent className="space-y-2">{safeTournaments.slice(0, 4).map((tournament) => <div key={tournament.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{tournament.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{tournament.session?.name ?? t('Session')}</p></div><CheckCircle2 className="size-4 shrink-0 text-emerald-600" /></div>)}</CardContent></Card>
-                        </section>
+                            </section>
+                        </details>
                     )}
             </div>
         </AuthenticatedLayout>
@@ -449,6 +530,18 @@ function MiniStat({ label, value }: { label: string; value: number }) {
 
 function StatusStat({ label, value, tone }: { label: string; value: number; tone: string }) {
     return <div className={`rounded-xl border p-3 ${tone}`}><p className="text-xs font-medium">{label}</p><p className="mt-1 text-2xl font-bold tabular-nums">{value}</p></div>;
+}
+
+function CoverageBar({ label, complete, total, progress, tone }: { label: string; complete: number; total: number; progress: number; tone: string }) {
+    return <div>
+        <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
+            <span className="font-medium text-foreground">{label}</span>
+            <span className="tabular-nums text-muted-foreground">{complete}/{total} · {progress}%</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${label}: ${complete} / ${total}, ${progress}%`}>
+            <div className={`h-full rounded-full transition-all ${tone}`} style={{ width: `${progress}%` }} />
+        </div>
+    </div>;
 }
 
 function MetricTile({ icon: Icon, label, value, detail, active, onClick, tone }: { icon: LucideIcon; label: string; value: number; detail: string; active: boolean; onClick: () => void; tone: string }) {

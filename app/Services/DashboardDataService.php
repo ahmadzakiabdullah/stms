@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\DashboardMetricSnapshot;
 use App\Models\Event;
 use App\Models\EventParticipant;
-use App\Models\DashboardMetricSnapshot;
 use App\Models\Fixture;
 use App\Models\Organization;
 use App\Models\Participant;
@@ -16,7 +16,6 @@ use App\Models\SquadMember;
 use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 final class DashboardDataService
@@ -40,7 +39,7 @@ final class DashboardDataService
         $sessionId = $filters['session_id'] ?? null;
         $tournamentId = $filters['tournament_id'] ?? null;
         $scopeFilters = [$sportId, $facultyId, $status, $sessionId, $tournamentId];
-        $cacheKey = 'dashboard-v7-'.($user->organization_id ?? 'all').'-'.$user->getKey().'-'.md5(implode('|', $scopeFilters));
+        $cacheKey = 'dashboard-v8-'.($user->organization_id ?? 'all').'-'.$user->getKey().'-'.md5(implode('|', $scopeFilters));
 
         $data = Cache::remember($cacheKey, 60, function () use ($isSuper, $user, $sportId, $facultyId, $status, $sessionId, $tournamentId) {
             $eventScope = fn ($query) => $query
@@ -204,6 +203,55 @@ final class DashboardDataService
                     ->all();
             }, []);
 
+            $rosterProgress = $this->safeQuery(function () use ($sportId, $facultyId, $status, $sessionId, $tournamentId) {
+                return EventParticipant::query()
+                    ->join('participants', function ($join) {
+                        $join->on('participants.id', '=', 'event_participants.participant_id')
+                            ->on('participants.organization_id', '=', 'event_participants.organization_id');
+                    })
+                    ->join('events', function ($join) {
+                        $join->on('events.id', '=', 'event_participants.event_id')
+                            ->on('events.organization_id', '=', 'event_participants.organization_id');
+                    })
+                    ->join('sports', function ($join) {
+                        $join->on('sports.id', '=', 'events.sport_id')
+                            ->on('sports.organization_id', '=', 'event_participants.organization_id');
+                    })
+                    ->leftJoin('squad_members', function ($join) {
+                        $join->on('squad_members.event_participant_id', '=', 'event_participants.id')
+                            ->on('squad_members.organization_id', '=', 'event_participants.organization_id')
+                            ->where('squad_members.is_active', true);
+                    })
+                    ->where('participants.is_active', true)
+                    ->whereNull('participants.deleted_at')
+                    ->where('events.is_active', true)
+                    ->whereNull('events.deleted_at')
+                    ->whereNull('sports.deleted_at')
+                    ->whereIn('event_participants.status', [EventParticipant::STATUS_PENDING, EventParticipant::STATUS_CONFIRMED])
+                    ->when($sportId, fn ($query) => $query->where('events.sport_id', $sportId))
+                    ->when($facultyId, fn ($query) => $query->where('event_participants.participant_id', $facultyId))
+                    ->when($status, fn ($query) => $query->where('event_participants.status', $status))
+                    ->when($sessionId, fn ($query) => $query->whereIn('events.tournament_id', Tournament::query()->select('id')->where('session_id', $sessionId)))
+                    ->when($tournamentId, fn ($query) => $query->where('events.tournament_id', $tournamentId))
+                    ->selectRaw('participants.id as faculty_id, participants.name as faculty_name, sports.id as sport_id, sports.name as sport_name')
+                    ->selectRaw('COUNT(DISTINCT event_participants.id) as registrations')
+                    ->selectRaw('COUNT(DISTINCT CASE WHEN squad_members.role = ? THEN event_participants.id END) as manager_entries', ['manager'])
+                    ->selectRaw('COUNT(DISTINCT CASE WHEN squad_members.role IN (?, ?) THEN event_participants.id END) as player_entries', SquadMember::ATHLETE_ROLES)
+                    ->groupBy('participants.id', 'participants.name', 'sports.id', 'sports.name')
+                    ->orderBy('participants.name')
+                    ->orderBy('sports.name')
+                    ->get()
+                    ->map(fn ($row) => [
+                        'faculty_id' => $row->faculty_id,
+                        'faculty_name' => $row->faculty_name,
+                        'sport_id' => $row->sport_id,
+                        'sport_name' => $row->sport_name,
+                        'registrations' => (int) $row->registrations,
+                        'manager_entries' => (int) $row->manager_entries,
+                        'player_entries' => (int) $row->player_entries,
+                    ]);
+            }, collect());
+
             $recentSessions = $this->safeQuery(fn () => Session::query()
                 ->when(! $isSuper, fn ($query) => $query->where('organization_id', $user->organization_id))
                 ->orderBy('start_date', 'desc')
@@ -238,7 +286,7 @@ final class DashboardDataService
                 'totalEventRegistrations', 'participantsWithRegistrations',
                 'upcomingEvents', 'registrationsBySport',
                 'registrationPipeline', 'registrationStats', 'systemOverview', 'facultyStats', 'eventStats', 'sports', 'faculties', 'squadStats',
-                'trendSnapshots', 'filterSessions', 'filterTournaments', 'currentTrendMetrics', 'selectedFilters'
+                'rosterProgress', 'trendSnapshots', 'filterSessions', 'filterTournaments', 'currentTrendMetrics', 'selectedFilters'
             );
         });
 
