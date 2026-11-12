@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class SportDocumentController extends Controller
@@ -35,10 +36,32 @@ class SportDocumentController extends Controller
     {
         Gate::authorize('update', $sport);
         $file = $request->file('document');
-        if (! $file || ! $file->isValid() || blank($file->getRealPath())) {
+        if (! $file || ! $file->isValid()) {
             return back()->withErrors(['document' => 'Upload gagal. Sila pilih fail PDF atau Markdown yang sah dan cuba lagi.']);
         }
-        $path = $file->store($documents->sportDirectory($sport, $request->validated('session_id')), 'public');
+
+        $sourcePath = $file->getRealPath();
+        if (! is_string($sourcePath) || $sourcePath === '' || ! is_file($sourcePath) || ! is_readable($sourcePath)) {
+            $sourcePath = $file->getPathname();
+        }
+        if (! is_string($sourcePath) || $sourcePath === '' || ! is_file($sourcePath) || ! is_readable($sourcePath)) {
+            return back()->withErrors(['document' => 'Fail sementara muat naik tidak dapat dibaca. Sila cuba muat naik semula.']);
+        }
+
+        $stream = @fopen($sourcePath, 'rb');
+        if ($stream === false) {
+            return back()->withErrors(['document' => 'Fail sementara muat naik tidak dapat dibaca. Sila cuba muat naik semula.']);
+        }
+
+        $path = $documents->sportDirectory($sport, $request->validated('session_id')).'/'.Str::uuid().'.'.$file->guessExtension();
+        try {
+            $stored = Storage::disk('public')->writeStream($path, $stream);
+        } finally {
+            fclose($stream);
+        }
+        if (! $stored) {
+            return back()->withErrors(['document' => 'Fail gagal disimpan. Sila cuba semula.']);
+        }
         SportDocument::create([...$request->safe()->except('document'), 'organization_id' => $sport->organization_id, 'sport_id' => $sport->id, 'file_path' => $path, 'file_name' => $file->getClientOriginalName(), 'mime_type' => $file->getMimeType(), 'file_size' => $file->getSize(), 'created_by' => $request->user()->uuid]);
         $publicPortal->forget($request->session_id);
 
